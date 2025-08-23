@@ -48,10 +48,10 @@ namespace clypse.core.IntTests.StepDefinitions
         public void AwsCloudServiceProviderIsInitialised()
         {
             _encryptedCloudStorageProvider = new AwsS3E2eCloudStorageProvider(
-                _testContext.BucketName,
+                _testContext.BucketName!,
                 new AmazonS3ClientWrapper(
-                    _testContext.AwsAccessKey,
-                    _testContext.SecretAccessKey,
+                    _testContext.AwsAccessKey!,
+                    _testContext.SecretAccessKey!,
                     Amazon.RegionEndpoint.EUWest2),
                 _cryptoService!);
         }
@@ -98,7 +98,7 @@ namespace clypse.core.IntTests.StepDefinitions
         {
             await _vaultManager!.SaveAsync(
                 _testContext.Vault!,
-                _testContext.Base64Key,
+                _testContext.Base64Key!,
                 CancellationToken.None);
         }
 
@@ -107,7 +107,7 @@ namespace clypse.core.IntTests.StepDefinitions
         {
             await _vaultManager!.DeleteAsync(
                 _testContext.Vault!,
-                _testContext.Base64Key,
+                _testContext.Base64Key!,
                 CancellationToken.None);
         }
 
