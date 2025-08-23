@@ -145,6 +145,15 @@ await this.FeatureBackgroundAsync();
 #line 16
  await testRunner.GivenAsync("create a new vault", ((string)(null)), ((global::Reqnroll.Table)(null)), "Given ");
 #line hidden
+#line 17
+ await testRunner.AndAsync("key derived from password foobar123", ((string)(null)), ((global::Reqnroll.Table)(null)), "And ");
+#line hidden
+#line 18
+ await testRunner.WhenAsync("vault is saved", ((string)(null)), ((global::Reqnroll.Table)(null)), "When ");
+#line hidden
+#line 19
+ await testRunner.ThenAsync("vault deleted", ((string)(null)), ((global::Reqnroll.Table)(null)), "Then ");
+#line hidden
             }
             await this.ScenarioCleanupAsync();
         }

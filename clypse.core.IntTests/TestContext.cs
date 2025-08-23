@@ -8,4 +8,5 @@ public class TestContext
     public string SecretAccessKey { get; set; }
     public string BucketName { get; set; }
     public IVault? Vault { get; set; }
+    public string Base64Key { get; set; }
 }

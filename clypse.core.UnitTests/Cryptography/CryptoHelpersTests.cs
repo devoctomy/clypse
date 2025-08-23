@@ -18,7 +18,7 @@ namespace clypse.core.UnitTests.Cryptography
             var salt = new byte[32];
 
             // Act
-            var key = await CryptoHelpers.DeriveKeyFromPassphrase(
+            var key = await CryptoHelpers.DeriveKeyFromPassphraseAsync(
                 securePassphrase,
                 Convert.ToBase64String(salt));
             var base64Key = Convert.ToBase64String(key);

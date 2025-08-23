@@ -1,4 +1,5 @@
-﻿using clypse.core.Cloud.Interfaces;
+﻿using clypse.core.Cloud.Exceptions;
+using clypse.core.Cloud.Interfaces;
 using clypse.core.Compression.Interfaces;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -18,7 +19,7 @@ namespace clypse.core.Vault
             }
         };
 
-        public Vault Create(
+        public IVault Create(
             string name,
             string description)
         {
@@ -29,7 +30,7 @@ namespace clypse.core.Vault
         }
 
         public async Task SaveAsync(
-            Vault vault,
+            IVault vault,
             string base64Key,
             CancellationToken cancellationToken)
         {
@@ -64,6 +65,27 @@ namespace clypse.core.Vault
                 compressedIndex,
                 base64Key,
                 cancellationToken);
+        }
+
+        public async Task DeleteAsync(
+            IVault vault,
+            string base64Key,
+            CancellationToken cancellationToken)
+        {
+            var allKeys = await encryptedCloudStorageProvider.ListObjectsAsync(
+                $"{vault.Info.Id}/",
+                cancellationToken);
+            foreach(var key in allKeys)
+            {
+                var deleted = await encryptedCloudStorageProvider.DeleteEncryptedObjectAsync(
+                    key,
+                    base64Key,
+                    cancellationToken);
+                if(!deleted)
+                {
+                    throw new CloudStorageProviderException($"Failed to delete '{key}' from S3, while deleting vault '{vault.Info.Name}'.");
+                }
+            }
         }
     }
 }

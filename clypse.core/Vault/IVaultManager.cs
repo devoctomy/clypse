@@ -2,11 +2,16 @@
 {
     public interface IVaultManager
     {
-        public Vault Create(
+        public IVault Create(
             string name,
             string description);
         public Task SaveAsync(
-            Vault vault,
+            IVault vault,
+            string base64Key,
+            CancellationToken cancellationToken);
+
+        public Task DeleteAsync(
+            IVault vault,
             string base64Key,
             CancellationToken cancellationToken);
     }

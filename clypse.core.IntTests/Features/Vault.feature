@@ -14,3 +14,6 @@ Background:
 @awss3
 Scenario: Create and save vault to S3
 	Given create a new vault
+	And key derived from password foobar123
+	When vault is saved
+	Then vault deleted

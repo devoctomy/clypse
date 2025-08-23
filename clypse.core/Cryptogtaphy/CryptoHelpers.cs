@@ -15,7 +15,7 @@ public class CryptoHelpers
         return data;
     }
 
-    public static async Task<byte[]> DeriveKeyFromPassphrase(
+    public static async Task<byte[]> DeriveKeyFromPassphraseAsync(
         SecureString passphrase,
         string base64Salt,
         int keyLength = 32)
