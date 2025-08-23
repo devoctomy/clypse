@@ -11,9 +11,16 @@ Background:
 	And compression service is initialised
 	And vault manager is initialised
 
-@awss3
-Scenario: Create and save vault to S3
+@awss3 @save @delete
+Scenario: Create and save vault to S3 then delete the vault
 	Given create a new vault
 	And key derived from password foobar123
 	When vault is saved
 	Then vault deleted
+
+#@awss3 @save @addsecret @getsecret @delete
+#Scenario: Create and save vault to S3, add a secret, get it back, then delete the vault
+#	Given create a new vault
+#	And key derived from password foobar123
+#	When vault is saved
+#	Then vault deleted

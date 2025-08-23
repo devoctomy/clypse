@@ -34,6 +34,13 @@ namespace clypse.core.Vault
             string base64Key,
             CancellationToken cancellationToken)
         {
+            if (vault.PendingSecrets.Count > 0)
+            {
+                // Add or update index entries
+
+                // Save pending secrets
+            }
+
             await SaveIndex(
                 vault.Info,
                 vault.Index,
