@@ -26,4 +26,8 @@ jobs:
       run: dotnet build --no-restore --configuration Release
       
     - name: Run tests
+      env:
+        CLYPSE_AWS_BUCKETNAME: ${{ secrets.CLYPSE_AWS_BUCKETNAME }}
+        CLYPSE_AWS_ACCESSKEY: ${{ secrets.CLYPSE_AWS_ACCESSKEY }}
+        CLYPSE_AWS_SECRETACCESSKEY: ${{ secrets.CLYPSE_AWS_SECRETACCESSKEY }}    
       run: dotnet test --no-build --configuration Release --verbosity normal
