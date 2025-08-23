@@ -34,17 +34,19 @@ namespace clypse.core.Vault
             CancellationToken cancellationToken)
         {
             await SaveIndex(
+                vault.Info,
                 vault.Index,
                 base64Key,
                 cancellationToken);
         }
 
         private async Task SaveIndex(
+            VaultInfo vaultInfo,
             VaultIndex vaultIndex,
             string base64Key,
             CancellationToken cancellationToken)
         {
-            var indexKey = "index.json";
+            var indexKey = $"{vaultInfo.Id}/index.json";
             var indexStream = new MemoryStream();
             await JsonSerializer.SerializeAsync(
                 indexStream,

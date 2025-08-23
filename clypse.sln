@@ -7,7 +7,19 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "clypse.core", "clypse.core\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "clypse.core.UnitTests", "clypse.core.UnitTests\clypse.core.UnitTests.csproj", "{73782589-C78B-40D8-95A2-4C0C3D67240E}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{02EA681E-C7D8-13C7-8484-4AC65E1B71E8}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Unit Tests", "Unit Tests", "{02EA681E-C7D8-13C7-8484-4AC65E1B71E8}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{3BA7C657-5D0E-4A72-BE18-554252D9C24A}"
+	ProjectSection(SolutionItems) = preProject
+		.gitignore = .gitignore
+		global.json = global.json
+		LICENSE = LICENSE
+		README.md = README.md
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Integration Tests", "Integration Tests", "{41200558-8DBA-4864-AF03-31DA8BED5936}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "clypse.core.IntTests", "clypse.core.IntTests\clypse.core.IntTests.csproj", "{6A33D703-4495-4C63-8C41-0DC8273A751B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -23,12 +35,17 @@ Global
 		{73782589-C78B-40D8-95A2-4C0C3D67240E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{73782589-C78B-40D8-95A2-4C0C3D67240E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{73782589-C78B-40D8-95A2-4C0C3D67240E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6A33D703-4495-4C63-8C41-0DC8273A751B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6A33D703-4495-4C63-8C41-0DC8273A751B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6A33D703-4495-4C63-8C41-0DC8273A751B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6A33D703-4495-4C63-8C41-0DC8273A751B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{73782589-C78B-40D8-95A2-4C0C3D67240E} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{6A33D703-4495-4C63-8C41-0DC8273A751B} = {41200558-8DBA-4864-AF03-31DA8BED5936}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {234CE61D-11A8-4ABB-BE55-10C28007EE2A}
