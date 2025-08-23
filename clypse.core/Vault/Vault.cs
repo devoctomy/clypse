@@ -8,7 +8,7 @@ public class Vault : IVault
     public VaultIndex Index { get; set; }
     public IReadOnlyList<Secret> PendingSecrets => _pendingSecrets;
 
-    private List<Secret> _pendingSecrets;
+    private readonly List<Secret> _pendingSecrets;
 
     public Vault(
         VaultInfo info,

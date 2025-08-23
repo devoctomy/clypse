@@ -119,16 +119,20 @@ namespace clypse.core.IntTests.Features
             await this.TestTearDownAsync();
         }
         
-        [Xunit.SkippableFactAttribute(DisplayName="Create and save vault to S3")]
+        [Xunit.SkippableFactAttribute(DisplayName="Create and save vault to S3 then delete the vault")]
         [Xunit.TraitAttribute("FeatureTitle", "Vault sync with AmazonS3")]
-        [Xunit.TraitAttribute("Description", "Create and save vault to S3")]
+        [Xunit.TraitAttribute("Description", "Create and save vault to S3 then delete the vault")]
         [Xunit.TraitAttribute("Category", "awss3")]
-        public async System.Threading.Tasks.Task CreateAndSaveVaultToS3()
+        [Xunit.TraitAttribute("Category", "save")]
+        [Xunit.TraitAttribute("Category", "delete")]
+        public async System.Threading.Tasks.Task CreateAndSaveVaultToS3ThenDeleteTheVault()
         {
             string[] tagsOfScenario = new string[] {
-                    "awss3"};
+                    "awss3",
+                    "save",
+                    "delete"};
             System.Collections.Specialized.OrderedDictionary argumentsOfScenario = new System.Collections.Specialized.OrderedDictionary();
-            global::Reqnroll.ScenarioInfo scenarioInfo = new global::Reqnroll.ScenarioInfo("Create and save vault to S3", null, tagsOfScenario, argumentsOfScenario, featureTags);
+            global::Reqnroll.ScenarioInfo scenarioInfo = new global::Reqnroll.ScenarioInfo("Create and save vault to S3 then delete the vault", null, tagsOfScenario, argumentsOfScenario, featureTags);
 #line 15
 this.ScenarioInitialize(scenarioInfo);
 #line hidden

@@ -34,6 +34,11 @@ namespace clypse.core.Vault
             string base64Key,
             CancellationToken cancellationToken)
         {
+            await SaveInfo(
+                vault.Info,
+                base64Key,
+                cancellationToken);
+
             if (vault.PendingSecrets.Count > 0)
             {
                 // Add or update index entries
@@ -48,30 +53,24 @@ namespace clypse.core.Vault
                 cancellationToken);
         }
 
-        private async Task SaveIndex(
-            VaultInfo vaultInfo,
-            VaultIndex vaultIndex,
+        public async Task<Vault> LoadAsync(
+            string id,
             string base64Key,
             CancellationToken cancellationToken)
         {
-            var indexKey = $"{vaultInfo.Id}/index.json";
-            var indexStream = new MemoryStream();
-            await JsonSerializer.SerializeAsync(
-                indexStream,
-                vaultIndex,
-                JsonSerializerOptions,
-                cancellationToken);
-            indexStream.Seek(0, SeekOrigin.Begin);
-
-            var compressedIndex = new MemoryStream();
-            await compressionService.CompressAsync(indexStream, compressedIndex);
-            compressedIndex.Seek(0, SeekOrigin.Begin);
-
-            await encryptedCloudStorageProvider.PutEncryptedObjectAsync(
-                indexKey,
-                compressedIndex,
+            var info = await LoadInfoAsync(
+                id,
                 base64Key,
                 cancellationToken);
+
+            var index = await LoadIndexAsync(
+                id,
+                base64Key,
+                cancellationToken);
+
+            return new Vault(
+                info,
+                index);
         }
 
         public async Task DeleteAsync(
@@ -82,17 +81,127 @@ namespace clypse.core.Vault
             var allKeys = await encryptedCloudStorageProvider.ListObjectsAsync(
                 $"{vault.Info.Id}/",
                 cancellationToken);
-            foreach(var key in allKeys)
+            foreach (var key in allKeys)
             {
                 var deleted = await encryptedCloudStorageProvider.DeleteEncryptedObjectAsync(
                     key,
                     base64Key,
                     cancellationToken);
-                if(!deleted)
+                if (!deleted)
                 {
                     throw new CloudStorageProviderException($"Failed to delete '{key}' from S3, while deleting vault '{vault.Info.Name}'.");
                 }
             }
+        }
+
+        private async Task SaveIndex(
+            VaultInfo vaultInfo,
+            VaultIndex vaultIndex,
+            string base64Key,
+            CancellationToken cancellationToken)
+        {
+            await SaveObjectAsync(
+                vaultIndex,
+                vaultInfo.Id,
+                "index.json",
+                base64Key,
+                cancellationToken);
+        }
+
+        private async Task SaveInfo(
+            VaultInfo vaultInfo,
+            string base64Key,
+            CancellationToken cancellationToken)
+        {
+            await SaveObjectAsync(
+                vaultInfo,
+                vaultInfo.Id,
+                "info.json",
+                base64Key,
+                cancellationToken);
+        }
+
+        private async Task<VaultInfo> LoadInfoAsync(
+            string id,
+            string base64Key,
+            CancellationToken cancellationToken)
+        {
+            var info = await LoadObjectAsync<VaultInfo>(
+                id,
+                "info.json",
+                base64Key,
+                cancellationToken);
+            return info!;
+        }
+
+        private async Task<VaultIndex> LoadIndexAsync(
+            string id,
+            string base64Key,
+            CancellationToken cancellationToken)
+        {
+            var index = await LoadObjectAsync<VaultIndex>(
+                id,
+                "index.json",
+                base64Key,
+                cancellationToken);
+            return index!;
+        }
+
+        private async Task SaveObjectAsync(
+            object obj,
+            string id,
+            string key,
+            string base64Key,
+            CancellationToken cancellationToken)
+        {
+            var objectKey = $"{id}/{key}";
+            var objectStream = new MemoryStream();
+            await JsonSerializer.SerializeAsync(
+                objectStream,
+                obj,
+                JsonSerializerOptions,
+                cancellationToken);
+            objectStream.Seek(0, SeekOrigin.Begin);
+
+            var compressedObject = new MemoryStream();
+            await compressionService.CompressAsync(
+                objectStream,
+                compressedObject,
+                cancellationToken);
+            compressedObject.Seek(0, SeekOrigin.Begin);
+
+            await encryptedCloudStorageProvider.PutEncryptedObjectAsync(
+                objectKey,
+                compressedObject,
+                base64Key,
+                cancellationToken);
+        }
+
+        private async Task<T> LoadObjectAsync<T>(
+            string id,
+            string key,
+            string base64Key,
+            CancellationToken cancellationToken)
+        {
+            var objectKey = $"{id}/{key}";
+            var encryptedCompressedStream = await encryptedCloudStorageProvider.GetEncryptedObjectAsync(
+                objectKey,
+                base64Key,
+                cancellationToken);
+
+            var decompressedStream = new MemoryStream();
+            await compressionService.DecompressAsync(
+                encryptedCompressedStream!,
+                decompressedStream,
+                cancellationToken);
+            decompressedStream.Seek(0, SeekOrigin.Begin);
+
+            var value = await JsonSerializer.DeserializeAsync<T>(
+                decompressedStream,
+                JsonSerializerOptions,
+                cancellationToken);
+
+            return value!;
         }
     }
 }

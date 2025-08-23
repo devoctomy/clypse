@@ -19,14 +19,15 @@ public class GZipCompressionService : ICompressionService, IDisposable
     /// <exception cref="ArgumentNullException">Thrown when inputStream or outputStream is null</exception>
     public async Task CompressAsync(
         Stream inputStream,
-        Stream outputStream)
+        Stream outputStream,
+        CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(inputStream, nameof(inputStream));
         ArgumentNullException.ThrowIfNull(outputStream, nameof(outputStream));
 
         using var gzipStream = new GZipStream(outputStream, CompressionMode.Compress, leaveOpen: true);
-        await inputStream.CopyToAsync(gzipStream);
-        await gzipStream.FlushAsync();
+        await inputStream.CopyToAsync(gzipStream, cancellationToken);
+        await gzipStream.FlushAsync(cancellationToken);
     }
 
     /// <summary>
@@ -39,13 +40,14 @@ public class GZipCompressionService : ICompressionService, IDisposable
     /// <exception cref="InvalidDataException">Thrown when input data is not in valid GZip format</exception>
     public async Task DecompressAsync(
         Stream inputStream,
-        Stream outputStream)
+        Stream outputStream,
+        CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(inputStream, nameof(inputStream));
         ArgumentNullException.ThrowIfNull(outputStream, nameof(outputStream));
 
         using var gzipStream = new GZipStream(inputStream, CompressionMode.Decompress, leaveOpen: true);
-        await gzipStream.CopyToAsync(outputStream);
+        await gzipStream.CopyToAsync(outputStream, cancellationToken);
     }
 
     /// <summary>
