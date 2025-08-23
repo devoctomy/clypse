@@ -34,19 +34,41 @@ namespace clypse.core.Vault
             string base64Key,
             CancellationToken cancellationToken)
         {
-            await SaveInfo(
+            if (!vault.IsDirty)
+            {
+                return;
+            }
+
+            await SaveInfoAsync(
                 vault.Info,
                 base64Key,
                 cancellationToken);
 
-            if (vault.PendingSecrets.Count > 0)
+            foreach (var secret in vault.PendingSecrets)
             {
-                // Add or update index entries
+                var existing = vault.Index.Entries.SingleOrDefault(x => x.Id == secret.Id);
+                if (existing != null)
+                {
+                    vault.Index.Entries.Remove(existing);
+                }
 
-                // Save pending secrets
+                vault.Index.Entries.Add(new VaultIndexEntry
+                (
+                    secret.Id,
+                    secret.Name!,
+                    secret.Description,
+                    string.Join(',', secret.Tags)
+                ));
+                await SaveObjectAsync(
+                    secret,
+                    vault.Info.Id,
+                    $"secrets/{secret.Id}",
+                    base64Key,
+                    cancellationToken);
             }
 
-            await SaveIndex(
+            vault.MakeClean();
+            await SaveIndexAsync(
                 vault.Info,
                 vault.Index,
                 base64Key,
@@ -94,7 +116,7 @@ namespace clypse.core.Vault
             }
         }
 
-        private async Task SaveIndex(
+        private async Task SaveIndexAsync(
             VaultInfo vaultInfo,
             VaultIndex vaultIndex,
             string base64Key,
@@ -108,7 +130,7 @@ namespace clypse.core.Vault
                 cancellationToken);
         }
 
-        private async Task SaveInfo(
+        private async Task SaveInfoAsync(
             VaultInfo vaultInfo,
             string base64Key,
             CancellationToken cancellationToken)
@@ -149,12 +171,12 @@ namespace clypse.core.Vault
 
         private async Task SaveObjectAsync(
             object obj,
-            string id,
+            string vaultId,
             string key,
             string base64Key,
             CancellationToken cancellationToken)
         {
-            var objectKey = $"{id}/{key}";
+            var objectKey = $"{vaultId}/{key}";
             var objectStream = new MemoryStream();
             await JsonSerializer.SerializeAsync(
                 objectStream,
@@ -178,12 +200,12 @@ namespace clypse.core.Vault
         }
 
         private async Task<T> LoadObjectAsync<T>(
-            string id,
+            string vaultId,
             string key,
             string base64Key,
             CancellationToken cancellationToken)
         {
-            var objectKey = $"{id}/{key}";
+            var objectKey = $"{vaultId}/{key}";
             var encryptedCompressedStream = await encryptedCloudStorageProvider.GetEncryptedObjectAsync(
                 objectKey,
                 base64Key,

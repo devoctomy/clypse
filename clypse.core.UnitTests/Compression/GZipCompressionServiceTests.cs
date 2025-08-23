@@ -25,9 +25,9 @@ public class GZipCompressionServiceTests : IDisposable
         using var decompressedStream = new MemoryStream();
 
         // Act
-        await _sut.CompressAsync(inputStream, compressedStream);
+        await _sut.CompressAsync(inputStream, compressedStream, CancellationToken.None);
         compressedStream.Position = 0;
-        await _sut.DecompressAsync(compressedStream, decompressedStream);
+        await _sut.DecompressAsync(compressedStream, decompressedStream, CancellationToken.None);
 
         // Assert
         string decompressedText = Encoding.UTF8.GetString(decompressedStream.ToArray());
@@ -44,9 +44,9 @@ public class GZipCompressionServiceTests : IDisposable
         using var decompressedStream = new MemoryStream();
 
         // Act
-        await _sut.CompressAsync(inputStream, compressedStream);
+        await _sut.CompressAsync(inputStream, compressedStream, CancellationToken.None);
         compressedStream.Position = 0;
-        await _sut.DecompressAsync(compressedStream, decompressedStream);
+        await _sut.DecompressAsync(compressedStream, decompressedStream, CancellationToken.None);
 
         // Assert
         Assert.Equal(largeData, decompressedStream.ToArray());
@@ -63,7 +63,7 @@ public class GZipCompressionServiceTests : IDisposable
         using var compressedStream = new MemoryStream();
 
         // Act
-        await _sut.CompressAsync(inputStream, compressedStream);
+        await _sut.CompressAsync(inputStream, compressedStream, CancellationToken.None);
 
         // Assert
         Assert.True(compressedStream.Length < originalData.Length, 
@@ -79,9 +79,9 @@ public class GZipCompressionServiceTests : IDisposable
         using var decompressedStream = new MemoryStream();
 
         // Act
-        await _sut.CompressAsync(inputStream, compressedStream);
+        await _sut.CompressAsync(inputStream, compressedStream, CancellationToken.None);
         compressedStream.Position = 0;
-        await _sut.DecompressAsync(compressedStream, decompressedStream);
+        await _sut.DecompressAsync(compressedStream, decompressedStream, CancellationToken.None);
 
         // Assert
         Assert.Equal(0, decompressedStream.Length);
@@ -97,7 +97,7 @@ public class GZipCompressionServiceTests : IDisposable
 
         // Act & Assert
         await Assert.ThrowsAsync<InvalidDataException>(
-            async () => await _sut.DecompressAsync(inputStream, outputStream));
+            async () => await _sut.DecompressAsync(inputStream, outputStream, CancellationToken.None));
     }
 
     [Fact]
@@ -108,7 +108,7 @@ public class GZipCompressionServiceTests : IDisposable
 
         // Act & Assert
         await Assert.ThrowsAsync<ArgumentNullException>(
-            async () => await _sut.CompressAsync(null!, outputStream));
+            async () => await _sut.CompressAsync(null!, outputStream, CancellationToken.None));
     }
 
     [Fact]
@@ -119,7 +119,7 @@ public class GZipCompressionServiceTests : IDisposable
 
         // Act & Assert
         await Assert.ThrowsAsync<ArgumentNullException>(
-            async () => await _sut.CompressAsync(inputStream, null!));
+            async () => await _sut.CompressAsync(inputStream, null!, CancellationToken.None));
     }
 
     [Fact]
@@ -130,7 +130,7 @@ public class GZipCompressionServiceTests : IDisposable
 
         // Act & Assert
         await Assert.ThrowsAsync<ArgumentNullException>(
-            async () => await _sut.DecompressAsync(null!, outputStream));
+            async () => await _sut.DecompressAsync(null!, outputStream, CancellationToken.None));
     }
 
     [Fact]
@@ -141,7 +141,7 @@ public class GZipCompressionServiceTests : IDisposable
 
         // Act & Assert
         await Assert.ThrowsAsync<ArgumentNullException>(
-            async () => await _sut.DecompressAsync(inputStream, null!));
+            async () => await _sut.DecompressAsync(inputStream, null!, CancellationToken.None));
     }
 
     [Fact]
@@ -156,9 +156,9 @@ public class GZipCompressionServiceTests : IDisposable
         using var decompressedStream = new MemoryStream();
 
         // Act
-        await _sut.CompressAsync(inputStream, compressedStream);
+        await _sut.CompressAsync(inputStream, compressedStream, CancellationToken.None);
         compressedStream.Position = 0;
-        await _sut.DecompressAsync(compressedStream, decompressedStream);
+        await _sut.DecompressAsync(compressedStream, decompressedStream, CancellationToken.None);
 
         // Assert
         Assert.Equal(binaryData, decompressedStream.ToArray());
