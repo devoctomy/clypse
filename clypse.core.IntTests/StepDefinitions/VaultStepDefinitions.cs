@@ -22,19 +22,19 @@ namespace clypse.core.IntTests.StepDefinitions
         [Given("aws access key loaded from environment variable")]
         public void AwsAccessKeyLoadedFromEnvironmentVariable()
         {
-            _testContext.AwsAccessKey = Environment.GetEnvironmentVariable("CLYPSE_AWS_ACCESSKEY", EnvironmentVariableTarget.User)!;
+            _testContext.AwsAccessKey = Environment.GetEnvironmentVariable("CLYPSE_AWS_ACCESSKEY")!;
         }
 
         [Given("aws secret access key loaded from environment variable")]
         public void AwsSecretAccessKeyLoadedFromEnvironmentVariable()
         {
-            _testContext.SecretAccessKey = Environment.GetEnvironmentVariable("CLYPSE_AWS_SECRETACCESSKEY", EnvironmentVariableTarget.User)!;
+            _testContext.SecretAccessKey = Environment.GetEnvironmentVariable("CLYPSE_AWS_SECRETACCESSKEY")!;
         }
 
         [Given("aws bucket name loaded from environment variable")]
         public void AwsBucketNameLoadedFromEnvironmentVariable()
         {
-            _testContext.BucketName = Environment.GetEnvironmentVariable("CLYPSE_AWS_BUCKETNAME", EnvironmentVariableTarget.User)!;
+            _testContext.BucketName = Environment.GetEnvironmentVariable("CLYPSE_AWS_BUCKETNAME")!;
         }
 
         [Given("crypto service is initialised")]
