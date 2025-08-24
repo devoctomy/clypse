@@ -7,7 +7,7 @@ public interface IVaultManager
     public IVault Create(
         string name,
         string description);
-    public Task SaveAsync(
+    public Task<VaultSaveResults> SaveAsync(
         IVault vault,
         string base64Key,
         CancellationToken cancellationToken);

@@ -30,14 +30,15 @@ public class VaultManager(
             new VaultIndex());
     }
 
-    public async Task SaveAsync(
+    public async Task<VaultSaveResults> SaveAsync(
         IVault vault,
         string base64Key,
         CancellationToken cancellationToken)
     {
+        var results = new VaultSaveResults();
         if (!vault.IsDirty)
         {
-            return;
+            return results;
         }
 
         await SaveInfoAsync(
@@ -48,9 +49,11 @@ public class VaultManager(
         foreach (var secret in vault.PendingSecrets)
         {
             var existing = vault.Index.Entries.SingleOrDefault(x => x.Id == secret.Id);
+            var updating = false;
             if (existing != null)
             {
                 vault.Index.Entries.Remove(existing);
+                updating = true;
             }
 
             secret.LastUpdatedAt = DateTime.UtcNow;
@@ -67,6 +70,15 @@ public class VaultManager(
                 $"secrets/{secret.Id}",
                 base64Key,
                 cancellationToken);
+
+            if(updating)
+            {
+                results.SecretsUpdated++;
+            }
+            else
+            {
+                results.SecretsCreated++;
+            }
         }
 
         foreach (var secret in vault.SecretsToDelete)
@@ -83,6 +95,8 @@ public class VaultManager(
                 secret,
                 base64Key,
                 cancellationToken);
+
+            results.SecretsDeleted++;
         }
 
         vault.MakeClean();
@@ -91,6 +105,8 @@ public class VaultManager(
             vault.Index,
             base64Key,
             cancellationToken);
+        results.Success = true;
+        return results;
     }
 
     public async Task<Vault> LoadAsync(

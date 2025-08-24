@@ -20,12 +20,17 @@ Scenario: Create and save vault to S3, perform basic CRUD operations on secrets,
 		| Secret1 | Some secret thing.    | bob@hoskins.com        | foobar123 |
 		| Secret2 | Another secret thing. | bob.hoskins@foobar.com | 123foobar |
 	And vault is saved
+	And save results successful
+	And save results report 1 secrets created
 	When vault is loaded
 	And secret Secret1 is loaded and matches added
 	And secret Secret2 is loaded and matches added
 	Then secret Secret1 is marked for deletion
 	And web secret Secret2 password is updated to password123
 	And vault is saved
+	And save results successful
+	And save results report 1 secrets deleted
+	And save results report 1 secrets updated
 	And vault is loaded
 	And secret Secret1 does not exist
 	And secret Secret2 is loaded and matches added but with password password123
