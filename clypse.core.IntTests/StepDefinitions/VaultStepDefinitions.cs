@@ -7,6 +7,7 @@ using clypse.core.Cryptogtaphy;
 using clypse.core.Cryptogtaphy.Interfaces;
 using clypse.core.Secrets;
 using clypse.core.Vault;
+using System.Collections.Generic;
 using System.Security;
 
 namespace clypse.core.IntTests.StepDefinitions
@@ -144,7 +145,7 @@ namespace clypse.core.IntTests.StepDefinitions
         }
 
         [StepDefinition("secret (.*) is loaded and matches added")]
-        public async Task SecretSecretIsLoaded(string secretName)
+        public async Task SecretSecretIsLoadedAndMatchesAdded(string secretName)
         {
             var indexEntry = _testContext.Vault!.Index.Entries.SingleOrDefault(x => x.Name == secretName);
             Assert.NotNull(indexEntry);
@@ -159,6 +160,26 @@ namespace clypse.core.IntTests.StepDefinitions
             Assert.NotNull(added.Value);
             Assert.Equal(added.Value.UserName, webSecret.UserName);
             Assert.Equal(added.Value.Password, webSecret.Password);
+        }
+
+        [StepDefinition("secret (.*) is loaded and matches added but with password (.*)")]
+        public async Task SecretSecretIsLoadedAndMatchesAddedButWithPassword(
+            string secretName,
+            string password)
+        {
+            var indexEntry = _testContext.Vault!.Index.Entries.SingleOrDefault(x => x.Name == secretName);
+            Assert.NotNull(indexEntry);
+            var secret = await _vaultManager!.GetSecretAsync(
+                _testContext.Vault,
+                indexEntry.Id,
+                _testContext.Base64Key!,
+                CancellationToken.None);
+            Assert.NotNull(secret);
+            var webSecret = WebSecret.FromSecret(secret);
+            var added = _testContext.AddedSecrets.SingleOrDefault(x => x.Key == secret.Id);
+            Assert.NotNull(added.Value);
+            Assert.Equal(added.Value.UserName, webSecret.UserName);
+            Assert.Equal(added.Value.Password, password);
         }
 
         [StepDefinition("secret (.*) does not exist")]
@@ -177,5 +198,21 @@ namespace clypse.core.IntTests.StepDefinitions
             Assert.True(deleted);
         }
 
+        [StepDefinition("web secret (.*) password is updated to (.*)")]
+        public async Task WebSecretSecretPasswordIsUpdatedToPassword(string secretName, string newPassword)
+        {
+            var indexEntry = _testContext.Vault!.Index.Entries.SingleOrDefault(x => x.Name == secretName);
+            Assert.NotNull(indexEntry);
+            var existing = await _vaultManager!.GetSecretAsync(
+                _testContext.Vault,
+                indexEntry.Id,
+                _testContext.Base64Key!,
+                CancellationToken.None);
+            var webSecret = WebSecret.FromSecret(existing);
+            webSecret.Password = newPassword;
+            _testContext.AddedSecrets.Remove(existing.Id);
+            _testContext.AddedSecrets.Add(webSecret.Id, webSecret);
+            _testContext.Vault.UpdateSecret(webSecret);
+        }
     }
 }

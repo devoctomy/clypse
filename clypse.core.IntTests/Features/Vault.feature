@@ -24,8 +24,9 @@ Scenario: Create and save vault to S3, perform basic CRUD operations on secrets,
 	And secret Secret1 is loaded and matches added
 	And secret Secret2 is loaded and matches added
 	Then secret Secret1 is marked for deletion
+	And web secret Secret2 password is updated to password123
 	And vault is saved
 	And vault is loaded
 	And secret Secret1 does not exist
-	And secret Secret2 is loaded and matches added
+	And secret Secret2 is loaded and matches added but with password password123
 	And vault deleted

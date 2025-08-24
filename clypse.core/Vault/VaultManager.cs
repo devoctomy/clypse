@@ -53,6 +53,7 @@ public class VaultManager(
                 vault.Index.Entries.Remove(existing);
             }
 
+            secret.LastUpdatedAt = DateTime.UtcNow;
             vault.Index.Entries.Add(new VaultIndexEntry
             (
                 secret.Id,
