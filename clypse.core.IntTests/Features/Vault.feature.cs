@@ -182,7 +182,7 @@ await this.FeatureBackgroundAsync();
  await testRunner.AndAsync("save results successful", ((string)(null)), ((global::Reqnroll.Table)(null)), "And ");
 #line hidden
 #line 24
- await testRunner.AndAsync("save results report 1 secrets created", ((string)(null)), ((global::Reqnroll.Table)(null)), "And ");
+ await testRunner.AndAsync("save results report 2 secrets created", ((string)(null)), ((global::Reqnroll.Table)(null)), "And ");
 #line hidden
 #line 25
  await testRunner.WhenAsync("vault is loaded", ((string)(null)), ((global::Reqnroll.Table)(null)), "When ");
