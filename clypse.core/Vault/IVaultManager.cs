@@ -19,9 +19,13 @@ public interface IVaultManager
         string id,
         string base64Key,
         CancellationToken cancellationToken);
-    public Task<Secret> GetSecretAsync(
+    public Task<Secret?> GetSecretAsync(
             IVault vault,
             string secretId,
             string base64Key,
+            CancellationToken cancellationToken);
+    public Task<VaultVerifyResults> VerifyAsync(
+        IVault vault,
+        string base64Key,
             CancellationToken cancellationToken);
 }

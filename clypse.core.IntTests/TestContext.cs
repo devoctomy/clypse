@@ -10,6 +10,6 @@ public class TestContext
     public string? BucketName { get; set; }
     public IVault? Vault { get; set; }
     public string? Base64Key { get; set; }
-    public VaultSaveResults SaveResults { get; set; }
+    public VaultSaveResults? SaveResults { get; set; }
     public Dictionary<string, WebSecret> AddedSecrets { get; set; } = [];
 }

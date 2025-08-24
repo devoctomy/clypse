@@ -152,7 +152,7 @@ public class VaultManager(
         }
     }
 
-    public async Task<Secret> GetSecretAsync(
+    public async Task<Secret?> GetSecretAsync(
         IVault vault,
         string secretId,
         string base64Key,
@@ -163,6 +163,11 @@ public class VaultManager(
             $"secrets/{secretId}",
             base64Key,
             cancellationToken);
+        if(secret == null)
+        {
+            return null;
+        }
+
         switch(secret.SecretType)
         {
             case Enums.SecretType.None:
@@ -264,7 +269,7 @@ public class VaultManager(
             cancellationToken);
     }
 
-    private async Task<T> LoadObjectAsync<T>(
+    private async Task<T?> LoadObjectAsync<T>(
         string vaultId,
         string key,
         string base64Key,
@@ -275,6 +280,10 @@ public class VaultManager(
             objectKey,
             base64Key,
             cancellationToken);
+        if(encryptedCompressedStream == null)
+        {
+            return default;
+        }
 
         var decompressedStream = new MemoryStream();
         await compressionService.DecompressAsync(
@@ -303,5 +312,41 @@ public class VaultManager(
             base64Key,
             cancellationToken);
         return deleted!;
+    }
+
+    public async Task<VaultVerifyResults> VerifyAsync(
+        IVault vault,
+        string base64Key,
+        CancellationToken cancellationToken)
+    {
+        var results = new VaultVerifyResults
+        {
+            Success = true
+        };
+        foreach (var index in vault.Index.Entries)
+        {
+            var secret = await GetSecretAsync(
+                vault,
+                index.Id,
+                base64Key,
+                cancellationToken);
+            if (secret == null)
+            {
+                results.MissingSecrets++;
+                results.Success = false;
+                continue;
+            }
+
+            if(secret.Name != index.Name ||
+                secret.Description != index.Description ||
+                string.Join(',', secret.Tags) != index.Tags)
+            {
+                results.MismatchedSecrets++;
+                results.Success = false;
+                continue;
+            }
+        }
+
+        return results;
     }
 }

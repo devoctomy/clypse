@@ -7,7 +7,6 @@ using clypse.core.Cryptogtaphy;
 using clypse.core.Cryptogtaphy.Interfaces;
 using clypse.core.Secrets;
 using clypse.core.Vault;
-using System.Collections.Generic;
 using System.Security;
 
 namespace clypse.core.IntTests.StepDefinitions
@@ -129,25 +128,25 @@ namespace clypse.core.IntTests.StepDefinitions
         [StepDefinition("save results successful")]
         public void SaveResultsSuccessful()
         {
-            Assert.True(_testContext.SaveResults.Success);
+            Assert.True(_testContext.SaveResults!.Success);
         }
 
         [StepDefinition("save results report (.*) secrets created")]
         public void SaveResultsReportSecretsCreated(int created)
         {
-            Assert.Equal(created, _testContext.SaveResults.SecretsCreated);
+            Assert.Equal(created, _testContext.SaveResults!.SecretsCreated);
         }
 
         [StepDefinition("save results report (.*) secrets updated")]
         public void SaveResultsReportSecretsUpdated(int updated)
         {
-            Assert.Equal(updated, _testContext.SaveResults.SecretsUpdated);
+            Assert.Equal(updated, _testContext.SaveResults!.SecretsUpdated);
         }
 
         [StepDefinition("save results report (.*) secrets deleted")]
         public void SaveResultsReportSecretsDeleted(int deleted)
         {
-            Assert.Equal(deleted, _testContext.SaveResults.SecretsDeleted);
+            Assert.Equal(deleted, _testContext.SaveResults!.SecretsDeleted);
         }
 
         [Then("vault deleted")]
@@ -232,6 +231,7 @@ namespace clypse.core.IntTests.StepDefinitions
                 indexEntry.Id,
                 _testContext.Base64Key!,
                 CancellationToken.None);
+            Assert.NotNull(existing);
             var webSecret = WebSecret.FromSecret(existing);
             webSecret.Password = newPassword;
             _testContext.AddedSecrets.Remove(existing.Id);
