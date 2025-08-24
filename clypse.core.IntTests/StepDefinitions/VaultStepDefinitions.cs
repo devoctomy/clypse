@@ -7,7 +7,6 @@ using clypse.core.Cryptogtaphy;
 using clypse.core.Cryptogtaphy.Interfaces;
 using clypse.core.Secrets;
 using clypse.core.Vault;
-using Microsoft.Win32.SafeHandles;
 using System.Security;
 
 namespace clypse.core.IntTests.StepDefinitions

@@ -19,7 +19,7 @@ public class VaultInfo
         Name = name;
         Description = description;
 
-        var salt = CryptoHelpers.SaltFromId(Id);
+        var salt = CryptoHelpers.Sha256HashString(Id);
         Base64Salt = Convert.ToBase64String(salt);
     }
 }

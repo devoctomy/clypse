@@ -24,7 +24,7 @@ namespace clypse.core.UnitTests.Cryptography
             var base64Key = Convert.ToBase64String(key);
 
             // Assert
-            Assert.Equal("B4VTTKslTp06FO7CQEduDhsNLe4CUjr5ImafG7xeNnU=", base64Key);
+            Assert.Equal("NIc4A4c2wQHU3xVNNc4dDb6umub01XVPiJtEontyBDM=", base64Key);
         }
     }
 }
