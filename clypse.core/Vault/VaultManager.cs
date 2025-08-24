@@ -347,6 +347,13 @@ public class VaultManager(
             }
         }
 
+        var secretsPrefix = $"{vault.Info.Id}/secrets/";
+        var allSecrets = await encryptedCloudStorageProvider.ListObjectsAsync(
+            secretsPrefix,
+            cancellationToken);
+        var unindexedSecrets = allSecrets.Where(x => !vault.Index.Entries.Any(y => y.Id == x));
+        results.UnindexedSecrets.AddRange(unindexedSecrets);
+
         return results;
     }
 }
