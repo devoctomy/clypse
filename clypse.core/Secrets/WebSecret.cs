@@ -43,4 +43,11 @@ public class WebSecret : Secret
     {
         SecretType = Enums.SecretType.Web;
     }
+
+    public static WebSecret FromSecret(Secret secret)
+    {
+        var webSecret = new WebSecret();
+        webSecret.SetAllData(secret.Data);
+        return webSecret;
+    }
 }

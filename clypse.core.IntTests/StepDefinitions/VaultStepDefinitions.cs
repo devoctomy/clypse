@@ -5,7 +5,9 @@ using clypse.core.Compression;
 using clypse.core.Compression.Interfaces;
 using clypse.core.Cryptogtaphy;
 using clypse.core.Cryptogtaphy.Interfaces;
+using clypse.core.Secrets;
 using clypse.core.Vault;
+using Microsoft.Win32.SafeHandles;
 using System.Security;
 
 namespace clypse.core.IntTests.StepDefinitions
@@ -93,7 +95,29 @@ namespace clypse.core.IntTests.StepDefinitions
             _testContext.Base64Key = Convert.ToBase64String(key);
         }
 
-        [When("vault is saved")]
+        [Given("web secrets are added")]
+        public void SecretsAreAdded(DataTable dataTable)
+        {
+            foreach(var row in dataTable.Rows)
+            {
+                var name = row["Name"];
+                var description = row["Description"];
+                var userName = row["UserName"];
+                var password = row["Password"];
+                var webSecret = new Secrets.WebSecret
+                {
+                    Name = name,
+                    Description = description,
+                    UserName = userName,
+                    Password = password
+                };
+                _testContext.Vault!.AddSecret(webSecret);
+
+                _testContext.AddedSecrets.Add(webSecret.Id, webSecret);
+            }
+        }
+
+        [StepDefinition("vault is saved")]
         public async Task VaultIsSaved()
         {
             await _vaultManager!.SaveAsync(
@@ -111,6 +135,48 @@ namespace clypse.core.IntTests.StepDefinitions
                 CancellationToken.None);
         }
 
+        [StepDefinition("vault is loaded")]
+        public async Task VaultIsLoaded()
+        {
+            _testContext.Vault = await _vaultManager!.LoadAsync(
+                _testContext.Vault!.Info.Id,
+                _testContext.Base64Key!,
+                CancellationToken.None);
+        }
+
+        [StepDefinition("secret (.*) is loaded and matches added")]
+        public async Task SecretSecretIsLoaded(string secretName)
+        {
+            var indexEntry = _testContext.Vault!.Index.Entries.SingleOrDefault(x => x.Name == secretName);
+            Assert.NotNull(indexEntry);
+            var secret = await _vaultManager!.GetSecretAsync(
+                _testContext.Vault,
+                indexEntry.Id,
+                _testContext.Base64Key!,
+                CancellationToken.None);
+            Assert.NotNull(secret);
+            var webSecret = WebSecret.FromSecret(secret);
+            var added = _testContext.AddedSecrets.SingleOrDefault(x => x.Key == secret.Id);
+            Assert.NotNull(added.Value);
+            Assert.Equal(added.Value.UserName, webSecret.UserName);
+            Assert.Equal(added.Value.Password, webSecret.Password);
+        }
+
+        [StepDefinition("secret (.*) does not exist")]
+        public void SecretSecretDoesNotExist(string secretName)
+        {
+            var indexEntry = _testContext.Vault!.Index.Entries.SingleOrDefault(x => x.Name == secretName);
+            Assert.Null(indexEntry);
+        }
+
+        [Then("secret (.*) is marked for deletion")]
+        public void SecretSecretIsMarkedForDeletion(string secretName)
+        {
+            var indexEntry = _testContext.Vault!.Index.Entries.SingleOrDefault(x => x.Name == secretName);
+            Assert.NotNull(indexEntry);
+            var deleted = _testContext.Vault.DeleteSecret(indexEntry.Id);
+            Assert.True(deleted);
+        }
 
     }
 }

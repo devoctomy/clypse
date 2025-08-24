@@ -71,4 +71,9 @@ public class ClypseObject
             Data[key] = value!;
         }       
     }
+
+    public void SetAllData(Dictionary<string, string> data)
+    {
+        Data = data;
+    }
 }
