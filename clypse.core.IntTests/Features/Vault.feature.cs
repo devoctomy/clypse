@@ -221,6 +221,15 @@ await this.FeatureBackgroundAsync();
  await testRunner.AndAsync("secret Secret2 is loaded and matches added but with password password123", ((string)(null)), ((global::Reqnroll.Table)(null)), "And ");
 #line hidden
 #line 37
+ await testRunner.AndAsync("vault is verified", ((string)(null)), ((global::Reqnroll.Table)(null)), "And ");
+#line hidden
+#line 38
+ await testRunner.AndAsync("verify results successful", ((string)(null)), ((global::Reqnroll.Table)(null)), "And ");
+#line hidden
+#line 39
+ await testRunner.AndAsync("verify results valid", ((string)(null)), ((global::Reqnroll.Table)(null)), "And ");
+#line hidden
+#line 40
  await testRunner.AndAsync("vault deleted", ((string)(null)), ((global::Reqnroll.Table)(null)), "And ");
 #line hidden
             }

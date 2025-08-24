@@ -351,7 +351,8 @@ public class VaultManager(
         var allSecrets = await encryptedCloudStorageProvider.ListObjectsAsync(
             secretsPrefix,
             cancellationToken);
-        var unindexedSecrets = allSecrets.Where(x => !vault.Index.Entries.Any(y => y.Id == x));
+        var allSecretKeys = allSecrets.Select(x => x.Split('/')[2]).ToList();
+        var unindexedSecrets = allSecretKeys.Where(x => !vault.Index.Entries.Any(y => y.Id == x));
         results.UnindexedSecrets.AddRange(unindexedSecrets);
 
         return results;

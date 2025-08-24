@@ -125,6 +125,15 @@ namespace clypse.core.IntTests.StepDefinitions
                 CancellationToken.None);
         }
 
+        [Then("vault is verified")]
+        public async Task ThenVaultIsVerified()
+        {
+            _testContext.VerifyResults = await _vaultManager!.VerifyAsync(
+                _testContext.Vault!,
+                _testContext.Base64Key!,
+                CancellationToken.None);
+        }
+
         [StepDefinition("save results successful")]
         public void SaveResultsSuccessful()
         {
@@ -147,6 +156,20 @@ namespace clypse.core.IntTests.StepDefinitions
         public void SaveResultsReportSecretsDeleted(int deleted)
         {
             Assert.Equal(deleted, _testContext.SaveResults!.SecretsDeleted);
+        }
+
+        [StepDefinition("verify results successful")]
+        public void VerifyResultsSuccessful()
+        {
+            Assert.True(_testContext.VerifyResults!.Success);
+        }
+
+        [StepDefinition("verify results valid")]
+        public void VerifyResultsValid()
+        {
+            Assert.Equal(0, _testContext.VerifyResults!.MissingSecrets);
+            Assert.Equal(0, _testContext.VerifyResults!.MismatchedSecrets);
+            Assert.Empty(_testContext.VerifyResults!.UnindexedSecrets);
         }
 
         [Then("vault deleted")]

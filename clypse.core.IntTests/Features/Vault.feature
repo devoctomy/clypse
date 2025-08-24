@@ -34,4 +34,7 @@ Scenario: Create and save vault to S3, perform basic CRUD operations on secrets,
 	And vault is loaded
 	And secret Secret1 does not exist
 	And secret Secret2 is loaded and matches added but with password password123
+	And vault is verified
+	And verify results successful
+	And verify results valid
 	And vault deleted

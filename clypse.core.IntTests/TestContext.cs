@@ -11,5 +11,6 @@ public class TestContext
     public IVault? Vault { get; set; }
     public string? Base64Key { get; set; }
     public VaultSaveResults? SaveResults { get; set; }
+    public VaultVerifyResults? VerifyResults { get; set; }
     public Dictionary<string, WebSecret> AddedSecrets { get; set; } = [];
 }
