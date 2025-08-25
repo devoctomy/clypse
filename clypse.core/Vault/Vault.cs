@@ -24,10 +24,17 @@ public class Vault : IVault
         _secretsToDelete = [];
     }
 
-    public void AddSecret(Secret secret)
+    public bool AddSecret(Secret secret)
     {
-        _pendingSecrets.Add(secret);
-        _isDirty = true;
+        var indexEntry = Index.Entries.SingleOrDefault(x => x.Id == secret.Id);
+        if (indexEntry == null)
+        {
+            _pendingSecrets.Add(secret);
+            _isDirty = true;
+            return true;
+        }
+
+        return false;
     }
 
     public bool DeleteSecret(string secretId)

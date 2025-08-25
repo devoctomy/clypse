@@ -10,7 +10,7 @@ public interface IVault
     public IReadOnlyList<string> SecretsToDelete { get; }
     public bool IsDirty { get; }
 
-    public void AddSecret(Secret secret);
+    public bool AddSecret(Secret secret);
     public bool DeleteSecret(string secretId);
     public bool UpdateSecret(Secret secret);
     public void MakeClean();
