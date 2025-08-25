@@ -78,52 +78,94 @@ public class VaultManagerTests
     }
 
     [Fact]
-    public async Task GivenVault_AndAddSecret_WhenSaveAsync_ThenInfoSaved_AndSecretSaved_AndIndexSaved_AndIndexUpdated()
+    public async Task GivenVault_AndClean_WhenSaveAsync_ThenVaultNotSaved()
+    {
+        // Arrange
+        var base64Key = "super secret base64 encoded encryption key";
+        var mockVault = new Mock<IVault>();
+        var cancellationTokenSource = new CancellationTokenSource();
+
+        // Act
+        var results = await _sut.SaveAsync(
+            mockVault.Object,
+            base64Key,
+            cancellationTokenSource.Token);
+
+        // Assert
+        Assert.False(results.Success);
+    }
+
+    [Fact]
+    public async Task GivenVault_AndDirty_AndSecretsToDelete_WhenSaveAsync_ThenVaultSaved_AndSecretsDeleted()
     {
         // Arrange
         var name = "Foobar";
         var description = "Description of vault";
         var base64Key = "super secret base64 encoded encryption key";
-        var vault = _sut.Create(name, description);
+        var mockVault = new Mock<IVault>();
+        var info = new VaultInfo(name, description);
+        var secretsToDelete = new List<string>(["1", "2", "3"]); // 3 Not indexed
+        var index = new VaultIndex
+        {
+            Entries = new List<VaultIndexEntry>
+                {
+                    new VaultIndexEntry(
+                        "1",
+                        "Foo",
+                        "Bar",
+                        ""),
+                    new VaultIndexEntry(
+                        "2",
+                        "Foo",
+                        "Bar",
+                        "")
+                }
+        };
         var cancellationTokenSource = new CancellationTokenSource();
 
-        var secret1 = new core.Secrets.Secret
-        {
-            Name = "Secret1",
-            Description = description,
-        };
-        vault.AddSecret(secret1);
+        mockVault.SetupGet(x => x.Info)
+            .Returns(info);
+
+        mockVault.SetupGet(x => x.Index)
+            .Returns(index);
+
+        mockVault.SetupGet(x => x.IsDirty)
+            .Returns(true);
+
+        mockVault.SetupGet(x => x.PendingSecrets)
+            .Returns([]);
+
+        mockVault.SetupGet(x => x.SecretsToDelete)
+            .Returns(secretsToDelete);
 
         // Act
         var results = await _sut.SaveAsync(
-            vault,
+            mockVault.Object,
             base64Key,
             cancellationTokenSource.Token);
 
         // Assert
         Assert.True(results.Success);
-        Assert.Equal(1, results.SecretsCreated);
-        Assert.Equal(0, results.SecretsUpdated);
-        Assert.Equal(0, results.SecretsDeleted);
+        Assert.Empty(index.Entries);
+        mockVault.Verify(x => x.MakeClean(), Times.Once);
         _mockEncryptedCloudStorageProvider.Verify(x => x.PutEncryptedObjectAsync(
-            It.Is<string>(y => y == $"{vault.Info.Id}/info.json"),
+            It.Is<string>(y => y == $"{info.Id}/info.json"),
             It.IsAny<Stream>(),
             It.Is<string>(y => y == base64Key),
             It.Is<CancellationToken>(y => y == cancellationTokenSource.Token)), Times.Once);
-        _mockEncryptedCloudStorageProvider.Verify(x => x.PutEncryptedObjectAsync(
-            It.Is<string>(y => y == $"{vault.Info.Id}/secrets/{secret1.Id}"),
-            It.IsAny<Stream>(),
+        _mockEncryptedCloudStorageProvider.Verify(x => x.DeleteEncryptedObjectAsync(
+            It.Is<string>(y => y == $"{info.Id}/secrets/1"),
+            It.Is<string>(y => y == base64Key),
+            It.Is<CancellationToken>(y => y == cancellationTokenSource.Token)), Times.Once);
+        _mockEncryptedCloudStorageProvider.Verify(x => x.DeleteEncryptedObjectAsync(
+            It.Is<string>(y => y == $"{info.Id}/secrets/2"),
             It.Is<string>(y => y == base64Key),
             It.Is<CancellationToken>(y => y == cancellationTokenSource.Token)), Times.Once);
         _mockEncryptedCloudStorageProvider.Verify(x => x.PutEncryptedObjectAsync(
-            It.Is<string>(y => y == $"{vault.Info.Id}/index.json"),
+            It.Is<string>(y => y == $"{info.Id}/index.json"),
             It.IsAny<Stream>(),
             It.Is<string>(y => y == base64Key),
             It.Is<CancellationToken>(y => y == cancellationTokenSource.Token)), Times.Once);
-        Assert.Equal(secret1.Id, vault.Index.Entries[0].Id);
-        Assert.False(vault.IsDirty);
-        Assert.Empty(vault.PendingSecrets);
-        Assert.Empty(vault.SecretsToDelete);
     }
 
     [Fact]

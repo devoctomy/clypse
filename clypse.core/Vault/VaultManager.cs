@@ -186,6 +186,50 @@ public class VaultManager(
         return secret;
     }
 
+    public async Task<VaultVerifyResults> VerifyAsync(
+    IVault vault,
+    string base64Key,
+    CancellationToken cancellationToken)
+    {
+        var results = new VaultVerifyResults();
+        foreach (var index in vault.Index.Entries)
+        {
+            var secret = await GetSecretAsync(
+                vault,
+                index.Id,
+                base64Key,
+                cancellationToken);
+            if (secret == null)
+            {
+                results.MissingSecrets++;
+                continue;
+            }
+
+            if (secret.Name != index.Name ||
+                secret.Description != index.Description ||
+                string.Join(',', secret.Tags) != index.Tags)
+            {
+                results.MismatchedSecrets++;
+                continue;
+            }
+        }
+
+        var secretsPrefix = $"{vault.Info.Id}/secrets/";
+        var allSecrets = await encryptedCloudStorageProvider.ListObjectsAsync(
+            secretsPrefix,
+            cancellationToken);
+        var allSecretKeys = allSecrets.Select(x => x.Split('/')[2]).ToList();
+        var unindexedSecrets = allSecretKeys.Where(x => !vault.Index.Entries.Any(y => y.Id == x));
+        results.UnindexedSecrets.AddRange(unindexedSecrets);
+
+        results.Success =
+            results.MismatchedSecrets == 0 &&
+            results.MissingSecrets == 0 &&
+            results.UnindexedSecrets.Count == 0;
+
+        return results;
+    }
+
     private async Task SaveIndexAsync(
         VaultInfo vaultInfo,
         VaultIndex vaultIndex,
@@ -312,49 +356,5 @@ public class VaultManager(
             base64Key,
             cancellationToken);
         return deleted!;
-    }
-
-    public async Task<VaultVerifyResults> VerifyAsync(
-        IVault vault,
-        string base64Key,
-        CancellationToken cancellationToken)
-    {
-        var results = new VaultVerifyResults();
-        foreach (var index in vault.Index.Entries)
-        {
-            var secret = await GetSecretAsync(
-                vault,
-                index.Id,
-                base64Key,
-                cancellationToken);
-            if (secret == null)
-            {
-                results.MissingSecrets++;
-                continue;
-            }
-
-            if (secret.Name != index.Name ||
-                secret.Description != index.Description ||
-                string.Join(',', secret.Tags) != index.Tags)
-            {
-                results.MismatchedSecrets++;
-                continue;
-            }
-        }
-
-        var secretsPrefix = $"{vault.Info.Id}/secrets/";
-        var allSecrets = await encryptedCloudStorageProvider.ListObjectsAsync(
-            secretsPrefix,
-            cancellationToken);
-        var allSecretKeys = allSecrets.Select(x => x.Split('/')[2]).ToList();
-        var unindexedSecrets = allSecretKeys.Where(x => !vault.Index.Entries.Any(y => y.Id == x));
-        results.UnindexedSecrets.AddRange(unindexedSecrets);
-
-        results.Success =
-            results.MismatchedSecrets == 0 &&
-            results.MissingSecrets== 0 &&
-            results.UnindexedSecrets.Count == 0;
-
-        return results;
     }
 }
