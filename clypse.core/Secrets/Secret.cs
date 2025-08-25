@@ -71,7 +71,7 @@ public class Secret : ClypseObject
         UpdateTags(new List<string>());
     }
 
-    private void UpdateTags(List<string> tags)
+    public void UpdateTags(List<string> tags)
     {
         var tagsCsv = string.Join(',', tags);
         SetData(nameof(Tags), tagsCsv);

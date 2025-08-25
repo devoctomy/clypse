@@ -71,7 +71,7 @@ public class VaultManager(
                 base64Key,
                 cancellationToken);
 
-            if(updating)
+            if (updating)
             {
                 results.SecretsUpdated++;
             }
@@ -84,7 +84,7 @@ public class VaultManager(
         foreach (var secret in vault.SecretsToDelete)
         {
             var existing = vault.Index.Entries.SingleOrDefault(x => x.Id == secret);
-            if(existing == null)
+            if (existing == null)
             {
                 continue;
             }
@@ -163,12 +163,12 @@ public class VaultManager(
             $"secrets/{secretId}",
             base64Key,
             cancellationToken);
-        if(secret == null)
+        if (secret == null)
         {
             return null;
         }
 
-        switch(secret.SecretType)
+        switch (secret.SecretType)
         {
             case Enums.SecretType.None:
                 {
@@ -280,7 +280,7 @@ public class VaultManager(
             objectKey,
             base64Key,
             cancellationToken);
-        if(encryptedCompressedStream == null)
+        if (encryptedCompressedStream == null)
         {
             return default;
         }
@@ -319,10 +319,7 @@ public class VaultManager(
         string base64Key,
         CancellationToken cancellationToken)
     {
-        var results = new VaultVerifyResults
-        {
-            Success = true
-        };
+        var results = new VaultVerifyResults();
         foreach (var index in vault.Index.Entries)
         {
             var secret = await GetSecretAsync(
@@ -333,16 +330,14 @@ public class VaultManager(
             if (secret == null)
             {
                 results.MissingSecrets++;
-                results.Success = false;
                 continue;
             }
 
-            if(secret.Name != index.Name ||
+            if (secret.Name != index.Name ||
                 secret.Description != index.Description ||
                 string.Join(',', secret.Tags) != index.Tags)
             {
                 results.MismatchedSecrets++;
-                results.Success = false;
                 continue;
             }
         }
@@ -354,6 +349,11 @@ public class VaultManager(
         var allSecretKeys = allSecrets.Select(x => x.Split('/')[2]).ToList();
         var unindexedSecrets = allSecretKeys.Where(x => !vault.Index.Entries.Any(y => y.Id == x));
         results.UnindexedSecrets.AddRange(unindexedSecrets);
+
+        results.Success =
+            results.MismatchedSecrets == 0 &&
+            results.MissingSecrets== 0 &&
+            results.UnindexedSecrets.Count == 0;
 
         return results;
     }
