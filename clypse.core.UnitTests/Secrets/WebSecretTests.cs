@@ -49,15 +49,23 @@ public class WebSecretTests
     public void GivenNewSecret_AndName_AndDescription_WhenSerialise_ThenObjectSerialisedCorrectly()
     {
         // Arrange
+        var name = "Foobar";
+        var description = "Hello World!";
+        var userName = "BobHoskins";
+        var emailAddress = "bob@hoskins.com";
+        var websiteUrl = "https://web.foobar.com";
+        var loginUrl = "https://login.foobar.com";
+        var password = "password123";
+
         var sut = new WebSecret
         {
-            Name = "Foobar",
-            Description = "Hello World!",
-            UserName = "BobHoskins",
-            EmailAddress = "bob@hoskins.com",
-            WebsiteUrl = "https://web.foobar.com",
-            LoginUrl = "https://login.foobar.com",
-            Password = "password123"
+            Name = name,
+            Description = description,
+            UserName = userName,
+            EmailAddress = emailAddress,
+            WebsiteUrl = websiteUrl,
+            LoginUrl = loginUrl,
+            Password = password
         };
 
         // Act
@@ -67,6 +75,13 @@ public class WebSecretTests
         // Assert
         var dataKeys = doc.RootElement.GetProperty("Data");
         var allProperties = dataKeys.EnumerateObject().ToList();
+        Assert.Equal(name, sut.Name);
+        Assert.Equal(description, sut.Description);
+        Assert.Equal(userName, sut.UserName);
+        Assert.Equal(emailAddress, sut.EmailAddress);
+        Assert.Equal(websiteUrl, sut.WebsiteUrl);
+        Assert.Equal(loginUrl, sut.LoginUrl);
+        Assert.Equal(password, sut.Password);
         Assert.Equal(11, allProperties.Count);
         Assert.Contains(allProperties, x => x.Name == "Id");
         Assert.Contains(allProperties, x => x.Name == "CreatedAt");
@@ -81,5 +96,27 @@ public class WebSecretTests
 
         var validator = new ClypseObjectValidator(sut);
         validator.Validate();
+    }
+
+    [Fact]
+    public void GivenSecret_WhenFromSecret_ThenWebSecretReturned()
+    {
+        // Arrange
+        var secret = new Secret
+        {
+            Name = "Foobar",
+            Description = "Hello World!"
+        };
+
+        // Act
+        var webSecret = WebSecret.FromSecret(secret);
+
+        // Assert
+        Assert.NotNull(webSecret);
+        Assert.Equal(secret.Id, webSecret.Id);
+        Assert.Equal(secret.Name, webSecret.Name);
+        Assert.Equal(secret.Description, webSecret.Description);
+        Assert.Equal(secret.CreatedAt, webSecret.CreatedAt);
+        Assert.Equal(secret.LastUpdatedAt, webSecret.LastUpdatedAt);
     }
 }
