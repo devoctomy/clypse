@@ -108,8 +108,8 @@ public class VaultManagerTests
         var info = new VaultInfo(name, description);
         var index = new VaultIndex
         {
-            Entries = new List<VaultIndexEntry>
-                {
+            Entries =
+                [
                     new VaultIndexEntry(
                         "1",
                         "Foo",
@@ -120,7 +120,7 @@ public class VaultManagerTests
                         "Foo",
                         "Bar",
                         "")
-                }
+                ]
         };
         var secretsToDelete = new List<string>(["1", "2", "3"]); // 3 Not indexed
         var cancellationTokenSource = new CancellationTokenSource();
@@ -180,8 +180,8 @@ public class VaultManagerTests
         var info = new VaultInfo(name, description);
         var index = new VaultIndex
         {
-            Entries = new List<VaultIndexEntry>
-                {
+            Entries =
+                [
                     new VaultIndexEntry(
                         "1",
                         "Foo",
@@ -192,7 +192,7 @@ public class VaultManagerTests
                         "Foo",
                         "Bar",
                         "")
-                }
+                ]
         };
         var cancellationTokenSource = new CancellationTokenSource();
 
@@ -452,7 +452,7 @@ public class VaultManagerTests
                     Name = indexEntry!.Name,
                     Description = indexEntry!.Description
                 };
-                secret.UpdateTags(indexEntry.Tags!.Split(',').ToList());
+                secret.UpdateTags([.. indexEntry.Tags!.Split(',')]);
                 var stream = new MemoryStream();
                 JsonSerializer.Serialize(stream, secret, JsonSerializerOptions);
                 return stream;
@@ -472,7 +472,7 @@ public class VaultManagerTests
         _mockEncryptedCloudStorageProvider.Setup(x => x.ListObjectsAsync(
             $"{info.Id}/secrets/",
             CancellationToken.None))
-            .ReturnsAsync(entries.Select(x => $"{info.Id}/secrets/{x.Id}").ToList());
+            .ReturnsAsync([.. entries.Select(x => $"{info.Id}/secrets/{x.Id}")]);
 
         // Act
         var results = await _sut.VerifyAsync(
@@ -550,7 +550,7 @@ public class VaultManagerTests
         _mockEncryptedCloudStorageProvider.Setup(x => x.ListObjectsAsync(
             $"{info.Id}/secrets/",
             CancellationToken.None))
-            .ReturnsAsync(entries.Select(x => $"{info.Id}/secrets/{x.Id}").ToList());
+            .ReturnsAsync([.. entries.Select(x => $"{info.Id}/secrets/{x.Id}")]);
 
         // Act
         var results = await _sut.VerifyAsync(
@@ -608,7 +608,7 @@ public class VaultManagerTests
         _mockEncryptedCloudStorageProvider.Setup(x => x.ListObjectsAsync(
             $"{info.Id}/secrets/",
             CancellationToken.None))
-            .ReturnsAsync(entries.Select(x => $"{info.Id}/secrets/{x.Id}").ToList());
+            .ReturnsAsync([.. entries.Select(x => $"{info.Id}/secrets/{x.Id}")]);
 
         // Act
         var results = await _sut.VerifyAsync(
@@ -654,7 +654,7 @@ public class VaultManagerTests
         _mockEncryptedCloudStorageProvider.Setup(x => x.ListObjectsAsync(
             $"{info.Id}/secrets/",
             CancellationToken.None))
-            .ReturnsAsync(entries.Select(x => $"{info.Id}/secrets/{x.Id}").ToList());
+            .ReturnsAsync([.. entries.Select(x => $"{info.Id}/secrets/{x.Id}")]);
 
         // Act
         var results = await _sut.VerifyAsync(

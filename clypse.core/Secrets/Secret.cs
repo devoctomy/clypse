@@ -41,7 +41,7 @@ public class Secret : ClypseObject
             var tags = GetData(nameof(Tags));
             if(string.IsNullOrEmpty(tags))
             {
-                return new List<string>();
+                return [];
             }
 
             return [.. tags.Split(',')];
@@ -68,7 +68,7 @@ public class Secret : ClypseObject
 
     public void ClearTags()
     {
-        UpdateTags(new List<string>());
+        UpdateTags([]);
     }
 
     public void UpdateTags(List<string> tags)

@@ -268,7 +268,7 @@ public class VaultManager(
             "info.json",
             base64Key,
             cancellationToken);
-        if(info == null)
+        if (info == null)
         {
             throw new FailedToLoadVaultInfoException($"Failed to load Info for vault '{id}'.");
         }
