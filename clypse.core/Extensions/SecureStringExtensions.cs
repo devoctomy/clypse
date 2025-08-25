@@ -23,7 +23,9 @@ public static class SecureStringExtensions
         finally
         {
             if (bstr != IntPtr.Zero)
+            {
                 Marshal.ZeroFreeBSTR(bstr);
+            }
         }
     }
 }
