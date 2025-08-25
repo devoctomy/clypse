@@ -1,6 +1,8 @@
-﻿namespace clypse.core.Cloud.Exceptions;
+﻿using clypse.core.Exceptions;
 
-public class CloudStorageProviderException : Exception
+namespace clypse.core.Cloud.Exceptions;
+
+public class CloudStorageProviderException : ClypseCoreException
 {
     public CloudStorageProviderException(string message) :
         base(message)

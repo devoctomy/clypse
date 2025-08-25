@@ -2,6 +2,7 @@
 using clypse.core.Cloud.Interfaces;
 using clypse.core.Compression.Interfaces;
 using clypse.core.Secrets;
+using clypse.core.Vault.Exceptions;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -267,6 +268,11 @@ public class VaultManager(
             "info.json",
             base64Key,
             cancellationToken);
+        if(info == null)
+        {
+            throw new FailedToLoadVaultInfoException($"Failed to load Info for vault '{id}'.");
+        }
+
         return info!;
     }
 
@@ -280,6 +286,11 @@ public class VaultManager(
             "index.json",
             base64Key,
             cancellationToken);
+        if (index == null)
+        {
+            throw new FailedToLoadVaultInfoException($"Failed to load Index for vault '{id}'.");
+        }
+
         return index!;
     }
 

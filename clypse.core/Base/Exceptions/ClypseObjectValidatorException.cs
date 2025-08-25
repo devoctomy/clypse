@@ -1,6 +1,8 @@
-﻿namespace clypse.core.Base.Exceptions;
+﻿using clypse.core.Exceptions;
 
-public class ClypseObjectValidatorException : Exception
+namespace clypse.core.Base.Exceptions;
+
+public class ClypseObjectValidatorException : ClypseCoreException
 {
     public List<string> MissingProperties { get; }
 
