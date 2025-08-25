@@ -3,6 +3,7 @@ using clypse.core.Cloud.Interfaces;
 using clypse.core.Compression.Interfaces;
 using clypse.core.Secrets;
 using clypse.core.Vault;
+using clypse.core.Vault.Exceptions;
 using Moq;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -247,6 +248,133 @@ public class VaultManagerTests
             It.Is<string>(y => y == base64Key),
             It.Is<CancellationToken>(y => y == cancellationTokenSource.Token)), Times.Once);
     }
+
+    [Fact]
+    public async Task GivenId_AndBase64Key_WhenLoadAsync_ThenInfoNotFound_AndIndexLoaded_AndExceptionThrown()
+    {
+        // Arrange
+        var name = "Foobar";
+        var description = "Description of vault";
+        var base64Key = "super secret base64 encoded encryption key";
+        var info = new VaultInfo(name, description);
+        var index = new VaultIndex
+        {
+            Entries =
+                [
+                    new VaultIndexEntry(
+                        "1",
+                        "Foo",
+                        "Bar",
+                        ""),
+                    new VaultIndexEntry(
+                        "2",
+                        "Foo",
+                        "Bar",
+                        "")
+                ]
+        };
+        var cancellationTokenSource = new CancellationTokenSource();
+
+        _mockEncryptedCloudStorageProvider.Setup(x => x.GetEncryptedObjectAsync(
+            It.Is<string>(y => y == $"{info.Id}/info.json"),
+            It.Is<string>(y => y == base64Key),
+            It.Is<CancellationToken>(y => y == cancellationTokenSource.Token)))
+            .Returns(async () =>
+            {
+                await Task.Yield();
+                return null;
+            });
+
+        // Act & Assert
+        await Assert.ThrowsAnyAsync<FailedToLoadVaultInfoException>(async () =>
+        {
+            _ = await _sut.LoadAsync(
+                info.Id,
+                base64Key,
+                cancellationTokenSource.Token);
+        });
+        _mockEncryptedCloudStorageProvider.Verify(x => x.GetEncryptedObjectAsync(
+            It.Is<string>(y => y == $"{info.Id}/info.json"),
+            It.Is<string>(y => y == base64Key),
+            It.Is<CancellationToken>(y => y == cancellationTokenSource.Token)), Times.Once);
+    }
+
+    [Fact]
+    public async Task GivenId_AndBase64Key_WhenLoadAsync_ThenInfoLoaded_AndIndexNotFound_AndExceptionThrown()
+    {
+        // Arrange
+        var name = "Foobar";
+        var description = "Description of vault";
+        var base64Key = "super secret base64 encoded encryption key";
+        var info = new VaultInfo(name, description);
+        var index = new VaultIndex
+        {
+            Entries =
+                [
+                    new VaultIndexEntry(
+                        "1",
+                        "Foo",
+                        "Bar",
+                        ""),
+                    new VaultIndexEntry(
+                        "2",
+                        "Foo",
+                        "Bar",
+                        "")
+                ]
+        };
+        var cancellationTokenSource = new CancellationTokenSource();
+
+        _mockEncryptedCloudStorageProvider.Setup(x => x.GetEncryptedObjectAsync(
+            It.Is<string>(y => y == $"{info.Id}/info.json"),
+            It.Is<string>(y => y == base64Key),
+            It.Is<CancellationToken>(y => y == cancellationTokenSource.Token)))
+            .Returns(async (string key, string base64EncryptionKey, CancellationToken ct) =>
+            {
+                var output = new MemoryStream();
+                await JsonSerializer.SerializeAsync(output, info, JsonSerializerOptions, ct);
+                return output;
+            });
+
+        _mockEncryptedCloudStorageProvider.Setup(x => x.GetEncryptedObjectAsync(
+            It.Is<string>(y => y == $"{info.Id}/index.json"),
+            It.Is<string>(y => y == base64Key),
+            It.Is<CancellationToken>(y => y == cancellationTokenSource.Token)))
+            .Returns(async (string key, string base64EncryptionKey, CancellationToken ct) =>
+            {
+                await Task.Yield();
+                return null;
+            });
+
+        _mockCompressionService.Setup(x => x.DecompressAsync(
+            It.IsAny<Stream>(),
+            It.IsAny<Stream>(),
+            It.IsAny<CancellationToken>()))
+            .Callback(async (Stream input, Stream output, CancellationToken ct) =>
+            {
+                input.Seek(0, SeekOrigin.Begin);
+                await input.CopyToAsync(output, ct);
+                await output.FlushAsync(ct);
+            });
+
+        // Act & Assert
+        await Assert.ThrowsAnyAsync<FailedToLoadVaultIndexException>(async () =>
+        {
+            _ = await _sut.LoadAsync(
+                info.Id,
+                base64Key,
+                cancellationTokenSource.Token);
+        });
+        _mockEncryptedCloudStorageProvider.Verify(x => x.GetEncryptedObjectAsync(
+            It.Is<string>(y => y == $"{info.Id}/info.json"),
+            It.Is<string>(y => y == base64Key),
+            It.Is<CancellationToken>(y => y == cancellationTokenSource.Token)), Times.Once);
+        _mockEncryptedCloudStorageProvider.Verify(x => x.GetEncryptedObjectAsync(
+            It.Is<string>(y => y == $"{info.Id}/index.json"),
+            It.Is<string>(y => y == base64Key),
+            It.Is<CancellationToken>(y => y == cancellationTokenSource.Token)), Times.Once);
+    }
+
 
     [Fact]
     public async Task GivenVault_AndBase64Key_WhenDeleteAsync_ThenObjectsListed_AndObjectsDeleted()

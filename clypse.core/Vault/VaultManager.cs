@@ -188,9 +188,9 @@ public class VaultManager(
     }
 
     public async Task<VaultVerifyResults> VerifyAsync(
-    IVault vault,
-    string base64Key,
-    CancellationToken cancellationToken)
+        IVault vault,
+        string base64Key,
+        CancellationToken cancellationToken)
     {
         var results = new VaultVerifyResults();
         foreach (var index in vault.Index.Entries)
@@ -288,7 +288,7 @@ public class VaultManager(
             cancellationToken);
         if (index == null)
         {
-            throw new FailedToLoadVaultInfoException($"Failed to load Index for vault '{id}'.");
+            throw new FailedToLoadVaultIndexException($"Failed to load Index for vault '{id}'.");
         }
 
         return index!;
