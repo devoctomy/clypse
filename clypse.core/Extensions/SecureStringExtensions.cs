@@ -8,7 +8,7 @@ public static class SecureStringExtensions
 {
     public static byte[] ToUtf8Bytes(this SecureString secureString)
     {
-        if (secureString == null) throw new ArgumentNullException(nameof(secureString));
+        ArgumentNullException.ThrowIfNull(secureString);
 
         IntPtr bstr = IntPtr.Zero;
         try
