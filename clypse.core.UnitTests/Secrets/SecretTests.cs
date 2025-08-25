@@ -95,6 +95,27 @@ public class SecretTests
     }
 
     [Fact]
+    public void GivenSecret_AndExistingTag_WhenAddTag_ThenTagNotAdded_AndFalseReturned()
+    {
+        // Arrange
+        var sut = new Secret
+        {
+            Name = "Foobar",
+            Description = "Hello World!"
+        };
+        var tag = "apple";
+        sut.AddTag(tag);
+
+        // Act
+        var result = sut.AddTag(tag);
+
+        // Assert
+        Assert.False(result);
+        Assert.Single(sut.Tags);
+        Assert.Equal(tag, sut.Tags[0]);
+    }
+
+    [Fact]
     public void GivenSecretWithTag_WhenUpdateTags_ThenTagsReplaced()
     {
         // Arrange
