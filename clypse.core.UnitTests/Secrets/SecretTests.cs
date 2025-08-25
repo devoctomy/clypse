@@ -73,4 +73,67 @@ public class SecretTests
         var validator = new ClypseObjectValidator(sut);
         validator.Validate();
     }
+
+    [Fact]
+    public void GivenSecret_AndNewTag_WhenAddTag_ThenTagAdded_AndTrueReturned()
+    {
+        // Arrange
+        var sut = new Secret
+        {
+            Name = "Foobar",
+            Description = "Hello World!"
+        };
+        var tag = "apple";
+
+        // Act
+        var result = sut.AddTag(tag);
+
+        // Assert
+        Assert.True(result);
+        Assert.Single(sut.Tags);
+        Assert.Equal(tag, sut.Tags[0]);
+    }
+
+    [Fact]
+    public void GivenSecretWithTag_WhenUpdateTags_ThenTagsReplaced()
+    {
+        // Arrange
+        var sut = new Secret
+        {
+            Name = "Foobar",
+            Description = "Hello World!"
+        };
+        var tag = "apple";
+        sut.AddTag(tag);
+
+        var updateTags = new List<string>(["red", "green", "blue"]);
+
+        // Act
+        sut.UpdateTags(updateTags);
+
+        // Assert
+        Assert.Equal(updateTags.Count, sut.Tags.Count);
+        Assert.Equal(string.Join(',', updateTags), string.Join(',', sut.Tags));
+    }
+
+
+    [Fact]
+    public void GivenSecretWithTag_WhenClearTags_ThenTagsCleared()
+    {
+        // Arrange
+        var sut = new Secret
+        {
+            Name = "Foobar",
+            Description = "Hello World!"
+        };
+        var tag = "apple";
+        sut.AddTag(tag);
+
+
+        // Act
+        sut.ClearTags();
+
+        // Assert
+        Assert.Empty(sut.Tags);
+    }
 }

@@ -1,5 +1,4 @@
-﻿using Amazon.S3;
-using clypse.core.Cloud.Exceptions;
+﻿using clypse.core.Cloud.Exceptions;
 using clypse.core.Cloud.Interfaces;
 using clypse.core.Compression.Interfaces;
 using clypse.core.Secrets;
@@ -7,7 +6,6 @@ using clypse.core.Vault;
 using Moq;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using System.Threading;
 
 namespace clypse.core.UnitTests.Vault;
 
@@ -24,7 +22,7 @@ public class VaultManagerTests
 
     private readonly Mock<ICompressionService> _mockCompressionService;
     private readonly Mock<IEncryptedCloudStorageProvider> _mockEncryptedCloudStorageProvider;
-    private readonly IVaultManager _sut;
+    private readonly VaultManager _sut;
 
     public VaultManagerTests()
     {
