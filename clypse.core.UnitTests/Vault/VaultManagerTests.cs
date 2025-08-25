@@ -665,4 +665,112 @@ public class VaultManagerTests
         Assert.Equal(2, results.UnindexedSecrets.Count);
         Assert.DoesNotContain(entries, x => !results.UnindexedSecrets.Contains(x.Id));
     }
+
+    [Fact]
+    public async Task GivenVault_AndSecretId_AndBase64Key_WhenGetSecretAsync_Then()
+    {
+        // Arrange
+        var name = "Foobar";
+        var description = "Description of vault";
+        var base64Key = "super secret base64 encoded encryption key";
+        var vault = _sut.Create(name, description);
+        var secretId = "1";
+        var cancellationTokenSource = new CancellationTokenSource();
+
+        var retrievedSecret = new Secret
+        {
+            Id = secretId,
+            Name = name,
+            Description = description,
+        };
+
+        _mockEncryptedCloudStorageProvider.Setup(x => x.GetEncryptedObjectAsync(
+            It.Is<string>(y => y == $"{vault.Info.Id}/secrets/{secretId}"),
+            It.Is<string>(y => y == base64Key),
+            It.Is<CancellationToken>(y => y == cancellationTokenSource.Token)))
+            .ReturnsAsync(() =>
+            {
+                var stream = new MemoryStream();
+                JsonSerializer.Serialize(stream, retrievedSecret, JsonSerializerOptions);
+                return stream;
+            });
+
+        _mockCompressionService.Setup(x => x.DecompressAsync(
+            It.IsAny<Stream>(),
+            It.IsAny<Stream>(),
+            It.IsAny<CancellationToken>()))
+            .Callback(async (Stream input, Stream output, CancellationToken ct) =>
+            {
+                input.Seek(0, SeekOrigin.Begin);
+                await input.CopyToAsync(output, ct);
+                await output.FlushAsync(ct);
+            });
+
+        // Act
+        var secret = await _sut.GetSecretAsync(
+            vault,
+            secretId,
+            base64Key,
+            cancellationTokenSource.Token);
+
+        // Assert
+        Assert.NotNull(secret);
+        Assert.Equal(Enums.SecretType.None, secret.SecretType);
+        Assert.Equal(name, secret.Name);
+        Assert.Equal(description, secret.Description);
+    }
+
+    [Fact]
+    public async Task GivenVault_AndWebSecretId_AndBase64Key_WhenGetSecretAsync_Then()
+    {
+        // Arrange
+        var name = "Foobar";
+        var description = "Description of vault";
+        var base64Key = "super secret base64 encoded encryption key";
+        var vault = _sut.Create(name, description);
+        var secretId = "1";
+        var cancellationTokenSource = new CancellationTokenSource();
+
+        var retrievedSecret = new WebSecret
+        {
+            Id = secretId,
+            Name = name,
+            Description = description,
+        };
+
+        _mockEncryptedCloudStorageProvider.Setup(x => x.GetEncryptedObjectAsync(
+            It.Is<string>(y => y == $"{vault.Info.Id}/secrets/{secretId}"),
+            It.Is<string>(y => y == base64Key),
+            It.Is<CancellationToken>(y => y == cancellationTokenSource.Token)))
+            .ReturnsAsync(() =>
+            {
+                var stream = new MemoryStream();
+                JsonSerializer.Serialize(stream, retrievedSecret, JsonSerializerOptions);
+                return stream;
+            });
+
+        _mockCompressionService.Setup(x => x.DecompressAsync(
+            It.IsAny<Stream>(),
+            It.IsAny<Stream>(),
+            It.IsAny<CancellationToken>()))
+            .Callback(async (Stream input, Stream output, CancellationToken ct) =>
+            {
+                input.Seek(0, SeekOrigin.Begin);
+                await input.CopyToAsync(output, ct);
+                await output.FlushAsync(ct);
+            });
+
+        // Act
+        var secret = await _sut.GetSecretAsync(
+            vault,
+            secretId,
+            base64Key,
+            cancellationTokenSource.Token);
+
+        // Assert
+        Assert.NotNull(secret);
+        Assert.Equal(Enums.SecretType.Web, secret.SecretType);
+        Assert.Equal(name, secret.Name);
+        Assert.Equal(description, secret.Description);
+    }
 }
