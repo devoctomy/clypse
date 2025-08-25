@@ -1,4 +1,5 @@
 ﻿using Amazon.S3;
+using clypse.core.Cloud.Exceptions;
 using clypse.core.Cloud.Interfaces;
 using clypse.core.Compression.Interfaces;
 using clypse.core.Secrets;
@@ -245,6 +246,103 @@ public class VaultManagerTests
             It.Is<CancellationToken>(y => y == cancellationTokenSource.Token)), Times.Once);
         _mockEncryptedCloudStorageProvider.Verify(x => x.GetEncryptedObjectAsync(
             It.Is<string>(y => y == $"{info.Id}/index.json"),
+            It.Is<string>(y => y == base64Key),
+            It.Is<CancellationToken>(y => y == cancellationTokenSource.Token)), Times.Once);
+    }
+
+    [Fact]
+    public async Task GivenVault_AndBase64Key_WhenDeleteAsync_ThenObjectsListed_AndObjectsDeleted()
+    {
+        // Arrange
+        var name = "Foobar";
+        var description = "Description of vault";
+        var base64Key = "super secret base64 encoded encryption key";
+        var vault = _sut.Create(name, description);
+        var cancellationTokenSource = new CancellationTokenSource();
+        var objects = new List<string>(["1", "2"]);
+
+        _mockEncryptedCloudStorageProvider.Setup(x => x.ListObjectsAsync(
+            It.Is<string>(y => y == $"{vault.Info.Id}/"),
+            It.Is<CancellationToken>(y => y == cancellationTokenSource.Token)))
+        .ReturnsAsync(objects);
+
+        _mockEncryptedCloudStorageProvider.Setup(x => x.DeleteEncryptedObjectAsync(
+            It.Is<string>(y => y == $"1"),
+            It.Is<string>(y => y == base64Key),
+            It.Is<CancellationToken>(y => y == cancellationTokenSource.Token)))
+        .ReturnsAsync(true);
+
+        _mockEncryptedCloudStorageProvider.Setup(x => x.DeleteEncryptedObjectAsync(
+            It.Is<string>(y => y == $"2"),
+            It.Is<string>(y => y == base64Key),
+            It.Is<CancellationToken>(y => y == cancellationTokenSource.Token)))
+        .ReturnsAsync(true);
+
+        // Act
+        await _sut.DeleteAsync(
+            vault,
+            base64Key,
+            cancellationTokenSource.Token);
+
+        // Assert
+        _mockEncryptedCloudStorageProvider.Verify(x => x.ListObjectsAsync(
+            It.Is<string>(y => y == $"{vault.Info.Id}/"),
+            It.Is<CancellationToken>(y => y == cancellationTokenSource.Token)), Times.Once);
+        _mockEncryptedCloudStorageProvider.Verify(x => x.DeleteEncryptedObjectAsync(
+            It.Is<string>(y => y == $"1"),
+            It.Is<string>(y => y == base64Key),
+            It.Is<CancellationToken>(y => y == cancellationTokenSource.Token)), Times.Once);
+        _mockEncryptedCloudStorageProvider.Verify(x => x.DeleteEncryptedObjectAsync(
+            It.Is<string>(y => y == $"2"),
+            It.Is<string>(y => y == base64Key),
+            It.Is<CancellationToken>(y => y == cancellationTokenSource.Token)), Times.Once);
+    }
+
+    [Fact]
+    public async Task GivenVault_AndBase64Key_WhenDeleteAsync_ThenObjectsListed_AndObjectsDeleted_AndFailedToDeleteObject_ThenExceptionThrown()
+    {
+        // Arrange
+        var name = "Foobar";
+        var description = "Description of vault";
+        var base64Key = "super secret base64 encoded encryption key";
+        var vault = _sut.Create(name, description);
+        var cancellationTokenSource = new CancellationTokenSource();
+        var objects = new List<string>(["1", "2", "3"]);
+
+        _mockEncryptedCloudStorageProvider.Setup(x => x.ListObjectsAsync(
+            It.Is<string>(y => y == $"{vault.Info.Id}/"),
+            It.Is<CancellationToken>(y => y == cancellationTokenSource.Token)))
+        .ReturnsAsync(objects);
+
+        _mockEncryptedCloudStorageProvider.Setup(x => x.DeleteEncryptedObjectAsync(
+            It.Is<string>(y => y == $"1"),
+            It.Is<string>(y => y == base64Key),
+            It.Is<CancellationToken>(y => y == cancellationTokenSource.Token)))
+        .ReturnsAsync(true);
+
+        _mockEncryptedCloudStorageProvider.Setup(x => x.DeleteEncryptedObjectAsync(
+            It.Is<string>(y => y == $"2"),
+            It.Is<string>(y => y == base64Key),
+            It.Is<CancellationToken>(y => y == cancellationTokenSource.Token)))
+        .ReturnsAsync(true);
+
+        // Act & Assert
+        await Assert.ThrowsAnyAsync<CloudStorageProviderException>(async () =>
+        {
+            await _sut.DeleteAsync(
+                vault,
+                base64Key,
+                cancellationTokenSource.Token);
+        });
+        _mockEncryptedCloudStorageProvider.Verify(x => x.ListObjectsAsync(
+            It.Is<string>(y => y == $"{vault.Info.Id}/"),
+            It.Is<CancellationToken>(y => y == cancellationTokenSource.Token)), Times.Once);
+        _mockEncryptedCloudStorageProvider.Verify(x => x.DeleteEncryptedObjectAsync(
+            It.Is<string>(y => y == $"1"),
+            It.Is<string>(y => y == base64Key),
+            It.Is<CancellationToken>(y => y == cancellationTokenSource.Token)), Times.Once);
+        _mockEncryptedCloudStorageProvider.Verify(x => x.DeleteEncryptedObjectAsync(
+            It.Is<string>(y => y == $"2"),
             It.Is<string>(y => y == base64Key),
             It.Is<CancellationToken>(y => y == cancellationTokenSource.Token)), Times.Once);
     }
