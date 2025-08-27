@@ -107,6 +107,16 @@ public class AwsCloudStorageProviderBase : ICloudStorageProvider
             cancellationToken);
     }
 
+    public async Task<List<string>> ListObjectsAsync(
+    string prefix,
+    CancellationToken cancellationToken)
+    {
+        return await ListObjectsAsync(
+            prefix,
+            null,
+            cancellationToken);
+    }
+
     protected async Task<List<string>> ListObjectsAsync(
         string prefix,
         Action<ListObjectsV2Request>? BeforeListObjectsV2Async,
@@ -137,16 +147,6 @@ public class AwsCloudStorageProviderBase : ICloudStorageProvider
         {
             throw new CloudStorageProviderException($"Failed to list objects with prefix '{prefix}'.", ex);
         }
-    }
-
-    public async Task<List<string>> ListObjectsAsync(
-        string prefix,
-        CancellationToken cancellationToken)
-    {
-        return await ListObjectsAsync(
-            prefix,
-            null,
-            cancellationToken);
     }
 
     protected async Task<bool> PutObjectAsync(

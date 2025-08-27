@@ -208,4 +208,44 @@ public class AwsCloudStorageProviderBaseTests
                 cancellationTokenSource.Token);
         });
     }
+
+    [Fact]
+    public async Task GivenBucketName_AndPrefix_WhenListObjectsAsync_ThenListObjectsV2Async_AndCallbackInvoked_AndObjectKeysReturned()
+    {
+        // Arrange
+        var bucketName = "Foo";
+        var mockAmazonS3Client = new Mock<IAmazonS3Client>();
+        var sut = new AwsCloudStorageProviderBase(bucketName, mockAmazonS3Client.Object);
+
+        var prefix = "Bar/";
+        var cancellationTokenSource = new CancellationTokenSource();
+
+        // Setup the mock to return a list of objects
+        var listObjectsResponse = new ListObjectsV2Response
+        {
+            S3Objects = new List<S3Object>
+            {
+                new S3Object { Key = "Bar/file1.txt" },
+                new S3Object { Key = "Bar/file2.txt" },
+                new S3Object { Key = "Bar/subfolder/file3.txt" }
+            },
+            IsTruncated = false
+        };
+
+        mockAmazonS3Client.Setup(x => x.ListObjectsV2Async(
+            It.IsAny<ListObjectsV2Request>(),
+            It.Is<CancellationToken>(y => y == cancellationTokenSource.Token)))
+            .ReturnsAsync(listObjectsResponse);
+
+        // Act
+        var result = await sut.ListObjectsAsync(
+            prefix,
+            cancellationTokenSource.Token);
+
+        // Assert  
+        Assert.Equal(3, result.Count);
+        Assert.Contains("Bar/file1.txt", result);
+        Assert.Contains("Bar/file2.txt", result);
+        Assert.Contains("Bar/subfolder/file3.txt", result);
+    }
 }
