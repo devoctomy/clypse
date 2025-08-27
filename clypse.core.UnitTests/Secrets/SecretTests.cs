@@ -24,7 +24,7 @@ public class SecretTests
         var sut = new Secret();
 
         // Act
-        var jsonRaw = JsonSerializer.Serialize(sut, jsonSerializerOptions);
+        var jsonRaw = JsonSerializer.Serialize(sut, this.jsonSerializerOptions);
         using JsonDocument doc = JsonDocument.Parse(jsonRaw);
 
         // Assert
@@ -56,7 +56,7 @@ public class SecretTests
         };
 
         // Act
-        var jsonRaw = JsonSerializer.Serialize(sut, jsonSerializerOptions);
+        var jsonRaw = JsonSerializer.Serialize(sut, this.jsonSerializerOptions);
         using JsonDocument doc = JsonDocument.Parse(jsonRaw);
 
         // Assert

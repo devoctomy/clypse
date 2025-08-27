@@ -61,7 +61,7 @@ public class AwsS3SseCCloudStorageProviderTests
         mockAmazonS3Client.Verify(
             x => x.GetObjectAsync(
             It.IsAny<GetObjectRequest>(),
-            It.IsAny<CancellationToken>()),Times.Once);
+            It.IsAny<CancellationToken>()), Times.Once);
         mockAmazonS3Client.Verify(
             x => x.DeleteObjectAsync(
             It.IsAny<DeleteObjectRequest>(),

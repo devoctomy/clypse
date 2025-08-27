@@ -6,7 +6,7 @@ namespace clypse.core.UnitTests.Cryptography;
 
 /// <summary>
 /// Cross-compatibility unit tests for AES-GCM ICryptoService implementations
-/// Tests that all specified implementations can encrypt/decrypt each other's data
+/// Tests that all specified implementations can encrypt/decrypt each other's data.
 /// </summary>
 public class AesGcmCompatibilityUnitTests
 {
@@ -15,10 +15,10 @@ public class AesGcmCompatibilityUnitTests
 
     // Define the AES-GCM implementations to test for compatibility
     private readonly string[] aesGcmServiceTypeNames =
-    {
+    [
         "clypse.core.Cryptogtaphy.NativeAesGcmCryptoService",
         "clypse.core.Cryptogtaphy.BouncyCastleAesGcmCryptoService",
-    };
+    ];
 
     public AesGcmCompatibilityUnitTests()
     {
@@ -93,7 +93,7 @@ public class AesGcmCompatibilityUnitTests
         // Act & Assert - Test every service encrypting and every other service decrypting
         for (int encryptorIndex = 0; encryptorIndex < this.cryptoServices.Count; encryptorIndex++)
         {
-            var (encryptorName, encryptorService) = this.cryptoServices[encryptorIndex];
+            var (_, encryptorService) = this.cryptoServices[encryptorIndex];
 
             // Encrypt with this service
             using var inputStream = new MemoryStream(largeData);
@@ -124,12 +124,12 @@ public class AesGcmCompatibilityUnitTests
     public async Task GivenAllAesGcmServices_WhenCrossTestingEmptyData_ThenAllCombinationsWork()
     {
         // Arrange
-        byte[] emptyData = Array.Empty<byte>();
+        byte[] emptyData = [];
 
         // Act & Assert - Test every service encrypting and every other service decrypting
         for (int encryptorIndex = 0; encryptorIndex < this.cryptoServices.Count; encryptorIndex++)
         {
-            var (encryptorName, encryptorService) = this.cryptoServices[encryptorIndex];
+            var (_, encryptorService) = this.cryptoServices[encryptorIndex];
 
             // Encrypt with this service
             using var inputStream = new MemoryStream(emptyData);
@@ -195,15 +195,14 @@ public class AesGcmCompatibilityUnitTests
     {
         var services = new List<(string Name, ICryptoService Service)>();
 
-        foreach (var typeName in aesGcmServiceTypeNames)
+        foreach (var typeName in this.aesGcmServiceTypeNames)
         {
             try
             {
                 var type = typeof(ICryptoService).Assembly.GetType(typeName);
                 if (type != null && typeof(ICryptoService).IsAssignableFrom(type))
                 {
-                    var instance = Activator.CreateInstance(type) as ICryptoService;
-                    if (instance != null)
+                    if (Activator.CreateInstance(type) is ICryptoService instance)
                     {
                         var serviceName = type.Name;
                         services.Add((serviceName, instance));

@@ -23,19 +23,19 @@ public sealed class VaultStepDefinitions(TestContext testContext)
     [Given("aws access key loaded from environment variable")]
     public void AwsAccessKeyLoadedFromEnvironmentVariable()
     {
-        this.testContext.AwsAccessKey = Environment.GetEnvironmentVariable("CLYPSE_AWS_ACCESSKEY")!;
+        this.testContext.AwsAccessKey = Environment.GetEnvironmentVariable("CLYPSE_AWS_ACCESSKEY") !;
     }
 
     [Given("aws secret access key loaded from environment variable")]
     public void AwsSecretAccessKeyLoadedFromEnvironmentVariable()
     {
-        this.testContext.SecretAccessKey = Environment.GetEnvironmentVariable("CLYPSE_AWS_SECRETACCESSKEY")!;
+        this.testContext.SecretAccessKey = Environment.GetEnvironmentVariable("CLYPSE_AWS_SECRETACCESSKEY") !;
     }
 
     [Given("aws bucket name loaded from environment variable")]
     public void AwsBucketNameLoadedFromEnvironmentVariable()
     {
-        this.testContext.BucketName = Environment.GetEnvironmentVariable("CLYPSE_AWS_BUCKETNAME")!;
+        this.testContext.BucketName = Environment.GetEnvironmentVariable("CLYPSE_AWS_BUCKETNAME") !;
     }
 
     [Given("crypto service is initialised")]
@@ -43,7 +43,6 @@ public sealed class VaultStepDefinitions(TestContext testContext)
     {
         this.cryptoService = new NativeAesGcmCryptoService();
     }
-
 
     [Given("aws cloud service provider is initialised")]
     public void AwsCloudServiceProviderIsInitialised()

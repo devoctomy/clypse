@@ -56,7 +56,7 @@ public class GZipCompressionServiceTests
     public async Task GivenRepetitiveData_WhenCompressing_ThenDataIsSmallerThanOriginal()
     {
         // Arrange
-        string repetitiveText = new string('A', 10000); // 10KB of repeated 'A' characters
+        string repetitiveText = new ('A', 10000); // 10KB of repeated 'A' characters
         byte[] originalData = Encoding.UTF8.GetBytes(repetitiveText);
 
         using var inputStream = new MemoryStream(originalData);

@@ -11,9 +11,9 @@ public class NativeAesGcmCryptoServiceTests
 
     public NativeAesGcmCryptoServiceTests()
     {
-        sut = new NativeAesGcmCryptoService();
+        this.sut = new NativeAesGcmCryptoService();
         byte[] keyBytes = CryptoHelpers.GenerateRandomBytes(32);
-        testKey = Convert.ToBase64String(keyBytes);
+        this.testKey = Convert.ToBase64String(keyBytes);
     }
 
     [Fact]
@@ -28,9 +28,9 @@ public class NativeAesGcmCryptoServiceTests
         using var decryptedStream = new MemoryStream();
 
         // Act
-        await sut.EncryptAsync(inputStream, encryptedStream, testKey);
+        await this.sut.EncryptAsync(inputStream, encryptedStream, this.testKey);
         encryptedStream.Position = 0;
-        await sut.DecryptAsync(encryptedStream, decryptedStream, testKey);
+        await this.sut.DecryptAsync(encryptedStream, decryptedStream, this.testKey);
 
         // Assert
         string decryptedText = Encoding.UTF8.GetString(decryptedStream.ToArray());
@@ -50,11 +50,11 @@ public class NativeAesGcmCryptoServiceTests
         using var decryptedStream = new MemoryStream();
 
         // Assert
-        await sut.EncryptAsync(inputStream, encryptedStream, testKey);
+        await this.sut.EncryptAsync(inputStream, encryptedStream, this.testKey);
         encryptedStream.Position = 0;
         await Assert.ThrowsAnyAsync<CryptographicException>(async () =>
         {
-            await sut.DecryptAsync(encryptedStream, decryptedStream, Convert.ToBase64String(wrongKeyBytes));
+            await this.sut.DecryptAsync(encryptedStream, decryptedStream, Convert.ToBase64String(wrongKeyBytes));
         });
     }
 
@@ -68,9 +68,9 @@ public class NativeAesGcmCryptoServiceTests
         using var decryptedStream = new MemoryStream();
 
         // Act
-        await sut.EncryptAsync(inputStream, encryptedStream, testKey);
+        await this.sut.EncryptAsync(inputStream, encryptedStream, this.testKey);
         encryptedStream.Position = 0;
-        await sut.DecryptAsync(encryptedStream, decryptedStream, testKey);
+        await this.sut.DecryptAsync(encryptedStream, decryptedStream, this.testKey);
 
         // Assert
         Assert.Equal(largeData, decryptedStream.ToArray());
@@ -88,7 +88,7 @@ public class NativeAesGcmCryptoServiceTests
         using var decryptedStream = new MemoryStream();
 
         // Act
-        await sut.EncryptAsync(inputStream, encryptedStream, testKey);
+        await this.sut.EncryptAsync(inputStream, encryptedStream, this.testKey);
 
         byte[] tamperedData = encryptedStream.ToArray();
         if (tamperedData.Length > 30)
@@ -100,7 +100,7 @@ public class NativeAesGcmCryptoServiceTests
 
         // Assert
         await Assert.ThrowsAsync<AuthenticationTagMismatchException>(
-            async () => await sut.DecryptAsync(tamperedStream, decryptedStream, testKey));
+            async () => await this.sut.DecryptAsync(tamperedStream, decryptedStream, this.testKey));
     }
 
     [Theory]
@@ -113,7 +113,7 @@ public class NativeAesGcmCryptoServiceTests
 
         // Act & Assert
         await Assert.ThrowsAsync<ArgumentNullException>(
-            async () => await sut.EncryptAsync(inputStream, outputStream, invalidKey));
+            async () => await this.sut.EncryptAsync(inputStream, outputStream, invalidKey));
     }
 
     [Theory]
@@ -126,7 +126,7 @@ public class NativeAesGcmCryptoServiceTests
 
         // Act & Assert
         await Assert.ThrowsAsync<ArgumentException>(
-            async () => await sut.EncryptAsync(inputStream, outputStream, invalidKey));
+            async () => await this.sut.EncryptAsync(inputStream, outputStream, invalidKey));
     }
 
     [Theory]
@@ -139,7 +139,7 @@ public class NativeAesGcmCryptoServiceTests
 
         // Act & Assert
         await Assert.ThrowsAsync<ArgumentNullException>(
-            async () => await sut.DecryptAsync(inputStream, outputStream, invalidKey));
+            async () => await this.sut.DecryptAsync(inputStream, outputStream, invalidKey));
     }
 
     [Theory]
@@ -152,7 +152,7 @@ public class NativeAesGcmCryptoServiceTests
 
         // Act & Assert
         await Assert.ThrowsAsync<ArgumentException>(
-            async () => await sut.DecryptAsync(inputStream, outputStream, invalidKey));
+            async () => await this.sut.DecryptAsync(inputStream, outputStream, invalidKey));
     }
 
     [Fact]
@@ -165,7 +165,7 @@ public class NativeAesGcmCryptoServiceTests
 
         // Act & Assert
         var ex = await Assert.ThrowsAsync<InvalidOperationException>(
-            async () => await sut.DecryptAsync(inputStream, outputStream, testKey));
+            async () => await this.sut.DecryptAsync(inputStream, outputStream, this.testKey));
 
         Assert.Equal("Failed to read nonce from input stream. Expected 12 bytes but got 5.", ex.Message);
     }
@@ -179,7 +179,7 @@ public class NativeAesGcmCryptoServiceTests
 
         // Act & Assert
         var ex = await Assert.ThrowsAsync<InvalidOperationException>(
-            async () => await sut.DecryptAsync(inputStream, outputStream, testKey));
+            async () => await this.sut.DecryptAsync(inputStream, outputStream, this.testKey));
 
         Assert.Equal("Failed to read nonce from input stream. Expected 12 bytes but got 0.", ex.Message);
     }
@@ -195,7 +195,7 @@ public class NativeAesGcmCryptoServiceTests
 
         // Act & Assert
         var ex = await Assert.ThrowsAsync<InvalidOperationException>(
-            async () => await sut.DecryptAsync(inputStream, outputStream, testKey));
+            async () => await this.sut.DecryptAsync(inputStream, outputStream, this.testKey));
 
         Assert.Equal("Input data is too short to contain authentication tag.", ex.Message);
     }

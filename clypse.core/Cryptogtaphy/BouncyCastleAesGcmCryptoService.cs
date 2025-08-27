@@ -23,9 +23,9 @@ public class BouncyCastleAesGcmCryptoService : ICryptoService
     /// <param name="inputStream">Input stream to encrypt.</param>
     /// <param name="outputStream">Output stream to store cipher data.</param>
     /// <param name="base64Key">Base64 encoded AES key.</param>
-    /// <returns>Nothing</returns>
-    /// <exception cref="ArgumentNullException"></exception> 
-    /// <exception cref="ArgumentException"></exception> 
+    /// <returns>Nothing.</returns>
+    /// <exception cref="ArgumentNullException"></exception>
+    /// <exception cref="ArgumentException"></exception>
     public async Task EncryptAsync(
         Stream inputStream,
         Stream outputStream,
@@ -75,9 +75,9 @@ public class BouncyCastleAesGcmCryptoService : ICryptoService
     /// <param name="inputStream">Input stream to decrypt.</param>
     /// <param name="outputStream">Output stream to store plaintext data.</param>
     /// <param name="base64Key">Base64 encoded AES key.</param>
-    /// <returns>Nothing</returns>
-    /// <exception cref="ArgumentNullException"></exception> 
-    /// <exception cref="ArgumentException"></exception> 
+    /// <returns>Nothing.</returns>
+    /// <exception cref="ArgumentNullException"></exception>
+    /// <exception cref="ArgumentException"></exception>
     /// <exception cref="InvalidOperationException"></exception>
     public async Task DecryptAsync(
         Stream inputStream,
@@ -95,7 +95,7 @@ public class BouncyCastleAesGcmCryptoService : ICryptoService
 
         byte[] key = Convert.FromBase64String(base64Key);
         byte[] nonce = new byte[NonceSize];
-        int bytesRead = await inputStream.ReadAsync(nonce.AsMemory(0, NonceSize));        
+        int bytesRead = await inputStream.ReadAsync(nonce.AsMemory(0, NonceSize));
         if (bytesRead != NonceSize)
         {
             throw new InvalidOperationException($"Failed to read nonce from input stream. Expected {NonceSize} bytes but got {bytesRead}.");

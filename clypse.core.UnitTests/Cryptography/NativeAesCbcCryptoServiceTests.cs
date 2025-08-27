@@ -11,9 +11,9 @@ public class NativeAesCbcCryptoServiceTests : IDisposable
 
     public NativeAesCbcCryptoServiceTests()
     {
-        sut = new NativeAesCbcCryptoService();
+        this.sut = new NativeAesCbcCryptoService();
         byte[] keyBytes = CryptoHelpers.GenerateRandomBytes(32);
-        testKey = Convert.ToBase64String(keyBytes);
+        this.testKey = Convert.ToBase64String(keyBytes);
     }
 
     [Fact]
@@ -28,9 +28,9 @@ public class NativeAesCbcCryptoServiceTests : IDisposable
         using var decryptedStream = new MemoryStream();
 
         // Act
-        await sut.EncryptAsync(inputStream, encryptedStream, testKey);
+        await this.sut.EncryptAsync(inputStream, encryptedStream, this.testKey);
         encryptedStream.Position = 0;
-        await sut.DecryptAsync(encryptedStream, decryptedStream, testKey);
+        await this.sut.DecryptAsync(encryptedStream, decryptedStream, this.testKey);
 
         // Assert
         string decryptedText = Encoding.UTF8.GetString(decryptedStream.ToArray());
@@ -50,11 +50,11 @@ public class NativeAesCbcCryptoServiceTests : IDisposable
         using var decryptedStream = new MemoryStream();
 
         // Assert
-        await sut.EncryptAsync(inputStream, encryptedStream, testKey);
+        await this.sut.EncryptAsync(inputStream, encryptedStream, this.testKey);
         encryptedStream.Position = 0;
         await Assert.ThrowsAnyAsync<CryptographicException>(async () =>
         {
-            await sut.DecryptAsync(encryptedStream, decryptedStream, Convert.ToBase64String(wrongKeyBytes));
+            await this.sut.DecryptAsync(encryptedStream, decryptedStream, Convert.ToBase64String(wrongKeyBytes));
         });
     }
 
@@ -68,9 +68,9 @@ public class NativeAesCbcCryptoServiceTests : IDisposable
         using var decryptedStream = new MemoryStream();
 
         // Act
-        await sut.EncryptAsync(inputStream, encryptedStream, testKey);
+        await this.sut.EncryptAsync(inputStream, encryptedStream, this.testKey);
         encryptedStream.Position = 0;
-        await sut.DecryptAsync(encryptedStream, decryptedStream, testKey);
+        await this.sut.DecryptAsync(encryptedStream, decryptedStream, this.testKey);
 
         // Assert
         Assert.Equal(largeData, decryptedStream.ToArray());
@@ -86,7 +86,7 @@ public class NativeAesCbcCryptoServiceTests : IDisposable
 
         // Act & Assert
         await Assert.ThrowsAsync<ArgumentNullException>(
-            async () => await sut.EncryptAsync(inputStream, outputStream, invalidKey));
+            async () => await this.sut.EncryptAsync(inputStream, outputStream, invalidKey));
     }
 
     [Theory]
@@ -99,7 +99,7 @@ public class NativeAesCbcCryptoServiceTests : IDisposable
 
         // Act & Assert
         await Assert.ThrowsAsync<ArgumentException>(
-            async () => await sut.EncryptAsync(inputStream, outputStream, invalidKey));
+            async () => await this.sut.EncryptAsync(inputStream, outputStream, invalidKey));
     }
 
     [Theory]
@@ -112,7 +112,7 @@ public class NativeAesCbcCryptoServiceTests : IDisposable
 
         // Act & Assert
         await Assert.ThrowsAsync<ArgumentNullException>(
-            async () => await sut.DecryptAsync(inputStream, outputStream, invalidKey));
+            async () => await this.sut.DecryptAsync(inputStream, outputStream, invalidKey));
     }
 
     [Theory]
@@ -125,7 +125,7 @@ public class NativeAesCbcCryptoServiceTests : IDisposable
 
         // Act & Assert
         await Assert.ThrowsAsync<ArgumentException>(
-            async () => await sut.DecryptAsync(inputStream, outputStream, invalidKey));
+            async () => await this.sut.DecryptAsync(inputStream, outputStream, invalidKey));
     }
 
     [Fact]
@@ -138,7 +138,7 @@ public class NativeAesCbcCryptoServiceTests : IDisposable
 
         // Act & Assert
         var ex = await Assert.ThrowsAsync<InvalidOperationException>(
-            async () => await sut.DecryptAsync(inputStream, outputStream, testKey));
+            async () => await this.sut.DecryptAsync(inputStream, outputStream, this.testKey));
 
         Assert.Equal("Failed to read IV from input stream. Expected 16 bytes but got 5.", ex.Message);
     }
@@ -152,7 +152,7 @@ public class NativeAesCbcCryptoServiceTests : IDisposable
 
         // Act & Assert
         var ex = await Assert.ThrowsAsync<InvalidOperationException>(
-            async () => await sut.DecryptAsync(inputStream, outputStream, testKey));
+            async () => await this.sut.DecryptAsync(inputStream, outputStream, this.testKey));
 
         Assert.Equal("Failed to read IV from input stream. Expected 16 bytes but got 0.", ex.Message);
     }
@@ -160,6 +160,6 @@ public class NativeAesCbcCryptoServiceTests : IDisposable
     public void Dispose()
     {
         GC.SuppressFinalize(this);
-        sut.Dispose();
+        this.sut.Dispose();
     }
 }

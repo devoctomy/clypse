@@ -10,7 +10,8 @@ namespace clypse.core.Vault;
 
 public class VaultManager(
     ICompressionService compressionService,
-    IEncryptedCloudStorageProvider encryptedCloudStorageProvider) : IVaultManager
+    IEncryptedCloudStorageProvider encryptedCloudStorageProvider)
+    : IVaultManager
 {
     private readonly JsonSerializerOptions jsonSerializerOptions = new ()
     {
@@ -63,8 +64,7 @@ public class VaultManager(
                     secret.Id,
                     secret.Name!,
                     secret.Description,
-                    string.Join(',', secret.Tags))
-            );
+                    string.Join(',', secret.Tags)));
             await this.SaveObjectAsync(
                 secret,
                 vault.Info.Id,

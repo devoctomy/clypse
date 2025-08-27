@@ -33,7 +33,6 @@ public class VaultTests
             info,
             index);
 
-
         // Act & Assert
         Assert.True(vault.IsDirty);
         vault.MakeClean();

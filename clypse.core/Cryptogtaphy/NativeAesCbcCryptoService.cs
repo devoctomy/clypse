@@ -5,7 +5,7 @@ namespace clypse.core.Cryptogtaphy;
 
 /// <summary>
 /// Implementation of ICryptoService using AES encryption in CBC mode
-/// Stream format: [IV][encrypted data]
+/// Stream format: [IV][encrypted data].
 /// </summary>
 public class NativeAesCbcCryptoService : ICryptoService, IDisposable
 {
@@ -14,7 +14,7 @@ public class NativeAesCbcCryptoService : ICryptoService, IDisposable
     private bool disposed;
 
     /// <summary>
-    /// Initializes a new instance of AesCbcCryptoService
+    /// Initializes a new instance of AesCbcCryptoService.
     /// </summary>
     public NativeAesCbcCryptoService()
     {
@@ -29,7 +29,7 @@ public class NativeAesCbcCryptoService : ICryptoService, IDisposable
     /// <param name="inputStream">Input stream to encrypt.</param>
     /// <param name="outputStream">Output stream to store cipher data.</param>
     /// <param name="base64Key">Base64 encoded AES key.</param>
-    /// <returns>Nothing</returns>
+    /// <returns>Nothing.</returns>
     /// <exception cref="ArgumentNullException"></exception>
     /// <exception cref="ArgumentException"></exception>
     public async Task EncryptAsync(
@@ -59,7 +59,7 @@ public class NativeAesCbcCryptoService : ICryptoService, IDisposable
     /// <param name="inputStream">Input stream to decrypt.</param>
     /// <param name="outputStream">Output stream to store plaintext data.</param>
     /// <param name="base64Key">Base64 encoded AES key.</param>
-    /// <returns>Nothing</returns>
+    /// <returns>Nothing.</returns>
     /// <exception cref="ArgumentNullException"></exception>
     /// <exception cref="ArgumentException"></exception>
     /// <exception cref="InvalidOperationException"></exception>
@@ -91,7 +91,7 @@ public class NativeAesCbcCryptoService : ICryptoService, IDisposable
     }
 
     /// <summary>
-    /// Disposes the resources used by this instance
+    /// Disposes the resources used by this instance.
     /// </summary>
     public void Dispose()
     {
@@ -100,9 +100,9 @@ public class NativeAesCbcCryptoService : ICryptoService, IDisposable
     }
 
     /// <summary>
-    /// Disposes the resources used by this instance
+    /// Disposes the resources used by this instance.
     /// </summary>
-    /// <param name="disposing">True if disposing managed resources</param>
+    /// <param name="disposing">True if disposing managed resources.</param>
     protected virtual void Dispose(bool disposing)
     {
         if (this.disposed)
