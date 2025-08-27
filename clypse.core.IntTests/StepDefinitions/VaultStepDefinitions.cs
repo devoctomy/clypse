@@ -23,58 +23,58 @@ public sealed class VaultStepDefinitions(TestContext testContext)
     [Given("aws access key loaded from environment variable")]
     public void AwsAccessKeyLoadedFromEnvironmentVariable()
     {
-        testContext.AwsAccessKey = Environment.GetEnvironmentVariable("CLYPSE_AWS_ACCESSKEY")!;
+        this.testContext.AwsAccessKey = Environment.GetEnvironmentVariable("CLYPSE_AWS_ACCESSKEY")!;
     }
 
     [Given("aws secret access key loaded from environment variable")]
     public void AwsSecretAccessKeyLoadedFromEnvironmentVariable()
     {
-        testContext.SecretAccessKey = Environment.GetEnvironmentVariable("CLYPSE_AWS_SECRETACCESSKEY")!;
+        this.testContext.SecretAccessKey = Environment.GetEnvironmentVariable("CLYPSE_AWS_SECRETACCESSKEY")!;
     }
 
     [Given("aws bucket name loaded from environment variable")]
     public void AwsBucketNameLoadedFromEnvironmentVariable()
     {
-        testContext.BucketName = Environment.GetEnvironmentVariable("CLYPSE_AWS_BUCKETNAME")!;
+        this.testContext.BucketName = Environment.GetEnvironmentVariable("CLYPSE_AWS_BUCKETNAME")!;
     }
 
     [Given("crypto service is initialised")]
     public void GivenCryptoServiceIsInitialised()
     {
-        cryptoService = new NativeAesGcmCryptoService();
+        this.cryptoService = new NativeAesGcmCryptoService();
     }
 
 
     [Given("aws cloud service provider is initialised")]
     public void AwsCloudServiceProviderIsInitialised()
     {
-        encryptedCloudStorageProvider = new AwsS3E2eCloudStorageProvider(
-            testContext.BucketName!,
+        this.encryptedCloudStorageProvider = new AwsS3E2eCloudStorageProvider(
+            this.testContext.BucketName!,
             new AmazonS3ClientWrapper(
-                testContext.AwsAccessKey!,
-                testContext.SecretAccessKey!,
+                this.testContext.AwsAccessKey!,
+                this.testContext.SecretAccessKey!,
                 Amazon.RegionEndpoint.EUWest2),
-            cryptoService!);
+            this.cryptoService!);
     }
 
     [Given("compression service is initialised")]
     public void GivenCompressionServiceIsInitialised()
     {
-        compressionService = new GZipCompressionService();
+        this.compressionService = new GZipCompressionService();
     }
 
     [Given("vault manager is initialised")]
     public void GivenVaultManagerIsInitialised()
     {
-        vaultManager = new VaultManager(
-            compressionService!,
-            encryptedCloudStorageProvider!);
+        this.vaultManager = new VaultManager(
+            this.compressionService!,
+            this.encryptedCloudStorageProvider!);
     }
 
     [Given("create a new vault")]
     public void CreateANewVault()
     {
-        testContext.Vault = vaultManager!.Create(
+        this.testContext.Vault = this.vaultManager!.Create(
             "TestVault",
             "This is a test vault, made during clypse integration testing.");
     }
@@ -90,8 +90,8 @@ public sealed class VaultStepDefinitions(TestContext testContext)
 
         var key = await CryptoHelpers.DeriveKeyFromPassphraseAsync(
             secureString,
-            testContext.Vault!.Info.Base64Salt);
-        testContext.Base64Key = Convert.ToBase64String(key);
+            this.testContext.Vault!.Info.Base64Salt);
+        this.testContext.Base64Key = Convert.ToBase64String(key);
     }
 
     [Given("web secrets are added")]
@@ -110,99 +110,99 @@ public sealed class VaultStepDefinitions(TestContext testContext)
                 UserName = userName,
                 Password = password,
             };
-            testContext.Vault!.AddSecret(webSecret);
+            this.testContext.Vault!.AddSecret(webSecret);
 
-            testContext.AddedSecrets.Add(webSecret.Id, webSecret);
+            this.testContext.AddedSecrets.Add(webSecret.Id, webSecret);
         }
     }
 
     [StepDefinition("vault is saved")]
     public async Task VaultIsSaved()
     {
-        testContext.SaveResults = await vaultManager!.SaveAsync(
-            testContext.Vault!,
-            testContext.Base64Key!,
+        this.testContext.SaveResults = await this.vaultManager!.SaveAsync(
+            this.testContext.Vault!,
+            this.testContext.Base64Key!,
             CancellationToken.None);
     }
 
     [Then("vault is verified")]
     public async Task ThenVaultIsVerified()
     {
-        testContext.VerifyResults = await vaultManager!.VerifyAsync(
-            testContext.Vault!,
-            testContext.Base64Key!,
+        this.testContext.VerifyResults = await this.vaultManager!.VerifyAsync(
+            this.testContext.Vault!,
+            this.testContext.Base64Key!,
             CancellationToken.None);
     }
 
     [StepDefinition("save results successful")]
     public void SaveResultsSuccessful()
     {
-        Assert.True(testContext.SaveResults!.Success);
+        Assert.True(this.testContext.SaveResults!.Success);
     }
 
     [StepDefinition("save results report (.*) secrets created")]
     public void SaveResultsReportSecretsCreated(int created)
     {
-        Assert.Equal(created, testContext.SaveResults!.SecretsCreated);
+        Assert.Equal(created, this.testContext.SaveResults!.SecretsCreated);
     }
 
     [StepDefinition("save results report (.*) secrets updated")]
     public void SaveResultsReportSecretsUpdated(int updated)
     {
-        Assert.Equal(updated, testContext.SaveResults!.SecretsUpdated);
+        Assert.Equal(updated, this.testContext.SaveResults!.SecretsUpdated);
     }
 
     [StepDefinition("save results report (.*) secrets deleted")]
     public void SaveResultsReportSecretsDeleted(int deleted)
     {
-        Assert.Equal(deleted, testContext.SaveResults!.SecretsDeleted);
+        Assert.Equal(deleted, this.testContext.SaveResults!.SecretsDeleted);
     }
 
     [StepDefinition("verify results successful")]
     public void VerifyResultsSuccessful()
     {
-        Assert.True(testContext.VerifyResults!.Success);
+        Assert.True(this.testContext.VerifyResults!.Success);
     }
 
     [StepDefinition("verify results valid")]
     public void VerifyResultsValid()
     {
-        Assert.Equal(0, testContext.VerifyResults!.MissingSecrets);
-        Assert.Equal(0, testContext.VerifyResults!.MismatchedSecrets);
-        Assert.Empty(testContext.VerifyResults!.UnindexedSecrets);
+        Assert.Equal(0, this.testContext.VerifyResults!.MissingSecrets);
+        Assert.Equal(0, this.testContext.VerifyResults!.MismatchedSecrets);
+        Assert.Empty(this.testContext.VerifyResults!.UnindexedSecrets);
     }
 
     [Then("vault deleted")]
     public async Task VaultDeleted()
     {
-        await vaultManager!.DeleteAsync(
-            testContext.Vault!,
-            testContext.Base64Key!,
+        await this.vaultManager!.DeleteAsync(
+            this.testContext.Vault!,
+            this.testContext.Base64Key!,
             CancellationToken.None);
     }
 
     [StepDefinition("vault is loaded")]
     public async Task VaultIsLoaded()
     {
-        testContext.Vault = await vaultManager!.LoadAsync(
-            testContext.Vault!.Info.Id,
-            testContext.Base64Key!,
+        this.testContext.Vault = await this.vaultManager!.LoadAsync(
+            this.testContext.Vault!.Info.Id,
+            this.testContext.Base64Key!,
             CancellationToken.None);
     }
 
     [StepDefinition("secret (.*) is loaded and matches added")]
     public async Task SecretSecretIsLoadedAndMatchesAdded(string secretName)
     {
-        var indexEntry = testContext.Vault!.Index.Entries.SingleOrDefault(x => x.Name == secretName);
+        var indexEntry = this.testContext.Vault!.Index.Entries.SingleOrDefault(x => x.Name == secretName);
         Assert.NotNull(indexEntry);
-        var secret = await vaultManager!.GetSecretAsync(
-            testContext.Vault,
+        var secret = await this.vaultManager!.GetSecretAsync(
+            this.testContext.Vault,
             indexEntry.Id,
-            testContext.Base64Key!,
+            this.testContext.Base64Key!,
             CancellationToken.None);
         Assert.NotNull(secret);
         var webSecret = WebSecret.FromSecret(secret);
-        var added = testContext.AddedSecrets.SingleOrDefault(x => x.Key == secret.Id);
+        var added = this.testContext.AddedSecrets.SingleOrDefault(x => x.Key == secret.Id);
         Assert.NotNull(added.Value);
         Assert.Equal(added.Value.UserName, webSecret.UserName);
         Assert.Equal(added.Value.Password, webSecret.Password);
@@ -213,16 +213,16 @@ public sealed class VaultStepDefinitions(TestContext testContext)
         string secretName,
         string password)
     {
-        var indexEntry = testContext.Vault!.Index.Entries.SingleOrDefault(x => x.Name == secretName);
+        var indexEntry = this.testContext.Vault!.Index.Entries.SingleOrDefault(x => x.Name == secretName);
         Assert.NotNull(indexEntry);
-        var secret = await vaultManager!.GetSecretAsync(
-            testContext.Vault,
+        var secret = await this.vaultManager!.GetSecretAsync(
+            this.testContext.Vault,
             indexEntry.Id,
-            testContext.Base64Key!,
+            this.testContext.Base64Key!,
             CancellationToken.None);
         Assert.NotNull(secret);
         var webSecret = WebSecret.FromSecret(secret);
-        var added = testContext.AddedSecrets.SingleOrDefault(x => x.Key == secret.Id);
+        var added = this.testContext.AddedSecrets.SingleOrDefault(x => x.Key == secret.Id);
         Assert.NotNull(added.Value);
         Assert.Equal(added.Value.UserName, webSecret.UserName);
         Assert.Equal(added.Value.Password, password);
@@ -231,34 +231,34 @@ public sealed class VaultStepDefinitions(TestContext testContext)
     [StepDefinition("secret (.*) does not exist")]
     public void SecretSecretDoesNotExist(string secretName)
     {
-        var indexEntry = testContext.Vault!.Index.Entries.SingleOrDefault(x => x.Name == secretName);
+        var indexEntry = this.testContext.Vault!.Index.Entries.SingleOrDefault(x => x.Name == secretName);
         Assert.Null(indexEntry);
     }
 
     [Then("secret (.*) is marked for deletion")]
     public void SecretSecretIsMarkedForDeletion(string secretName)
     {
-        var indexEntry = testContext.Vault!.Index.Entries.SingleOrDefault(x => x.Name == secretName);
+        var indexEntry = this.testContext.Vault!.Index.Entries.SingleOrDefault(x => x.Name == secretName);
         Assert.NotNull(indexEntry);
-        var deleted = testContext.Vault.DeleteSecret(indexEntry.Id);
+        var deleted = this.testContext.Vault.DeleteSecret(indexEntry.Id);
         Assert.True(deleted);
     }
 
     [StepDefinition("web secret (.*) password is updated to (.*)")]
     public async Task WebSecretSecretPasswordIsUpdatedToPassword(string secretName, string newPassword)
     {
-        var indexEntry = testContext.Vault!.Index.Entries.SingleOrDefault(x => x.Name == secretName);
+        var indexEntry = this.testContext.Vault!.Index.Entries.SingleOrDefault(x => x.Name == secretName);
         Assert.NotNull(indexEntry);
-        var existing = await vaultManager!.GetSecretAsync(
-            testContext.Vault,
+        var existing = await this.vaultManager!.GetSecretAsync(
+            this.testContext.Vault,
             indexEntry.Id,
-            testContext.Base64Key!,
+            this.testContext.Base64Key!,
             CancellationToken.None);
         Assert.NotNull(existing);
         var webSecret = WebSecret.FromSecret(existing);
         webSecret.Password = newPassword;
-        testContext.AddedSecrets.Remove(existing.Id);
-        testContext.AddedSecrets.Add(webSecret.Id, webSecret);
-        testContext.Vault.UpdateSecret(webSecret);
+        this.testContext.AddedSecrets.Remove(existing.Id);
+        this.testContext.AddedSecrets.Add(webSecret.Id, webSecret);
+        this.testContext.Vault.UpdateSecret(webSecret);
     }
 }

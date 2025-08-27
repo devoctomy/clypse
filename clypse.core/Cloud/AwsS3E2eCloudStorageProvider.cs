@@ -7,7 +7,7 @@ namespace clypse.core.Cloud;
 
 public class AwsS3E2eCloudStorageProvider : AwsCloudStorageProviderBase, IEncryptedCloudStorageProvider
 {
-    private readonly ICryptoService _cryptoService;
+    private readonly ICryptoService cryptoService;
 
     public AwsS3E2eCloudStorageProvider(
         string bucketName,
@@ -15,7 +15,7 @@ public class AwsS3E2eCloudStorageProvider : AwsCloudStorageProviderBase, IEncryp
         ICryptoService cryptoService)
         : base(bucketName, amazonS3Client)
     {
-        _cryptoService = cryptoService;
+        this.cryptoService = cryptoService;
     }
 
     public async Task<bool> DeleteEncryptedObjectAsync(
@@ -23,7 +23,7 @@ public class AwsS3E2eCloudStorageProvider : AwsCloudStorageProviderBase, IEncryp
         string base64EncryptionKey,
         CancellationToken cancellationToken)
     {
-        return await DeleteObjectAsync(
+        return await this.DeleteObjectAsync(
             key,
             null,
             null,
@@ -38,12 +38,12 @@ public class AwsS3E2eCloudStorageProvider : AwsCloudStorageProviderBase, IEncryp
         async Task<Stream> ProcessGetObjectResponse(GetObjectResponse response)
         {
             var decrypted = new MemoryStream();
-            await _cryptoService.DecryptAsync(response.ResponseStream, decrypted, base64EncryptionKey);
+            await this.cryptoService.DecryptAsync(response.ResponseStream, decrypted, base64EncryptionKey);
             decrypted.Seek(0, SeekOrigin.Begin);
             return decrypted;
         }
 
-        return await GetObjectAsync(
+        return await this.GetObjectAsync(
             key,
             null,
             ProcessGetObjectResponse,
@@ -54,7 +54,7 @@ public class AwsS3E2eCloudStorageProvider : AwsCloudStorageProviderBase, IEncryp
         string prefix,
         CancellationToken cancellationToken)
     {
-        return await ListObjectsAsync(
+        return await this.ListObjectsAsync(
             prefix,
             null,
             cancellationToken);
@@ -69,12 +69,12 @@ public class AwsS3E2eCloudStorageProvider : AwsCloudStorageProviderBase, IEncryp
         async Task BeforePutObjectAsync(PutObjectRequest request)
         {
             var encrypted = new MemoryStream();
-            await _cryptoService.EncryptAsync(data, encrypted, base64EncryptionKey);
+            await this.cryptoService.EncryptAsync(data, encrypted, base64EncryptionKey);
             encrypted.Seek(0, SeekOrigin.Begin);
             request.InputStream = encrypted;
         }
 
-        return await PutObjectAsync(
+        return await this.PutObjectAsync(
             key,
             data,
             BeforePutObjectAsync,

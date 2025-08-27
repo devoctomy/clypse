@@ -8,13 +8,13 @@ namespace clypse.core.UnitTests.Cryptography;
 /// Cross-compatibility unit tests for AES-GCM ICryptoService implementations
 /// Tests that all specified implementations can encrypt/decrypt each other's data
 /// </summary>
-public class AesGcmCompatibilityUnitTests : IDisposable
+public class AesGcmCompatibilityUnitTests
 {
-    private readonly string _testKey;
-    private readonly List<(string Name, ICryptoService Service)> _cryptoServices;
+    private readonly string testKey;
+    private readonly List<(string Name, ICryptoService Service)> cryptoServices;
 
     // Define the AES-GCM implementations to test for compatibility
-    private readonly string[] _aesGcmServiceTypeNames =
+    private readonly string[] aesGcmServiceTypeNames =
     {
         "clypse.core.Cryptogtaphy.NativeAesGcmCryptoService",
         "clypse.core.Cryptogtaphy.BouncyCastleAesGcmCryptoService",
@@ -23,19 +23,19 @@ public class AesGcmCompatibilityUnitTests : IDisposable
     public AesGcmCompatibilityUnitTests()
     {
         byte[] keyBytes = CryptoHelpers.GenerateRandomBytes(32);
-        _testKey = Convert.ToBase64String(keyBytes);
+        this.testKey = Convert.ToBase64String(keyBytes);
 
-        _cryptoServices = LoadCryptoServices();
+        this.cryptoServices = this.LoadCryptoServices();
     }
 
     [Fact]
     public void GivenServiceTypeNames_WhenLoadingServices_ThenAllExpectedServicesAreLoaded()
     {
         // Assert that we have the expected number of services loaded
-        Assert.True(_cryptoServices.Count >= 2, $"Expected at least 2 crypto services, but loaded {_cryptoServices.Count}");
+        Assert.True(this.cryptoServices.Count >= 2, $"Expected at least 2 crypto services, but loaded {this.cryptoServices.Count}");
 
         // Verify specific services are loaded
-        var serviceNames = _cryptoServices.Select(s => s.Name).ToList();
+        var serviceNames = this.cryptoServices.Select(s => s.Name).ToList();
         Assert.Contains("NativeAesGcmCryptoService", serviceNames);
         Assert.Contains("BouncyCastleAesGcmCryptoService", serviceNames);
     }
@@ -49,27 +49,27 @@ public class AesGcmCompatibilityUnitTests : IDisposable
         var testResults = new List<string>();
 
         // Act & Assert - Test every service encrypting and every other service decrypting
-        for (int encryptorIndex = 0; encryptorIndex < _cryptoServices.Count; encryptorIndex++)
+        for (int encryptorIndex = 0; encryptorIndex < this.cryptoServices.Count; encryptorIndex++)
         {
-            var (encryptorName, encryptorService) = _cryptoServices[encryptorIndex];
+            var (encryptorName, encryptorService) = this.cryptoServices[encryptorIndex];
 
             // Encrypt with this service
             using var inputStream = new MemoryStream(originalData);
             using var encryptedStream = new MemoryStream();
 
-            await encryptorService.EncryptAsync(inputStream, encryptedStream, _testKey);
+            await encryptorService.EncryptAsync(inputStream, encryptedStream, this.testKey);
             byte[] encryptedData = encryptedStream.ToArray();
 
             // Try to decrypt with every service (including itself)
-            for (int decryptorIndex = 0; decryptorIndex < _cryptoServices.Count; decryptorIndex++)
+            for (int decryptorIndex = 0; decryptorIndex < this.cryptoServices.Count; decryptorIndex++)
             {
-                var (decryptorName, decryptorService) = _cryptoServices[decryptorIndex];
+                var (decryptorName, decryptorService) = this.cryptoServices[decryptorIndex];
 
                 using var encryptedDataStream = new MemoryStream(encryptedData);
                 using var decryptedStream = new MemoryStream();
 
                 // Act
-                await decryptorService.DecryptAsync(encryptedDataStream, decryptedStream, _testKey);
+                await decryptorService.DecryptAsync(encryptedDataStream, decryptedStream, this.testKey);
 
                 // Assert
                 string decryptedText = Encoding.UTF8.GetString(decryptedStream.ToArray());
@@ -91,27 +91,27 @@ public class AesGcmCompatibilityUnitTests : IDisposable
         byte[] largeData = CryptoHelpers.GenerateRandomBytes(1024 * 100); // 100KB test data
 
         // Act & Assert - Test every service encrypting and every other service decrypting
-        for (int encryptorIndex = 0; encryptorIndex < _cryptoServices.Count; encryptorIndex++)
+        for (int encryptorIndex = 0; encryptorIndex < this.cryptoServices.Count; encryptorIndex++)
         {
-            var (encryptorName, encryptorService) = _cryptoServices[encryptorIndex];
+            var (encryptorName, encryptorService) = this.cryptoServices[encryptorIndex];
 
             // Encrypt with this service
             using var inputStream = new MemoryStream(largeData);
             using var encryptedStream = new MemoryStream();
 
-            await encryptorService.EncryptAsync(inputStream, encryptedStream, _testKey);
+            await encryptorService.EncryptAsync(inputStream, encryptedStream, this.testKey);
             byte[] encryptedData = encryptedStream.ToArray();
 
             // Try to decrypt with every service
-            for (int decryptorIndex = 0; decryptorIndex < _cryptoServices.Count; decryptorIndex++)
+            for (int decryptorIndex = 0; decryptorIndex < this.cryptoServices.Count; decryptorIndex++)
             {
-                var (decryptorName, decryptorService) = _cryptoServices[decryptorIndex];
+                var (decryptorName, decryptorService) = this.cryptoServices[decryptorIndex];
 
                 using var encryptedDataStream = new MemoryStream(encryptedData);
                 using var decryptedStream = new MemoryStream();
 
                 // Act
-                await decryptorService.DecryptAsync(encryptedDataStream, decryptedStream, _testKey);
+                await decryptorService.DecryptAsync(encryptedDataStream, decryptedStream, this.testKey);
 
                 // Assert
                 byte[] decryptedData = decryptedStream.ToArray();
@@ -127,27 +127,27 @@ public class AesGcmCompatibilityUnitTests : IDisposable
         byte[] emptyData = Array.Empty<byte>();
 
         // Act & Assert - Test every service encrypting and every other service decrypting
-        for (int encryptorIndex = 0; encryptorIndex < _cryptoServices.Count; encryptorIndex++)
+        for (int encryptorIndex = 0; encryptorIndex < this.cryptoServices.Count; encryptorIndex++)
         {
-            var (encryptorName, encryptorService) = _cryptoServices[encryptorIndex];
+            var (encryptorName, encryptorService) = this.cryptoServices[encryptorIndex];
 
             // Encrypt with this service
             using var inputStream = new MemoryStream(emptyData);
             using var encryptedStream = new MemoryStream();
 
-            await encryptorService.EncryptAsync(inputStream, encryptedStream, _testKey);
+            await encryptorService.EncryptAsync(inputStream, encryptedStream, this.testKey);
             byte[] encryptedData = encryptedStream.ToArray();
 
             // Try to decrypt with every service
-            for (int decryptorIndex = 0; decryptorIndex < _cryptoServices.Count; decryptorIndex++)
+            for (int decryptorIndex = 0; decryptorIndex < this.cryptoServices.Count; decryptorIndex++)
             {
-                var (decryptorName, decryptorService) = _cryptoServices[decryptorIndex];
+                var (decryptorName, decryptorService) = this.cryptoServices[decryptorIndex];
 
                 using var encryptedDataStream = new MemoryStream(encryptedData);
                 using var decryptedStream = new MemoryStream();
 
                 // Act
-                await decryptorService.DecryptAsync(encryptedDataStream, decryptedStream, _testKey);
+                await decryptorService.DecryptAsync(encryptedDataStream, decryptedStream, this.testKey);
 
                 // Assert
                 byte[] decryptedData = decryptedStream.ToArray();
@@ -166,21 +166,21 @@ public class AesGcmCompatibilityUnitTests : IDisposable
         string wrongKey = Convert.ToBase64String(wrongKeyBytes);
 
         // Act & Assert - Test every service encrypting and every other service failing to decrypt with wrong key
-        for (int encryptorIndex = 0; encryptorIndex < _cryptoServices.Count; encryptorIndex++)
+        for (int encryptorIndex = 0; encryptorIndex < this.cryptoServices.Count; encryptorIndex++)
         {
-            var (encryptorName, encryptorService) = _cryptoServices[encryptorIndex];
+            var (encryptorName, encryptorService) = this.cryptoServices[encryptorIndex];
 
             // Encrypt with correct key
             using var inputStream = new MemoryStream(testData);
             using var encryptedStream = new MemoryStream();
 
-            await encryptorService.EncryptAsync(inputStream, encryptedStream, _testKey);
+            await encryptorService.EncryptAsync(inputStream, encryptedStream, this.testKey);
             byte[] encryptedData = encryptedStream.ToArray();
 
             // Try to decrypt with wrong key using every service
-            for (int decryptorIndex = 0; decryptorIndex < _cryptoServices.Count; decryptorIndex++)
+            for (int decryptorIndex = 0; decryptorIndex < this.cryptoServices.Count; decryptorIndex++)
             {
-                var (decryptorName, decryptorService) = _cryptoServices[decryptorIndex];
+                var (decryptorName, decryptorService) = this.cryptoServices[decryptorIndex];
                 using var encryptedDataStream = new MemoryStream(encryptedData);
                 using var decryptedStream = new MemoryStream();
 
@@ -191,23 +191,11 @@ public class AesGcmCompatibilityUnitTests : IDisposable
         }
     }
 
-    public void Dispose()
-    {
-        GC.SuppressFinalize(this);
-        foreach (var (_, service) in _cryptoServices)
-        {
-            if (service is IDisposable disposableService)
-            {
-                disposableService.Dispose();
-            }
-        }
-    }
-
     private List<(string Name, ICryptoService Service)> LoadCryptoServices()
     {
         var services = new List<(string Name, ICryptoService Service)>();
 
-        foreach (var typeName in _aesGcmServiceTypeNames)
+        foreach (var typeName in aesGcmServiceTypeNames)
         {
             try
             {

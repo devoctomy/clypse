@@ -10,8 +10,8 @@ public class VaultIndex
 
     public VaultIndex()
     {
-        Entries = [];
-        CreatedAt = DateTime.UtcNow;
-        LastUpdatedAt = DateTime.UtcNow;
+        this.Entries = [];
+        this.CreatedAt = DateTime.UtcNow;
+        this.LastUpdatedAt = DateTime.UtcNow;
     }
 }

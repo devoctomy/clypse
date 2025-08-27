@@ -8,22 +8,22 @@ namespace clypse.core.Cloud;
 
 public class AwsCloudStorageProviderBase : ICloudStorageProvider
 {
-    private readonly string _bucketName;
-    private readonly IAmazonS3Client _amazonS3Client;
+    private readonly string bucketName;
+    private readonly IAmazonS3Client amazonS3Client;
 
     public AwsCloudStorageProviderBase(
         string bucketName,
         IAmazonS3Client amazonS3Client)
     {
-        _bucketName = bucketName;
-        _amazonS3Client = amazonS3Client;
+        this.bucketName = bucketName;
+        this.amazonS3Client = amazonS3Client;
     }
 
     public async Task<bool> DeleteObjectAsync(
         string key,
         CancellationToken cancellationToken)
     {
-        return await DeleteObjectAsync(
+        return await this.DeleteObjectAsync(
             key,
             null,
             null,
@@ -34,7 +34,7 @@ public class AwsCloudStorageProviderBase : ICloudStorageProvider
         string key,
         CancellationToken cancellationToken)
     {
-        return await GetObjectAsync(
+        return await this.GetObjectAsync(
             key,
             null,
             null,
@@ -42,10 +42,10 @@ public class AwsCloudStorageProviderBase : ICloudStorageProvider
     }
 
     public async Task<List<string>> ListObjectsAsync(
-    string prefix,
-    CancellationToken cancellationToken)
+        string prefix,
+        CancellationToken cancellationToken)
     {
-        return await ListObjectsAsync(
+        return await this.ListObjectsAsync(
             prefix,
             null,
             cancellationToken);
@@ -56,7 +56,7 @@ public class AwsCloudStorageProviderBase : ICloudStorageProvider
         Stream data,
         CancellationToken cancellationToken)
     {
-        return await PutObjectAsync(
+        return await this.PutObjectAsync(
             key,
             data,
             null,
@@ -71,14 +71,14 @@ public class AwsCloudStorageProviderBase : ICloudStorageProvider
     {
         var getObjectRequest = new GetObjectRequest
         {
-            BucketName = _bucketName,
+            BucketName = this.bucketName,
             Key = key,
         };
 
         try
         {
             beforeGetObjectAsync?.Invoke(getObjectRequest);
-            GetObjectResponse getObjectResponse = await _amazonS3Client.GetObjectAsync(getObjectRequest, cancellationToken);
+            GetObjectResponse getObjectResponse = await this.amazonS3Client.GetObjectAsync(getObjectRequest, cancellationToken);
             return processGetObjectResponse != null ? await processGetObjectResponse(getObjectResponse) : getObjectResponse.ResponseStream;
         }
         catch (AmazonS3Exception ex)
@@ -99,7 +99,7 @@ public class AwsCloudStorageProviderBase : ICloudStorageProvider
     {
         var listObjectsRequest = new ListObjectsV2Request
         {
-            BucketName = _bucketName,
+            BucketName = this.bucketName,
             Prefix = prefix,
             MaxKeys = 100,
         };
@@ -111,7 +111,7 @@ public class AwsCloudStorageProviderBase : ICloudStorageProvider
             do
             {
                 beforeListObjectsV2Async?.Invoke(listObjectsRequest);
-                listObjectsResponse = await _amazonS3Client.ListObjectsV2Async(listObjectsRequest, cancellationToken);
+                listObjectsResponse = await this.amazonS3Client.ListObjectsV2Async(listObjectsRequest, cancellationToken);
                 allKeys.AddRange(listObjectsResponse.S3Objects.Select(x => x.Key));
                 listObjectsRequest.ContinuationToken = listObjectsResponse.NextContinuationToken;
             }
@@ -133,7 +133,7 @@ public class AwsCloudStorageProviderBase : ICloudStorageProvider
     {
         var putObjectRequest = new PutObjectRequest
         {
-            BucketName = _bucketName,
+            BucketName = this.bucketName,
             Key = key,
             InputStream = data,
         };
@@ -141,8 +141,8 @@ public class AwsCloudStorageProviderBase : ICloudStorageProvider
         try
         {
             await (beforePutObjectAsync?.Invoke(putObjectRequest) ?? Task.CompletedTask);
-            await _amazonS3Client.PutObjectAsync(putObjectRequest, cancellationToken);
-            Console.WriteLine($"Successfully uploaded {key} to {_bucketName}.");
+            await this.amazonS3Client.PutObjectAsync(putObjectRequest, cancellationToken);
+            Console.WriteLine($"Successfully uploaded {key} to {this.bucketName}.");
             return true;
         }
         catch (AmazonS3Exception ex)
@@ -159,22 +159,22 @@ public class AwsCloudStorageProviderBase : ICloudStorageProvider
     {
         var getObjectMetadata = new GetObjectMetadataRequest
         {
-            BucketName = _bucketName,
+            BucketName = this.bucketName,
             Key = key,
         };
         var deleteRequest = new DeleteObjectRequest
         {
-            BucketName = _bucketName,
+            BucketName = this.bucketName,
             Key = key,
         };
 
         try
         {
             beforeGetObjectMetadataAsync?.Invoke(getObjectMetadata);
-            var getMetaDataResponse = await _amazonS3Client.GetObjectMetadataAsync(getObjectMetadata, cancellationToken);
+            var getMetaDataResponse = await this.amazonS3Client.GetObjectMetadataAsync(getObjectMetadata, cancellationToken);
 
             beforeDeleteObjectAsync?.Invoke(deleteRequest);
-            var deleteResponse = await _amazonS3Client.DeleteObjectAsync(deleteRequest, cancellationToken);
+            var deleteResponse = await this.amazonS3Client.DeleteObjectAsync(deleteRequest, cancellationToken);
             return true;
         }
         catch (AmazonS3Exception ex)

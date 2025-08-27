@@ -42,7 +42,7 @@ public class VaultManager(
             return results;
         }
 
-        await SaveInfoAsync(
+        await this.SaveInfoAsync(
             vault.Info,
             base64Key,
             cancellationToken);
@@ -58,14 +58,14 @@ public class VaultManager(
             }
 
             secret.LastUpdatedAt = DateTime.UtcNow;
-            vault.Index.Entries.Add(new VaultIndexEntry
-            (
-                secret.Id,
-                secret.Name!,
-                secret.Description,
-                string.Join(',', secret.Tags)
-            ));
-            await SaveObjectAsync(
+            vault.Index.Entries.Add(
+                new VaultIndexEntry(
+                    secret.Id,
+                    secret.Name!,
+                    secret.Description,
+                    string.Join(',', secret.Tags))
+            );
+            await this.SaveObjectAsync(
                 secret,
                 vault.Info.Id,
                 $"secrets/{secret.Id}",
@@ -91,7 +91,7 @@ public class VaultManager(
             }
 
             vault.Index.Entries.Remove(existing);
-            await DeleteSecretAsync(
+            await this.DeleteSecretAsync(
                 vault.Info.Id,
                 secret,
                 base64Key,
@@ -101,7 +101,7 @@ public class VaultManager(
         }
 
         vault.MakeClean();
-        await SaveIndexAsync(
+        await this.SaveIndexAsync(
             vault.Info,
             vault.Index,
             base64Key,
@@ -115,12 +115,12 @@ public class VaultManager(
         string base64Key,
         CancellationToken cancellationToken)
     {
-        var info = await LoadInfoAsync(
+        var info = await this.LoadInfoAsync(
             id,
             base64Key,
             cancellationToken);
 
-        var index = await LoadIndexAsync(
+        var index = await this.LoadIndexAsync(
             id,
             base64Key,
             cancellationToken);
@@ -159,7 +159,7 @@ public class VaultManager(
         string base64Key,
         CancellationToken cancellationToken)
     {
-        var secret = await LoadObjectAsync<Secret>(
+        var secret = await this.LoadObjectAsync<Secret>(
             vault.Info.Id,
             $"secrets/{secretId}",
             base64Key,
@@ -195,7 +195,7 @@ public class VaultManager(
         var results = new VaultVerifyResults();
         foreach (var index in vault.Index.Entries)
         {
-            var secret = await GetSecretAsync(
+            var secret = await this.GetSecretAsync(
                 vault,
                 index.Id,
                 base64Key,
@@ -237,7 +237,7 @@ public class VaultManager(
         string base64Key,
         CancellationToken cancellationToken)
     {
-        await SaveObjectAsync(
+        await this.SaveObjectAsync(
             vaultIndex,
             vaultInfo.Id,
             "index.json",
@@ -250,7 +250,7 @@ public class VaultManager(
         string base64Key,
         CancellationToken cancellationToken)
     {
-        await SaveObjectAsync(
+        await this.SaveObjectAsync(
             vaultInfo,
             vaultInfo.Id,
             "info.json",
@@ -263,7 +263,7 @@ public class VaultManager(
         string base64Key,
         CancellationToken cancellationToken)
     {
-        var info = await LoadObjectAsync<VaultInfo>(
+        var info = await this.LoadObjectAsync<VaultInfo>(
             id,
             "info.json",
             base64Key,
@@ -281,7 +281,7 @@ public class VaultManager(
         string base64Key,
         CancellationToken cancellationToken)
     {
-        var index = await LoadObjectAsync<VaultIndex>(
+        var index = await this.LoadObjectAsync<VaultIndex>(
             id,
             "index.json",
             base64Key,
@@ -306,7 +306,7 @@ public class VaultManager(
         await JsonSerializer.SerializeAsync(
             objectStream,
             obj,
-            jsonSerializerOptions,
+            this.jsonSerializerOptions,
             cancellationToken);
         objectStream.Seek(0, SeekOrigin.Begin);
 
@@ -349,7 +349,7 @@ public class VaultManager(
 
         var value = await JsonSerializer.DeserializeAsync<T>(
             decompressedStream,
-            jsonSerializerOptions,
+            this.jsonSerializerOptions,
             cancellationToken);
 
         return value!;

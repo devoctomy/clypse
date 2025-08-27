@@ -16,9 +16,9 @@ public class VaultIndexEntry
         string? description,
         string? tags)
     {
-        Id = id;
-        Name = name;
-        Description = description;
-        Tags = tags;
+        this.Id = id;
+        this.Name = name;
+        this.Description = description;
+        this.Tags = tags;
     }
 }

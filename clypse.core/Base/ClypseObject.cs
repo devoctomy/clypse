@@ -6,9 +6,9 @@ public class ClypseObject
 {
     public ClypseObject()
     {
-        Id = Guid.NewGuid().ToString();
-        CreatedAt = DateTime.UtcNow;
-        LastUpdatedAt = DateTime.UtcNow;
+        this.Id = Guid.NewGuid().ToString();
+        this.CreatedAt = DateTime.UtcNow;
+        this.LastUpdatedAt = DateTime.UtcNow;
     }
 
     [RequiredData]
@@ -17,12 +17,12 @@ public class ClypseObject
     {
         get
         {
-            return GetData(nameof(Id)) !;
+            return this.GetData(nameof(this.Id)) !;
         }
 
         set
         {
-            SetData(nameof(Id), value);
+            this.SetData(nameof(this.Id), value);
         }
     }
 
@@ -32,13 +32,13 @@ public class ClypseObject
     {
         get
         {
-            var value = GetData(nameof(CreatedAt));
+            var value = this.GetData(nameof(this.CreatedAt));
             return DateTime.ParseExact(value!, "dd-MM-yyyyTHH:mm:ss", System.Globalization.CultureInfo.InvariantCulture);
         }
 
         set
         {
-            SetData(nameof(CreatedAt), value.ToString("dd-MM-yyyyTHH:mm:ss"));
+            this.SetData(nameof(this.CreatedAt), value.ToString("dd-MM-yyyyTHH:mm:ss"));
         }
     }
 
@@ -48,13 +48,13 @@ public class ClypseObject
     {
         get
         {
-            var value = GetData(nameof(LastUpdatedAt));
+            var value = this.GetData(nameof(this.LastUpdatedAt));
             return DateTime.ParseExact(value!, "dd-MM-yyyyTHH:mm:ss", System.Globalization.CultureInfo.InvariantCulture);
         }
 
         set
         {
-            SetData(nameof(LastUpdatedAt), value.ToString("dd-MM-yyyyTHH:mm:ss"));
+            this.SetData(nameof(this.LastUpdatedAt), value.ToString("dd-MM-yyyyTHH:mm:ss"));
         }
     }
 
@@ -64,7 +64,7 @@ public class ClypseObject
     {
         ArgumentException.ThrowIfNullOrEmpty(key, nameof(key));
 
-        if (Data.TryGetValue(key, out var value))
+        if (this.Data.TryGetValue(key, out var value))
         {
             return value;
         }
@@ -77,18 +77,18 @@ public class ClypseObject
         ArgumentException.ThrowIfNullOrEmpty(key, nameof(key));
 
         if (string.IsNullOrEmpty(value) &&
-            Data.ContainsKey(key))
+            this.Data.ContainsKey(key))
         {
-            Data.Remove(key);
+            this.Data.Remove(key);
         }
         else
         {
-            Data[key] = value!;
+            this.Data[key] = value!;
         }
     }
 
     public void SetAllData(Dictionary<string, string> data)
     {
-        Data = data;
+        this.Data = data;
     }
 }

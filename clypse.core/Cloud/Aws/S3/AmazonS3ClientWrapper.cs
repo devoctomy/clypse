@@ -14,55 +14,55 @@ public class AmazonS3ClientWrapper : IAmazonS3Client
     private readonly AmazonS3Client client;
 
     public AmazonS3ClientWrapper(
-        string awsAccessKey,
-        string awsSecretAccessKey,
-        Amazon.RegionEndpoint awsRegionEndpoint)
+        string accessKey,
+        string secretAccessKey,
+        Amazon.RegionEndpoint regionEndpoint)
     {
-        accessKey = awsAccessKey;
-        secretAccessKey = awsSecretAccessKey;
-        regionEndpoint = awsRegionEndpoint;
-        client = new AmazonS3Client(CreateBasicAwsCredentials(), regionEndpoint);
+        this.accessKey = accessKey;
+        this.secretAccessKey = secretAccessKey;
+        this.regionEndpoint = regionEndpoint;
+        this.client = new AmazonS3Client(this.CreateBasicAwsCredentials(), regionEndpoint);
     }
 
     public async Task<DeleteObjectResponse> DeleteObjectAsync(
         DeleteObjectRequest request,
         CancellationToken cancellationToken)
     {
-        return await client.DeleteObjectAsync(request, cancellationToken);
+        return await this.client.DeleteObjectAsync(request, cancellationToken);
     }
 
     public async Task<GetObjectResponse> GetObjectAsync(
         GetObjectRequest request,
         CancellationToken cancellationToken)
     {
-        return await client.GetObjectAsync(request, cancellationToken);
+        return await this.client.GetObjectAsync(request, cancellationToken);
     }
 
     public async Task<GetObjectMetadataResponse> GetObjectMetadataAsync(
         GetObjectMetadataRequest request,
         CancellationToken cancellationToken)
     {
-        return await client.GetObjectMetadataAsync(request, cancellationToken);
+        return await this.client.GetObjectMetadataAsync(request, cancellationToken);
     }
 
     public async Task<ListObjectsV2Response> ListObjectsV2Async(
         ListObjectsV2Request request,
         CancellationToken cancellationToken)
     {
-        return await client.ListObjectsV2Async(request, cancellationToken);
+        return await this.client.ListObjectsV2Async(request, cancellationToken);
     }
 
     public async Task<PutObjectResponse> PutObjectAsync(
         PutObjectRequest request,
         CancellationToken cancellationToken)
     {
-        return await client.PutObjectAsync(request, cancellationToken);
+        return await this.client.PutObjectAsync(request, cancellationToken);
     }
 
     private BasicAWSCredentials CreateBasicAwsCredentials()
     {
         return new BasicAWSCredentials(
-            accessKey,
-            secretAccessKey);
+            this.accessKey,
+            this.secretAccessKey);
     }
 }

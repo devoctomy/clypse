@@ -11,6 +11,6 @@ public class ClypseObjectValidatorException : ClypseCoreException
         List<string> missingProperties)
         : base(message)
     {
-        MissingProperties = missingProperties;
+        this.MissingProperties = missingProperties;
     }
 }

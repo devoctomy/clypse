@@ -115,9 +115,9 @@ csharp_using_directive_placement = outside_namespace:warning
 
 # StyleCop Rules
 dotnet_diagnostic.SA1200.severity = none  # Using directives should be placed correctly
-dotnet_diagnostic.SA1101.severity = none  # Prefix local calls with this
 dotnet_diagnostic.SA1633.severity = none  # File should have header
 dotnet_diagnostic.SA1010.severity = none  # Opening square brackets should be spaced correctly
+dotnet_diagnostic.SA1600.severity = none  # Elements should be documented
 
 #### C# Formatting Rules ####
 

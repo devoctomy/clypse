@@ -18,9 +18,9 @@ public class NativeAesCbcCryptoService : ICryptoService, IDisposable
     /// </summary>
     public NativeAesCbcCryptoService()
     {
-        aes = Aes.Create();
-        aes.Mode = CipherMode.CBC;
-        aes.Padding = PaddingMode.PKCS7;
+        this.aes = Aes.Create();
+        this.aes.Mode = CipherMode.CBC;
+        this.aes.Padding = PaddingMode.PKCS7;
     }
 
     /// <summary>
@@ -42,12 +42,12 @@ public class NativeAesCbcCryptoService : ICryptoService, IDisposable
         ArgumentException.ThrowIfNullOrEmpty(base64Key, nameof(base64Key));
 
         byte[] key = Convert.FromBase64String(base64Key);
-        aes.Key = key;
-        aes.GenerateIV();
+        this.aes.Key = key;
+        this.aes.GenerateIV();
 
-        await outputStream.WriteAsync(aes.IV.AsMemory(0, aes.IV.Length));
+        await outputStream.WriteAsync(this.aes.IV.AsMemory(0, this.aes.IV.Length));
 
-        using var encryptor = aes.CreateEncryptor();
+        using var encryptor = this.aes.CreateEncryptor();
         using var cryptoStream = new CryptoStream(outputStream, encryptor, CryptoStreamMode.Write, leaveOpen: true);
         await inputStream.CopyToAsync(cryptoStream);
         await cryptoStream.FlushFinalBlockAsync();
@@ -73,7 +73,7 @@ public class NativeAesCbcCryptoService : ICryptoService, IDisposable
         ArgumentException.ThrowIfNullOrEmpty(base64Key, nameof(base64Key));
 
         byte[] key = Convert.FromBase64String(base64Key);
-        aes.Key = key;
+        this.aes.Key = key;
 
         byte[] iv = new byte[IvSize];
         int bytesRead = await inputStream.ReadAsync(iv.AsMemory(0, IvSize));
@@ -83,9 +83,9 @@ public class NativeAesCbcCryptoService : ICryptoService, IDisposable
             throw new InvalidOperationException($"Failed to read IV from input stream. Expected {IvSize} bytes but got {bytesRead}.");
         }
 
-        aes.IV = iv;
+        this.aes.IV = iv;
 
-        using var decryptor = aes.CreateDecryptor();
+        using var decryptor = this.aes.CreateDecryptor();
         using var cryptoStream = new CryptoStream(inputStream, decryptor, CryptoStreamMode.Read);
         await cryptoStream.CopyToAsync(outputStream);
     }
@@ -95,7 +95,7 @@ public class NativeAesCbcCryptoService : ICryptoService, IDisposable
     /// </summary>
     public void Dispose()
     {
-        Dispose(true);
+        this.Dispose(true);
         GC.SuppressFinalize(this);
     }
 
@@ -105,16 +105,16 @@ public class NativeAesCbcCryptoService : ICryptoService, IDisposable
     /// <param name="disposing">True if disposing managed resources</param>
     protected virtual void Dispose(bool disposing)
     {
-        if (disposed)
+        if (this.disposed)
         {
             return;
         }
 
         if (disposing)
         {
-            aes?.Dispose();
+            this.aes?.Dispose();
         }
 
-        disposed = true;
+        this.disposed = true;
     }
 }

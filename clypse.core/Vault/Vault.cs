@@ -12,29 +12,29 @@ public class Vault : IVault
 
     public VaultIndex Index { get; set; }
 
-    public IReadOnlyList<Secret> PendingSecrets => pendingSecrets;
+    public IReadOnlyList<Secret> PendingSecrets => this.pendingSecrets;
 
-    public IReadOnlyList<string> SecretsToDelete => secretsToDelete;
+    public IReadOnlyList<string> SecretsToDelete => this.secretsToDelete;
 
-    public bool IsDirty => isDirty;
+    public bool IsDirty => this.isDirty;
 
     public Vault(
         VaultInfo info,
         VaultIndex index)
     {
-        Info = info;
-        Index = index;
-        pendingSecrets = [];
-        secretsToDelete = [];
+        this.Info = info;
+        this.Index = index;
+        this.pendingSecrets = [];
+        this.secretsToDelete = [];
     }
 
     public bool AddSecret(Secret secret)
     {
-        var indexEntry = Index.Entries.SingleOrDefault(x => x.Id == secret.Id);
+        var indexEntry = this.Index.Entries.SingleOrDefault(x => x.Id == secret.Id);
         if (indexEntry == null)
         {
-            pendingSecrets.Add(secret);
-            isDirty = true;
+            this.pendingSecrets.Add(secret);
+            this.isDirty = true;
             return true;
         }
 
@@ -43,11 +43,11 @@ public class Vault : IVault
 
     public bool DeleteSecret(string secretId)
     {
-        var indexEntry = Index.Entries.SingleOrDefault(x => x.Id == secretId);
+        var indexEntry = this.Index.Entries.SingleOrDefault(x => x.Id == secretId);
         if (indexEntry != null)
         {
-            secretsToDelete.Add(secretId);
-            isDirty = true;
+            this.secretsToDelete.Add(secretId);
+            this.isDirty = true;
             return true;
         }
 
@@ -56,11 +56,11 @@ public class Vault : IVault
 
     public bool UpdateSecret(Secret secret)
     {
-        var existing = Index.Entries.SingleOrDefault(x => x.Id == secret.Id);
+        var existing = this.Index.Entries.SingleOrDefault(x => x.Id == secret.Id);
         if (existing != null)
         {
-            pendingSecrets.Add(secret);
-            isDirty = true;
+            this.pendingSecrets.Add(secret);
+            this.isDirty = true;
             return true;
         }
 
@@ -69,8 +69,8 @@ public class Vault : IVault
 
     public void MakeClean()
     {
-        pendingSecrets.Clear();
-        secretsToDelete.Clear();
-        isDirty = false;
+        this.pendingSecrets.Clear();
+        this.secretsToDelete.Clear();
+        this.isDirty = false;
     }
 }

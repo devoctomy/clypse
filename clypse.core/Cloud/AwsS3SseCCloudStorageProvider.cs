@@ -25,7 +25,7 @@ public class AwsS3SseCCloudStorageProvider : AwsCloudStorageProviderBase, IEncry
             request.ServerSideEncryptionCustomerProvidedKey = base64EncryptionKey;
         }
 
-        return await DeleteObjectAsync(
+        return await this.DeleteObjectAsync(
             key,
             BeforeGetObjectMetadataAsync,
             null,
@@ -48,7 +48,7 @@ public class AwsS3SseCCloudStorageProvider : AwsCloudStorageProviderBase, IEncry
             return Task.FromResult(response.ResponseStream);
         }
 
-        return await GetObjectAsync(
+        return await this.GetObjectAsync(
             key,
             BeforeGetObjectAsync,
             ProcessGetObjectResponse,
@@ -59,7 +59,7 @@ public class AwsS3SseCCloudStorageProvider : AwsCloudStorageProviderBase, IEncry
         string prefix,
         CancellationToken cancellationToken)
     {
-        return await ListObjectsAsync(
+        return await this.ListObjectsAsync(
             prefix,
             null,
             cancellationToken);
@@ -78,7 +78,7 @@ public class AwsS3SseCCloudStorageProvider : AwsCloudStorageProviderBase, IEncry
             return Task.CompletedTask;
         }
 
-        return await PutObjectAsync(
+        return await this.PutObjectAsync(
             key,
             data,
             BeforePutObjectAsync,

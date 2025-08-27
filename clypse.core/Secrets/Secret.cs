@@ -12,13 +12,13 @@ public class Secret : ClypseObject
     {
         get
         {
-            var secretType = GetData(nameof(SecretType));
+            var secretType = this.GetData(nameof(this.SecretType));
             return Enum.Parse<SecretType>(secretType!, true);
         }
 
         set
         {
-            SetData(nameof(SecretType), value.ToString());
+            this.SetData(nameof(this.SecretType), value.ToString());
         }
     }
 
@@ -26,15 +26,15 @@ public class Secret : ClypseObject
     [JsonIgnore]
     public string? Name
     {
-        get { return GetData(nameof(Name)); }
-        set { SetData(nameof(Name), value); }
+        get { return this.GetData(nameof(this.Name)); }
+        set { this.SetData(nameof(this.Name), value); }
     }
 
     [JsonIgnore]
     public string? Description
     {
-        get { return GetData(nameof(Description)); }
-        set { SetData(nameof(Description), value); }
+        get { return this.GetData(nameof(this.Description)); }
+        set { this.SetData(nameof(this.Description), value); }
     }
 
     [JsonIgnore]
@@ -42,7 +42,7 @@ public class Secret : ClypseObject
     {
         get
         {
-            var tags = GetData(nameof(Tags));
+            var tags = this.GetData(nameof(this.Tags));
             if (string.IsNullOrEmpty(tags))
             {
                 return [];
@@ -54,30 +54,30 @@ public class Secret : ClypseObject
 
     public Secret()
     {
-        SecretType = SecretType.None;
+        this.SecretType = SecretType.None;
     }
 
     public bool AddTag(string tag)
     {
-        var tags = Tags;
+        var tags = this.Tags;
         if (tags.Contains(tag))
         {
             return false;
         }
 
         tags.Add(tag);
-        UpdateTags(tags);
+        this.UpdateTags(tags);
         return true;
     }
 
     public void ClearTags()
     {
-        UpdateTags([]);
+        this.UpdateTags([]);
     }
 
     public void UpdateTags(List<string> tags)
     {
         var tagsCsv = string.Join(',', tags);
-        SetData(nameof(Tags), tagsCsv);
+        this.SetData(nameof(this.Tags), tagsCsv);
     }
 }

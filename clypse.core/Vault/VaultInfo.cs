@@ -18,11 +18,11 @@ public class VaultInfo
         string name,
         string description)
     {
-        Id = Guid.NewGuid().ToString();
-        Name = name;
-        Description = description;
+        this.Id = Guid.NewGuid().ToString();
+        this.Name = name;
+        this.Description = description;
 
-        var salt = CryptoHelpers.Sha256HashString(Id);
-        Base64Salt = Convert.ToBase64String(salt);
+        var salt = CryptoHelpers.Sha256HashString(this.Id);
+        this.Base64Salt = Convert.ToBase64String(salt);
     }
 }

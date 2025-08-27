@@ -22,7 +22,7 @@ public class ClypseObjectTests
         var sut = new ClypseObject();
 
         // Act
-        var jsonRaw = JsonSerializer.Serialize(sut, jsonSerializerOptions);
+        var jsonRaw = JsonSerializer.Serialize(sut, this.jsonSerializerOptions);
         using JsonDocument doc = JsonDocument.Parse(jsonRaw);
 
         // Assert
@@ -43,7 +43,7 @@ public class ClypseObjectTests
         var sut = new ClypseObject();
 
         // Act
-        var jsonRaw = JsonSerializer.Serialize(sut, jsonSerializerOptions);
+        var jsonRaw = JsonSerializer.Serialize(sut, this.jsonSerializerOptions);
         var sut2 = JsonSerializer.Deserialize<ClypseObject>(jsonRaw);
 
         // Assert

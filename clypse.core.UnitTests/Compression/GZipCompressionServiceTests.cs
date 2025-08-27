@@ -6,11 +6,11 @@ namespace clypse.core.UnitTests.Compression;
 
 public class GZipCompressionServiceTests
 {
-    private readonly GZipCompressionService _sut;
+    private readonly GZipCompressionService sut;
 
     public GZipCompressionServiceTests()
     {
-        _sut = new GZipCompressionService();
+        this.sut = new GZipCompressionService();
     }
 
     [Fact]
@@ -25,9 +25,9 @@ public class GZipCompressionServiceTests
         using var decompressedStream = new MemoryStream();
 
         // Act
-        await _sut.CompressAsync(inputStream, compressedStream, CancellationToken.None);
+        await this.sut.CompressAsync(inputStream, compressedStream, CancellationToken.None);
         compressedStream.Position = 0;
-        await _sut.DecompressAsync(compressedStream, decompressedStream, CancellationToken.None);
+        await this.sut.DecompressAsync(compressedStream, decompressedStream, CancellationToken.None);
 
         // Assert
         string decompressedText = Encoding.UTF8.GetString(decompressedStream.ToArray());
@@ -44,9 +44,9 @@ public class GZipCompressionServiceTests
         using var decompressedStream = new MemoryStream();
 
         // Act
-        await _sut.CompressAsync(inputStream, compressedStream, CancellationToken.None);
+        await this.sut.CompressAsync(inputStream, compressedStream, CancellationToken.None);
         compressedStream.Position = 0;
-        await _sut.DecompressAsync(compressedStream, decompressedStream, CancellationToken.None);
+        await this.sut.DecompressAsync(compressedStream, decompressedStream, CancellationToken.None);
 
         // Assert
         Assert.Equal(largeData, decompressedStream.ToArray());
@@ -63,7 +63,7 @@ public class GZipCompressionServiceTests
         using var compressedStream = new MemoryStream();
 
         // Act
-        await _sut.CompressAsync(inputStream, compressedStream, CancellationToken.None);
+        await this.sut.CompressAsync(inputStream, compressedStream, CancellationToken.None);
 
         // Assert
         Assert.True(
@@ -80,9 +80,9 @@ public class GZipCompressionServiceTests
         using var decompressedStream = new MemoryStream();
 
         // Act
-        await _sut.CompressAsync(inputStream, compressedStream, CancellationToken.None);
+        await this.sut.CompressAsync(inputStream, compressedStream, CancellationToken.None);
         compressedStream.Position = 0;
-        await _sut.DecompressAsync(compressedStream, decompressedStream, CancellationToken.None);
+        await this.sut.DecompressAsync(compressedStream, decompressedStream, CancellationToken.None);
 
         // Assert
         Assert.Equal(0, decompressedStream.Length);
@@ -98,7 +98,7 @@ public class GZipCompressionServiceTests
 
         // Act & Assert
         await Assert.ThrowsAsync<InvalidDataException>(
-            async () => await _sut.DecompressAsync(inputStream, outputStream, CancellationToken.None));
+            async () => await this.sut.DecompressAsync(inputStream, outputStream, CancellationToken.None));
     }
 
     [Fact]
@@ -109,7 +109,7 @@ public class GZipCompressionServiceTests
 
         // Act & Assert
         await Assert.ThrowsAsync<ArgumentNullException>(
-            async () => await _sut.CompressAsync(null!, outputStream, CancellationToken.None));
+            async () => await this.sut.CompressAsync(null!, outputStream, CancellationToken.None));
     }
 
     [Fact]
@@ -120,7 +120,7 @@ public class GZipCompressionServiceTests
 
         // Act & Assert
         await Assert.ThrowsAsync<ArgumentNullException>(
-            async () => await _sut.CompressAsync(inputStream, null!, CancellationToken.None));
+            async () => await this.sut.CompressAsync(inputStream, null!, CancellationToken.None));
     }
 
     [Fact]
@@ -131,7 +131,7 @@ public class GZipCompressionServiceTests
 
         // Act & Assert
         await Assert.ThrowsAsync<ArgumentNullException>(
-            async () => await _sut.DecompressAsync(null!, outputStream, CancellationToken.None));
+            async () => await this.sut.DecompressAsync(null!, outputStream, CancellationToken.None));
     }
 
     [Fact]
@@ -142,7 +142,7 @@ public class GZipCompressionServiceTests
 
         // Act & Assert
         await Assert.ThrowsAsync<ArgumentNullException>(
-            async () => await _sut.DecompressAsync(inputStream, null!, CancellationToken.None));
+            async () => await this.sut.DecompressAsync(inputStream, null!, CancellationToken.None));
     }
 
     [Fact]
@@ -157,9 +157,9 @@ public class GZipCompressionServiceTests
         using var decompressedStream = new MemoryStream();
 
         // Act
-        await _sut.CompressAsync(inputStream, compressedStream, CancellationToken.None);
+        await this.sut.CompressAsync(inputStream, compressedStream, CancellationToken.None);
         compressedStream.Position = 0;
-        await _sut.DecompressAsync(compressedStream, decompressedStream, CancellationToken.None);
+        await this.sut.DecompressAsync(compressedStream, decompressedStream, CancellationToken.None);
 
         // Assert
         Assert.Equal(binaryData, decompressedStream.ToArray());
