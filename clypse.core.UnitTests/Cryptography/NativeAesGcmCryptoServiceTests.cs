@@ -4,14 +4,14 @@ using clypse.core.Cryptogtaphy;
 
 namespace clypse.core.UnitTests.Cryptography;
 
-public class AesGcmCryptoServiceTests : IDisposable
+public class NativeAesGcmCryptoServiceTests : IDisposable
 {
-    private readonly AesGcmCryptoService _sut;
+    private readonly NativeAesGcmCryptoService _sut;
     private readonly string _testKey;
 
-    public AesGcmCryptoServiceTests()
+    public NativeAesGcmCryptoServiceTests()
     {
-        _sut = new AesGcmCryptoService();
+        _sut = new NativeAesGcmCryptoService();
         byte[] keyBytes = CryptoHelpers.GenerateRandomBytes(32);
         _testKey = Convert.ToBase64String(keyBytes);
     }

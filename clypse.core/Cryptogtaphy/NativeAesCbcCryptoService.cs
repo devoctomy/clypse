@@ -7,7 +7,7 @@ namespace clypse.core.Cryptogtaphy;
 /// Implementation of ICryptoService using AES encryption in CBC mode
 /// Stream format: [IV][encrypted data]
 /// </summary>
-public class AesCbcCryptoService : ICryptoService, IDisposable
+public class NativeAesCbcCryptoService : ICryptoService, IDisposable
 {
     private const int IvSize = 16;
     private readonly Aes _aes;
@@ -16,7 +16,7 @@ public class AesCbcCryptoService : ICryptoService, IDisposable
     /// <summary>
     /// Initializes a new instance of AesCbcCryptoService
     /// </summary>
-    public AesCbcCryptoService()
+    public NativeAesCbcCryptoService()
     {
         _aes = Aes.Create();
         _aes.Mode = CipherMode.CBC;

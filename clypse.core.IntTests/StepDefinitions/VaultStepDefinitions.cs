@@ -41,7 +41,7 @@ public sealed class VaultStepDefinitions(TestContext testContext)
     [Given("crypto service is initialised")]
     public void GivenCryptoServiceIsInitialised()
     {
-        _cryptoService = new AesGcmCryptoService();
+        _cryptoService = new NativeAesGcmCryptoService();
     }
 
 

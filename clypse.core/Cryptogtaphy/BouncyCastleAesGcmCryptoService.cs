@@ -1,13 +1,18 @@
 using System.Security.Cryptography;
 using clypse.core.Cryptogtaphy.Interfaces;
+using Org.BouncyCastle.Crypto;
+using Org.BouncyCastle.Crypto.Engines;
+using Org.BouncyCastle.Crypto.Modes;
+using Org.BouncyCastle.Crypto.Parameters;
 
 namespace clypse.core.Cryptogtaphy;
 
 /// <summary>
-/// Implementation of ICryptoService using AES-GCM encryption
+/// Implementation of ICryptoService using Bouncy Castle AES-GCM encryption
 /// Stream format: [nonce][ciphertext][authentication tag]
+/// This implementation is compatible with NativeAesGcmCryptoService
 /// </summary>
-public class AesGcmCryptoService : ICryptoService, IDisposable
+public class BouncyCastleAesGcmCryptoService : ICryptoService, IDisposable
 {
     private const int NonceSize = 12;
     private const int TagSize = 16; // AES-GCM uses a 128-bit authentication tag
@@ -29,7 +34,7 @@ public class AesGcmCryptoService : ICryptoService, IDisposable
     {
         ArgumentNullException.ThrowIfNull(inputStream, nameof(inputStream));
         ArgumentNullException.ThrowIfNull(outputStream, nameof(outputStream));
-        ArgumentException.ThrowIfNullOrEmpty(base64Key, nameof(base64Key));           
+        ArgumentException.ThrowIfNullOrEmpty(base64Key, nameof(base64Key));
 
         byte[] key = Convert.FromBase64String(base64Key);
         
@@ -42,12 +47,24 @@ public class AesGcmCryptoService : ICryptoService, IDisposable
         await inputStream.CopyToAsync(memoryStream);
         byte[] plaintext = memoryStream.ToArray();
 
-        byte[] ciphertext = new byte[plaintext.Length];
+        // Initialize Bouncy Castle AES-GCM cipher
+        var cipher = new GcmBlockCipher(new AesEngine());
+        var parameters = new AeadParameters(new KeyParameter(key), TagSize * 8, nonce);
+        
+        cipher.Init(true, parameters);
+
+        // Encrypt the data
+        byte[] output = new byte[cipher.GetOutputSize(plaintext.Length)];
+        int len = cipher.ProcessBytes(plaintext, 0, plaintext.Length, output, 0);
+        len += cipher.DoFinal(output, len);
+
+        // Split the output into ciphertext and tag
+        int ciphertextLength = len - TagSize;
+        byte[] ciphertext = new byte[ciphertextLength];
         byte[] tag = new byte[TagSize];
-        using (var aesGcm = new AesGcm(key, TagSize))
-        {
-            aesGcm.Encrypt(nonce, plaintext, ciphertext, tag);
-        }
+
+        Buffer.BlockCopy(output, 0, ciphertext, 0, ciphertextLength);
+        Buffer.BlockCopy(output, ciphertextLength, tag, 0, TagSize);
 
         await outputStream.WriteAsync(ciphertext);
         await outputStream.WriteAsync(tag);
@@ -100,13 +117,35 @@ public class AesGcmCryptoService : ICryptoService, IDisposable
         Buffer.BlockCopy(encryptedData, 0, ciphertext, 0, ciphertextLength);
         Buffer.BlockCopy(encryptedData, ciphertextLength, tag, 0, TagSize);
 
-        byte[] plaintext = new byte[ciphertextLength];
-        using (var aesGcm = new AesGcm(key, TagSize))
-        {
-            aesGcm.Decrypt(nonce, ciphertext, tag, plaintext);
-        }
+        // Combine ciphertext and tag for Bouncy Castle
+        byte[] ciphertextWithTag = new byte[ciphertextLength + TagSize];
+        Buffer.BlockCopy(ciphertext, 0, ciphertextWithTag, 0, ciphertextLength);
+        Buffer.BlockCopy(tag, 0, ciphertextWithTag, ciphertextLength, TagSize);
 
-        await outputStream.WriteAsync(plaintext);
+        // Initialize Bouncy Castle AES-GCM cipher for decryption
+        var cipher = new GcmBlockCipher(new AesEngine());
+        var parameters = new AeadParameters(new KeyParameter(key), TagSize * 8, nonce);
+        
+        cipher.Init(false, parameters);
+
+        try
+        {
+            // Decrypt the data
+            byte[] plaintext = new byte[cipher.GetOutputSize(ciphertextWithTag.Length)];
+            int len = cipher.ProcessBytes(ciphertextWithTag, 0, ciphertextWithTag.Length, plaintext, 0);
+            len += cipher.DoFinal(plaintext, len);
+
+            // Write only the actual decrypted data (trim to actual length)
+            byte[] actualPlaintext = new byte[len];
+            Buffer.BlockCopy(plaintext, 0, actualPlaintext, 0, len);
+
+            await outputStream.WriteAsync(actualPlaintext);
+        }
+        catch (InvalidCipherTextException ex)
+        {
+            // Convert Bouncy Castle exception to the same type as .NET throws
+            throw new System.Security.Cryptography.AuthenticationTagMismatchException("Authentication tag mismatch", ex);
+        }
     }
 
     /// <summary>
