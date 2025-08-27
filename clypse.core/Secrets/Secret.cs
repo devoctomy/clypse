@@ -1,6 +1,6 @@
-﻿using clypse.core.Base;
+﻿using System.Text.Json.Serialization;
+using clypse.core.Base;
 using clypse.core.Enums;
-using System.Text.Json.Serialization;
 
 namespace clypse.core.Secrets;
 
@@ -10,12 +10,16 @@ public class Secret : ClypseObject
     [JsonIgnore]
     public SecretType SecretType
     {
-        get 
+        get
         {
             var secretType = GetData(nameof(SecretType));
             return Enum.Parse<SecretType>(secretType!, true);
         }
-        set { SetData(nameof(SecretType), value.ToString()); }
+
+        set
+        {
+            SetData(nameof(SecretType), value.ToString());
+        }
     }
 
     [RequiredData]
@@ -39,7 +43,7 @@ public class Secret : ClypseObject
         get
         {
             var tags = GetData(nameof(Tags));
-            if(string.IsNullOrEmpty(tags))
+            if (string.IsNullOrEmpty(tags))
             {
                 return [];
             }
@@ -56,7 +60,7 @@ public class Secret : ClypseObject
     public bool AddTag(string tag)
     {
         var tags = Tags;
-        if(tags.Contains(tag))
+        if (tags.Contains(tag))
         {
             return false;
         }

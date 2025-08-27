@@ -10,17 +10,17 @@ namespace clypse.core.Cryptogtaphy;
 public class NativeAesCbcCryptoService : ICryptoService, IDisposable
 {
     private const int IvSize = 16;
-    private readonly Aes _aes;
-    private bool _disposed;
+    private readonly Aes aes;
+    private bool disposed;
 
     /// <summary>
     /// Initializes a new instance of AesCbcCryptoService
     /// </summary>
     public NativeAesCbcCryptoService()
     {
-        _aes = Aes.Create();
-        _aes.Mode = CipherMode.CBC;
-        _aes.Padding = PaddingMode.PKCS7;
+        aes = Aes.Create();
+        aes.Mode = CipherMode.CBC;
+        aes.Padding = PaddingMode.PKCS7;
     }
 
     /// <summary>
@@ -30,8 +30,8 @@ public class NativeAesCbcCryptoService : ICryptoService, IDisposable
     /// <param name="outputStream">Output stream to store cipher data.</param>
     /// <param name="base64Key">Base64 encoded AES key.</param>
     /// <returns>Nothing</returns>
-    /// <exception cref="ArgumentNullException"></exception> 
-    /// <exception cref="ArgumentException"></exception> 
+    /// <exception cref="ArgumentNullException"></exception>
+    /// <exception cref="ArgumentException"></exception>
     public async Task EncryptAsync(
         Stream inputStream,
         Stream outputStream,
@@ -42,12 +42,12 @@ public class NativeAesCbcCryptoService : ICryptoService, IDisposable
         ArgumentException.ThrowIfNullOrEmpty(base64Key, nameof(base64Key));
 
         byte[] key = Convert.FromBase64String(base64Key);
-        _aes.Key = key;
-        _aes.GenerateIV();
+        aes.Key = key;
+        aes.GenerateIV();
 
-        await outputStream.WriteAsync(_aes.IV.AsMemory(0, _aes.IV.Length));
+        await outputStream.WriteAsync(aes.IV.AsMemory(0, aes.IV.Length));
 
-        using var encryptor = _aes.CreateEncryptor();
+        using var encryptor = aes.CreateEncryptor();
         using var cryptoStream = new CryptoStream(outputStream, encryptor, CryptoStreamMode.Write, leaveOpen: true);
         await inputStream.CopyToAsync(cryptoStream);
         await cryptoStream.FlushFinalBlockAsync();
@@ -60,8 +60,8 @@ public class NativeAesCbcCryptoService : ICryptoService, IDisposable
     /// <param name="outputStream">Output stream to store plaintext data.</param>
     /// <param name="base64Key">Base64 encoded AES key.</param>
     /// <returns>Nothing</returns>
-    /// <exception cref="ArgumentNullException"></exception> 
-    /// <exception cref="ArgumentException"></exception> 
+    /// <exception cref="ArgumentNullException"></exception>
+    /// <exception cref="ArgumentException"></exception>
     /// <exception cref="InvalidOperationException"></exception>
     public async Task DecryptAsync(
         Stream inputStream,
@@ -73,19 +73,19 @@ public class NativeAesCbcCryptoService : ICryptoService, IDisposable
         ArgumentException.ThrowIfNullOrEmpty(base64Key, nameof(base64Key));
 
         byte[] key = Convert.FromBase64String(base64Key);
-        _aes.Key = key;
+        aes.Key = key;
 
         byte[] iv = new byte[IvSize];
         int bytesRead = await inputStream.ReadAsync(iv.AsMemory(0, IvSize));
-        
+
         if (bytesRead != IvSize)
         {
             throw new InvalidOperationException($"Failed to read IV from input stream. Expected {IvSize} bytes but got {bytesRead}.");
         }
 
-        _aes.IV = iv;
+        aes.IV = iv;
 
-        using var decryptor = _aes.CreateDecryptor();
+        using var decryptor = aes.CreateDecryptor();
         using var cryptoStream = new CryptoStream(inputStream, decryptor, CryptoStreamMode.Read);
         await cryptoStream.CopyToAsync(outputStream);
     }
@@ -105,13 +105,16 @@ public class NativeAesCbcCryptoService : ICryptoService, IDisposable
     /// <param name="disposing">True if disposing managed resources</param>
     protected virtual void Dispose(bool disposing)
     {
-        if (_disposed) return;
+        if (disposed)
+        {
+            return;
+        }
 
         if (disposing)
         {
-            _aes?.Dispose();
+            aes?.Dispose();
         }
 
-        _disposed = true;
+        disposed = true;
     }
 }

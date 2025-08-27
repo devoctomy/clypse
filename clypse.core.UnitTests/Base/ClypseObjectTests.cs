@@ -1,18 +1,18 @@
-﻿using clypse.core.Base;
-using System.Text.Json;
+﻿using System.Text.Json;
 using System.Text.Json.Serialization;
+using clypse.core.Base;
 
 namespace clypse.core.UnitTests.Base;
 
 public class ClypseObjectTests
 {
-    private readonly JsonSerializerOptions JsonSerializerOptions = new()
+    private readonly JsonSerializerOptions jsonSerializerOptions = new ()
     {
         WriteIndented = true,
         Converters =
         {
-            new JsonStringEnumConverter(JsonNamingPolicy.CamelCase)
-        }
+            new JsonStringEnumConverter(JsonNamingPolicy.CamelCase),
+        },
     };
 
     [Fact]
@@ -22,7 +22,7 @@ public class ClypseObjectTests
         var sut = new ClypseObject();
 
         // Act
-        var jsonRaw = JsonSerializer.Serialize(sut, JsonSerializerOptions);
+        var jsonRaw = JsonSerializer.Serialize(sut, jsonSerializerOptions);
         using JsonDocument doc = JsonDocument.Parse(jsonRaw);
 
         // Assert
@@ -43,7 +43,7 @@ public class ClypseObjectTests
         var sut = new ClypseObject();
 
         // Act
-        var jsonRaw = JsonSerializer.Serialize(sut, JsonSerializerOptions);
+        var jsonRaw = JsonSerializer.Serialize(sut, jsonSerializerOptions);
         var sut2 = JsonSerializer.Deserialize<ClypseObject>(jsonRaw);
 
         // Assert

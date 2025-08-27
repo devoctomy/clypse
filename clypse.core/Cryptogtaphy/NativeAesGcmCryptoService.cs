@@ -7,11 +7,10 @@ namespace clypse.core.Cryptogtaphy;
 /// Implementation of ICryptoService using AES-GCM encryption
 /// Stream format: [nonce][ciphertext][authentication tag]
 /// </summary>
-public class NativeAesGcmCryptoService : ICryptoService, IDisposable
+public class NativeAesGcmCryptoService : ICryptoService
 {
     private const int NonceSize = 12;
     private const int TagSize = 16; // AES-GCM uses a 128-bit authentication tag
-    private bool _disposed;
 
     /// <summary>
     /// Encrypt the input stream via AES GCM using the key provided.
@@ -29,10 +28,10 @@ public class NativeAesGcmCryptoService : ICryptoService, IDisposable
     {
         ArgumentNullException.ThrowIfNull(inputStream, nameof(inputStream));
         ArgumentNullException.ThrowIfNull(outputStream, nameof(outputStream));
-        ArgumentException.ThrowIfNullOrEmpty(base64Key, nameof(base64Key));           
+        ArgumentException.ThrowIfNullOrEmpty(base64Key, nameof(base64Key));
 
         byte[] key = Convert.FromBase64String(base64Key);
-        
+
         byte[] nonce = new byte[NonceSize];
         RandomNumberGenerator.Fill(nonce);
 
@@ -71,7 +70,7 @@ public class NativeAesGcmCryptoService : ICryptoService, IDisposable
         ArgumentNullException.ThrowIfNull(inputStream, nameof(inputStream));
         ArgumentNullException.ThrowIfNull(outputStream, nameof(outputStream));
         ArgumentNullException.ThrowIfNull(base64Key, nameof(base64Key));
-        
+
         if (string.IsNullOrEmpty(base64Key))
         {
             throw new ArgumentException("Key cannot be empty", nameof(base64Key));
@@ -107,28 +106,5 @@ public class NativeAesGcmCryptoService : ICryptoService, IDisposable
         }
 
         await outputStream.WriteAsync(plaintext);
-    }
-
-    /// <summary>
-    /// Disposes the resources used by this instance
-    /// </summary>
-    public void Dispose()
-    {
-        Dispose(true);
-        GC.SuppressFinalize(this);
-    }
-
-    /// <summary>
-    /// Disposes the resources used by this instance
-    /// </summary>
-    /// <param name="disposing">True if disposing managed resources</param>
-    protected virtual void Dispose(bool disposing)
-    {
-        if (_disposed)
-        {
-            return;
-        }
-
-        _disposed = true;
     }
 }

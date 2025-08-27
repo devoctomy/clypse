@@ -63,7 +63,7 @@ public class AwsCloudStorageProviderBaseTests
             {
                 throw new AmazonS3Exception("Something went wrong!")
                 {
-                    StatusCode = System.Net.HttpStatusCode.NotFound
+                    StatusCode = System.Net.HttpStatusCode.NotFound,
                 };
             });
 
@@ -129,7 +129,7 @@ public class AwsCloudStorageProviderBaseTests
         var cancellationTokenSource = new CancellationTokenSource();
         var getObjectResponse = new GetObjectResponse
         {
-            ResponseStream = processedResponseStream
+            ResponseStream = processedResponseStream,
         };
 
         mockAmazonS3Client.Setup(x => x.GetObjectAsync(
@@ -166,7 +166,7 @@ public class AwsCloudStorageProviderBaseTests
             {
                 throw new AmazonS3Exception("Something went wrong!")
                 {
-                    StatusCode = System.Net.HttpStatusCode.NotFound
+                    StatusCode = System.Net.HttpStatusCode.NotFound,
                 };
             });
 
@@ -223,13 +223,13 @@ public class AwsCloudStorageProviderBaseTests
         // Setup the mock to return a list of objects
         var listObjectsResponse = new ListObjectsV2Response
         {
-            S3Objects = new List<S3Object>
-            {
+            S3Objects =
+            [
                 new S3Object { Key = "Bar/file1.txt" },
                 new S3Object { Key = "Bar/file2.txt" },
-                new S3Object { Key = "Bar/subfolder/file3.txt" }
-            },
-            IsTruncated = false
+                new S3Object { Key = "Bar/subfolder/file3.txt" },
+            ],
+            IsTruncated = false,
         };
 
         mockAmazonS3Client.Setup(x => x.ListObjectsV2Async(
@@ -242,7 +242,7 @@ public class AwsCloudStorageProviderBaseTests
             prefix,
             cancellationTokenSource.Token);
 
-        // Assert  
+        // Assert
         Assert.Equal(3, result.Count);
         Assert.Contains("Bar/file1.txt", result);
         Assert.Contains("Bar/file2.txt", result);

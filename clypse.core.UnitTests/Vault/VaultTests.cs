@@ -47,14 +47,14 @@ public class VaultTests
         var info = new VaultInfo("Foo", "Bar");
         var index = new VaultIndex
         {
-            Entries = new List<VaultIndexEntry>
-            {
+            Entries =
+            [
                 new VaultIndexEntry(
                     "1",
                     "Secret1",
                     "Hello World",
-                    null)
-            }
+                    null),
+            ],
         };
         var vault = new core.Vault.Vault(
             info,
@@ -64,7 +64,7 @@ public class VaultTests
         // Act
         var result = vault.AddSecret(new core.Secrets.Secret
         {
-            Id = "1"
+            Id = "1",
         });
 
         // Assert
@@ -80,14 +80,14 @@ public class VaultTests
         var info = new VaultInfo("Foo", "Bar");
         var index = new VaultIndex
         {
-            Entries = new List<VaultIndexEntry>
-            {
+            Entries =
+            [
                 new VaultIndexEntry(
                     "1",
                     "Secret1",
                     "Hello World",
-                    null)
-            }
+                    null),
+            ],
         };
         var vault = new core.Vault.Vault(
             info,
@@ -97,7 +97,7 @@ public class VaultTests
         // Act
         var result = vault.UpdateSecret(new core.Secrets.Secret
         {
-            Id = "1"
+            Id = "1",
         });
 
         // Assert
@@ -113,14 +113,14 @@ public class VaultTests
         var info = new VaultInfo("Foo", "Bar");
         var index = new VaultIndex
         {
-            Entries = new List<VaultIndexEntry>
-            {
+            Entries =
+            [
                 new VaultIndexEntry(
                     "1",
                     "Secret1",
                     "Hello World",
-                    null)
-            }
+                    null),
+            ],
         };
         var vault = new core.Vault.Vault(
             info,
@@ -130,7 +130,7 @@ public class VaultTests
         // Act
         var result = vault.UpdateSecret(new core.Secrets.Secret
         {
-            Id = "2"
+            Id = "2",
         });
 
         // Assert
@@ -146,14 +146,14 @@ public class VaultTests
         var info = new VaultInfo("Foo", "Bar");
         var index = new VaultIndex
         {
-            Entries = new List<VaultIndexEntry>
-            {
+            Entries =
+            [
                 new VaultIndexEntry(
                     "1",
                     "Secret1",
                     "Hello World",
-                    null)
-            }
+                    null),
+            ],
         };
         var vault = new core.Vault.Vault(
             info,
@@ -176,14 +176,14 @@ public class VaultTests
         var info = new VaultInfo("Foo", "Bar");
         var index = new VaultIndex
         {
-            Entries = new List<VaultIndexEntry>
-            {
+            Entries =
+            [
                 new VaultIndexEntry(
                     "1",
                     "Secret1",
                     "Hello World",
-                    null)
-            }
+                    null),
+            ],
         };
         var vault = new core.Vault.Vault(
             info,

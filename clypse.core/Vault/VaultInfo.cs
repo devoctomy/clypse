@@ -1,13 +1,16 @@
-﻿using clypse.core.Cryptogtaphy;
-using System.Text.Json.Serialization;
+﻿using System.Text.Json.Serialization;
+using clypse.core.Cryptogtaphy;
 
 namespace clypse.core.Vault;
 
 public class VaultInfo
 {
     public string Id { get; set; }
+
     public string Name { get; set; }
+
     public string Description { get; set; }
+
     [JsonIgnore]
     public string Base64Salt { get; set; }
 

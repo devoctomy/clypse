@@ -4,7 +4,7 @@ using clypse.core.Cryptogtaphy;
 
 namespace clypse.core.UnitTests.Compression;
 
-public class GZipCompressionServiceTests : IDisposable
+public class GZipCompressionServiceTests
 {
     private readonly GZipCompressionService _sut;
 
@@ -66,7 +66,8 @@ public class GZipCompressionServiceTests : IDisposable
         await _sut.CompressAsync(inputStream, compressedStream, CancellationToken.None);
 
         // Assert
-        Assert.True(compressedStream.Length < originalData.Length, 
+        Assert.True(
+            compressedStream.Length < originalData.Length,
             $"Compressed size ({compressedStream.Length}) should be smaller than original size ({originalData.Length})");
     }
 
@@ -162,11 +163,5 @@ public class GZipCompressionServiceTests : IDisposable
 
         // Assert
         Assert.Equal(binaryData, decompressedStream.ToArray());
-    }
-
-    public void Dispose()
-    {
-        GC.SuppressFinalize(this);
-        _sut.Dispose();
     }
 }

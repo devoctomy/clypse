@@ -4,15 +4,19 @@ namespace clypse.core.Vault;
 
 public class Vault : IVault
 {
-    public VaultInfo Info { get; set; }
-    public VaultIndex Index { get; set; }
-    public IReadOnlyList<Secret> PendingSecrets => _pendingSecrets;
-    public IReadOnlyList<string> SecretsToDelete => _secretsToDelete;
-    public bool IsDirty => _isDirty;
+    private readonly List<Secret> pendingSecrets;
+    private readonly List<string> secretsToDelete;
+    private bool isDirty = true;
 
-    private readonly List<Secret> _pendingSecrets;
-    private readonly List<string> _secretsToDelete;
-    private bool _isDirty = true;
+    public VaultInfo Info { get; set; }
+
+    public VaultIndex Index { get; set; }
+
+    public IReadOnlyList<Secret> PendingSecrets => pendingSecrets;
+
+    public IReadOnlyList<string> SecretsToDelete => secretsToDelete;
+
+    public bool IsDirty => isDirty;
 
     public Vault(
         VaultInfo info,
@@ -20,8 +24,8 @@ public class Vault : IVault
     {
         Info = info;
         Index = index;
-        _pendingSecrets = [];
-        _secretsToDelete = [];
+        pendingSecrets = [];
+        secretsToDelete = [];
     }
 
     public bool AddSecret(Secret secret)
@@ -29,8 +33,8 @@ public class Vault : IVault
         var indexEntry = Index.Entries.SingleOrDefault(x => x.Id == secret.Id);
         if (indexEntry == null)
         {
-            _pendingSecrets.Add(secret);
-            _isDirty = true;
+            pendingSecrets.Add(secret);
+            isDirty = true;
             return true;
         }
 
@@ -40,10 +44,10 @@ public class Vault : IVault
     public bool DeleteSecret(string secretId)
     {
         var indexEntry = Index.Entries.SingleOrDefault(x => x.Id == secretId);
-        if(indexEntry != null)
+        if (indexEntry != null)
         {
-            _secretsToDelete.Add(secretId);
-            _isDirty = true;
+            secretsToDelete.Add(secretId);
+            isDirty = true;
             return true;
         }
 
@@ -55,8 +59,8 @@ public class Vault : IVault
         var existing = Index.Entries.SingleOrDefault(x => x.Id == secret.Id);
         if (existing != null)
         {
-            _pendingSecrets.Add(secret);
-            _isDirty = true;
+            pendingSecrets.Add(secret);
+            isDirty = true;
             return true;
         }
 
@@ -65,8 +69,8 @@ public class Vault : IVault
 
     public void MakeClean()
     {
-        _pendingSecrets.Clear();
-        _secretsToDelete.Clear();
-        _isDirty = false;
+        pendingSecrets.Clear();
+        secretsToDelete.Clear();
+        isDirty = false;
     }
 }

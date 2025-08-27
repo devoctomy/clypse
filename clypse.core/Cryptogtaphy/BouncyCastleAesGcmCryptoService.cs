@@ -10,13 +10,12 @@ namespace clypse.core.Cryptogtaphy;
 /// <summary>
 /// Implementation of ICryptoService using Bouncy Castle AES-GCM encryption
 /// Stream format: [nonce][ciphertext][authentication tag]
-/// This implementation is compatible with NativeAesGcmCryptoService
+/// This implementation is compatible with NativeAesGcmCryptoService.
 /// </summary>
-public class BouncyCastleAesGcmCryptoService : ICryptoService, IDisposable
+public class BouncyCastleAesGcmCryptoService : ICryptoService
 {
     private const int NonceSize = 12;
     private const int TagSize = 16; // AES-GCM uses a 128-bit authentication tag
-    private bool _disposed;
 
     /// <summary>
     /// Encrypt the input stream via AES GCM using the key provided.
@@ -37,7 +36,7 @@ public class BouncyCastleAesGcmCryptoService : ICryptoService, IDisposable
         ArgumentException.ThrowIfNullOrEmpty(base64Key, nameof(base64Key));
 
         byte[] key = Convert.FromBase64String(base64Key);
-        
+
         byte[] nonce = new byte[NonceSize];
         RandomNumberGenerator.Fill(nonce);
 
@@ -50,7 +49,7 @@ public class BouncyCastleAesGcmCryptoService : ICryptoService, IDisposable
         // Initialize Bouncy Castle AES-GCM cipher
         var cipher = new GcmBlockCipher(new AesEngine());
         var parameters = new AeadParameters(new KeyParameter(key), TagSize * 8, nonce);
-        
+
         cipher.Init(true, parameters);
 
         // Encrypt the data
@@ -88,7 +87,7 @@ public class BouncyCastleAesGcmCryptoService : ICryptoService, IDisposable
         ArgumentNullException.ThrowIfNull(inputStream, nameof(inputStream));
         ArgumentNullException.ThrowIfNull(outputStream, nameof(outputStream));
         ArgumentNullException.ThrowIfNull(base64Key, nameof(base64Key));
-        
+
         if (string.IsNullOrEmpty(base64Key))
         {
             throw new ArgumentException("Key cannot be empty", nameof(base64Key));
@@ -125,7 +124,7 @@ public class BouncyCastleAesGcmCryptoService : ICryptoService, IDisposable
         // Initialize Bouncy Castle AES-GCM cipher for decryption
         var cipher = new GcmBlockCipher(new AesEngine());
         var parameters = new AeadParameters(new KeyParameter(key), TagSize * 8, nonce);
-        
+
         cipher.Init(false, parameters);
 
         try
@@ -144,30 +143,7 @@ public class BouncyCastleAesGcmCryptoService : ICryptoService, IDisposable
         catch (InvalidCipherTextException ex)
         {
             // Convert Bouncy Castle exception to the same type as .NET throws
-            throw new System.Security.Cryptography.AuthenticationTagMismatchException("Authentication tag mismatch", ex);
+            throw new AuthenticationTagMismatchException("Authentication tag mismatch", ex);
         }
-    }
-
-    /// <summary>
-    /// Disposes the resources used by this instance
-    /// </summary>
-    public void Dispose()
-    {
-        Dispose(true);
-        GC.SuppressFinalize(this);
-    }
-
-    /// <summary>
-    /// Disposes the resources used by this instance
-    /// </summary>
-    /// <param name="disposing">True if disposing managed resources</param>
-    protected virtual void Dispose(bool disposing)
-    {
-        if (_disposed)
-        {
-            return;
-        }
-
-        _disposed = true;
     }
 }

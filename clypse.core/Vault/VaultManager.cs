@@ -1,10 +1,10 @@
-﻿using clypse.core.Cloud.Exceptions;
+﻿using System.Text.Json;
+using System.Text.Json.Serialization;
+using clypse.core.Cloud.Exceptions;
 using clypse.core.Cloud.Interfaces;
 using clypse.core.Compression.Interfaces;
 using clypse.core.Secrets;
 using clypse.core.Vault.Exceptions;
-using System.Text.Json;
-using System.Text.Json.Serialization;
 
 namespace clypse.core.Vault;
 
@@ -12,13 +12,13 @@ public class VaultManager(
     ICompressionService compressionService,
     IEncryptedCloudStorageProvider encryptedCloudStorageProvider) : IVaultManager
 {
-    private readonly JsonSerializerOptions JsonSerializerOptions = new()
+    private readonly JsonSerializerOptions jsonSerializerOptions = new ()
     {
         WriteIndented = true,
         Converters =
         {
-            new JsonStringEnumConverter(JsonNamingPolicy.CamelCase)
-        }
+            new JsonStringEnumConverter(JsonNamingPolicy.CamelCase),
+        },
     };
 
     public IVault Create(
@@ -306,7 +306,7 @@ public class VaultManager(
         await JsonSerializer.SerializeAsync(
             objectStream,
             obj,
-            JsonSerializerOptions,
+            jsonSerializerOptions,
             cancellationToken);
         objectStream.Seek(0, SeekOrigin.Begin);
 
@@ -349,7 +349,7 @@ public class VaultManager(
 
         var value = await JsonSerializer.DeserializeAsync<T>(
             decompressedStream,
-            JsonSerializerOptions,
+            jsonSerializerOptions,
             cancellationToken);
 
         return value!;

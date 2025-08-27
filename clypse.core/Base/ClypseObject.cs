@@ -4,12 +4,26 @@ namespace clypse.core.Base;
 
 public class ClypseObject
 {
+    public ClypseObject()
+    {
+        Id = Guid.NewGuid().ToString();
+        CreatedAt = DateTime.UtcNow;
+        LastUpdatedAt = DateTime.UtcNow;
+    }
+
     [RequiredData]
     [JsonIgnore]
     public string Id
     {
-        get { return GetData(nameof(Id))!; }
-        set { SetData(nameof(Id), value); }
+        get
+        {
+            return GetData(nameof(Id)) !;
+        }
+
+        set
+        {
+            SetData(nameof(Id), value);
+        }
     }
 
     [RequiredData]
@@ -21,7 +35,11 @@ public class ClypseObject
             var value = GetData(nameof(CreatedAt));
             return DateTime.ParseExact(value!, "dd-MM-yyyyTHH:mm:ss", System.Globalization.CultureInfo.InvariantCulture);
         }
-        set { SetData(nameof(CreatedAt), value.ToString("dd-MM-yyyyTHH:mm:ss")); }
+
+        set
+        {
+            SetData(nameof(CreatedAt), value.ToString("dd-MM-yyyyTHH:mm:ss"));
+        }
     }
 
     [RequiredData]
@@ -33,17 +51,14 @@ public class ClypseObject
             var value = GetData(nameof(LastUpdatedAt));
             return DateTime.ParseExact(value!, "dd-MM-yyyyTHH:mm:ss", System.Globalization.CultureInfo.InvariantCulture);
         }
-        set { SetData(nameof(LastUpdatedAt), value.ToString("dd-MM-yyyyTHH:mm:ss")); }
+
+        set
+        {
+            SetData(nameof(LastUpdatedAt), value.ToString("dd-MM-yyyyTHH:mm:ss"));
+        }
     }
 
     public Dictionary<string, string> Data { get; set; } = [];
-
-    public ClypseObject()
-    {
-        Id = Guid.NewGuid().ToString();
-        CreatedAt = DateTime.UtcNow;
-        LastUpdatedAt = DateTime.UtcNow;
-    }
 
     public string? GetData(string key)
     {
@@ -61,7 +76,7 @@ public class ClypseObject
     {
         ArgumentException.ThrowIfNullOrEmpty(key, nameof(key));
 
-        if(string.IsNullOrEmpty(value) &&
+        if (string.IsNullOrEmpty(value) &&
             Data.ContainsKey(key))
         {
             Data.Remove(key);
@@ -69,7 +84,7 @@ public class ClypseObject
         else
         {
             Data[key] = value!;
-        }       
+        }
     }
 
     public void SetAllData(Dictionary<string, string> data)

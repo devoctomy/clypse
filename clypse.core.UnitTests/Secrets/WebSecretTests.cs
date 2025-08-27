@@ -1,20 +1,20 @@
-﻿using clypse.core.Base;
+﻿using System.Text.Json;
+using System.Text.Json.Serialization;
+using clypse.core.Base;
 using clypse.core.Base.Exceptions;
 using clypse.core.Secrets;
-using System.Text.Json;
-using System.Text.Json.Serialization;
 
 namespace clypse.core.UnitTests.Secrets;
 
 public class WebSecretTests
 {
-    private readonly JsonSerializerOptions JsonSerializerOptions = new()
+    private readonly JsonSerializerOptions jsonSerializerOptions = new ()
     {
         WriteIndented = true,
         Converters =
         {
-            new JsonStringEnumConverter(JsonNamingPolicy.CamelCase)
-        }
+            new JsonStringEnumConverter(JsonNamingPolicy.CamelCase),
+        },
     };
 
     [Fact]
@@ -24,7 +24,7 @@ public class WebSecretTests
         var sut = new WebSecret();
 
         // Act
-        var jsonRaw = JsonSerializer.Serialize(sut, JsonSerializerOptions);
+        var jsonRaw = JsonSerializer.Serialize(sut, jsonSerializerOptions);
         using JsonDocument doc = JsonDocument.Parse(jsonRaw);
 
         // Assert
@@ -65,11 +65,11 @@ public class WebSecretTests
             EmailAddress = emailAddress,
             WebsiteUrl = websiteUrl,
             LoginUrl = loginUrl,
-            Password = password
+            Password = password,
         };
 
         // Act
-        var jsonRaw = JsonSerializer.Serialize(sut, JsonSerializerOptions);
+        var jsonRaw = JsonSerializer.Serialize(sut, jsonSerializerOptions);
         using JsonDocument doc = JsonDocument.Parse(jsonRaw);
 
         // Assert
@@ -105,7 +105,7 @@ public class WebSecretTests
         var secret = new Secret
         {
             Name = "Foobar",
-            Description = "Hello World!"
+            Description = "Hello World!",
         };
 
         // Act

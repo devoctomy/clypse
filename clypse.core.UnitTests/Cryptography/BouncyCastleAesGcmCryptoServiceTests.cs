@@ -4,16 +4,16 @@ using clypse.core.Cryptogtaphy;
 
 namespace clypse.core.UnitTests.Cryptography;
 
-public class BouncyCastleAesGcmCryptoServiceTests : IDisposable
+public class BouncyCastleAesGcmCryptoServiceTests
 {
-    private readonly BouncyCastleAesGcmCryptoService _sut;
-    private readonly string _testKey;
+    private readonly BouncyCastleAesGcmCryptoService sut;
+    private readonly string testKey;
 
     public BouncyCastleAesGcmCryptoServiceTests()
     {
-        _sut = new BouncyCastleAesGcmCryptoService();
+        sut = new BouncyCastleAesGcmCryptoService();
         byte[] keyBytes = CryptoHelpers.GenerateRandomBytes(32);
-        _testKey = Convert.ToBase64String(keyBytes);
+        testKey = Convert.ToBase64String(keyBytes);
     }
 
     [Fact]
@@ -28,9 +28,9 @@ public class BouncyCastleAesGcmCryptoServiceTests : IDisposable
         using var decryptedStream = new MemoryStream();
 
         // Act
-        await _sut.EncryptAsync(inputStream, encryptedStream, _testKey);
+        await sut.EncryptAsync(inputStream, encryptedStream, testKey);
         encryptedStream.Position = 0;
-        await _sut.DecryptAsync(encryptedStream, decryptedStream, _testKey);
+        await sut.DecryptAsync(encryptedStream, decryptedStream, testKey);
 
         // Assert
         string decryptedText = Encoding.UTF8.GetString(decryptedStream.ToArray());
@@ -50,11 +50,11 @@ public class BouncyCastleAesGcmCryptoServiceTests : IDisposable
         using var decryptedStream = new MemoryStream();
 
         // Assert
-        await _sut.EncryptAsync(inputStream, encryptedStream, _testKey);
+        await sut.EncryptAsync(inputStream, encryptedStream, testKey);
         encryptedStream.Position = 0;
         await Assert.ThrowsAnyAsync<CryptographicException>(async () =>
         {
-            await _sut.DecryptAsync(encryptedStream, decryptedStream, Convert.ToBase64String(wrongKeyBytes));
+            await sut.DecryptAsync(encryptedStream, decryptedStream, Convert.ToBase64String(wrongKeyBytes));
         });
     }
 
@@ -68,9 +68,9 @@ public class BouncyCastleAesGcmCryptoServiceTests : IDisposable
         using var decryptedStream = new MemoryStream();
 
         // Act
-        await _sut.EncryptAsync(inputStream, encryptedStream, _testKey);
+        await sut.EncryptAsync(inputStream, encryptedStream, testKey);
         encryptedStream.Position = 0;
-        await _sut.DecryptAsync(encryptedStream, decryptedStream, _testKey);
+        await sut.DecryptAsync(encryptedStream, decryptedStream, testKey);
 
         // Assert
         Assert.Equal(largeData, decryptedStream.ToArray());
@@ -88,8 +88,8 @@ public class BouncyCastleAesGcmCryptoServiceTests : IDisposable
         using var decryptedStream = new MemoryStream();
 
         // Act - First encrypt the data
-        await _sut.EncryptAsync(inputStream, encryptedStream, _testKey);
-        
+        await sut.EncryptAsync(inputStream, encryptedStream, testKey);
+
         // Tamper with the encrypted data
         byte[] tamperedData = encryptedStream.ToArray();
         if (tamperedData.Length > 30)
@@ -101,7 +101,7 @@ public class BouncyCastleAesGcmCryptoServiceTests : IDisposable
 
         // Assert
         await Assert.ThrowsAsync<AuthenticationTagMismatchException>(
-            async () => await _sut.DecryptAsync(tamperedStream, decryptedStream, _testKey));
+            async () => await sut.DecryptAsync(tamperedStream, decryptedStream, testKey));
     }
 
     [Theory]
@@ -114,7 +114,7 @@ public class BouncyCastleAesGcmCryptoServiceTests : IDisposable
 
         // Act & Assert
         await Assert.ThrowsAsync<ArgumentNullException>(
-            async () => await _sut.EncryptAsync(inputStream, outputStream, invalidKey));
+            async () => await sut.EncryptAsync(inputStream, outputStream, invalidKey));
     }
 
     [Theory]
@@ -127,7 +127,7 @@ public class BouncyCastleAesGcmCryptoServiceTests : IDisposable
 
         // Act & Assert
         await Assert.ThrowsAsync<ArgumentException>(
-            async () => await _sut.EncryptAsync(inputStream, outputStream, invalidKey));
+            async () => await sut.EncryptAsync(inputStream, outputStream, invalidKey));
     }
 
     [Theory]
@@ -140,7 +140,7 @@ public class BouncyCastleAesGcmCryptoServiceTests : IDisposable
 
         // Act & Assert
         await Assert.ThrowsAsync<ArgumentNullException>(
-            async () => await _sut.DecryptAsync(inputStream, outputStream, invalidKey));
+            async () => await sut.DecryptAsync(inputStream, outputStream, invalidKey));
     }
 
     [Theory]
@@ -153,7 +153,7 @@ public class BouncyCastleAesGcmCryptoServiceTests : IDisposable
 
         // Act & Assert
         await Assert.ThrowsAsync<ArgumentException>(
-            async () => await _sut.DecryptAsync(inputStream, outputStream, invalidKey));
+            async () => await sut.DecryptAsync(inputStream, outputStream, invalidKey));
     }
 
     [Fact]
@@ -166,8 +166,8 @@ public class BouncyCastleAesGcmCryptoServiceTests : IDisposable
 
         // Act & Assert
         var ex = await Assert.ThrowsAsync<InvalidOperationException>(
-            async () => await _sut.DecryptAsync(inputStream, outputStream, _testKey));
-        
+            async () => await sut.DecryptAsync(inputStream, outputStream, testKey));
+
         Assert.Equal("Failed to read nonce from input stream. Expected 12 bytes but got 5.", ex.Message);
     }
 
@@ -180,8 +180,8 @@ public class BouncyCastleAesGcmCryptoServiceTests : IDisposable
 
         // Act & Assert
         var ex = await Assert.ThrowsAsync<InvalidOperationException>(
-            async () => await _sut.DecryptAsync(inputStream, outputStream, _testKey));
-        
+            async () => await sut.DecryptAsync(inputStream, outputStream, testKey));
+
         Assert.Equal("Failed to read nonce from input stream. Expected 12 bytes but got 0.", ex.Message);
     }
 
@@ -196,14 +196,8 @@ public class BouncyCastleAesGcmCryptoServiceTests : IDisposable
 
         // Act & Assert
         var ex = await Assert.ThrowsAsync<InvalidOperationException>(
-            async () => await _sut.DecryptAsync(inputStream, outputStream, _testKey));
-        
-        Assert.Equal("Input data is too short to contain authentication tag.", ex.Message);
-    }
+            async () => await sut.DecryptAsync(inputStream, outputStream, testKey));
 
-    public void Dispose()
-    {
-        GC.SuppressFinalize(this);
-        _sut.Dispose();
+        Assert.Equal("Input data is too short to contain authentication tag.", ex.Message);
     }
 }

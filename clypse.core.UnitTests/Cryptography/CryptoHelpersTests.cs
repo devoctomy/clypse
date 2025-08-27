@@ -1,5 +1,5 @@
-﻿using clypse.core.Cryptogtaphy;
-using System.Security;
+﻿using System.Security;
+using clypse.core.Cryptogtaphy;
 
 namespace clypse.core.UnitTests.Cryptography;
 
@@ -27,10 +27,11 @@ public class CryptoHelpersTests
         // Arrange
         var passphrase = "The quick brown fox jumps over the lazy dog.";
         var securePassphrase = new SecureString();
-        foreach(var curChar in passphrase)
+        foreach (var curChar in passphrase)
         {
             securePassphrase.AppendChar(curChar);
         }
+
         var salt = new byte[32];
 
         // Act

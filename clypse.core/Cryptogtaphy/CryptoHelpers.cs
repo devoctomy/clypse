@@ -1,8 +1,8 @@
-﻿using clypse.core.Extensions;
-using Konscious.Security.Cryptography;
-using System.Security;
+﻿using System.Security;
 using System.Security.Cryptography;
 using System.Text;
+using clypse.core.Extensions;
+using Konscious.Security.Cryptography;
 
 namespace clypse.core.Cryptogtaphy;
 
@@ -40,7 +40,7 @@ public class CryptoHelpers
             MemorySize = 8192,
             Iterations = 40,
             KnownSecret = Sha256HashString("13E3288E-445F-4A44-858C-483B8A3566BC", 32),
-            Salt = Convert.FromBase64String(base64Salt)
+            Salt = Convert.FromBase64String(base64Salt),
         };
         return await argon2.GetBytesAsync(keyLength);
     }

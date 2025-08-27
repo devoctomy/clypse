@@ -1,20 +1,20 @@
-﻿using clypse.core.Base;
+﻿using System.Text.Json;
+using System.Text.Json.Serialization;
+using clypse.core.Base;
 using clypse.core.Base.Exceptions;
 using clypse.core.Secrets;
-using System.Text.Json;
-using System.Text.Json.Serialization;
 
 namespace clypse.core.UnitTests.Secrets;
 
 public class SecretTests
 {
-    private readonly JsonSerializerOptions JsonSerializerOptions = new()
+    private readonly JsonSerializerOptions jsonSerializerOptions = new ()
     {
         WriteIndented = true,
         Converters =
         {
-            new JsonStringEnumConverter(JsonNamingPolicy.CamelCase)
-        }
+            new JsonStringEnumConverter(JsonNamingPolicy.CamelCase),
+        },
     };
 
     [Fact]
@@ -24,7 +24,7 @@ public class SecretTests
         var sut = new Secret();
 
         // Act
-        var jsonRaw = JsonSerializer.Serialize(sut, JsonSerializerOptions);
+        var jsonRaw = JsonSerializer.Serialize(sut, jsonSerializerOptions);
         using JsonDocument doc = JsonDocument.Parse(jsonRaw);
 
         // Assert
@@ -52,11 +52,11 @@ public class SecretTests
         var sut = new Secret
         {
             Name = "Foobar",
-            Description = "Hello World!"
+            Description = "Hello World!",
         };
 
         // Act
-        var jsonRaw = JsonSerializer.Serialize(sut, JsonSerializerOptions);
+        var jsonRaw = JsonSerializer.Serialize(sut, jsonSerializerOptions);
         using JsonDocument doc = JsonDocument.Parse(jsonRaw);
 
         // Assert
@@ -81,7 +81,7 @@ public class SecretTests
         var sut = new Secret
         {
             Name = "Foobar",
-            Description = "Hello World!"
+            Description = "Hello World!",
         };
         var tag = "apple";
 
@@ -101,7 +101,7 @@ public class SecretTests
         var sut = new Secret
         {
             Name = "Foobar",
-            Description = "Hello World!"
+            Description = "Hello World!",
         };
         var tag = "apple";
         sut.AddTag(tag);
@@ -122,7 +122,7 @@ public class SecretTests
         var sut = new Secret
         {
             Name = "Foobar",
-            Description = "Hello World!"
+            Description = "Hello World!",
         };
         var tag = "apple";
         sut.AddTag(tag);
@@ -137,7 +137,6 @@ public class SecretTests
         Assert.Equal(string.Join(',', updateTags), string.Join(',', sut.Tags));
     }
 
-
     [Fact]
     public void GivenSecretWithTag_WhenClearTags_ThenTagsCleared()
     {
@@ -145,11 +144,10 @@ public class SecretTests
         var sut = new Secret
         {
             Name = "Foobar",
-            Description = "Hello World!"
+            Description = "Hello World!",
         };
         var tag = "apple";
         sut.AddTag(tag);
-
 
         // Act
         sut.ClearTags();

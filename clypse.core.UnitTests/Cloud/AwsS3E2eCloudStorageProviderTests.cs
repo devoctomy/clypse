@@ -1,11 +1,11 @@
-﻿using Amazon.S3;
+﻿using System.Text;
+using Amazon.S3;
 using Amazon.S3.Model;
 using clypse.core.Cloud;
 using clypse.core.Cloud.Aws.S3;
 using clypse.core.Cryptogtaphy;
 using clypse.core.Cryptogtaphy.Interfaces;
 using Moq;
-using System.Text;
 
 namespace clypse.core.UnitTests.Cloud;
 
@@ -37,7 +37,7 @@ public class AwsS3E2eCloudStorageProviderTests
             It.IsAny<CancellationToken>()))
             .ReturnsAsync(new GetObjectResponse
             {
-                ResponseStream = getObjectResponseStream
+                ResponseStream = getObjectResponseStream,
             });
 
         mockCryptoService.Setup(x => x.EncryptAsync(
@@ -76,21 +76,26 @@ public class AwsS3E2eCloudStorageProviderTests
         Assert.True(deleted);
         Assert.Equal(plainText, Encoding.UTF8.GetString(retrievedData));
 
-        mockAmazonS3Client.Verify(x => x.PutObjectAsync(
+        mockAmazonS3Client.Verify(
+            x => x.PutObjectAsync(
             It.IsAny<PutObjectRequest>(),
             It.IsAny<CancellationToken>()), Times.Once);
-        mockAmazonS3Client.Verify(x => x.GetObjectAsync(
+        mockAmazonS3Client.Verify(
+            x => x.GetObjectAsync(
             It.IsAny<GetObjectRequest>(),
             It.IsAny<CancellationToken>()), Times.Once);
-        mockCryptoService.Verify(x => x.EncryptAsync(
+        mockCryptoService.Verify(
+            x => x.EncryptAsync(
             It.IsAny<Stream>(),
             It.IsAny<Stream>(),
             It.Is<string>(y => y == Convert.ToBase64String(encryptionKey))), Times.Once);
-        mockCryptoService.Verify(x => x.DecryptAsync(
+        mockCryptoService.Verify(
+            x => x.DecryptAsync(
             It.IsAny<Stream>(),
             It.IsAny<Stream>(),
             It.Is<string>(y => y == Convert.ToBase64String(encryptionKey))), Times.Once);
-        mockAmazonS3Client.Verify(x => x.DeleteObjectAsync(
+        mockAmazonS3Client.Verify(
+            x => x.DeleteObjectAsync(
             It.IsAny<DeleteObjectRequest>(),
             It.IsAny<CancellationToken>()), Times.Once);
     }
@@ -109,24 +114,27 @@ public class AwsS3E2eCloudStorageProviderTests
         var data = Encoding.UTF8.GetBytes(plainText);
         using var dataStream = new MemoryStream(data);
         using var getObjectResponseStream = new MemoryStream(data);
-        var encryptionKey = CryptoHelpers.GenerateRandomBytes(32);          
+        var encryptionKey = CryptoHelpers.GenerateRandomBytes(32);
         var decyptionKey = encryptionKey;
         decyptionKey[0] = 69;
 
-        mockAmazonS3Client.Setup(x => x.PutObjectAsync(
+        mockAmazonS3Client.Setup(
+            x => x.PutObjectAsync(
             It.IsAny<PutObjectRequest>(),
             It.IsAny<CancellationToken>()))
             .ReturnsAsync(new PutObjectResponse());
 
-        mockAmazonS3Client.Setup(x => x.GetObjectAsync(
+        mockAmazonS3Client.Setup(
+            x => x.GetObjectAsync(
             It.IsAny<GetObjectRequest>(),
             It.IsAny<CancellationToken>()))
             .ReturnsAsync(new GetObjectResponse
             {
-                ResponseStream = getObjectResponseStream
+                ResponseStream = getObjectResponseStream,
             });
 
-        mockCryptoService.Setup(x => x.DecryptAsync(
+        mockCryptoService.Setup(
+            x => x.DecryptAsync(
             It.IsAny<Stream>(),
             It.IsAny<Stream>(),
             It.IsAny<string>()))
@@ -152,17 +160,21 @@ public class AwsS3E2eCloudStorageProviderTests
         Assert.NotNull(retrievedData);
         Assert.True(deleted);
 
-        mockAmazonS3Client.Verify(x => x.PutObjectAsync(
+        mockAmazonS3Client.Verify(
+            x => x.PutObjectAsync(
             It.IsAny<PutObjectRequest>(),
             It.IsAny<CancellationToken>()), Times.Once);
-        mockAmazonS3Client.Verify(x => x.GetObjectAsync(
+        mockAmazonS3Client.Verify(
+            x => x.GetObjectAsync(
             It.IsAny<GetObjectRequest>(),
             It.IsAny<CancellationToken>()), Times.Once);
-        mockCryptoService.Verify(x => x.DecryptAsync(
+        mockCryptoService.Verify(
+            x => x.DecryptAsync(
             It.IsAny<Stream>(),
             It.IsAny<Stream>(),
             It.IsAny<string>()), Times.Once);
-        mockAmazonS3Client.Verify(x => x.DeleteObjectAsync(
+        mockAmazonS3Client.Verify(
+            x => x.DeleteObjectAsync(
             It.IsAny<DeleteObjectRequest>(),
             It.IsAny<CancellationToken>()), Times.Once);
     }
@@ -186,7 +198,7 @@ public class AwsS3E2eCloudStorageProviderTests
             {
                 throw new AmazonS3Exception("Foobar")
                 {
-                    StatusCode = System.Net.HttpStatusCode.NotFound
+                    StatusCode = System.Net.HttpStatusCode.NotFound,
                 };
             });
 
@@ -197,7 +209,7 @@ public class AwsS3E2eCloudStorageProviderTests
             {
                 throw new AmazonS3Exception("Foobar")
                 {
-                    StatusCode = System.Net.HttpStatusCode.NotFound
+                    StatusCode = System.Net.HttpStatusCode.NotFound,
                 };
             });
 
@@ -209,13 +221,16 @@ public class AwsS3E2eCloudStorageProviderTests
         Assert.Null(retrievedData);
         Assert.False(deleted);
 
-        mockAmazonS3Client.Verify(x => x.GetObjectAsync(
+        mockAmazonS3Client.Verify(
+            x => x.GetObjectAsync(
             It.IsAny<GetObjectRequest>(),
             It.IsAny<CancellationToken>()), Times.Once);
-        mockAmazonS3Client.Verify(x => x.GetObjectMetadataAsync(
+        mockAmazonS3Client.Verify(
+            x => x.GetObjectMetadataAsync(
             It.IsAny<GetObjectMetadataRequest>(),
             It.IsAny<CancellationToken>()), Times.Once);
-        mockAmazonS3Client.Verify(x => x.DeleteObjectAsync(
+        mockAmazonS3Client.Verify(
+            x => x.DeleteObjectAsync(
             It.IsAny<DeleteObjectRequest>(),
             It.IsAny<CancellationToken>()), Times.Never);
     }

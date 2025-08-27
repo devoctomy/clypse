@@ -8,8 +8,8 @@ public class ClypseObjectValidatorException : ClypseCoreException
 
     public ClypseObjectValidatorException(
         string message,
-        List<string> missingProperties) :
-        base(message)
+        List<string> missingProperties)
+        : base(message)
     {
         MissingProperties = missingProperties;
     }

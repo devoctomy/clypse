@@ -3,5 +3,5 @@
 public enum SecretType
 {
     None = 0,
-    Web = 1
+    Web = 1,
 }

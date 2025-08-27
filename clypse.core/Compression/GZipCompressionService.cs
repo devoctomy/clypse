@@ -4,17 +4,16 @@ using clypse.core.Compression.Interfaces;
 namespace clypse.core.Compression;
 
 /// <summary>
-/// Implementation of ICompressionService using GZip compression
+/// Implementation of ICompressionService using GZip compression.
 /// </summary>
-public class GZipCompressionService : ICompressionService, IDisposable
+public class GZipCompressionService : ICompressionService
 {
-    private bool _disposed;
-
     /// <summary>
-    /// Compresses data from the input stream using GZip compression and writes to the output stream
+    /// Compresses data from the input stream using GZip compression and writes to the output stream.
     /// </summary>
     /// <param name="inputStream">Stream containing data to compress</param>
     /// <param name="outputStream">Stream to write compressed data to</param>
+    /// <param name="cancellationToken"></param>
     /// <returns>Task representing the asynchronous operation</returns>
     /// <exception cref="ArgumentNullException">Thrown when inputStream or outputStream is null</exception>
     public async Task CompressAsync(
@@ -35,6 +34,7 @@ public class GZipCompressionService : ICompressionService, IDisposable
     /// </summary>
     /// <param name="inputStream">Stream containing compressed data to decompress</param>
     /// <param name="outputStream">Stream to write decompressed data to</param>
+    /// <param name="cancellationToken"></param>
     /// <returns>Task representing the asynchronous operation</returns>
     /// <exception cref="ArgumentNullException">Thrown when inputStream or outputStream is null</exception>
     /// <exception cref="InvalidDataException">Thrown when input data is not in valid GZip format</exception>
@@ -48,28 +48,5 @@ public class GZipCompressionService : ICompressionService, IDisposable
 
         using var gzipStream = new GZipStream(inputStream, CompressionMode.Decompress, leaveOpen: true);
         await gzipStream.CopyToAsync(outputStream, cancellationToken);
-    }
-
-    /// <summary>
-    /// Disposes the resources used by this instance
-    /// </summary>
-    public void Dispose()
-    {
-        Dispose(true);
-        GC.SuppressFinalize(this);
-    }
-
-    /// <summary>
-    /// Disposes the resources used by this instance
-    /// </summary>
-    /// <param name="disposing">True if disposing managed resources</param>
-    protected virtual void Dispose(bool disposing)
-    {
-        if (_disposed)
-        {
-            return;
-        }
-
-        _disposed = true;
     }
 }

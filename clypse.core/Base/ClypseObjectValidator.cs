@@ -1,13 +1,13 @@
-﻿using clypse.core.Base.Exceptions;
-using System.Reflection;
+﻿using System.Reflection;
+using clypse.core.Base.Exceptions;
 
 namespace clypse.core.Base;
 
-public class ClypseObjectValidator(ClypseObject _clypseObject)
+public class ClypseObjectValidator(ClypseObject clypseObject)
 {
     public void Validate()
     {
-        var requiredProperties = _clypseObject.GetType()
+        var requiredProperties = clypseObject.GetType()
             .GetProperties(BindingFlags.Public | BindingFlags.Instance)
             .Where(prop => prop.GetCustomAttribute<RequiredDataAttribute>() != null).ToList();
 
@@ -15,7 +15,7 @@ public class ClypseObjectValidator(ClypseObject _clypseObject)
 
         foreach (var property in requiredProperties)
         {
-            var value = property.GetValue(_clypseObject);
+            var value = property.GetValue(clypseObject);
             if (value == null)
             {
                 missingProperties.Add(property.Name);
