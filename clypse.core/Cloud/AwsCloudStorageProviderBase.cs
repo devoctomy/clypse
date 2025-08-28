@@ -6,11 +6,20 @@ using clypse.core.Cloud.Interfaces;
 
 namespace clypse.core.Cloud;
 
+/// <summary>
+/// Base class for AWS S3 cloud storage providers, implementing common S3 operations and providing extensible hooks for derived classes.
+/// This class provides the foundation for both encrypted and unencrypted S3 storage implementations.
+/// </summary>
 public class AwsCloudStorageProviderBase : ICloudStorageProvider
 {
     private readonly string bucketName;
     private readonly IAmazonS3Client amazonS3Client;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="AwsCloudStorageProviderBase"/> class with the specified S3 configuration.
+    /// </summary>
+    /// <param name="bucketName">The name of the S3 bucket to use for storage operations.</param>
+    /// <param name="amazonS3Client">The Amazon S3 client for performing S3 operations.</param>
     public AwsCloudStorageProviderBase(
         string bucketName,
         IAmazonS3Client amazonS3Client)
@@ -19,6 +28,12 @@ public class AwsCloudStorageProviderBase : ICloudStorageProvider
         this.amazonS3Client = amazonS3Client;
     }
 
+    /// <summary>
+    /// Deletes an object from the S3 bucket.
+    /// </summary>
+    /// <param name="key">The unique key identifying the object to delete.</param>
+    /// <param name="cancellationToken">The cancellation token.</param>
+    /// <returns>True if the object was successfully deleted; otherwise, false.</returns>
     public async Task<bool> DeleteObjectAsync(
         string key,
         CancellationToken cancellationToken)
@@ -30,6 +45,12 @@ public class AwsCloudStorageProviderBase : ICloudStorageProvider
             cancellationToken);
     }
 
+    /// <summary>
+    /// Retrieves an object from the S3 bucket.
+    /// </summary>
+    /// <param name="key">The unique key identifying the object to retrieve.</param>
+    /// <param name="cancellationToken">The cancellation token.</param>
+    /// <returns>A stream containing the object data if found; otherwise, null.</returns>
     public async Task<Stream?> GetObjectAsync(
         string key,
         CancellationToken cancellationToken)
@@ -41,6 +62,12 @@ public class AwsCloudStorageProviderBase : ICloudStorageProvider
             cancellationToken);
     }
 
+    /// <summary>
+    /// Lists all objects in the S3 bucket that match the specified prefix.
+    /// </summary>
+    /// <param name="prefix">The prefix to filter objects by.</param>
+    /// <param name="cancellationToken">The cancellation token.</param>
+    /// <returns>A list of object keys that match the prefix.</returns>
     public async Task<List<string>> ListObjectsAsync(
         string prefix,
         CancellationToken cancellationToken)
@@ -51,6 +78,13 @@ public class AwsCloudStorageProviderBase : ICloudStorageProvider
             cancellationToken);
     }
 
+    /// <summary>
+    /// Stores an object in the S3 bucket.
+    /// </summary>
+    /// <param name="key">The unique key to identify the object.</param>
+    /// <param name="data">The stream containing the object data to store.</param>
+    /// <param name="cancellationToken">The cancellation token.</param>
+    /// <returns>True if the object was successfully stored; otherwise, false.</returns>
     public async Task<bool> PutObjectAsync(
         string key,
         Stream data,
@@ -63,6 +97,15 @@ public class AwsCloudStorageProviderBase : ICloudStorageProvider
             cancellationToken);
     }
 
+    /// <summary>
+    /// Retrieves an object from the S3 bucket with extensibility hooks for derived classes.
+    /// </summary>
+    /// <param name="key">The unique key identifying the object to retrieve.</param>
+    /// <param name="beforeGetObjectAsync">Optional action to modify the GetObjectRequest before execution.</param>
+    /// <param name="processGetObjectResponse">Optional function to process the GetObjectResponse and return a custom stream.</param>
+    /// <param name="cancellationToken">The cancellation token.</param>
+    /// <returns>A stream containing the object data if found; otherwise, null.</returns>
+    /// <exception cref="CloudStorageProviderException">Thrown when the S3 operation fails.</exception>
     protected async Task<Stream?> GetObjectAsync(
         string key,
         Action<GetObjectRequest>? beforeGetObjectAsync,
@@ -92,6 +135,15 @@ public class AwsCloudStorageProviderBase : ICloudStorageProvider
         }
     }
 
+    /// <summary>
+    /// Lists all objects in the S3 bucket that match the specified prefix with extensibility hooks for derived classes.
+    /// This method handles pagination automatically to retrieve all matching objects.
+    /// </summary>
+    /// <param name="prefix">The prefix to filter objects by.</param>
+    /// <param name="beforeListObjectsV2Async">Optional action to modify the ListObjectsV2Request before execution.</param>
+    /// <param name="cancellationToken">The cancellation token.</param>
+    /// <returns>A list of object keys that match the prefix.</returns>
+    /// <exception cref="CloudStorageProviderException">Thrown when the S3 operation fails.</exception>
     protected async Task<List<string>> ListObjectsAsync(
         string prefix,
         Action<ListObjectsV2Request>? beforeListObjectsV2Async,
@@ -125,6 +177,15 @@ public class AwsCloudStorageProviderBase : ICloudStorageProvider
         }
     }
 
+    /// <summary>
+    /// Stores an object in the S3 bucket with extensibility hooks for derived classes.
+    /// </summary>
+    /// <param name="key">The unique key to identify the object.</param>
+    /// <param name="data">The stream containing the object data to store.</param>
+    /// <param name="beforePutObjectAsync">Optional asynchronous function to modify the PutObjectRequest before execution.</param>
+    /// <param name="cancellationToken">The cancellation token.</param>
+    /// <returns>True if the object was successfully stored; otherwise, false.</returns>
+    /// <exception cref="CloudStorageProviderException">Thrown when the S3 operation fails.</exception>
     protected async Task<bool> PutObjectAsync(
         string key,
         Stream data,
@@ -151,6 +212,16 @@ public class AwsCloudStorageProviderBase : ICloudStorageProvider
         }
     }
 
+    /// <summary>
+    /// Deletes an object from the S3 bucket with extensibility hooks for derived classes.
+    /// This method first checks if the object exists before attempting deletion.
+    /// </summary>
+    /// <param name="key">The unique key identifying the object to delete.</param>
+    /// <param name="beforeGetObjectMetadataAsync">Optional action to modify the GetObjectMetadataRequest before execution.</param>
+    /// <param name="beforeDeleteObjectAsync">Optional action to modify the DeleteObjectRequest before execution.</param>
+    /// <param name="cancellationToken">The cancellation token.</param>
+    /// <returns>True if the object was successfully deleted; false if the object was not found.</returns>
+    /// <exception cref="CloudStorageProviderException">Thrown when the S3 operation fails.</exception>
     protected async Task<bool> DeleteObjectAsync(
         string key,
         Action<GetObjectMetadataRequest>? beforeGetObjectMetadataAsync,

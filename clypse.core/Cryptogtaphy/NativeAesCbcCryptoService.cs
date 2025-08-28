@@ -14,7 +14,7 @@ public class NativeAesCbcCryptoService : ICryptoService, IDisposable
     private bool disposed;
 
     /// <summary>
-    /// Initializes a new instance of AesCbcCryptoService.
+    /// Initializes a new instance of the <see cref="NativeAesCbcCryptoService"/> class.
     /// </summary>
     public NativeAesCbcCryptoService()
     {
@@ -30,8 +30,8 @@ public class NativeAesCbcCryptoService : ICryptoService, IDisposable
     /// <param name="outputStream">Output stream to store cipher data.</param>
     /// <param name="base64Key">Base64 encoded AES key.</param>
     /// <returns>Nothing.</returns>
-    /// <exception cref="ArgumentNullException"></exception>
-    /// <exception cref="ArgumentException"></exception>
+    /// <exception cref="ArgumentNullException">Thrown when inputStream, outputStream, or base64Key is null.</exception>
+    /// <exception cref="ArgumentException">Thrown when base64Key is empty or not a valid base64 string.</exception>
     public async Task EncryptAsync(
         Stream inputStream,
         Stream outputStream,
@@ -60,9 +60,9 @@ public class NativeAesCbcCryptoService : ICryptoService, IDisposable
     /// <param name="outputStream">Output stream to store plaintext data.</param>
     /// <param name="base64Key">Base64 encoded AES key.</param>
     /// <returns>Nothing.</returns>
-    /// <exception cref="ArgumentNullException"></exception>
-    /// <exception cref="ArgumentException"></exception>
-    /// <exception cref="InvalidOperationException"></exception>
+    /// <exception cref="ArgumentNullException">Thrown when inputStream, outputStream, or base64Key is null.</exception>
+    /// <exception cref="ArgumentException">Thrown when base64Key is empty or not a valid base64 string.</exception>
+    /// <exception cref="InvalidOperationException">Thrown when the input data is invalid or cannot be decrypted.</exception>
     public async Task DecryptAsync(
         Stream inputStream,
         Stream outputStream,

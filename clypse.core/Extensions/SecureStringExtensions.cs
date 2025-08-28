@@ -4,8 +4,19 @@ using System.Text;
 
 namespace clypse.core.Extensions;
 
+/// <summary>
+/// Provides extension methods for SecureString to enable safe conversion to byte arrays.
+/// </summary>
 public static class SecureStringExtensions
 {
+    /// <summary>
+    /// Converts a SecureString to a UTF-8 encoded byte array in a secure manner.
+    /// The SecureString is temporarily converted to an unmanaged BSTR, then to UTF-8 bytes,
+    /// with the intermediate memory being securely zeroed out.
+    /// </summary>
+    /// <param name="secureString">The SecureString to convert.</param>
+    /// <returns>A byte array containing the UTF-8 encoded representation of the SecureString.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when secureString is null.</exception>
     public static byte[] ToUtf8Bytes(this SecureString secureString)
     {
         ArgumentNullException.ThrowIfNull(secureString);
