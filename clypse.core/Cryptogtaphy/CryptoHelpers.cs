@@ -6,8 +6,16 @@ using Konscious.Security.Cryptography;
 
 namespace clypse.core.Cryptogtaphy;
 
+/// <summary>
+/// Provides utility methods for cryptographic operations including random byte generation, hashing, and key derivation.
+/// </summary>
 public class CryptoHelpers
 {
+    /// <summary>
+    /// Generates a cryptographically secure array of random bytes.
+    /// </summary>
+    /// <param name="length">The number of random bytes to generate.</param>
+    /// <returns>An array of cryptographically secure random bytes.</returns>
     public static byte[] GenerateRandomBytes(int length)
     {
         using var rng = RandomNumberGenerator.Create();
@@ -16,6 +24,13 @@ public class CryptoHelpers
         return data;
     }
 
+    /// <summary>
+    /// Computes a SHA-256 hash of the specified string and returns a truncated portion of the hash.
+    /// </summary>
+    /// <param name="value">The string value to hash.</param>
+    /// <param name="length">The number of bytes to return from the hash (default: 16).</param>
+    /// <returns>A byte array containing the truncated SHA-256 hash.</returns>
+    /// <exception cref="ArgumentOutOfRangeException">Thrown when length is greater than the hash size.</exception>
     public static byte[] Sha256HashString(
         string value,
         int length = 16)
@@ -29,6 +44,13 @@ public class CryptoHelpers
         return salt;
     }
 
+    /// <summary>
+    /// Derives a cryptographic key from a passphrase using the Argon2d key derivation function.
+    /// </summary>
+    /// <param name="passphrase">The secure passphrase to derive the key from.</param>
+    /// <param name="base64Salt">The base64-encoded salt for key derivation.</param>
+    /// <param name="keyLength">The desired length of the derived key in bytes (default: 32).</param>
+    /// <returns>A byte array containing the derived cryptographic key.</returns>
     public static async Task<byte[]> DeriveKeyFromPassphraseAsync(
         SecureString passphrase,
         string base64Salt,

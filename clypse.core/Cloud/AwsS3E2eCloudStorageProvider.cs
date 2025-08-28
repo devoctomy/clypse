@@ -5,10 +5,19 @@ using clypse.core.Cryptogtaphy.Interfaces;
 
 namespace clypse.core.Cloud;
 
+/// <summary>
+/// AWS S3 cloud storage provider with end-to-end encryption capabilities, providing encrypted storage and retrieval of objects.
+/// </summary>
 public class AwsS3E2eCloudStorageProvider : AwsCloudStorageProviderBase, IEncryptedCloudStorageProvider
 {
     private readonly ICryptoService cryptoService;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="AwsS3E2eCloudStorageProvider"/> class with the specified S3 configuration and crypto service.
+    /// </summary>
+    /// <param name="bucketName">The name of the S3 bucket to use for storage.</param>
+    /// <param name="amazonS3Client">The Amazon S3 client for S3 operations.</param>
+    /// <param name="cryptoService">The cryptographic service for encryption and decryption.</param>
     public AwsS3E2eCloudStorageProvider(
         string bucketName,
         IAmazonS3Client amazonS3Client,

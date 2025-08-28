@@ -4,8 +4,22 @@ using clypse.core.Enums;
 
 namespace clypse.core.Secrets;
 
+/// <summary>
+/// Generic secret which other secrets may be derived from.
+/// </summary>
 public class Secret : ClypseObject
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="Secret"/> class.
+    /// </summary>
+    public Secret()
+    {
+        this.SecretType = SecretType.None;
+    }
+
+    /// <summary>
+    /// Gets or Sets SecretType for this secret.
+    /// </summary>
     [RequiredData]
     [JsonIgnore]
     public SecretType SecretType
@@ -22,6 +36,9 @@ public class Secret : ClypseObject
         }
     }
 
+    /// <summary>
+    /// Gets or sets Name for this secret.
+    /// </summary>
     [RequiredData]
     [JsonIgnore]
     public string? Name
@@ -30,6 +47,9 @@ public class Secret : ClypseObject
         set { this.SetData(nameof(this.Name), value); }
     }
 
+    /// <summary>
+    /// Gets or sets Description of this secret.
+    /// </summary>
     [JsonIgnore]
     public string? Description
     {
@@ -37,6 +57,9 @@ public class Secret : ClypseObject
         set { this.SetData(nameof(this.Description), value); }
     }
 
+    /// <summary>
+    /// Gets list of Tags for this secret.
+    /// </summary>
     [JsonIgnore]
     public List<string> Tags
     {
@@ -52,11 +75,11 @@ public class Secret : ClypseObject
         }
     }
 
-    public Secret()
-    {
-        this.SecretType = SecretType.None;
-    }
-
+    /// <summary>
+    /// Add a tag to this secret.
+    /// </summary>
+    /// <param name="tag">Tag to add.</param>
+    /// <returns>True when successfully added.</returns>
     public bool AddTag(string tag)
     {
         var tags = this.Tags;
@@ -70,11 +93,18 @@ public class Secret : ClypseObject
         return true;
     }
 
+    /// <summary>
+    /// Clear all tags for this secret.
+    /// </summary>
     public void ClearTags()
     {
         this.UpdateTags([]);
     }
 
+    /// <summary>
+    /// Update all tags for this secret, replacing all existing tags.
+    /// </summary>
+    /// <param name="tags">Tags to update this secret with.</param>
     public void UpdateTags(List<string> tags)
     {
         var tagsCsv = string.Join(',', tags);

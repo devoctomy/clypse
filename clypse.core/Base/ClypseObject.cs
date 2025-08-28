@@ -2,8 +2,14 @@
 
 namespace clypse.core.Base;
 
+/// <summary>
+/// Base class for all Clypse objects, providing common functionality for object management including unique identification, timestamps, and data storage.
+/// </summary>
 public class ClypseObject
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ClypseObject"/> class with a unique identifier and current timestamps.
+    /// </summary>
     public ClypseObject()
     {
         this.Id = Guid.NewGuid().ToString();
@@ -11,6 +17,9 @@ public class ClypseObject
         this.LastUpdatedAt = DateTime.UtcNow;
     }
 
+    /// <summary>
+    /// Gets or sets the unique identifier for this object.
+    /// </summary>
     [RequiredData]
     [JsonIgnore]
     public string Id
@@ -26,6 +35,9 @@ public class ClypseObject
         }
     }
 
+    /// <summary>
+    /// Gets or sets the timestamp when this object was created.
+    /// </summary>
     [RequiredData]
     [JsonIgnore]
     public DateTime CreatedAt
@@ -42,6 +54,9 @@ public class ClypseObject
         }
     }
 
+    /// <summary>
+    /// Gets or sets the timestamp when this object was last updated.
+    /// </summary>
     [RequiredData]
     [JsonIgnore]
     public DateTime LastUpdatedAt
@@ -58,8 +73,16 @@ public class ClypseObject
         }
     }
 
+    /// <summary>
+    /// Gets or sets the dictionary containing all data for this object.
+    /// </summary>
     public Dictionary<string, string> Data { get; set; } = [];
 
+    /// <summary>
+    /// Retrieves data value for the specified key.
+    /// </summary>
+    /// <param name="key">The key to retrieve data for.</param>
+    /// <returns>The data value if found; otherwise, null.</returns>
     public string? GetData(string key)
     {
         ArgumentException.ThrowIfNullOrEmpty(key, nameof(key));
@@ -72,6 +95,11 @@ public class ClypseObject
         return null;
     }
 
+    /// <summary>
+    /// Sets or updates data value for the specified key. If value is null or empty, the key is removed.
+    /// </summary>
+    /// <param name="key">The key to set data for.</param>
+    /// <param name="value">The value to set. If null or empty, the key will be removed.</param>
     public void SetData(string key, string? value)
     {
         ArgumentException.ThrowIfNullOrEmpty(key, nameof(key));
@@ -87,6 +115,10 @@ public class ClypseObject
         }
     }
 
+    /// <summary>
+    /// Replaces all data in this object with the provided dictionary.
+    /// </summary>
+    /// <param name="data">The new data dictionary to set.</param>
     public void SetAllData(Dictionary<string, string> data)
     {
         this.Data = data;

@@ -111,14 +111,7 @@ csharp_style_unused_value_assignment_preference = discard_variable:suggestion
 csharp_style_unused_value_expression_statement_preference = discard_variable:silent
 
 # 'using' directive preferences
-csharp_using_directive_placement = outside_namespace:warning
-
-# StyleCop Rules
-dotnet_diagnostic.SA1200.severity = none  # Using directives should be placed correctly
-dotnet_diagnostic.SA1633.severity = none  # File should have header
-dotnet_diagnostic.SA1010.severity = none  # Opening square brackets should be spaced correctly
-dotnet_diagnostic.SA1011.severity = none  # Closing square brackets should be spaced correctly
-dotnet_diagnostic.SA1600.severity = none  # Elements should be documented
+csharp_using_directive_placement = outside_namespace:silent
 
 #### C# Formatting Rules ####
 
@@ -208,130 +201,14 @@ dotnet_naming_style.begins_with_i.required_prefix = I
 dotnet_naming_style.begins_with_i.required_suffix = 
 dotnet_naming_style.begins_with_i.word_separator = 
 dotnet_naming_style.begins_with_i.capitalization = pascal_case
-csharp_style_namespace_declarations = block_scoped:silent
-csharp_style_prefer_method_group_conversion = true:silent
-csharp_style_prefer_top_level_statements = true:silent
-csharp_style_prefer_primary_constructors = true:suggestion
-csharp_prefer_system_threading_lock = true:suggestion
 
-[*.{cs,vb}]
-dotnet_style_operator_placement_when_wrapping = beginning_of_line
-tab_width = 4
-indent_size = 4
-end_of_line = crlf
-dotnet_style_coalesce_expression = true:suggestion
-dotnet_style_null_propagation = true:suggestion
-dotnet_style_prefer_is_null_check_over_reference_equality_method = true:suggestion
-dotnet_style_prefer_auto_properties = true:silent
-dotnet_style_object_initializer = true:suggestion
-dotnet_style_collection_initializer = true:suggestion
-dotnet_style_prefer_simplified_boolean_expressions = true:suggestion
-dotnet_style_prefer_conditional_expression_over_assignment = true:silent
-dotnet_style_prefer_conditional_expression_over_return = true:silent
+#### StyleCop Analyzers Rules ####
 
-# Test project specific rules - disable documentation requirements
-[**/clypse.core.UnitTests/**/*.cs]
-dotnet_diagnostic.SA1600.severity = none  # Elements should be documented
-dotnet_diagnostic.SA1601.severity = none  # Partial elements should be documented
-dotnet_diagnostic.SA1602.severity = none  # Enumeration items should be documented
-dotnet_diagnostic.SA1603.severity = none  # Documentation should contain meaningful text
-dotnet_diagnostic.SA1604.severity = none  # Element documentation should have summary
-dotnet_diagnostic.SA1605.severity = none  # Partial element documentation should have summary
-dotnet_diagnostic.SA1606.severity = none  # Element documentation should have summary text
-dotnet_diagnostic.SA1607.severity = none  # Partial element documentation should have summary text
-dotnet_diagnostic.SA1608.severity = none  # Element documentation should not have default summary
-dotnet_diagnostic.SA1610.severity = none  # Property documentation should have value text
-dotnet_diagnostic.SA1611.severity = none  # Element parameters should be documented
-dotnet_diagnostic.SA1612.severity = none  # Element parameter documentation should match element parameters
-dotnet_diagnostic.SA1613.severity = none  # Element parameter documentation should declare parameter name
-dotnet_diagnostic.SA1614.severity = none  # Element parameter documentation should have text
-dotnet_diagnostic.SA1615.severity = none  # Element return value should be documented
-dotnet_diagnostic.SA1616.severity = none  # Element return value documentation should have text
-dotnet_diagnostic.SA1617.severity = none  # Void return value should not be documented
-dotnet_diagnostic.SA1618.severity = none  # Generic type parameters should be documented
-dotnet_diagnostic.SA1619.severity = none  # Generic type parameters should be documented partial class
-dotnet_diagnostic.SA1620.severity = none  # Generic type parameter documentation should match type parameters
-dotnet_diagnostic.SA1621.severity = none  # Generic type parameter documentation should declare parameter name
-dotnet_diagnostic.SA1622.severity = none  # Generic type parameter documentation should have text
-dotnet_diagnostic.SA1623.severity = none  # Property summary documentation should match accessors
-dotnet_diagnostic.SA1624.severity = none  # Property summary documentation should omit accessor with restricted access
-dotnet_diagnostic.SA1625.severity = none  # Element documentation should not be copied and pasted
-dotnet_diagnostic.SA1626.severity = none  # Single-line comments should not use documentation style slashes
-dotnet_diagnostic.SA1627.severity = none  # Documentation text should not be empty
-dotnet_diagnostic.SA1628.severity = none  # Documentation text should begin with a capital letter
-dotnet_diagnostic.SA1629.severity = none  # Documentation text should end with a period
-dotnet_diagnostic.SA1630.severity = none  # Documentation text should contain whitespace
-dotnet_diagnostic.SA1631.severity = none  # Documentation should meet character percentage
-dotnet_diagnostic.SA1632.severity = none  # Documentation text should meet minimum character length
-dotnet_diagnostic.SA1633.severity = none  # File should have header
-dotnet_diagnostic.SA1634.severity = none  # File header should show copyright
-dotnet_diagnostic.SA1635.severity = none  # File header should have copyright text
-dotnet_diagnostic.SA1636.severity = none  # File header copyright text should match
-dotnet_diagnostic.SA1637.severity = none  # File header should contain file name
-dotnet_diagnostic.SA1638.severity = none  # File header file name documentation should match file name
-dotnet_diagnostic.SA1639.severity = none  # File header should have summary
-dotnet_diagnostic.SA1640.severity = none  # File header should have valid company text
-dotnet_diagnostic.SA1641.severity = none  # File header company name text should match
-dotnet_diagnostic.SA1642.severity = none  # Constructor summary documentation should begin with standard text
-dotnet_diagnostic.SA1643.severity = none  # Destructor summary documentation should begin with standard text
-dotnet_diagnostic.SA1644.severity = none  # Documentation headers should not contain blank lines
-dotnet_diagnostic.SA1645.severity = none  # Included documentation file does not exist
-dotnet_diagnostic.SA1646.severity = none  # Included documentation XPath does not exist
-dotnet_diagnostic.SA1647.severity = none  # Include node does not contain valid file and path
-dotnet_diagnostic.SA1648.severity = none  # Inheritdoc should be used with inheriting class
-dotnet_diagnostic.SA1649.severity = none  # File name should match first type name
-dotnet_diagnostic.SA1650.severity = none  # Element documentation should be spelled correctly
-dotnet_diagnostic.SA1651.severity = none  # Do not use placeholder elements
+# SA1200: Using directives should be placed correctly
+dotnet_diagnostic.SA1200.severity = none
 
-[**/clypse.core.IntTests/**/*.cs]
-dotnet_diagnostic.SA1600.severity = none  # Elements should be documented
-dotnet_diagnostic.SA1601.severity = none  # Partial elements should be documented
-dotnet_diagnostic.SA1602.severity = none  # Enumeration items should be documented
-dotnet_diagnostic.SA1603.severity = none  # Documentation should contain meaningful text
-dotnet_diagnostic.SA1604.severity = none  # Element documentation should have summary
-dotnet_diagnostic.SA1605.severity = none  # Partial element documentation should have summary
-dotnet_diagnostic.SA1606.severity = none  # Element documentation should have summary text
-dotnet_diagnostic.SA1607.severity = none  # Partial element documentation should have summary text
-dotnet_diagnostic.SA1608.severity = none  # Element documentation should not have default summary
-dotnet_diagnostic.SA1610.severity = none  # Property documentation should have value text
-dotnet_diagnostic.SA1611.severity = none  # Element parameters should be documented
-dotnet_diagnostic.SA1612.severity = none  # Element parameter documentation should match element parameters
-dotnet_diagnostic.SA1613.severity = none  # Element parameter documentation should declare parameter name
-dotnet_diagnostic.SA1614.severity = none  # Element parameter documentation should have text
-dotnet_diagnostic.SA1615.severity = none  # Element return value should be documented
-dotnet_diagnostic.SA1616.severity = none  # Element return value documentation should have text
-dotnet_diagnostic.SA1617.severity = none  # Void return value should not be documented
-dotnet_diagnostic.SA1618.severity = none  # Generic type parameters should be documented
-dotnet_diagnostic.SA1619.severity = none  # Generic type parameters should be documented partial class
-dotnet_diagnostic.SA1620.severity = none  # Generic type parameter documentation should match type parameters
-dotnet_diagnostic.SA1621.severity = none  # Generic type parameter documentation should declare parameter name
-dotnet_diagnostic.SA1622.severity = none  # Generic type parameter documentation should have text
-dotnet_diagnostic.SA1623.severity = none  # Property summary documentation should match accessors
-dotnet_diagnostic.SA1624.severity = none  # Property summary documentation should omit accessor with restricted access
-dotnet_diagnostic.SA1625.severity = none  # Element documentation should not be copied and pasted
-dotnet_diagnostic.SA1626.severity = none  # Single-line comments should not use documentation style slashes
-dotnet_diagnostic.SA1627.severity = none  # Documentation text should not be empty
-dotnet_diagnostic.SA1628.severity = none  # Documentation text should begin with a capital letter
-dotnet_diagnostic.SA1629.severity = none  # Documentation text should end with a period
-dotnet_diagnostic.SA1630.severity = none  # Documentation text should contain whitespace
-dotnet_diagnostic.SA1631.severity = none  # Documentation should meet character percentage
-dotnet_diagnostic.SA1632.severity = none  # Documentation text should meet minimum character length
-dotnet_diagnostic.SA1633.severity = none  # File should have header
-dotnet_diagnostic.SA1634.severity = none  # File header should show copyright
-dotnet_diagnostic.SA1635.severity = none  # File header should have copyright text
-dotnet_diagnostic.SA1636.severity = none  # File header copyright text should match
-dotnet_diagnostic.SA1637.severity = none  # File header should contain file name
-dotnet_diagnostic.SA1638.severity = none  # File header file name documentation should match file name
-dotnet_diagnostic.SA1639.severity = none  # File header should have summary
-dotnet_diagnostic.SA1640.severity = none  # File header should have valid company text
-dotnet_diagnostic.SA1641.severity = none  # File header company name text should match
-dotnet_diagnostic.SA1642.severity = none  # Constructor summary documentation should begin with standard text
-dotnet_diagnostic.SA1643.severity = none  # Destructor summary documentation should begin with standard text
-dotnet_diagnostic.SA1644.severity = none  # Documentation headers should not contain blank lines
-dotnet_diagnostic.SA1645.severity = none  # Included documentation file does not exist
-dotnet_diagnostic.SA1646.severity = none  # Included documentation XPath does not exist
-dotnet_diagnostic.SA1647.severity = none  # Include node does not contain valid file and path
-dotnet_diagnostic.SA1648.severity = none  # Inheritdoc should be used with inheriting class
-dotnet_diagnostic.SA1649.severity = none  # File name should match first type name
-dotnet_diagnostic.SA1650.severity = none  # Element documentation should be spelled correctly
-dotnet_diagnostic.SA1651.severity = none  # Do not use placeholder elements
+# SA1633: File should have header
+dotnet_diagnostic.SA1633.severity = none
+
+# SA1010: Opening square brackets should be spaced correctly
+dotnet_diagnostic.SA1010.severity = none
