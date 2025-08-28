@@ -253,9 +253,7 @@ public class VaultManager(
                 continue;
             }
 
-            if (secret.Name != index.Name ||
-                secret.Description != index.Description ||
-                string.Join(',', secret.Tags) != index.Tags)
+            if (!index.Equals(secret))
             {
                 results.MismatchedSecrets++;
                 continue;
@@ -269,12 +267,6 @@ public class VaultManager(
         var allSecretKeys = allSecrets.Select(x => x.Split('/')[2]).ToList();
         var unindexedSecrets = allSecretKeys.Where(x => !vault.Index.Entries.Any(y => y.Id == x));
         results.UnindexedSecrets.AddRange(unindexedSecrets);
-
-        results.Success =
-            results.MismatchedSecrets == 0 &&
-            results.MissingSecrets == 0 &&
-            results.UnindexedSecrets.Count == 0;
-
         return results;
     }
 

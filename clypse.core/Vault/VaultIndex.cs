@@ -1,4 +1,7 @@
-﻿namespace clypse.core.Vault;
+﻿using clypse.core.Secrets;
+using System;
+
+namespace clypse.core.Vault;
 
 /// <summary>
 /// Represents an index of secrets within a vault, containing metadata about each secret for efficient lookup and management.

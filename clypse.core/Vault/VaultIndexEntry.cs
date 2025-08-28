@@ -1,4 +1,6 @@
-﻿namespace clypse.core.Vault;
+﻿using clypse.core.Secrets;
+
+namespace clypse.core.Vault;
 
 /// <summary>
 /// Represents a single entry in the vault index, containing metadata about a secret without the actual secret data.
@@ -43,4 +45,17 @@ public class VaultIndexEntry
     /// Gets or sets the comma-separated tags for the secret.
     /// </summary>
     public string? Tags { get; set; }
+
+    /// <summary>
+    /// Compare this Index entry to a secret.
+    /// </summary>
+    /// <param name="secret">Secret to compare this index entry to.</param>
+    /// <returns>True if the Index matches the secret.</returns>
+    public bool Equals(Secret secret)
+    {
+        return
+            secret.Name == this.Name &&
+            secret.Description == this.Description &&
+            string.Join(',', secret.Tags) == this.Tags;
+    }
 }

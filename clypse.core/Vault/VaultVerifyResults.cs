@@ -6,9 +6,9 @@
 public class VaultVerifyResults
 {
     /// <summary>
-    /// Gets or sets a value indicating whether the verification was successful (no integrity issues found).
+    /// Gets a value indicating whether the verification was successful (no integrity issues found).
     /// </summary>
-    public bool Success { get; set; }
+    public bool Success => this.MissingSecrets == 0 && this.MismatchedSecrets == 0 && this.UnindexedSecrets.Count == 0;
 
     /// <summary>
     /// Gets or sets the number of secrets that are referenced in the index but missing from storage.
