@@ -1,6 +1,8 @@
 ﻿@page "/"
-@using clypse.portal.Services
-@inject ICognitoAuthService CognitoAuth
+@using clypse.portal.Models
+@using Microsoft.JSInterop
+@inject IJSRuntime JSRuntime
+@inject AwsCognitoConfig CognitoConfig
 
 <PageTitle>Clypse Portal - Home</PageTitle>
 
@@ -12,7 +14,7 @@
                     <h3 class="text-center">AWS Cognito Login</h3>
                 </div>
                 <div class="card-body">
-                    @if (!CognitoAuth.IsAuthenticated)
+                    @if (!isAuthenticated)
                     {
                         <EditForm Model="@loginModel" OnValidSubmit="@HandleLogin">
                             <DataAnnotationsValidator />
@@ -58,12 +60,12 @@
                             <div class="row">
                                 <div class="col-12 mb-3">
                                     <label class="form-label fw-bold">Access Token:</label>
-                                    <textarea class="form-control" rows="3" readonly>@(CognitoAuth.AccessToken ?? "Not available")</textarea>
+                                    <textarea class="form-control" rows="3" readonly>@(accessToken ?? "Not available")</textarea>
                                 </div>
                                 
                                 <div class="col-12 mb-3">
                                     <label class="form-label fw-bold">ID Token:</label>
-                                    <textarea class="form-control" rows="3" readonly>@(CognitoAuth.IdToken ?? "Not available")</textarea>
+                                    <textarea class="form-control" rows="3" readonly>@(idToken ?? "Not available")</textarea>
                                 </div>
                             </div>
 
@@ -77,7 +79,7 @@
                                     
                                     <div class="col-12 mb-3">
                                         <label class="form-label fw-bold">AWS Secret Access Key:</label>
-                                        <input type="password" class="form-control" readonly value="@awsCredentials.SecretKey" />
+                                        <input type="password" class="form-control" readonly value="@awsCredentials.SecretAccessKey" />
                                     </div>
 
                                     @if (!string.IsNullOrEmpty(awsCredentials.SessionToken))
@@ -90,7 +92,7 @@
 
                                     <div class="col-12 mb-3">
                                         <label class="form-label fw-bold">Token Expiration:</label>
-                                        <input type="text" class="form-control" readonly value="@awsCredentials.Expiration.GetValueOrDefault().ToString("yyyy-MM-dd HH:mm:ss UTC")" />
+                                        <input type="text" class="form-control" readonly value="@awsCredentials.Expiration" />
                                     </div>
                                 </div>
                             }
@@ -107,13 +109,42 @@
 @code {
     private LoginModel loginModel = new();
     private bool isLoading = false;
+    private bool isAuthenticated = false;
     private string? errorMessage;
-    private Amazon.CognitoIdentity.Model.Credentials? awsCredentials;
+    private string? accessToken;
+    private string? idToken;
+    private AwsCredentials? awsCredentials;
 
     private class LoginModel
     {
         public string Username { get; set; } = string.Empty;
         public string Password { get; set; } = string.Empty;
+    }
+
+    private class AwsCredentials
+    {
+        public string AccessKeyId { get; set; } = string.Empty;
+        public string SecretAccessKey { get; set; } = string.Empty;
+        public string SessionToken { get; set; } = string.Empty;
+        public string Expiration { get; set; } = string.Empty;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            // Initialize Cognito with configuration
+            await JSRuntime.InvokeVoidAsync("eval", $@"
+                window.cognitoConfig = {{
+                    userPoolId: '{CognitoConfig.UserPoolId}',
+                    userPoolClientId: '{CognitoConfig.UserPoolClientId}',
+                    region: '{CognitoConfig.Region}',
+                    identityPoolId: '{CognitoConfig.IdentityPoolId}'
+                }};
+            ");
+            
+            await JSRuntime.InvokeAsync<string>("CognitoAuth.initialize", CognitoConfig);
+        }
     }
 
     private async Task HandleLogin()
@@ -124,17 +155,31 @@
 
         try
         {
-            var result = await CognitoAuth.LoginAsync(loginModel.Username, loginModel.Password);
+            var result = await JSRuntime.InvokeAsync<LoginResult>("CognitoAuth.login", loginModel.Username, loginModel.Password);
             
             if (result.Success)
             {
-                awsCredentials = result.AwsCredentials;
+                isAuthenticated = true;
+                accessToken = result.AccessToken;
+                idToken = result.IdToken;
+                
+                if (result.AwsCredentials != null)
+                {
+                    awsCredentials = new AwsCredentials
+                    {
+                        AccessKeyId = result.AwsCredentials.AccessKeyId,
+                        SecretAccessKey = result.AwsCredentials.SecretAccessKey,
+                        SessionToken = result.AwsCredentials.SessionToken,
+                        Expiration = result.AwsCredentials.Expiration
+                    };
+                }
+                
                 loginModel.Username = string.Empty;
                 loginModel.Password = string.Empty;
             }
             else
             {
-                errorMessage = result.ErrorMessage ?? "Login failed";
+                errorMessage = result.Error ?? "Login failed";
             }
         }
         catch (Exception ex)
@@ -150,9 +195,29 @@
 
     private async Task HandleLogout()
     {
-        await CognitoAuth.LogoutAsync();
+        await JSRuntime.InvokeAsync<string>("CognitoAuth.logout");
+        isAuthenticated = false;
+        accessToken = null;
+        idToken = null;
         awsCredentials = null;
         errorMessage = null;
         StateHasChanged();
+    }
+
+    private class LoginResult
+    {
+        public bool Success { get; set; }
+        public string? Error { get; set; }
+        public string? AccessToken { get; set; }
+        public string? IdToken { get; set; }
+        public JsAwsCredentials? AwsCredentials { get; set; }
+    }
+
+    private class JsAwsCredentials
+    {
+        public string AccessKeyId { get; set; } = string.Empty;
+        public string SecretAccessKey { get; set; } = string.Empty;
+        public string SessionToken { get; set; } = string.Empty;
+        public string Expiration { get; set; } = string.Empty;
     }
 }

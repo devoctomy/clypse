@@ -1,6 +1,5 @@
 using clypse.portal;
 using clypse.portal.Models;
-using clypse.portal.Services;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 
@@ -14,8 +13,5 @@ builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.
 var cognitoConfig = new AwsCognitoConfig();
 builder.Configuration.GetSection("AwsCognito").Bind(cognitoConfig);
 builder.Services.AddSingleton(cognitoConfig);
-
-// Register Cognito Auth Service
-builder.Services.AddScoped<ICognitoAuthService, CognitoAuthService>();
 
 await builder.Build().RunAsync();
