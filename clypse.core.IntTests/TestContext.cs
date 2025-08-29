@@ -20,4 +20,6 @@ public class TestContext
     public VaultVerifyResults? VerifyResults { get; set; }
 
     public Dictionary<string, WebSecret> AddedSecrets { get; set; } = [];
+
+    public string? IdentityId { get; set; }
 }

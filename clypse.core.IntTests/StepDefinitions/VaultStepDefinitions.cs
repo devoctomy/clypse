@@ -62,10 +62,17 @@ public sealed class VaultStepDefinitions(TestContext testContext)
         this.compressionService = new GZipCompressionService();
     }
 
+    [Given("user IdentityId is set")]
+    public void GivenUserIdentityIdIsSet()
+    {
+        this.testContext.IdentityId = Guid.NewGuid().ToString();
+    }
+
     [Given("vault manager is initialised")]
     public void GivenVaultManagerIsInitialised()
     {
         this.vaultManager = new VaultManager(
+            this.testContext.IdentityId!,
             this.compressionService!,
             this.encryptedCloudStorageProvider!);
     }
@@ -87,7 +94,7 @@ public sealed class VaultStepDefinitions(TestContext testContext)
             secureString.AppendChar(c);
         }
 
-        var key = await CryptoHelpers.DeriveKeyFromPassphraseAsync(
+        var key = await CryptoHelpers.DeriveKeyFromPassphraseUsingArgon2Async(
             secureString,
             this.testContext.Vault!.Info.Base64Salt);
         this.testContext.Base64Key = Convert.ToBase64String(key);

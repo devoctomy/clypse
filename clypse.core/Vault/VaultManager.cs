@@ -11,6 +11,7 @@ namespace clypse.core.Vault;
 /// <summary>
 /// Manages vault operations including creation, saving, loading, and deletion of vaults and their secrets.
 /// </summary>
+/// <param name="prefix">Prefix to use for all S3 object keys.</param>
 /// <param name="compressionService">The compression service for data compression.</param>
 /// <param name="encryptedCloudStorageProvider">The encrypted cloud storage provider for secure data storage.</param>
 public class VaultManager(
@@ -171,7 +172,7 @@ public class VaultManager(
         CancellationToken cancellationToken)
     {
         var allKeys = await encryptedCloudStorageProvider.ListObjectsAsync(
-            $"{vault.Info.Id}/",
+            $"{prefix}/{vault.Info.Id}/",
             cancellationToken);
         foreach (var key in allKeys)
         {
@@ -261,11 +262,11 @@ public class VaultManager(
             }
         }
 
-        var secretsPrefix = $"{vault.Info.Id}/secrets/";
+        var secretsPrefix = $"{prefix}/{vault.Info.Id}/secrets/";
         var allSecrets = await encryptedCloudStorageProvider.ListObjectsAsync(
             secretsPrefix,
             cancellationToken);
-        var allSecretKeys = allSecrets.Select(x => x.Split('/')[2]).ToList();
+        var allSecretKeys = allSecrets.Select(x => x.Split('/')[3]).ToList();
         var unindexedSecrets = allSecretKeys.Where(x => !vault.Index.Entries.Any(y => y.Id == x));
         results.UnindexedSecrets.AddRange(unindexedSecrets);
         return results;

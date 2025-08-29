@@ -222,7 +222,7 @@ public class JavaScriptS3Client : IAmazonS3Client
         PutObjectRequest request,
         CancellationToken cancellationToken)
     {
-        byte[] bodyData = null;
+        byte[]? bodyData = null;
         if (request.InputStream != null)
         {
             using var memoryStream = new MemoryStream();

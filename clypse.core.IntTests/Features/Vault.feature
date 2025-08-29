@@ -9,6 +9,7 @@ Background:
 	And crypto service is initialised
 	And aws cloud service provider is initialised
 	And compression service is initialised
+	And user IdentityId is set
 	And vault manager is initialised
 
 @awss3 @vault @secret @crud
