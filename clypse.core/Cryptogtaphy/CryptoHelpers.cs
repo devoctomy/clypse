@@ -51,7 +51,7 @@ public class CryptoHelpers
     /// <param name="base64Salt">The base64-encoded salt for key derivation.</param>
     /// <param name="keyLength">The desired length of the derived key in bytes (default: 32).</param>
     /// <returns>A byte array containing the derived cryptographic key.</returns>
-    public static async Task<byte[]> DeriveKeyFromPassphraseAsync(
+    public static async Task<byte[]> DeriveKeyFromPassphraseUsingArgon2Async(
         SecureString passphrase,
         string base64Salt,
         int keyLength = 32)
@@ -66,4 +66,28 @@ public class CryptoHelpers
         };
         return await argon2.GetBytesAsync(keyLength);
     }
+
+    /// <summary>
+    /// Derives a cryptographic key from a passphrase using the native .NET PBKDF2 (RFC 2898) key derivation function.
+    /// </summary>
+    /// <param name="passphrase">The secure passphrase to derive the key from.</param>
+    /// <param name="base64Salt">The base64-encoded salt for key derivation.</param>
+    /// <param name="keyLength">The desired length of the derived key in bytes (default: 32).</param>
+    /// <param name="iterations">The number of iterations to perform (default: 100000).</param>
+    /// <returns>A byte array containing the derived cryptographic key.</returns>
+    public static async Task<byte[]> DeriveKeyFromPassphraseUsingRfc2898Async(
+        SecureString passphrase,
+        string base64Salt,
+        int keyLength = 32,
+        int iterations = 100000)
+    {
+        return await Task.Run(() =>
+        {
+            var passphraseBytes = passphrase.ToUtf8Bytes();
+            var salt = Convert.FromBase64String(base64Salt);
+            using var pbkdf2 = new Rfc2898DeriveBytes(passphraseBytes, salt, iterations, HashAlgorithmName.SHA256);
+            return pbkdf2.GetBytes(keyLength);
+        });
+    }
+
 }

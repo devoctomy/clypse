@@ -1,4 +1,10 @@
 ﻿@page "/"
+@using System.Security
+@using clypse.core.Cloud
+@using clypse.core.Cloud.Aws.S3
+@using clypse.core.Compression
+@using clypse.core.Cryptogtaphy
+@using clypse.core.Vault
 @using clypse.portal.Models
 @using Microsoft.JSInterop
 @inject IJSRuntime JSRuntime
@@ -97,7 +103,36 @@
                                 </div>
                             }
 
-                            <button class="btn btn-secondary" @onclick="HandleLogout">Logout</button>
+                            <div class="d-grid gap-2">
+                                <button class="btn btn-success" @onclick="HandleTestClypse" disabled="@isTestingClypse">
+                                    @if (isTestingClypse)
+                                    {
+                                        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                        <span>Testing Clypse...</span>
+                                    }
+                                    else
+                                    {
+                                        <span>Test Clypse Core</span>
+                                    }
+                                </button>
+                                <button class="btn btn-secondary" @onclick="HandleLogout">Logout</button>
+                            </div>
+                            
+                            @if (!string.IsNullOrEmpty(clypseTestResult))
+                            {
+                                <div class="alert alert-info mt-3" role="alert">
+                                    <strong>Clypse Test Result:</strong><br/>
+                                    @clypseTestResult
+                                </div>
+                            }
+                            
+                            @if (!string.IsNullOrEmpty(clypseTestError))
+                            {
+                                <div class="alert alert-danger mt-3" role="alert">
+                                    <strong>Clypse Test Error:</strong><br/>
+                                    @clypseTestError
+                                </div>
+                            }
                         </div>
                     }
                 </div>
@@ -110,9 +145,12 @@
     private LoginModel loginModel = new();
     private bool isLoading = false;
     private bool isAuthenticated = false;
+    private bool isTestingClypse = false;
     private string? errorMessage;
     private string? accessToken;
     private string? idToken;
+    private string? clypseTestResult;
+    private string? clypseTestError;
     private AwsCredentials? awsCredentials;
 
     private class LoginModel
@@ -142,7 +180,7 @@
                     identityPoolId: '{CognitoConfig.IdentityPoolId}'
                 }};
             ");
-            
+
             await JSRuntime.InvokeAsync<string>("CognitoAuth.initialize", CognitoConfig);
         }
     }
@@ -156,13 +194,13 @@
         try
         {
             var result = await JSRuntime.InvokeAsync<LoginResult>("CognitoAuth.login", loginModel.Username, loginModel.Password);
-            
+
             if (result.Success)
             {
                 isAuthenticated = true;
                 accessToken = result.AccessToken;
                 idToken = result.IdToken;
-                
+
                 if (result.AwsCredentials != null)
                 {
                     awsCredentials = new AwsCredentials
@@ -173,7 +211,7 @@
                         Expiration = result.AwsCredentials.Expiration
                     };
                 }
-                
+
                 loginModel.Username = string.Empty;
                 loginModel.Password = string.Empty;
             }
@@ -201,7 +239,74 @@
         idToken = null;
         awsCredentials = null;
         errorMessage = null;
+        clypseTestResult = null;
+        clypseTestError = null;
         StateHasChanged();
+    }
+
+    private async Task HandleTestClypse()
+    {
+        if (awsCredentials == null)
+        {
+            clypseTestError = "No AWS credentials available";
+            return;
+        }
+
+        isTestingClypse = true;
+        clypseTestResult = null;
+        clypseTestError = null;
+        StateHasChanged();
+
+        try
+        {
+            await TestClypse(awsCredentials.AccessKeyId, awsCredentials.SecretAccessKey);
+            clypseTestResult = "Clypse Core test completed successfully! Vault created and saved to S3.";
+        }
+        catch (Exception ex)
+        {
+            clypseTestError = $"Clypse test failed: {ex.Message}";
+        }
+        finally
+        {
+            isTestingClypse = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task TestClypse(
+        string accessKey,
+        string secretAccessKey)
+    {
+        var compressionService = new GZipCompressionService();
+        var awsS3Client = new AmazonS3ClientWrapper(
+            accessKey,
+            secretAccessKey,
+            Amazon.RegionEndpoint.EUWest1);
+        var awsS3E2eCloudStorageProvider = new AwsS3E2eCloudStorageProvider(
+            "clypse-testing",
+            awsS3Client,
+            new BouncyCastleAesGcmCryptoService());
+        var vaultManager = new VaultManager(
+            compressionService,
+            awsS3E2eCloudStorageProvider);
+
+        var vault = vaultManager.Create(
+            "Foobar",
+            "This is a test vault"
+        );
+        var password = new SecureString();
+        foreach (var curChar in "password123")
+        {
+            password.AppendChar(curChar);
+        };
+
+        var base64Key = await CryptoHelpers.DeriveKeyFromPassphraseUsingRfc2898Async(
+            password,
+            vault.Info.Base64Salt);
+        await vaultManager.SaveAsync(
+            vault,
+            Convert.ToBase64String(base64Key),
+            CancellationToken.None);
     }
 
     private class LoginResult
