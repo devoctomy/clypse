@@ -1,5 +1,5 @@
-﻿using clypse.core.Secrets;
-using System;
+﻿using System;
+using clypse.core.Secrets;
 
 namespace clypse.core.Vault;
 
