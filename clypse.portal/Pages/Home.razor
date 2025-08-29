@@ -96,6 +96,14 @@
                                         </div>
                                     }
 
+                                    @if (!string.IsNullOrEmpty(awsCredentials.IdentityId))
+                                    {
+                                        <div class="col-12 mb-3">
+                                            <label class="form-label fw-bold">Identity ID (cognito-identity.amazonaws.com:sub):</label>
+                                            <input type="text" class="form-control" value="@awsCredentials.IdentityId" readonly />
+                                        </div>
+                                    }
+
                                     <div class="col-12 mb-3">
                                         <label class="form-label fw-bold">Token Expiration:</label>
                                         <input type="text" class="form-control" readonly value="@awsCredentials.Expiration" />
@@ -165,6 +173,7 @@
         public string SecretAccessKey { get; set; } = string.Empty;
         public string SessionToken { get; set; } = string.Empty;
         public string Expiration { get; set; } = string.Empty;
+        public string IdentityId { get; set; } = string.Empty;
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -208,7 +217,8 @@
                         AccessKeyId = result.AwsCredentials.AccessKeyId,
                         SecretAccessKey = result.AwsCredentials.SecretAccessKey,
                         SessionToken = result.AwsCredentials.SessionToken,
-                        Expiration = result.AwsCredentials.Expiration
+                        Expiration = result.AwsCredentials.Expiration,
+                        IdentityId = result.AwsCredentials.IdentityId
                     };
                 }
 
@@ -284,7 +294,7 @@
             JSRuntime,
             accessKey,
             secretAccessKey,
-            awsCredentials?.SessionToken ?? "",
+            awsCredentials?.SessionToken ?? string.Empty,
             "eu-west-2");
             
         var awsS3E2eCloudStorageProvider = new AwsS3E2eCloudStorageProvider(
@@ -292,6 +302,7 @@
             jsS3Client,
             new BouncyCastleAesGcmCryptoService());
         var vaultManager = new VaultManager(
+            awsCredentials?.IdentityId ?? string.Empty,
             compressionService,
             awsS3E2eCloudStorageProvider);
 
@@ -329,5 +340,6 @@
         public string SecretAccessKey { get; set; } = string.Empty;
         public string SessionToken { get; set; } = string.Empty;
         public string Expiration { get; set; } = string.Empty;
+        public string IdentityId { get; set; } = string.Empty;
     }
 }

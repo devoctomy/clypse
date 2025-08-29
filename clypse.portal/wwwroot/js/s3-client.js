@@ -2,7 +2,6 @@ window.S3Client = {
     
     putObject: async function(request) {
         try {
-            // Configure AWS credentials
             AWS.config.update({
                 accessKeyId: request.accessKeyId,
                 secretAccessKey: request.secretAccessKey,
@@ -12,7 +11,6 @@ window.S3Client = {
 
             const s3 = new AWS.S3();
             
-            // Debug the request body
             if (!request.body) {
                 return {
                     Success: false,
@@ -47,17 +45,17 @@ window.S3Client = {
     getObject: async function(request) {
         try {
             AWS.config.update({
-                accessKeyId: request.AccessKeyId,
-                secretAccessKey: request.SecretAccessKey,
-                sessionToken: request.SessionToken,
-                region: request.Region
+                accessKeyId: request.cccessKeyId,
+                secretAccessKey: request.secretAccessKey,
+                sessionToken: request.sessionToken,
+                region: request.region
             });
 
             const s3 = new AWS.S3();
             
             const params = {
-                Bucket: request.Bucket,
-                Key: request.Key
+                Bucket: request.bucket,
+                Key: request.key
             };
 
             const result = await s3.getObject(params).promise();
@@ -86,17 +84,17 @@ window.S3Client = {
     getObjectMetadata: async function(request) {
         try {
             AWS.config.update({
-                accessKeyId: request.AccessKeyId,
-                secretAccessKey: request.SecretAccessKey,
-                sessionToken: request.SessionToken,
-                region: request.Region
+                accessKeyId: request.accessKeyId,
+                secretAccessKey: request.secretAccessKey,
+                sessionToken: request.sessionToken,
+                region: request.region
             });
 
             const s3 = new AWS.S3();
             
             const params = {
-                Bucket: request.Bucket,
-                Key: request.Key
+                Bucket: request.bucket,
+                Key: request.key
             };
 
             const result = await s3.headObject(params).promise();
@@ -121,17 +119,17 @@ window.S3Client = {
     deleteObject: async function(request) {
         try {
             AWS.config.update({
-                accessKeyId: request.AccessKeyId,
-                secretAccessKey: request.SecretAccessKey,
-                sessionToken: request.SessionToken,
-                region: request.Region
+                accessKeyId: request.accessKeyId,
+                secretAccessKey: request.secretAccessKey,
+                sessionToken: request.sessionToken,
+                region: request.region
             });
 
             const s3 = new AWS.S3();
             
             const params = {
-                Bucket: request.Bucket,
-                Key: request.Key
+                Bucket: request.bucket,
+                Key: request.key
             };
 
             const result = await s3.deleteObject(params).promise();
@@ -154,19 +152,19 @@ window.S3Client = {
     listObjectsV2: async function(request) {
         try {
             AWS.config.update({
-                accessKeyId: request.AccessKeyId,
-                secretAccessKey: request.SecretAccessKey,
-                sessionToken: request.SessionToken,
-                region: request.Region
+                accessKeyId: request.accessKeyId,
+                secretAccessKey: request.secretAccessKey,
+                sessionToken: request.sessionToken,
+                region: request.region
             });
 
             const s3 = new AWS.S3();
             
             const params = {
-                Bucket: request.Bucket,
-                Prefix: request.Prefix,
-                MaxKeys: request.MaxKeys,
-                ContinuationToken: request.ContinuationToken
+                Bucket: request.bucket,
+                Prefix: request.prefix,
+                MaxKeys: request.maxKeys,
+                ContinuationToken: request.continuationToken
             };
 
             const result = await s3.listObjectsV2(params).promise();

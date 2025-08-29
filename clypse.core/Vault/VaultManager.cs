@@ -14,6 +14,7 @@ namespace clypse.core.Vault;
 /// <param name="compressionService">The compression service for data compression.</param>
 /// <param name="encryptedCloudStorageProvider">The encrypted cloud storage provider for secure data storage.</param>
 public class VaultManager(
+    string prefix,
     ICompressionService compressionService,
     IEncryptedCloudStorageProvider encryptedCloudStorageProvider)
     : IVaultManager
@@ -340,7 +341,7 @@ public class VaultManager(
         string base64Key,
         CancellationToken cancellationToken)
     {
-        var objectKey = $"{vaultId}/{key}";
+        var objectKey = $"{prefix}/{vaultId}/{key}";
         var objectStream = new MemoryStream();
         await JsonSerializer.SerializeAsync(
             objectStream,
@@ -369,7 +370,7 @@ public class VaultManager(
         string base64Key,
         CancellationToken cancellationToken)
     {
-        var objectKey = $"{vaultId}/{key}";
+        var objectKey = $"{prefix}/{vaultId}/{key}";
         var encryptedCompressedStream = await encryptedCloudStorageProvider.GetEncryptedObjectAsync(
             objectKey,
             base64Key,
@@ -400,7 +401,7 @@ public class VaultManager(
         string base64Key,
         CancellationToken cancellationToken)
     {
-        var objectKey = $"{vaultId}/secrets/{secretId}";
+        var objectKey = $"{prefix}/{vaultId}/secrets/{secretId}";
         var deleted = await encryptedCloudStorageProvider.DeleteEncryptedObjectAsync(
             objectKey,
             base64Key,
