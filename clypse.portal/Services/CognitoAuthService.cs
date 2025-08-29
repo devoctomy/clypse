@@ -5,8 +5,6 @@ using Amazon.CognitoIdentityProvider;
 using Amazon.CognitoIdentityProvider.Model;
 using clypse.portal.Models;
 
-using System.Collections.Generic;
-
 namespace clypse.portal.Services;
 
 public class CognitoAuthService : ICognitoAuthService

@@ -10,7 +10,7 @@ builder.RootComponents.Add<HeadOutlet>("head::after");
 
 builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
 
-// Configure AWS Cognito settings
+// Configure AWS Cognito settings from appsettings.json
 var cognitoConfig = new AwsCognitoConfig();
 builder.Configuration.GetSection("AwsCognito").Bind(cognitoConfig);
 builder.Services.AddSingleton(cognitoConfig);
