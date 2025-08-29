@@ -12,8 +12,16 @@ window.S3Client = {
 
             const s3 = new AWS.S3();
             
-            // Convert base64 back to buffer
-            const buffer = Uint8Array.from(atob(request.Body), c => c.charCodeAt(0));
+            // Debug the request body
+            if (!request.Body) {
+                return {
+                    Success: false,
+                    ErrorMessage: 'Request body is null or undefined'
+                };
+            }
+            
+            // Convert byte array to Uint8Array
+            const buffer = new Uint8Array(request.Body);
             
             const params = {
                 Bucket: request.Bucket,

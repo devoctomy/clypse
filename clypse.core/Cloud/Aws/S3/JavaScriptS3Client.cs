@@ -87,7 +87,7 @@ public class JavaScriptS3Client : IAmazonS3Client
         var jsRequest = new
         {
             Bucket = request.BucketName,
-            Key = request.Key,
+            request.Key,
             AccessKeyId = this.accessKey,
             SecretAccessKey = this.secretKey,
             SessionToken = this.sessionToken,
@@ -170,9 +170,9 @@ public class JavaScriptS3Client : IAmazonS3Client
         var jsRequest = new
         {
             Bucket = request.BucketName,
-            Prefix = request.Prefix,
-            MaxKeys = request.MaxKeys,
-            ContinuationToken = request.ContinuationToken,
+            request.Prefix,
+            request.MaxKeys,
+            request.ContinuationToken,
             AccessKeyId = this.accessKey,
             SecretAccessKey = this.secretKey,
             SessionToken = this.sessionToken,
@@ -222,24 +222,29 @@ public class JavaScriptS3Client : IAmazonS3Client
         PutObjectRequest request,
         CancellationToken cancellationToken)
     {
-        string base64Content = string.Empty;
+        byte[] bodyData = null;
         if (request.InputStream != null)
         {
             using var memoryStream = new MemoryStream();
             await request.InputStream.CopyToAsync(memoryStream);
-            base64Content = Convert.ToBase64String(memoryStream.ToArray());
+            bodyData = memoryStream.ToArray();
         }
         else if (!string.IsNullOrEmpty(request.ContentBody))
         {
-            var bytes = Encoding.UTF8.GetBytes(request.ContentBody);
-            base64Content = Convert.ToBase64String(bytes);
+            bodyData = Encoding.UTF8.GetBytes(request.ContentBody);
+        }
+
+        // Debug: check if bodyData is null or empty
+        if (bodyData == null || bodyData.Length == 0)
+        {
+            throw new AmazonS3Exception($"No body data available. InputStream: {request.InputStream != null}, ContentBody: {!string.IsNullOrEmpty(request.ContentBody)}");
         }
 
         var jsRequest = new
         {
             Bucket = request.BucketName,
             Key = request.Key,
-            Body = base64Content,
+            Body = bodyData,
             ContentType = request.ContentType,
             AccessKeyId = this.accessKey,
             SecretAccessKey = this.secretKey,
