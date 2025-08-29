@@ -4,30 +4,27 @@ window.S3Client = {
         try {
             // Configure AWS credentials
             AWS.config.update({
-                accessKeyId: request.AccessKeyId,
-                secretAccessKey: request.SecretAccessKey,
-                sessionToken: request.SessionToken,
-                region: request.Region
+                accessKeyId: request.accessKeyId,
+                secretAccessKey: request.secretAccessKey,
+                sessionToken: request.sessionToken,
+                region: request.region
             });
 
             const s3 = new AWS.S3();
             
             // Debug the request body
-            if (!request.Body) {
+            if (!request.body) {
                 return {
                     Success: false,
                     ErrorMessage: 'Request body is null or undefined'
                 };
             }
-            
-            // Convert byte array to Uint8Array
-            const buffer = new Uint8Array(request.Body);
-            
+                  
             const params = {
-                Bucket: request.Bucket,
-                Key: request.Key,
-                Body: buffer,
-                ContentType: request.ContentType || 'application/octet-stream'
+                Bucket: request.bucket,
+                Key: request.key,
+                Body: request.body,
+                ContentType: request.contentType
             };
 
             const result = await s3.putObject(params).promise();

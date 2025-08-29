@@ -243,9 +243,9 @@ public class JavaScriptS3Client : IAmazonS3Client
         var jsRequest = new
         {
             Bucket = request.BucketName,
-            Key = request.Key,
+            request.Key,
             Body = bodyData,
-            ContentType = request.ContentType,
+            ContentType = "application/octet-stream",
             AccessKeyId = this.accessKey,
             SecretAccessKey = this.secretKey,
             SessionToken = this.sessionToken,
