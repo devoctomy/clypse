@@ -22,6 +22,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Integration Tests", "Integr
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "clypse.core.IntTests", "clypse.core.IntTests\clypse.core.IntTests.csproj", "{6A33D703-4495-4C63-8C41-0DC8273A751B}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "clypse.portal", "clypse.portal\clypse.portal.csproj", "{CC531A7E-0297-4060-A923-B1DEFF9B1063}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -40,6 +42,10 @@ Global
 		{6A33D703-4495-4C63-8C41-0DC8273A751B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6A33D703-4495-4C63-8C41-0DC8273A751B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6A33D703-4495-4C63-8C41-0DC8273A751B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CC531A7E-0297-4060-A923-B1DEFF9B1063}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CC531A7E-0297-4060-A923-B1DEFF9B1063}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CC531A7E-0297-4060-A923-B1DEFF9B1063}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CC531A7E-0297-4060-A923-B1DEFF9B1063}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
