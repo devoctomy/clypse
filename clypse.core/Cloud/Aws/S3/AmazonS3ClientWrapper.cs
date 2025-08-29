@@ -31,14 +31,10 @@ public class AmazonS3ClientWrapper : IAmazonS3Client
         this.accessKey = accessKey;
         this.secretAccessKey = secretAccessKey;
         this.regionEndpoint = regionEndpoint;
-        
-        // Configure for Blazor WebAssembly compatibility
         var config = new AmazonS3Config
         {
             RegionEndpoint = regionEndpoint,
-            UseHttp = true // Force HTTP/1.1 for WebAssembly compatibility
         };
-        
         this.client = new AmazonS3Client(this.CreateBasicAwsCredentials(), config);
     }
 

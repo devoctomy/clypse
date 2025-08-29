@@ -278,13 +278,18 @@
         string secretAccessKey)
     {
         var compressionService = new GZipCompressionService();
-        var awsS3Client = new AmazonS3ClientWrapper(
+        
+        // Use JavaScript S3 client instead of native AWS SDK
+        var jsS3Client = new JavaScriptS3Client(
+            JSRuntime,
             accessKey,
             secretAccessKey,
-            Amazon.RegionEndpoint.EUWest1);
+            awsCredentials?.SessionToken ?? "",
+            "eu-west-2");
+            
         var awsS3E2eCloudStorageProvider = new AwsS3E2eCloudStorageProvider(
             "clypse-testing",
-            awsS3Client,
+            jsS3Client,
             new BouncyCastleAesGcmCryptoService());
         var vaultManager = new VaultManager(
             compressionService,
