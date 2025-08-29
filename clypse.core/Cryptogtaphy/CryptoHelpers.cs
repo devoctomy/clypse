@@ -89,5 +89,4 @@ public class CryptoHelpers
             return pbkdf2.GetBytes(keyLength);
         });
     }
-
 }

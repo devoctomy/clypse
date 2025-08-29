@@ -54,13 +54,13 @@ public class JavaScriptS3Client : IAmazonS3Client
         {
             Bucket = request.BucketName,
             Key = request.Key,
-            AccessKeyId = accessKey,
-            SecretAccessKey = secretKey,
-            SessionToken = sessionToken,
-            Region = region
+            AccessKeyId = this.accessKey,
+            SecretAccessKey = this.secretKey,
+            SessionToken = this.sessionToken,
+            Region = this.region,
         };
 
-        var result = await jsRuntime.InvokeAsync<S3OperationResult>("S3Client.deleteObject", jsRequest);
+        var result = await this.jsRuntime.InvokeAsync<S3OperationResult>("S3Client.deleteObject", jsRequest);
 
         if (!result.Success)
         {
@@ -69,8 +69,8 @@ public class JavaScriptS3Client : IAmazonS3Client
 
         return new DeleteObjectResponse
         {
-            DeleteMarker = result.Data?.GetValueOrDefault("DeleteMarker", false) ?? false,
-            VersionId = result.Data?.GetValueOrDefault("VersionId", "")?.ToString()
+            DeleteMarker = result.Data?.GetValueOrDefault("DeleteMarker", string.Empty)?.ToString() ?? string.Empty,
+            VersionId = result.Data?.GetValueOrDefault("VersionId", string.Empty)?.ToString(),
         };
     }
 
@@ -107,7 +107,7 @@ public class JavaScriptS3Client : IAmazonS3Client
             Key = request.Key,
             ContentLength = (long)(result.Data?.GetValueOrDefault("ContentLength", 0) ?? 0),
             ////ContentType = result.Data?.GetValueOrDefault("ContentType", string.Empty)?.ToString() ?? string.Empty,
-            ETag = result.Data?.GetValueOrDefault("ETag", "")?.ToString() ?? string.Empty,
+            ETag = result.Data?.GetValueOrDefault("ETag", string.Empty)?.ToString() ?? string.Empty,
             LastModified = DateTime.Parse(result.Data?.GetValueOrDefault("LastModified", DateTime.UtcNow.ToString())?.ToString() ?? DateTime.UtcNow.ToString()),
         };
 
@@ -135,9 +135,9 @@ public class JavaScriptS3Client : IAmazonS3Client
         {
             Bucket = request.BucketName,
             Key = request.Key,
-            AccessKeyId = accessKey,
-            SecretAccessKey = secretKey,
-            SessionToken = sessionToken,
+            AccessKeyId = this.accessKey,
+            SecretAccessKey = this.secretKey,
+            SessionToken = this.sessionToken,
             Region = this.region,
         };
 
@@ -150,13 +150,13 @@ public class JavaScriptS3Client : IAmazonS3Client
 
         return new GetObjectMetadataResponse
         {
-            Key = request.Key,
             ContentLength = (long)(result.Data?.GetValueOrDefault("ContentLength", 0) ?? 0),
             ContentType = result.Data?.GetValueOrDefault("ContentType", string.Empty)?.ToString() ?? string.Empty,
             ETag = result.Data?.GetValueOrDefault("ETag", string.Empty)?.ToString() ?? string.Empty,
             LastModified = DateTime.Parse(result.Data?.GetValueOrDefault("LastModified", DateTime.UtcNow.ToString())?.ToString() ?? DateTime.UtcNow.ToString()),
         };
     }
+
     /// <summary>
     /// Lists objects in an Amazon S3 bucket using the ListObjectsV2 API.
     /// </summary>
@@ -179,7 +179,7 @@ public class JavaScriptS3Client : IAmazonS3Client
             Region = this.region,
         };
 
-        var result = await jsRuntime.InvokeAsync<S3OperationResult>("S3Client.listObjectsV2", jsRequest);
+        var result = await this.jsRuntime.InvokeAsync<S3OperationResult>("S3Client.listObjectsV2", jsRequest);
 
         if (!result.Success)
         {
