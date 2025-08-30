@@ -1,4 +1,5 @@
-﻿using clypse.core.Secrets;
+﻿using Amazon.S3.Model;
+using clypse.core.Secrets;
 
 namespace clypse.core.Vault;
 
@@ -16,6 +17,13 @@ public interface IVaultManager
     public IVault Create(
         string name,
         string description);
+
+    /// <summary>
+    /// Fetches a list of all vault Ids available in storage.
+    /// </summary>
+    /// <param name="cancellationToken">The cancellation token.</param>
+    /// <returns>List of vault ids found in storage.</returns>
+    public Task<List<string>> ListVaultIdsAsync(CancellationToken cancellationToken);
 
     /// <summary>
     /// Saves the vault and all pending changes to encrypted cloud storage.

@@ -79,15 +79,17 @@ public class AwsS3E2eCloudStorageProvider : AwsCloudStorageProviderBase, IEncryp
     /// This operation does not require encryption keys as it only returns object metadata.
     /// </summary>
     /// <param name="prefix">The prefix to filter objects by.</param>
+    /// <param name="delimiter">Delimiter used to separate keys.</param>
     /// <param name="cancellationToken">The cancellation token.</param>
     /// <returns>A list of object keys that match the prefix.</returns>
     public new async Task<List<string>> ListObjectsAsync(
         string prefix,
+        string? delimiter,
         CancellationToken cancellationToken)
     {
         return await this.ListObjectsAsync(
             prefix,
-            null,
+            delimiter,
             cancellationToken);
     }
 

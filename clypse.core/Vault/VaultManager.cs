@@ -46,6 +46,21 @@ public class VaultManager(
     }
 
     /// <summary>
+    /// Fetches a list of all vault Ids available in storage.
+    /// </summary>
+    /// <param name="cancellationToken">The cancellation token.</param>
+    /// <returns>List of vault ids found in storage.</returns>
+    public async Task<List<string>> ListVaultIdsAsync(CancellationToken cancellationToken)
+    {
+        var allObjectsPrefix = $"{prefix}/";
+        var allObjects = await encryptedCloudStorageProvider.ListObjectsAsync(
+            allObjectsPrefix,
+            "/",
+            cancellationToken);
+        return allObjects;
+    }
+
+    /// <summary>
     /// Saves the vault and all pending changes to encrypted cloud storage.
     /// </summary>
     /// <param name="vault">The vault to save.</param>
@@ -173,6 +188,7 @@ public class VaultManager(
     {
         var allKeys = await encryptedCloudStorageProvider.ListObjectsAsync(
             $"{prefix}/{vault.Info.Id}/",
+            null,
             cancellationToken);
         foreach (var key in allKeys)
         {
@@ -265,6 +281,7 @@ public class VaultManager(
         var secretsPrefix = $"{prefix}/{vault.Info.Id}/secrets/";
         var allSecrets = await encryptedCloudStorageProvider.ListObjectsAsync(
             secretsPrefix,
+            null,
             cancellationToken);
         var allSecretKeys = allSecrets.Select(x => x.Split('/')[3]).ToList();
         var unindexedSecrets = allSecretKeys.Where(x => !vault.Index.Entries.Any(y => y.Id == x));

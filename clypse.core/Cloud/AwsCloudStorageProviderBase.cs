@@ -66,14 +66,17 @@ public class AwsCloudStorageProviderBase : ICloudStorageProvider
     /// Lists all objects in the S3 bucket that match the specified prefix.
     /// </summary>
     /// <param name="prefix">The prefix to filter objects by.</param>
+    /// <param name="delimiter">Delimiter used to separate keys.</param>
     /// <param name="cancellationToken">The cancellation token.</param>
     /// <returns>A list of object keys that match the prefix.</returns>
     public async Task<List<string>> ListObjectsAsync(
         string prefix,
+        string? delimiter,
         CancellationToken cancellationToken)
     {
         return await this.ListObjectsAsync(
             prefix,
+            delimiter,
             null,
             cancellationToken);
     }
@@ -140,12 +143,14 @@ public class AwsCloudStorageProviderBase : ICloudStorageProvider
     /// This method handles pagination automatically to retrieve all matching objects.
     /// </summary>
     /// <param name="prefix">The prefix to filter objects by.</param>
+    /// <param name="delimiter">Delimiter used to separate keys.</param>
     /// <param name="beforeListObjectsV2Async">Optional action to modify the ListObjectsV2Request before execution.</param>
     /// <param name="cancellationToken">The cancellation token.</param>
     /// <returns>A list of object keys that match the prefix.</returns>
     /// <exception cref="CloudStorageProviderException">Thrown when the S3 operation fails.</exception>
     protected async Task<List<string>> ListObjectsAsync(
         string prefix,
+        string? delimiter,
         Action<ListObjectsV2Request>? beforeListObjectsV2Async,
         CancellationToken cancellationToken)
     {
@@ -154,6 +159,7 @@ public class AwsCloudStorageProviderBase : ICloudStorageProvider
             BucketName = this.bucketName,
             Prefix = prefix,
             MaxKeys = 100,
+            Delimiter = delimiter ?? string.Empty,
         };
 
         try

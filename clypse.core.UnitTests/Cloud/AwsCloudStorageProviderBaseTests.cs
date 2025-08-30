@@ -240,6 +240,7 @@ public class AwsCloudStorageProviderBaseTests
         // Act
         var result = await sut.ListObjectsAsync(
             prefix,
+            null,
             cancellationTokenSource.Token);
 
         // Assert

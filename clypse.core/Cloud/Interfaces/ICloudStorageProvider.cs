@@ -31,10 +31,12 @@ public interface ICloudStorageProvider
     /// Lists all objects in cloud storage that match the specified prefix.
     /// </summary>
     /// <param name="prefix">The prefix to filter objects by.</param>
+    /// <param name="delimiter">Delimiter used to separate keys.</param>
     /// <param name="cancellationToken">The cancellation token.</param>
     /// <returns>A list of object keys that match the prefix.</returns>
     public Task<List<string>> ListObjectsAsync(
         string prefix,
+        string? delimiter,
         CancellationToken cancellationToken);
 
     /// <summary>

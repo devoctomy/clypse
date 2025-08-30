@@ -407,6 +407,7 @@ public class VaultManagerTests
         this.mockEncryptedCloudStorageProvider.Setup(
             x => x.ListObjectsAsync(
             It.Is<string>(y => y == $"foobar/{vault.Info.Id}/"),
+            It.Is<string?>(y => y == null),
             It.Is<CancellationToken>(y => y == cancellationTokenSource.Token)))
         .ReturnsAsync(objects);
 
@@ -434,6 +435,7 @@ public class VaultManagerTests
         this.mockEncryptedCloudStorageProvider.Verify(
             x => x.ListObjectsAsync(
             It.Is<string>(y => y == $"foobar/{vault.Info.Id}/"),
+            It.IsAny<string?>(),
             It.Is<CancellationToken>(y => y == cancellationTokenSource.Token)), Times.Once);
         this.mockEncryptedCloudStorageProvider.Verify(
             x => x.DeleteEncryptedObjectAsync(
@@ -461,6 +463,7 @@ public class VaultManagerTests
         this.mockEncryptedCloudStorageProvider.Setup(
             x => x.ListObjectsAsync(
             It.Is<string>(y => y == $"foobar/{vault.Info.Id}/"),
+            It.Is<string?>(y => y == null),
             It.Is<CancellationToken>(y => y == cancellationTokenSource.Token)))
         .ReturnsAsync(objects);
 
@@ -489,6 +492,7 @@ public class VaultManagerTests
         this.mockEncryptedCloudStorageProvider.Verify(
             x => x.ListObjectsAsync(
             It.Is<string>(y => y == $"foobar/{vault.Info.Id}/"),
+            It.Is<string?>(y => y == null),
             It.Is<CancellationToken>(y => y == cancellationTokenSource.Token)), Times.Once);
         this.mockEncryptedCloudStorageProvider.Verify(
             x => x.DeleteEncryptedObjectAsync(
@@ -632,6 +636,7 @@ public class VaultManagerTests
         this.mockEncryptedCloudStorageProvider.Setup(
             x => x.ListObjectsAsync(
             $"foobar/{info.Id}/secrets/",
+            null,
             CancellationToken.None))
             .ReturnsAsync([.. entries.Select(x => $"foobar/{info.Id}/secrets/{x.Id}")]);
 
@@ -713,6 +718,7 @@ public class VaultManagerTests
         this.mockEncryptedCloudStorageProvider.Setup(
             x => x.ListObjectsAsync(
             $"foobar/{info.Id}/secrets/",
+            null,
             CancellationToken.None))
             .ReturnsAsync([.. entries.Select(x => $"foobar/{info.Id}/secrets/{x.Id}")]);
 
@@ -773,6 +779,7 @@ public class VaultManagerTests
         this.mockEncryptedCloudStorageProvider.Setup(
             x => x.ListObjectsAsync(
             $"foobar/{info.Id}/secrets/",
+            null,
             CancellationToken.None))
             .ReturnsAsync([.. entries.Select(x => $"foobar/{info.Id}/secrets/{x.Id}")]);
 
@@ -820,6 +827,7 @@ public class VaultManagerTests
         this.mockEncryptedCloudStorageProvider.Setup(
             x => x.ListObjectsAsync(
             $"foobar/{info.Id}/secrets/",
+            null,
             CancellationToken.None))
             .ReturnsAsync([.. entries.Select(x => $"foobar/{info.Id}/secrets/{x.Id}")]);
 
