@@ -291,4 +291,66 @@ public class AwsCloudStorageProviderBaseTests
         Assert.Contains("Bar2", result);
         Assert.Contains("Bar3", result);
     }
+
+    [Fact]
+    public async Task GivenBucketName_AndKey_AndData_WhenPutObjectAsync_ThenPutObjectAsync_AndTrueReturned()
+    {
+        // Arrange
+        var bucketName = "Foo";
+        var mockAmazonS3Client = new Mock<IAmazonS3Client>();
+        var sut = new AwsCloudStorageProviderBase(bucketName, mockAmazonS3Client.Object);
+
+        var key = "Bar";
+        using var data = new MemoryStream();
+        var cancellationTokenSource = new CancellationTokenSource();
+        var putObjectResponse = new PutObjectResponse();
+
+        mockAmazonS3Client.Setup(x => x.PutObjectAsync(
+            It.IsAny<PutObjectRequest>(),
+            It.Is<CancellationToken>(y => y == cancellationTokenSource.Token)))
+            .ReturnsAsync(putObjectResponse);
+
+        // Act
+        var result = await sut.PutObjectAsync(
+            key,
+            data,
+            cancellationTokenSource.Token);
+
+        // Assert
+        Assert.True(result);
+        mockAmazonS3Client.Verify(
+            x => x.PutObjectAsync(
+            It.Is<PutObjectRequest>(r => r.BucketName == bucketName && r.Key == key && r.InputStream == data),
+            It.Is<CancellationToken>(y => y == cancellationTokenSource.Token)), Times.Once);
+    }
+
+    [Fact]
+    public async Task GivenBucketName_AndKey_AndData_WhenPutObjectAsync_ThenPutObjectAsyncFailed_AndCloudStorageProviderExceptionThrown()
+    {
+        // Arrange
+        var bucketName = "Foo";
+        var mockAmazonS3Client = new Mock<IAmazonS3Client>();
+        var sut = new AwsCloudStorageProviderBase(bucketName, mockAmazonS3Client.Object);
+
+        var key = "Bar";
+        using var data = new MemoryStream();
+        var cancellationTokenSource = new CancellationTokenSource();
+
+        mockAmazonS3Client.Setup(x => x.PutObjectAsync(
+            It.IsAny<PutObjectRequest>(),
+            It.Is<CancellationToken>(y => y == cancellationTokenSource.Token)))
+            .Callback(() =>
+            {
+                throw new AmazonS3Exception("Something went wrong!");
+            });
+
+        // Act & Assert
+        await Assert.ThrowsAnyAsync<CloudStorageProviderException>(async () =>
+        {
+            _ = await sut.PutObjectAsync(
+                key,
+                data,
+                cancellationTokenSource.Token);
+        });
+    }
 }
