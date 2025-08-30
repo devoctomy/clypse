@@ -953,4 +953,31 @@ public class VaultManagerTests
         Assert.Equal(name, secret.Name);
         Assert.Equal(description, secret.Description);
     }
+
+    [Fact]
+    public async Task GivenCancellationToken_WhenListVaultIdsAsync_ThenObjectsListedWithDelimiter_AndObjectsReturned()
+    {
+        // Arrange
+        var cancellationTokenSource = new CancellationTokenSource();
+
+        var ids = new List<string>
+        {
+            "Foo",
+            "Bar",
+        };
+
+        this.mockEncryptedCloudStorageProvider.Setup(x => x.ListObjectsAsync(
+            It.Is<string>(y => y == "foobar/"),
+            It.Is<string>(y => y == "/"),
+            It.Is<CancellationToken>(y => y == cancellationTokenSource.Token)))
+            .ReturnsAsync(ids);
+
+        // Act
+        var vaultIds = await this.sut.ListVaultIdsAsync(cancellationTokenSource.Token);
+
+        // Assert
+        Assert.Equal(ids.Count, vaultIds.Count);
+        Assert.Equal(ids[0], vaultIds[0]);
+        Assert.Equal(ids[1], vaultIds[1]);
+    }
 }
