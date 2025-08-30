@@ -5,6 +5,8 @@
 @using clypse.portal.Services
 @using clypse.core.Cloud.Aws.S3
 @using clypse.core.Vault
+@using clypse.core.Cryptogtaphy
+@using System.Security
 @layout HomeLayout
 @inject NavigationManager Navigation
 @inject IJSRuntime JSRuntime
@@ -236,12 +238,52 @@ else if (currentPage == "create-vault")
         try
         {
             Console.WriteLine($"Creating vault: {request.Name} - {request.Description}");
-            // TODO: Implement actual vault creation
-            Console.WriteLine("Vault creation placeholder - not implemented yet");
+            
+            // Create vault manager if not already instantiated
+            if (vaultManager == null)
+            {
+                vaultManager = await CreateVaultManager();
+                if (vaultManager == null)
+                {
+                    Console.WriteLine("Failed to create vault manager");
+                    return;
+                }
+            }
+
+            // Create the vault
+            var vault = vaultManager.Create(request.Name, request.Description);
+            Console.WriteLine($"Vault created with ID: {vault.Info.Id}");
+
+            // Convert passphrase to SecureString
+            var password = new SecureString();
+            foreach (var curChar in request.Passphrase)
+            {
+                password.AppendChar(curChar);
+            }
+
+            // Derive encryption key from passphrase
+            var base64Key = await CryptoHelpers.DeriveKeyFromPassphraseUsingRfc2898Async(
+                password,
+                vault.Info.Base64Salt);
+
+            // Save the vault
+            Console.WriteLine("Saving vault...");
+            var saveResults = await vaultManager.SaveAsync(
+                vault,
+                Convert.ToBase64String(base64Key),
+                CancellationToken.None);
+
+            Console.WriteLine($"Vault saved successfully. Results: {saveResults}");
+            
+            // Navigate back to vaults page
+            currentPage = "vaults";
+            StateHasChanged();
+            await UpdateNavigation();
         }
         catch (Exception ex)
         {
             Console.WriteLine($"Error creating vault: {ex.Message}");
+            // Don't navigate away on error so user can see the error and try again
         }
     }
 
