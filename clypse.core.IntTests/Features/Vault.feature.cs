@@ -233,6 +233,9 @@ await this.FeatureBackgroundAsync();
  await testRunner.AndAsync("verify results valid", ((string)(null)), ((global::Reqnroll.Table)(null)), "And ");
 #line hidden
 #line 41
+ await testRunner.AndAsync("vault listed", ((string)(null)), ((global::Reqnroll.Table)(null)), "And ");
+#line hidden
+#line 42
  await testRunner.AndAsync("vault deleted", ((string)(null)), ((global::Reqnroll.Table)(null)), "And ");
 #line hidden
             }

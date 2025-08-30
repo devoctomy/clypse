@@ -178,6 +178,14 @@ public sealed class VaultStepDefinitions(TestContext testContext)
         Assert.Empty(this.testContext.VerifyResults!.UnindexedSecrets);
     }
 
+    [Then("vault listed")]
+    public async Task ThenVaultListed()
+    {
+        var allVaultIds = await this.vaultManager!.ListVaultIdsAsync(CancellationToken.None);
+        Assert.Single(allVaultIds);
+        Assert.Equal(this.testContext!.Vault!.Info.Id, allVaultIds[0]);
+    }
+
     [Then("vault deleted")]
     public async Task VaultDeleted()
     {

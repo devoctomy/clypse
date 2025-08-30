@@ -38,4 +38,5 @@ Scenario: Create and save vault to S3, perform basic CRUD operations on secrets,
 	And vault is verified
 	And verify results successful
 	And verify results valid
+	And vault listed
 	And vault deleted

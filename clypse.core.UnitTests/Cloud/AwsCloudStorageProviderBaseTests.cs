@@ -249,4 +249,46 @@ public class AwsCloudStorageProviderBaseTests
         Assert.Contains("Bar/file2.txt", result);
         Assert.Contains("Bar/subfolder/file3.txt", result);
     }
+
+    [Fact]
+    public async Task GivenBucketName_AndPrefix_AndDelimiter_WhenListObjectsAsync_ThenListObjectsV2Async_AndCallbackInvoked_AndCommonPrefixesReturned()
+    {
+        // Arrange
+        var bucketName = "Foo";
+        var mockAmazonS3Client = new Mock<IAmazonS3Client>();
+        var sut = new AwsCloudStorageProviderBase(bucketName, mockAmazonS3Client.Object);
+
+        var prefix = "Pop/";
+        var delimiter = "/";
+        var cancellationTokenSource = new CancellationTokenSource();
+
+        // Setup the mock to return a list of objects
+        var listObjectsResponse = new ListObjectsV2Response
+        {
+            CommonPrefixes =
+            [
+                "Pop/Bar1/",
+                "Pop/Bar2/",
+                "Pop/Bar3/",
+            ],
+            IsTruncated = false,
+        };
+
+        mockAmazonS3Client.Setup(x => x.ListObjectsV2Async(
+            It.IsAny<ListObjectsV2Request>(),
+            It.Is<CancellationToken>(y => y == cancellationTokenSource.Token)))
+            .ReturnsAsync(listObjectsResponse);
+
+        // Act
+        var result = await sut.ListObjectsAsync(
+            prefix,
+            delimiter,
+            cancellationTokenSource.Token);
+
+        // Assert
+        Assert.Equal(3, result.Count);
+        Assert.Contains("Bar1", result);
+        Assert.Contains("Bar2", result);
+        Assert.Contains("Bar3", result);
+    }
 }

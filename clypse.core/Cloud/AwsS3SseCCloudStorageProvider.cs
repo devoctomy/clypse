@@ -95,6 +95,7 @@ public class AwsS3SseCCloudStorageProvider : AwsCloudStorageProviderBase, IEncry
         return await this.ListObjectsAsync(
             prefix,
             delimiter,
+            null,
             cancellationToken);
     }
 

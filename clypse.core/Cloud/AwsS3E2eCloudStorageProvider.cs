@@ -90,6 +90,7 @@ public class AwsS3E2eCloudStorageProvider : AwsCloudStorageProviderBase, IEncryp
         return await this.ListObjectsAsync(
             prefix,
             delimiter,
+            null,
             cancellationToken);
     }
 
