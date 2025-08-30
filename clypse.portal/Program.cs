@@ -13,6 +13,9 @@ builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.
 // Register VaultManagerFactoryService
 builder.Services.AddScoped<IVaultManagerFactoryService, VaultManagerFactoryService>();
 
+// Register VaultStorageService
+builder.Services.AddScoped<IVaultStorageService, VaultStorageService>();
+
 // Configure AWS Cognito settings from appsettings.json
 var cognitoConfig = new AwsCognitoConfig();
 builder.Configuration.GetSection("AwsCognito").Bind(cognitoConfig);

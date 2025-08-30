@@ -1,43 +1,107 @@
+@using clypse.portal.Models
+@using clypse.portal.Services
+@inject IVaultStorageService VaultStorage
+
 <div class="vaults-page">
     <h2>Vaults</h2>
-    <p>This is the Vaults page for testing the layout.</p>
     
-    <div class="row">
-        <div class="col-md-6">
-            <div class="card">
-                <div class="card-header">
-                    <h5>Available Vaults</h5>
-                </div>
-                <div class="card-body">
-                    <div class="list-group">
-                        <div class="list-group-item">
-                            <h6 class="mb-1">Personal Vault</h6>
-                            <p class="mb-1">Contains personal credentials and secrets</p>
-                            <small>Created: 2024-01-15</small>
+    @if (isLoading)
+    {
+        <div class="d-flex justify-content-center">
+            <div class="spinner-border" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+    }
+    else if (vaults == null || vaults.Count == 0)
+    {
+        <div class="alert alert-info" role="alert">
+            <h5 class="alert-heading">No Vaults Found</h5>
+            <p>No vaults are available. Click the "Refresh" button to search for vaults.</p>
+        </div>
+    }
+    else
+    {
+        <div class="vaults-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 1rem; margin-top: 1rem;">
+            @foreach (var vault in vaults)
+            {
+                <div class="vault-card" style="background: #ffffff; border: 1px solid #dee2e6; border-radius: 8px; padding: 1.5rem; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); position: relative; margin-bottom: 1rem;">
+                    <div class="vault-lock-icon" style="position: absolute; top: 12px; left: 12px; color: #6c757d; font-size: 1rem;">
+                        <i class="bi bi-lock-fill"></i>
+                    </div>
+                    <div class="vault-content" style="margin-left: 1.5rem;">
+                        <div class="vault-field">
+                            <strong>Id:</strong> @vault.Id
                         </div>
-                        <div class="list-group-item">
-                            <h6 class="mb-1">Work Vault</h6>
-                            <p class="mb-1">Work-related credentials and API keys</p>
-                            <small>Created: 2024-01-10</small>
+                        <div class="vault-field">
+                            <strong>Name:</strong> 
+                            @if (string.IsNullOrEmpty(vault.Name))
+                            {
+                                <span class="text-muted">Unknown, you must unlock this vault first</span>
+                            }
+                            else
+                            {
+                                <span>@vault.Name</span>
+                            }
+                        </div>
+                        <div class="vault-field">
+                            <strong>Description:</strong> 
+                            @if (string.IsNullOrEmpty(vault.Description))
+                            {
+                                <span class="text-muted">Unknown, you must unlock this vault first</span>
+                            }
+                            else
+                            {
+                                <span>@vault.Description</span>
+                            }
                         </div>
                     </div>
                 </div>
-            </div>
+            }
         </div>
-        
-        <div class="col-md-6">
-            <div class="card">
-                <div class="card-header">
-                    <h5>Vault Details</h5>
-                </div>
-                <div class="card-body">
-                    <p>Select a vault to view details and manage credentials.</p>
-                    <div class="text-muted">
-                        <small>Total Vaults: 2</small><br>
-                        <small>Last Accessed: Today</small>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+    }
 </div>
+
+@code {
+    private List<VaultMetadata> vaults = new();
+    private bool isLoading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadVaults();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await LoadVaults();
+        }
+    }
+
+    private async Task LoadVaults()
+    {
+        try
+        {
+            isLoading = true;
+            StateHasChanged();
+            
+            vaults = await VaultStorage.GetVaultsAsync();
+            
+            isLoading = false;
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading vaults: {ex.Message}");
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    // This method can be called by parent components to refresh the vault list
+    public async Task RefreshVaults()
+    {
+        await LoadVaults();
+    }
+}
