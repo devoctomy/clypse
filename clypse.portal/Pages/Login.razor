@@ -1,4 +1,8 @@
 @page "/login"
+@using clypse.portal.Models
+@inject IJSRuntime JSRuntime
+@inject AwsCognitoConfig CognitoConfig
+@inject NavigationManager Navigation
 
 <PageTitle>Clypse Portal - Login</PageTitle>
 
@@ -66,6 +70,24 @@
         public string Password { get; set; } = string.Empty;
     }
 
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            // Initialize Cognito with configuration
+            await JSRuntime.InvokeVoidAsync("eval", $@"
+                window.cognitoConfig = {{
+                    userPoolId: '{CognitoConfig.UserPoolId}',
+                    userPoolClientId: '{CognitoConfig.UserPoolClientId}',
+                    region: '{CognitoConfig.Region}',
+                    identityPoolId: '{CognitoConfig.IdentityPoolId}'
+                }};
+            ");
+
+            await JSRuntime.InvokeAsync<string>("CognitoAuth.initialize", CognitoConfig);
+        }
+    }
+
     private async Task HandleLogin()
     {
         isLoading = true;
@@ -74,11 +96,20 @@
 
         try
         {
-            // TODO: Implement login logic here
-            await Task.Delay(1000); // Simulate login delay
-            
-            // For now, just show an error message since no logic is implemented
-            errorMessage = "Login functionality not yet implemented.";
+            var result = await JSRuntime.InvokeAsync<LoginResult>("CognitoAuth.login", loginModel.Username, loginModel.Password);
+
+            if (result.Success)
+            {
+                // Store credentials in local storage
+                await StoreCredentials(result);
+                
+                // Redirect to home page
+                Navigation.NavigateTo("/");
+            }
+            else
+            {
+                errorMessage = result.Error ?? "Login failed";
+            }
         }
         catch (Exception ex)
         {
@@ -89,5 +120,38 @@
             isLoading = false;
             StateHasChanged();
         }
+    }
+
+    private async Task StoreCredentials(LoginResult result)
+    {
+        var credentials = new
+        {
+            AccessToken = result.AccessToken,
+            IdToken = result.IdToken,
+            AwsCredentials = result.AwsCredentials,
+            ExpirationTime = result.AwsCredentials?.Expiration ?? DateTime.UtcNow.AddHours(1).ToString(),
+            StoredAt = DateTime.UtcNow
+        };
+
+        var credentialsJson = System.Text.Json.JsonSerializer.Serialize(credentials);
+        await JSRuntime.InvokeVoidAsync("localStorage.setItem", "clypse_credentials", credentialsJson);
+    }
+
+    private class LoginResult
+    {
+        public bool Success { get; set; }
+        public string? Error { get; set; }
+        public string? AccessToken { get; set; }
+        public string? IdToken { get; set; }
+        public AwsCredentials? AwsCredentials { get; set; }
+    }
+
+    private class AwsCredentials
+    {
+        public string AccessKeyId { get; set; } = string.Empty;
+        public string SecretAccessKey { get; set; } = string.Empty;
+        public string SessionToken { get; set; } = string.Empty;
+        public string Expiration { get; set; } = string.Empty;
+        public string IdentityId { get; set; } = string.Empty;
     }
 }

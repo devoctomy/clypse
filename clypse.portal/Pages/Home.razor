@@ -2,6 +2,7 @@
 @page "/home"
 @layout HomeLayout
 @inject NavigationManager Navigation
+@inject IJSRuntime JSRuntime
 
 <PageTitle>Clypse Portal - Home</PageTitle>
 
@@ -9,14 +10,67 @@
 <p>This is the home page.</p>
 
 @code {
-    private bool isLoggedIn = false; // Placeholder - will be false for now
+    private bool isLoggedIn = false;
 
-    protected override void OnInitialized()
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        // Check if user is logged in (placeholder logic)
+        if (firstRender)
+        {
+            await CheckAuthentication();
+        }
+    }
+
+    private async Task CheckAuthentication()
+    {
+        try
+        {
+            var credentialsJson = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "clypse_credentials");
+            
+            if (!string.IsNullOrEmpty(credentialsJson))
+            {
+                var credentials = System.Text.Json.JsonSerializer.Deserialize<StoredCredentials>(credentialsJson);
+                
+                // Check if credentials are still valid
+                if (credentials != null && DateTime.Parse(credentials.ExpirationTime) > DateTime.UtcNow)
+                {
+                    isLoggedIn = true;
+                    StateHasChanged();
+                    return;
+                }
+                else
+                {
+                    // Credentials expired, remove them
+                    await JSRuntime.InvokeVoidAsync("localStorage.removeItem", "clypse_credentials");
+                }
+            }
+        }
+        catch (Exception)
+        {
+            // If any error occurs, assume not logged in
+        }
+
+        // Not logged in or credentials expired
         if (!isLoggedIn)
         {
             Navigation.NavigateTo("/login");
         }
+    }
+
+    private class StoredCredentials
+    {
+        public string? AccessToken { get; set; }
+        public string? IdToken { get; set; }
+        public AwsCredentials? AwsCredentials { get; set; }
+        public string ExpirationTime { get; set; } = string.Empty;
+        public DateTime StoredAt { get; set; }
+    }
+
+    private class AwsCredentials
+    {
+        public string AccessKeyId { get; set; } = string.Empty;
+        public string SecretAccessKey { get; set; } = string.Empty;
+        public string SessionToken { get; set; } = string.Empty;
+        public string Expiration { get; set; } = string.Empty;
+        public string IdentityId { get; set; } = string.Empty;
     }
 }
