@@ -1,6 +1,6 @@
 using Amazon.S3;
 using Amazon.S3.Model;
-using Microsoft.VisualBasic;
+using clypse.core.Blazor;
 
 namespace clypse.core.Cloud.Aws.S3;
 
@@ -67,8 +67,8 @@ public class JavaScriptS3Client : IAmazonS3Client
 
         return new DeleteObjectResponse
         {
-            DeleteMarker = result.Data?.GetValueOrDefault("DeleteMarker", string.Empty)?.ToString() ?? string.Empty,
-            VersionId = result.Data?.GetValueOrDefault("VersionId", string.Empty)?.ToString(),
+            DeleteMarker = JavaScriptInteropUtility.GetStringValue(result.Data, "DeleteMarker", string.Empty) ?? string.Empty,
+            VersionId = JavaScriptInteropUtility.GetStringValue(result.Data, "VersionId", string.Empty),
         };
     }
 
@@ -103,12 +103,12 @@ public class JavaScriptS3Client : IAmazonS3Client
         {
             BucketName = request.BucketName,
             Key = request.Key,
-            ContentLength = (long)(result.Data?.GetValueOrDefault("ContentLength", 0L) ?? 0L),
-            ETag = result.Data?.GetValueOrDefault("ETag", string.Empty)?.ToString() ?? string.Empty,
-            LastModified = DateTime.Parse(result.Data?.GetValueOrDefault("LastModified", DateTime.UtcNow.ToString())?.ToString() ?? DateTime.UtcNow.ToString()),
+            ContentLength = JavaScriptInteropUtility.GetLongValue(result.Data, "ContentLength"),
+            ETag = JavaScriptInteropUtility.GetStringValue(result.Data, "ETag", string.Empty) ?? string.Empty,
+            LastModified = DateTime.Parse(JavaScriptInteropUtility.GetStringValue(result.Data, "LastModified", DateTime.UtcNow.ToString()) ?? DateTime.UtcNow.ToString()),
         };
 
-        var base64Content = result.Data?.GetValueOrDefault("Body", string.Empty)?.ToString() ?? string.Empty;
+        var base64Content = JavaScriptInteropUtility.GetStringValue(result.Data, "Body", string.Empty) ?? string.Empty;
         if (!string.IsNullOrEmpty(base64Content))
         {
             var bytes = Convert.FromBase64String(base64Content);
@@ -147,10 +147,10 @@ public class JavaScriptS3Client : IAmazonS3Client
 
         return new GetObjectMetadataResponse
         {
-            ContentLength = (long)(result.Data?.GetValueOrDefault("ContentLength", 0) ?? 0),
-            ContentType = result.Data?.GetValueOrDefault("ContentType", string.Empty)?.ToString() ?? string.Empty,
-            ETag = result.Data?.GetValueOrDefault("ETag", string.Empty)?.ToString() ?? string.Empty,
-            LastModified = DateTime.Parse(result.Data?.GetValueOrDefault("LastModified", DateTime.UtcNow.ToString())?.ToString() ?? DateTime.UtcNow.ToString()),
+            ContentLength = JavaScriptInteropUtility.GetLongValue(result.Data, "ContentLength"),
+            ContentType = JavaScriptInteropUtility.GetStringValue(result.Data, "ContentType", string.Empty) ?? string.Empty,
+            ETag = JavaScriptInteropUtility.GetStringValue(result.Data, "ETag", string.Empty) ?? string.Empty,
+            LastModified = DateTime.Parse(JavaScriptInteropUtility.GetStringValue(result.Data, "LastModified", DateTime.UtcNow.ToString()) ?? DateTime.UtcNow.ToString()),
         };
     }
 
@@ -186,11 +186,11 @@ public class JavaScriptS3Client : IAmazonS3Client
         var response = new ListObjectsV2Response
         {
             Prefix = request.Prefix,
-            IsTruncated = (bool)(result.Data?.GetValueOrDefault("IsTruncated", false) ?? false),
-            NextContinuationToken = result.Data?.GetValueOrDefault("NextContinuationToken", string.Empty)?.ToString(),
+            IsTruncated = JavaScriptInteropUtility.GetBoolValue(result.Data, "IsTruncated"),
+            NextContinuationToken = JavaScriptInteropUtility.GetStringValue(result.Data, "NextContinuationToken", string.Empty),
             S3Objects = [],
             MaxKeys = jsRequest.MaxKeys,
-            KeyCount = (int)(result.Data?.GetValueOrDefault("KeyCount", 0) ?? 0),
+            KeyCount = JavaScriptInteropUtility.GetIntValue(result.Data, "KeyCount"),
         };
 
         if (result.Data?.ContainsKey("Contents") == true)
@@ -200,15 +200,15 @@ public class JavaScriptS3Client : IAmazonS3Client
             {
                 foreach (var obj in contentsDictionary)
                 {
-                    var lastModifiedString = (string?)(obj!.GetValueOrDefault("LastModified", null) ?? null);
+                    var lastModifiedString = JavaScriptInteropUtility.GetStringValue(obj, "LastModified");
                     var lastModified = (DateTime?)(lastModifiedString != null ? DateTime.Parse(lastModifiedString) : null);
                     response.S3Objects.Add(new S3Object
                     {
                         BucketName = request.BucketName,
-                        Key = (string)(obj.GetValueOrDefault("Key", string.Empty) ?? string.Empty),
-                        Size = (long)(obj.GetValueOrDefault("Size", 0L) ?? 0L),
+                        Key = JavaScriptInteropUtility.GetStringValue(obj, "Key", string.Empty) ?? string.Empty,
+                        Size = JavaScriptInteropUtility.GetLongValue(obj, "Size"),
                         LastModified = lastModified,
-                        ETag = (string)(obj.GetValueOrDefault("ETag", string.Empty) ?? string.Empty),
+                        ETag = JavaScriptInteropUtility.GetStringValue(obj, "ETag", string.Empty) ?? string.Empty,
                     });
                 }
             }
@@ -262,8 +262,8 @@ public class JavaScriptS3Client : IAmazonS3Client
 
         return new PutObjectResponse
         {
-            ETag = result.Data?.GetValueOrDefault("ETag", string.Empty)?.ToString() ?? string.Empty,
-            VersionId = result.Data?.GetValueOrDefault("VersionId", string.Empty)?.ToString(),
+            ETag = JavaScriptInteropUtility.GetStringValue(result.Data, "ETag", string.Empty) ?? string.Empty,
+            VersionId = JavaScriptInteropUtility.GetStringValue(result.Data, "VersionId", string.Empty),
         };
     }
 }
