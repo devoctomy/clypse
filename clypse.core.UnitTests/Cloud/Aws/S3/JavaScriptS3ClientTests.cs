@@ -491,23 +491,20 @@ public class JavaScriptS3ClientTests
                 { "MaxKeys", 10 },
                 { "KeyCount", 2 },
                 {
-                    "Contents", new List<Dictionary<string, object>>
-                    {
-                        new ()
+                    "Contents", JsonSerializer.Deserialize<JsonElement>(@"[
                         {
-                            { "Key", "test-prefix/file1.txt" },
-                            { "Size", 100L },
-                            { "ETag", "\"etag1\"" },
-                            { "LastModified", DateTime.UtcNow.ToString() },
+                            ""Key"": ""test-prefix/file1.txt"",
+                            ""Size"": 100,
+                            ""ETag"": ""\""etag1\"""",
+                            ""LastModified"": """ + DateTime.UtcNow.ToString() + @"""
                         },
-                        new ()
                         {
-                            { "Key", "test-prefix/file2.txt" },
-                            { "Size", 200L },
-                            { "ETag", "\"etag2\"" },
-                            { "LastModified", DateTime.UtcNow.ToString() },
-                        },
-                    }
+                            ""Key"": ""test-prefix/file2.txt"",
+                            ""Size"": 200,
+                            ""ETag"": ""\""etag2\"""",
+                            ""LastModified"": """ + DateTime.UtcNow.ToString() + @"""
+                        }
+                    ]")
                 },
             },
         };

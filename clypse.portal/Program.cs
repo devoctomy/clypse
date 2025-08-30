@@ -1,5 +1,6 @@
 using clypse.portal;
 using clypse.portal.Models;
+using clypse.portal.Services;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 
@@ -8,6 +9,9 @@ builder.RootComponents.Add<App>("#app");
 builder.RootComponents.Add<HeadOutlet>("head::after");
 
 builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
+
+// Register VaultManagerFactoryService
+builder.Services.AddScoped<IVaultManagerFactoryService, VaultManagerFactoryService>();
 
 // Configure AWS Cognito settings from appsettings.json
 var cognitoConfig = new AwsCognitoConfig();

@@ -1,6 +1,7 @@
 using Amazon.S3;
 using Amazon.S3.Model;
 using clypse.core.Blazor;
+using System.Text.Json;
 
 namespace clypse.core.Cloud.Aws.S3;
 
@@ -195,20 +196,21 @@ public class JavaScriptS3Client : IAmazonS3Client
 
         if (result.Data?.ContainsKey("Contents") == true)
         {
-            var contentsDictionary = (List<Dictionary<string, object?>>?)(result?.Data?.GetValueOrDefault("Contents", null) ?? null);
-            if (contentsDictionary != null)
+            var contentsValue = result.Data.GetValueOrDefault("Contents", null);
+            if (contentsValue is JsonElement jsonElement && jsonElement.ValueKind == JsonValueKind.Array)
             {
-                foreach (var obj in contentsDictionary)
+                foreach (var item in jsonElement.EnumerateArray())
                 {
-                    var lastModifiedString = JavaScriptInteropUtility.GetStringValue(obj, "LastModified");
+                    var itemDict = JsonSerializer.Deserialize<Dictionary<string, object?>>(item.GetRawText()) ?? new Dictionary<string, object?>();
+                    var lastModifiedString = JavaScriptInteropUtility.GetStringValue(itemDict, "LastModified");
                     var lastModified = (DateTime?)(lastModifiedString != null ? DateTime.Parse(lastModifiedString) : null);
                     response.S3Objects.Add(new S3Object
                     {
                         BucketName = request.BucketName,
-                        Key = JavaScriptInteropUtility.GetStringValue(obj, "Key", string.Empty) ?? string.Empty,
-                        Size = JavaScriptInteropUtility.GetLongValue(obj, "Size"),
+                        Key = JavaScriptInteropUtility.GetStringValue(itemDict, "Key", string.Empty) ?? string.Empty,
+                        Size = JavaScriptInteropUtility.GetLongValue(itemDict, "Size"),
                         LastModified = lastModified,
-                        ETag = JavaScriptInteropUtility.GetStringValue(obj, "ETag", string.Empty) ?? string.Empty,
+                        ETag = JavaScriptInteropUtility.GetStringValue(itemDict, "ETag", string.Empty) ?? string.Empty,
                     });
                 }
             }
