@@ -572,11 +572,12 @@ public class JavaScriptS3ClientTests
     }
 
     private static bool DictionaryContainsAndStringValueEquals(
-        Dictionary<string, object> dictionary,
+        Dictionary<string, object>? dictionary,
         string key,
         object expectedValue)
     {
-        if (!dictionary.TryGetValue(key, out var value))
+        if (dictionary == null ||
+            !dictionary.TryGetValue(key, out var value))
         {
             return false;
         }
@@ -588,11 +589,6 @@ public class JavaScriptS3ClientTests
     {
         var json = JsonSerializer.Serialize(request);
         var requestObj = JsonSerializer.Deserialize<Dictionary<string, object>>(json);
-
-        if (requestObj == null)
-        {
-            return false;
-        }
 
         return DictionaryContainsAndStringValueEquals(requestObj, "Bucket", expectedBucket) &&
                DictionaryContainsAndStringValueEquals(requestObj, "Key", expectedKey) &&
@@ -607,11 +603,6 @@ public class JavaScriptS3ClientTests
     {
         var json = JsonSerializer.Serialize(request);
         var requestObj = JsonSerializer.Deserialize<Dictionary<string, object>>(json);
-
-        if (requestObj == null)
-        {
-            return false;
-        }
 
         return DictionaryContainsAndStringValueEquals(requestObj, "Bucket", expectedBucket) &&
                DictionaryContainsAndStringValueEquals(requestObj, "Key", expectedKey) &&
@@ -629,11 +620,6 @@ public class JavaScriptS3ClientTests
         var json = JsonSerializer.Serialize(request);
         var requestObj = JsonSerializer.Deserialize<Dictionary<string, object>>(json);
 
-        if (requestObj == null)
-        {
-            return false;
-        }
-
         return DictionaryContainsAndStringValueEquals(requestObj, "Bucket", expectedBucket) &&
                DictionaryContainsAndStringValueEquals(requestObj, "Key", expectedKey) &&
                DictionaryContainsAndStringValueEquals(requestObj, "AccessKeyId", this.testAccessKey) &&
@@ -649,11 +635,6 @@ public class JavaScriptS3ClientTests
     {
         var json = JsonSerializer.Serialize(request);
         var requestObj = JsonSerializer.Deserialize<Dictionary<string, object>>(json);
-
-        if (requestObj == null)
-        {
-            return false;
-        }
 
         return DictionaryContainsAndStringValueEquals(requestObj, "Bucket", expectedBucket) &&
                DictionaryContainsAndStringValueEquals(requestObj, "Key", expectedKey) &&
@@ -671,11 +652,6 @@ public class JavaScriptS3ClientTests
     {
         var json = JsonSerializer.Serialize(request);
         var requestObj = JsonSerializer.Deserialize<Dictionary<string, object>>(json);
-
-        if (requestObj == null)
-        {
-            return false;
-        }
 
         return DictionaryContainsAndStringValueEquals(requestObj, "Bucket", expectedBucket) &&
                DictionaryContainsAndStringValueEquals(requestObj, "Prefix", expectedPrefix) &&
