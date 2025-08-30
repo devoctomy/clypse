@@ -1,36 +1,71 @@
 @inherits LayoutComponentBase
+@using clypse.portal.Models
 @inject IJSRuntime JSRuntime
 @inject NavigationManager Navigation
 
-<div class="d-flex flex-column vh-100">
-    <!-- Title Bar -->
-    <div class="bg-primary text-white p-3">
-        <h4 class="mb-0">Clypse Portal</h4>
-    </div>
+<CascadingValue Value="this">
+    <div class="d-flex flex-column vh-100">
+        <!-- Title Bar -->
+        <div class="bg-primary text-white p-3">
+            <h4 class="mb-0">Clypse Portal</h4>
+        </div>
 
-    <div class="flex-grow-1 d-flex">
-        <!-- Navigation Sidebar -->
-        <nav class="bg-light p-3 d-flex flex-column" style="width: 250px;">
-            <div class="flex-grow-1">
-                <!-- Navigation content can change depending on context -->
-            </div>
-            
-            <!-- Logout at bottom -->
-            <div class="mt-auto pt-3 border-top">
-                <button class="btn btn-outline-danger btn-sm w-100" @onclick="HandleLogout">
-                    Logout
-                </button>
-            </div>
-        </nav>
+        <div class="flex-grow-1 d-flex">
+            <!-- Navigation Sidebar -->
+            <nav class="bg-light p-3 d-flex flex-column" style="width: 250px;">
+                <div class="flex-grow-1">
+                    @if (navigationItems != null && navigationItems.Any())
+                    {
+                        <h6 class="text-muted mb-3">Actions</h6>
+                        @foreach (var item in navigationItems)
+                        {
+                            <button class="btn @item.ButtonClass btn-sm w-100 mb-2 text-start" @onclick="() => HandleNavigationAction(item.Action)">
+                                <i class="@item.Icon me-2"></i>
+                                @item.Text
+                            </button>
+                        }
+                    }
+                </div>
+                
+                <!-- Logout at bottom -->
+                <div class="mt-auto pt-3 border-top">
+                    <button class="btn btn-outline-danger btn-sm w-100" @onclick="HandleLogout">
+                        Logout
+                    </button>
+                </div>
+            </nav>
 
-        <!-- Main Content Area -->
-        <main class="flex-grow-1 p-4">
-            @Body
-        </main>
+            <!-- Main Content Area -->
+            <main class="flex-grow-1 p-4">
+                @Body
+            </main>
+        </div>
     </div>
-</div>
+</CascadingValue>
 
 @code {
+    private List<NavigationItem>? navigationItems;
+    private Pages.Home? homePageRef;
+
+    public void SetNavigationItems(List<NavigationItem> items)
+    {
+        navigationItems = items;
+        StateHasChanged();
+    }
+
+    public void SetHomePageReference(Pages.Home homeRef)
+    {
+        homePageRef = homeRef;
+    }
+
+    private async Task HandleNavigationAction(string action)
+    {
+        if (homePageRef != null)
+        {
+            await homePageRef.HandleNavigationAction(action);
+        }
+    }
+
     private async Task HandleLogout()
     {
         // Clear credentials from local storage

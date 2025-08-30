@@ -1,23 +1,39 @@
 ﻿@page "/"
 @page "/home"
 @using clypse.portal.Models
+@using clypse.portal.Components
 @layout HomeLayout
 @inject NavigationManager Navigation
 @inject IJSRuntime JSRuntime
 
 <PageTitle>Clypse Portal - Home</PageTitle>
 
-<h1>Home</h1>
-<p>This is the home page.</p>
+@if (currentPage == "vaults")
+{
+    <Vaults />
+}
+else if (currentPage == "credentials")
+{
+    <Credentials />
+}
 
 @code {
     private bool isLoggedIn = false;
+    private string currentPage = "vaults"; // Default to vaults page
+
+    [CascadingParameter] public Layout.HomeLayout? Layout { get; set; }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
         {
             await CheckAuthentication();
+            if (isLoggedIn)
+            {
+                // Set up communication with layout
+                Layout?.SetHomePageReference(this);
+                await UpdateNavigation();
+            }
         }
     }
 
@@ -57,5 +73,63 @@
         }
     }
 
+    public async Task HandleNavigationAction(string action)
+    {
+        switch (action)
+        {
+            case "show-credentials":
+                currentPage = "credentials";
+                break;
+            case "show-vaults":
+                currentPage = "vaults";
+                break;
+            case "create-vault":
+                // TODO: Implement create vault
+                break;
+            case "delete-vault":
+                // TODO: Implement delete vault
+                break;
+            case "create-credential":
+                // TODO: Implement create credential
+                break;
+            case "delete-credential":
+                // TODO: Implement delete credential
+                break;
+            case "refresh":
+                // TODO: Implement refresh
+                break;
+        }
+        
+        StateHasChanged();
+        await UpdateNavigation();
+    }
 
+    private async Task UpdateNavigation()
+    {
+        var navigationItems = GetNavigationItems();
+        Layout?.SetNavigationItems(navigationItems);
+        await Task.CompletedTask;
+    }
+
+    private List<NavigationItem> GetNavigationItems()
+    {
+        return currentPage switch
+        {
+            "vaults" => new List<NavigationItem>
+            {
+                new() { Text = "Create Vault", Action = "create-vault", Icon = "bi bi-plus-circle" },
+                new() { Text = "Delete Vault", Action = "delete-vault", Icon = "bi bi-trash", ButtonClass = "btn-outline-danger" },
+                new() { Text = "Refresh", Action = "refresh", Icon = "bi bi-arrow-clockwise" },
+                new() { Text = "Show Credentials", Action = "show-credentials", Icon = "bi bi-key" }
+            },
+            "credentials" => new List<NavigationItem>
+            {
+                new() { Text = "Create Credential", Action = "create-credential", Icon = "bi bi-plus-circle" },
+                new() { Text = "Delete Credential", Action = "delete-credential", Icon = "bi bi-trash", ButtonClass = "btn-outline-danger" },
+                new() { Text = "Refresh", Action = "refresh", Icon = "bi bi-arrow-clockwise" },
+                new() { Text = "Show Vaults", Action = "show-vaults", Icon = "bi bi-safe" }
+            },
+            _ => new List<NavigationItem>()
+        };
+    }
 }
