@@ -1,5 +1,6 @@
 using Amazon.S3;
 using Amazon.S3.Model;
+using Microsoft.VisualBasic;
 
 namespace clypse.core.Cloud.Aws.S3;
 
@@ -102,8 +103,7 @@ public class JavaScriptS3Client : IAmazonS3Client
         {
             BucketName = request.BucketName,
             Key = request.Key,
-            ContentLength = (long)(result.Data?.GetValueOrDefault("ContentLength", 0) ?? 0),
-            ////ContentType = result.Data?.GetValueOrDefault("ContentType", string.Empty)?.ToString() ?? string.Empty,
+            ContentLength = (long)(result.Data?.GetValueOrDefault("ContentLength", 0L) ?? 0L),
             ETag = result.Data?.GetValueOrDefault("ETag", string.Empty)?.ToString() ?? string.Empty,
             LastModified = DateTime.Parse(result.Data?.GetValueOrDefault("LastModified", DateTime.UtcNow.ToString())?.ToString() ?? DateTime.UtcNow.ToString()),
         };

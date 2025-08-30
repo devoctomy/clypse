@@ -4,6 +4,7 @@
 @using clypse.core.Cloud.Aws.S3
 @using clypse.core.Compression
 @using clypse.core.Cryptogtaphy
+@using clypse.core.Secrets
 @using clypse.core.Vault
 @using clypse.portal.Models
 @using Microsoft.JSInterop
@@ -288,7 +289,7 @@
         string secretAccessKey)
     {
         var compressionService = new GZipCompressionService();
-        
+
         // Use JavaScript S3 client instead of native AWS SDK
         var jsS3Client = new JavaScriptS3Client(
             new JavaScriptS3Invoker(JSRuntime),
@@ -296,7 +297,7 @@
             secretAccessKey,
             awsCredentials?.SessionToken ?? string.Empty,
             "eu-west-2");
-            
+
         var awsS3E2eCloudStorageProvider = new AwsS3E2eCloudStorageProvider(
             "clypse-testing",
             jsS3Client,
@@ -310,12 +311,19 @@
             "Foobar",
             "This is a test vault"
         );
+
+        var secret = vault.AddSecret(new WebSecret
+        {
+            Name = "Foobar",
+            Description = "This is a test secret.",
+            Password = "password123"
+        });
+
         var password = new SecureString();
         foreach (var curChar in "password123")
         {
             password.AppendChar(curChar);
         };
-
         var base64Key = await CryptoHelpers.DeriveKeyFromPassphraseUsingRfc2898Async(
             password,
             vault.Info.Base64Salt);
@@ -323,6 +331,18 @@
             vault,
             Convert.ToBase64String(base64Key),
             CancellationToken.None);
+
+        var loadedVault = await vaultManager.LoadAsync(
+            vault.Info.Id,
+            Convert.ToBase64String(base64Key),
+            CancellationToken.None);
+        var webSecret = await vaultManager.GetSecretAsync(
+            loadedVault,
+            loadedVault.Index.Entries[0].Id,
+            Convert.ToBase64String(base64Key),
+            CancellationToken.None);
+        
+
     }
 
     private class LoginResult
