@@ -164,7 +164,8 @@ window.S3Client = {
                 Bucket: request.bucket,
                 Prefix: request.prefix,
                 MaxKeys: request.maxKeys,
-                ContinuationToken: request.continuationToken
+                ContinuationToken: request.continuationToken,
+                Delimiter: request.delimiter
             };
 
             const result = await s3.listObjectsV2(params).promise();
@@ -174,7 +175,8 @@ window.S3Client = {
                 Data: {
                     IsTruncated: result.IsTruncated || false,
                     NextContinuationToken: result.NextContinuationToken,
-                    Contents: result.Contents || []
+                    Contents: result.Contents || [],
+                    CommonPrefixes: (result.CommonPrefixes || []).map(cp => cp.Prefix)
                 }
             };
         } catch (error) {

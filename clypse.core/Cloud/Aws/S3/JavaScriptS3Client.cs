@@ -169,6 +169,7 @@ public class JavaScriptS3Client : IAmazonS3Client
         {
             Bucket = request.BucketName,
             request.Prefix,
+            request.Delimiter,
             request.MaxKeys,
             request.ContinuationToken,
             AccessKeyId = this.accessKey,
@@ -212,6 +213,27 @@ public class JavaScriptS3Client : IAmazonS3Client
                         LastModified = lastModified,
                         ETag = JavaScriptInteropUtility.GetStringValue(itemDict, "ETag", string.Empty) ?? string.Empty,
                     });
+                }
+            }
+        }
+
+        // Handle CommonPrefixes (for delimiter-based queries)
+        if (result.Data?.ContainsKey("CommonPrefixes") == true)
+        {
+            var commonPrefixesValue = result.Data.GetValueOrDefault("CommonPrefixes", null);
+            if (commonPrefixesValue is JsonElement commonPrefixesElement && commonPrefixesElement.ValueKind == JsonValueKind.Array)
+            {
+                response.CommonPrefixes = [];
+                foreach (var item in commonPrefixesElement.EnumerateArray())
+                {
+                    if (item.ValueKind == JsonValueKind.String)
+                    {
+                        var prefix = item.GetString();
+                        if (!string.IsNullOrEmpty(prefix))
+                        {
+                            response.CommonPrefixes.Add(prefix);
+                        }
+                    }
                 }
             }
         }

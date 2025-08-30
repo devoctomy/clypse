@@ -170,7 +170,7 @@ public class AwsCloudStorageProviderBase : ICloudStorageProvider
             {
                 beforeListObjectsV2Async?.Invoke(listObjectsRequest);
                 listObjectsResponse = await this.amazonS3Client.ListObjectsV2Async(listObjectsRequest, cancellationToken);
-                if (listObjectsResponse.S3Objects != null)
+                if (listObjectsResponse.S3Objects != null && listObjectsResponse.S3Objects.Count > 0)
                 {
                     allKeys.AddRange(listObjectsResponse.S3Objects.Select(x => x.Key));
                 }
