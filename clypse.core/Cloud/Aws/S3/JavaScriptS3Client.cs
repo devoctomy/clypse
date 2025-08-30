@@ -2,7 +2,6 @@ using System.Text;
 using System.Text.Json;
 using Amazon.S3;
 using Amazon.S3.Model;
-using Microsoft.JSInterop;
 
 namespace clypse.core.Cloud.Aws.S3;
 
@@ -12,7 +11,7 @@ namespace clypse.core.Cloud.Aws.S3;
 /// </summary>
 public class JavaScriptS3Client : IAmazonS3Client
 {
-    private readonly IJSRuntime jsRuntime;
+    private readonly IJavaScriptS3Invoker jsInvoker;
     private readonly string accessKey;
     private readonly string secretKey;
     private readonly string sessionToken;
@@ -21,19 +20,19 @@ public class JavaScriptS3Client : IAmazonS3Client
     /// <summary>
     /// Initializes a new instance of the <see cref="JavaScriptS3Client"/> class with AWS credentials.
     /// </summary>
-    /// <param name="jsRuntime">The JavaScript runtime for interop calls.</param>
+    /// <param name="jsInvoker">The JavaScript S3 invoker for interop calls.</param>
     /// <param name="accessKey">AWS access key ID.</param>
     /// <param name="secretKey">AWS secret access key.</param>
     /// <param name="sessionToken">AWS session token (for temporary credentials).</param>
     /// <param name="region">AWS region name.</param>
     public JavaScriptS3Client(
-        IJSRuntime jsRuntime,
+        IJavaScriptS3Invoker jsInvoker,
         string accessKey,
         string secretKey,
         string sessionToken,
         string region)
     {
-        this.jsRuntime = jsRuntime;
+        this.jsInvoker = jsInvoker;
         this.accessKey = accessKey;
         this.secretKey = secretKey;
         this.sessionToken = sessionToken;
@@ -53,14 +52,14 @@ public class JavaScriptS3Client : IAmazonS3Client
         var jsRequest = new
         {
             Bucket = request.BucketName,
-            Key = request.Key,
+            request.Key,
             AccessKeyId = this.accessKey,
             SecretAccessKey = this.secretKey,
             SessionToken = this.sessionToken,
             Region = this.region,
         };
 
-        var result = await this.jsRuntime.InvokeAsync<S3OperationResult>("S3Client.deleteObject", jsRequest);
+        var result = await this.jsInvoker.InvokeS3OperationAsync("S3Client.deleteObject", jsRequest);
 
         if (!result.Success)
         {
@@ -94,7 +93,7 @@ public class JavaScriptS3Client : IAmazonS3Client
             Region = this.region,
         };
 
-        var result = await this.jsRuntime.InvokeAsync<S3OperationResult>("S3Client.getObject", jsRequest);
+        var result = await this.jsInvoker.InvokeS3OperationAsync("S3Client.getObject", jsRequest);
 
         if (!result.Success)
         {
@@ -134,14 +133,14 @@ public class JavaScriptS3Client : IAmazonS3Client
         var jsRequest = new
         {
             Bucket = request.BucketName,
-            Key = request.Key,
+            request.Key,
             AccessKeyId = this.accessKey,
             SecretAccessKey = this.secretKey,
             SessionToken = this.sessionToken,
             Region = this.region,
         };
 
-        var result = await this.jsRuntime.InvokeAsync<S3OperationResult>("S3Client.getObjectMetadata", jsRequest);
+        var result = await this.jsInvoker.InvokeS3OperationAsync("S3Client.getObjectMetadata", jsRequest);
 
         if (!result.Success)
         {
@@ -179,7 +178,7 @@ public class JavaScriptS3Client : IAmazonS3Client
             Region = this.region,
         };
 
-        var result = await this.jsRuntime.InvokeAsync<S3OperationResult>("S3Client.listObjectsV2", jsRequest);
+        var result = await this.jsInvoker.InvokeS3OperationAsync("S3Client.listObjectsV2", jsRequest);
 
         if (!result.Success)
         {
@@ -191,21 +190,29 @@ public class JavaScriptS3Client : IAmazonS3Client
             Prefix = request.Prefix,
             IsTruncated = (bool)(result.Data?.GetValueOrDefault("IsTruncated", false) ?? false),
             NextContinuationToken = result.Data?.GetValueOrDefault("NextContinuationToken", string.Empty)?.ToString(),
-            S3Objects = new List<S3Object>(),
+            S3Objects = [],
+            MaxKeys = jsRequest.MaxKeys,
+            KeyCount = (int)(result.Data?.GetValueOrDefault("KeyCount", 0) ?? 0),
         };
 
-        if (result.Data?.ContainsKey("Contents") == true && result.Data["Contents"] is JsonElement contentsElement)
+        if (result.Data?.ContainsKey("Contents") == true)
         {
-            foreach (var obj in contentsElement.EnumerateArray())
+            var contentsDictionary = (List<Dictionary<string, object>>?)(result?.Data?.GetValueOrDefault("Contents", null) ?? null);
+            if (contentsDictionary != null)
             {
-                response.S3Objects.Add(new S3Object
+                foreach (var obj in contentsDictionary)
                 {
-                    BucketName = request.BucketName,
-                    Key = obj.GetProperty("Key").GetString() ?? string.Empty,
-                    Size = obj.GetProperty("Size").GetInt64(),
-                    LastModified = DateTime.Parse(obj.GetProperty("LastModified").GetString() ?? DateTime.UtcNow.ToString()),
-                    ETag = obj.GetProperty("ETag").GetString() ?? string.Empty,
-                });
+                    var lastModifiedString = (string?)(obj!.GetValueOrDefault("LastModified", null) ?? null);
+                    var lastModified = (DateTime?)(lastModifiedString != null ? DateTime.Parse(lastModifiedString) : null);
+                    response.S3Objects.Add(new S3Object
+                    {
+                        BucketName = request.BucketName,
+                        Key = (string)(obj.GetValueOrDefault("Key", string.Empty) ?? string.Empty),
+                        Size = (long)(obj.GetValueOrDefault("Size", 0L) ?? 0L),
+                        LastModified = lastModified,
+                        ETag = (string)(obj.GetValueOrDefault("ETag", string.Empty) ?? string.Empty),
+                    });
+                }
             }
         }
 
@@ -226,16 +233,12 @@ public class JavaScriptS3Client : IAmazonS3Client
         if (request.InputStream != null)
         {
             using var memoryStream = new MemoryStream();
-            await request.InputStream.CopyToAsync(memoryStream);
+            await request.InputStream.CopyToAsync(memoryStream, cancellationToken);
             bodyData = memoryStream.ToArray();
         }
-        else if (!string.IsNullOrEmpty(request.ContentBody))
-        {
-            bodyData = Encoding.UTF8.GetBytes(request.ContentBody);
-        }
 
-        // Debug: check if bodyData is null or empty
-        if (bodyData == null || bodyData.Length == 0)
+        if (bodyData == null ||
+            bodyData.Length == 0)
         {
             throw new AmazonS3Exception($"No body data available. InputStream: {request.InputStream != null}, ContentBody: {!string.IsNullOrEmpty(request.ContentBody)}");
         }
@@ -252,7 +255,7 @@ public class JavaScriptS3Client : IAmazonS3Client
             Region = this.region,
         };
 
-        var result = await this.jsRuntime.InvokeAsync<S3OperationResult>("S3Client.putObject", jsRequest);
+        var result = await this.jsInvoker.InvokeS3OperationAsync("S3Client.putObject", jsRequest);
 
         if (!result.Success)
         {
@@ -264,17 +267,5 @@ public class JavaScriptS3Client : IAmazonS3Client
             ETag = result.Data?.GetValueOrDefault("ETag", string.Empty)?.ToString() ?? string.Empty,
             VersionId = result.Data?.GetValueOrDefault("VersionId", string.Empty)?.ToString(),
         };
-    }
-
-    /// <summary>
-    /// Result structure for JavaScript S3 operations.
-    /// </summary>
-    private class S3OperationResult
-    {
-        public bool Success { get; set; }
-
-        public string ErrorMessage { get; set; } = string.Empty;
-
-        public Dictionary<string, object>? Data { get; set; }
     }
 }

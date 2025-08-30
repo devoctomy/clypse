@@ -291,7 +291,7 @@
         
         // Use JavaScript S3 client instead of native AWS SDK
         var jsS3Client = new JavaScriptS3Client(
-            JSRuntime,
+            new JavaScriptS3Invoker(JSRuntime),
             accessKey,
             secretAccessKey,
             awsCredentials?.SessionToken ?? string.Empty,
