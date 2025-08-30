@@ -137,21 +137,5 @@
         await JSRuntime.InvokeVoidAsync("localStorage.setItem", "clypse_credentials", credentialsJson);
     }
 
-    private class LoginResult
-    {
-        public bool Success { get; set; }
-        public string? Error { get; set; }
-        public string? AccessToken { get; set; }
-        public string? IdToken { get; set; }
-        public AwsCredentials? AwsCredentials { get; set; }
-    }
 
-    private class AwsCredentials
-    {
-        public string AccessKeyId { get; set; } = string.Empty;
-        public string SecretAccessKey { get; set; } = string.Empty;
-        public string SessionToken { get; set; } = string.Empty;
-        public string Expiration { get; set; } = string.Empty;
-        public string IdentityId { get; set; } = string.Empty;
-    }
 }

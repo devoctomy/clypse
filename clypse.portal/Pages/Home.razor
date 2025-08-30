@@ -1,5 +1,6 @@
 ﻿@page "/"
 @page "/home"
+@using clypse.portal.Models
 @layout HomeLayout
 @inject NavigationManager Navigation
 @inject IJSRuntime JSRuntime
@@ -56,21 +57,5 @@
         }
     }
 
-    private class StoredCredentials
-    {
-        public string? AccessToken { get; set; }
-        public string? IdToken { get; set; }
-        public AwsCredentials? AwsCredentials { get; set; }
-        public string ExpirationTime { get; set; } = string.Empty;
-        public DateTime StoredAt { get; set; }
-    }
 
-    private class AwsCredentials
-    {
-        public string AccessKeyId { get; set; } = string.Empty;
-        public string SecretAccessKey { get; set; } = string.Empty;
-        public string SessionToken { get; set; } = string.Empty;
-        public string Expiration { get; set; } = string.Empty;
-        public string IdentityId { get; set; } = string.Empty;
-    }
 }
