@@ -197,7 +197,7 @@ public class JavaScriptS3Client : IAmazonS3Client
 
         if (result.Data?.ContainsKey("Contents") == true)
         {
-            var contentsDictionary = (List<Dictionary<string, object>>?)(result?.Data?.GetValueOrDefault("Contents", null) ?? null);
+            var contentsDictionary = (List<Dictionary<string, object?>>?)(result?.Data?.GetValueOrDefault("Contents", null) ?? null);
             if (contentsDictionary != null)
             {
                 foreach (var obj in contentsDictionary)

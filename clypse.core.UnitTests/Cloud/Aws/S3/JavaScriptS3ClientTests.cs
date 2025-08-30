@@ -189,7 +189,7 @@ public class JavaScriptS3ClientTests
         {
             Success = true,
             ErrorMessage = string.Empty,
-            Data = new Dictionary<string, object>
+            Data = new Dictionary<string, object?>
             {
                 { "Body", base64Data },
                 { "ContentLength", (long)testData.Length },
@@ -280,7 +280,7 @@ public class JavaScriptS3ClientTests
         {
             Success = true,
             ErrorMessage = string.Empty,
-            Data = new Dictionary<string, object>
+            Data = new Dictionary<string, object?>
             {
                 { "Body", string.Empty },
                 { "ContentLength", 0L },
@@ -402,7 +402,7 @@ public class JavaScriptS3ClientTests
         {
             Success = true,
             ErrorMessage = string.Empty,
-            Data = new Dictionary<string, object>
+            Data = new Dictionary<string, object?>
             {
                 { "ETag", expectedETag },
                 { "LastModified", expectedLastModified.ToString() },
@@ -485,7 +485,7 @@ public class JavaScriptS3ClientTests
         {
             Success = true,
             ErrorMessage = string.Empty,
-            Data = new Dictionary<string, object>
+            Data = new Dictionary<string, object?>
             {
                 { "IsTruncated", false },
                 { "MaxKeys", 10 },
@@ -571,6 +571,19 @@ public class JavaScriptS3ClientTests
         Assert.Equal("Bucket access denied", exception.Message);
     }
 
+    private static bool DictionaryContainsAndStringValueEquals(
+        Dictionary<string, object> dictionary,
+        string key,
+        object expectedValue)
+    {
+        if (!dictionary.TryGetValue(key, out var value))
+        {
+            return false;
+        }
+
+        return value.ToString() == expectedValue.ToString();
+    }
+
     private bool VerifyPutObjectRequest(object request, string expectedBucket, string expectedKey, byte[] expectedData)
     {
         var json = JsonSerializer.Serialize(request);
@@ -581,13 +594,13 @@ public class JavaScriptS3ClientTests
             return false;
         }
 
-        return this.DictionaryContainsAndValueEquals(requestObj, "Bucket", expectedBucket) &&
-               this.DictionaryContainsAndValueEquals(requestObj, "Key", expectedKey) &&
-               this.DictionaryContainsAndValueEquals(requestObj, "Body", Convert.ToBase64String(expectedData)) &&
-               this.DictionaryContainsAndValueEquals(requestObj, "AccessKeyId", this.testAccessKey) &&
-               this.DictionaryContainsAndValueEquals(requestObj, "SecretAccessKey", this.testSecretKey) &&
-               this.DictionaryContainsAndValueEquals(requestObj, "SessionToken", this.testSessionToken) &&
-               this.DictionaryContainsAndValueEquals(requestObj, "Region", this.testRegion);
+        return DictionaryContainsAndStringValueEquals(requestObj, "Bucket", expectedBucket) &&
+               DictionaryContainsAndStringValueEquals(requestObj, "Key", expectedKey) &&
+               DictionaryContainsAndStringValueEquals(requestObj, "Body", Convert.ToBase64String(expectedData)) &&
+               DictionaryContainsAndStringValueEquals(requestObj, "AccessKeyId", this.testAccessKey) &&
+               DictionaryContainsAndStringValueEquals(requestObj, "SecretAccessKey", this.testSecretKey) &&
+               DictionaryContainsAndStringValueEquals(requestObj, "SessionToken", this.testSessionToken) &&
+               DictionaryContainsAndStringValueEquals(requestObj, "Region", this.testRegion);
     }
 
     private bool VerifyGetObjectRequest(object request, string expectedBucket, string expectedKey)
@@ -600,12 +613,12 @@ public class JavaScriptS3ClientTests
             return false;
         }
 
-        return this.DictionaryContainsAndValueEquals(requestObj, "Bucket", expectedBucket) &&
-               this.DictionaryContainsAndValueEquals(requestObj, "Key", expectedKey) &&
-               this.DictionaryContainsAndValueEquals(requestObj, "AccessKeyId", this.testAccessKey) &&
-               this.DictionaryContainsAndValueEquals(requestObj, "SecretAccessKey", this.testSecretKey) &&
-               this.DictionaryContainsAndValueEquals(requestObj, "SessionToken", this.testSessionToken) &&
-               this.DictionaryContainsAndValueEquals(requestObj, "Region", this.testRegion);
+        return DictionaryContainsAndStringValueEquals(requestObj, "Bucket", expectedBucket) &&
+               DictionaryContainsAndStringValueEquals(requestObj, "Key", expectedKey) &&
+               DictionaryContainsAndStringValueEquals(requestObj, "AccessKeyId", this.testAccessKey) &&
+               DictionaryContainsAndStringValueEquals(requestObj, "SecretAccessKey", this.testSecretKey) &&
+               DictionaryContainsAndStringValueEquals(requestObj, "SessionToken", this.testSessionToken) &&
+               DictionaryContainsAndStringValueEquals(requestObj, "Region", this.testRegion);
     }
 
     private bool VerifyDeleteObjectRequest(
@@ -621,12 +634,12 @@ public class JavaScriptS3ClientTests
             return false;
         }
 
-        return this.DictionaryContainsAndValueEquals(requestObj, "Bucket", expectedBucket) &&
-               this.DictionaryContainsAndValueEquals(requestObj, "Key", expectedKey) &&
-               this.DictionaryContainsAndValueEquals(requestObj, "AccessKeyId", this.testAccessKey) &&
-               this.DictionaryContainsAndValueEquals(requestObj, "SecretAccessKey", this.testSecretKey) &&
-               this.DictionaryContainsAndValueEquals(requestObj, "SessionToken", this.testSessionToken) &&
-               this.DictionaryContainsAndValueEquals(requestObj, "Region", this.testRegion);
+        return DictionaryContainsAndStringValueEquals(requestObj, "Bucket", expectedBucket) &&
+               DictionaryContainsAndStringValueEquals(requestObj, "Key", expectedKey) &&
+               DictionaryContainsAndStringValueEquals(requestObj, "AccessKeyId", this.testAccessKey) &&
+               DictionaryContainsAndStringValueEquals(requestObj, "SecretAccessKey", this.testSecretKey) &&
+               DictionaryContainsAndStringValueEquals(requestObj, "SessionToken", this.testSessionToken) &&
+               DictionaryContainsAndStringValueEquals(requestObj, "Region", this.testRegion);
     }
 
     private bool VerifyGetObjectMetadataRequest(
@@ -642,12 +655,12 @@ public class JavaScriptS3ClientTests
             return false;
         }
 
-        return this.DictionaryContainsAndValueEquals(requestObj, "Bucket", expectedBucket) &&
-               this.DictionaryContainsAndValueEquals(requestObj, "Key", expectedKey) &&
-               this.DictionaryContainsAndValueEquals(requestObj, "AccessKeyId", this.testAccessKey) &&
-               this.DictionaryContainsAndValueEquals(requestObj, "SecretAccessKey", this.testSecretKey) &&
-               this.DictionaryContainsAndValueEquals(requestObj, "SessionToken", this.testSessionToken) &&
-               this.DictionaryContainsAndValueEquals(requestObj, "Region", this.testRegion);
+        return DictionaryContainsAndStringValueEquals(requestObj, "Bucket", expectedBucket) &&
+               DictionaryContainsAndStringValueEquals(requestObj, "Key", expectedKey) &&
+               DictionaryContainsAndStringValueEquals(requestObj, "AccessKeyId", this.testAccessKey) &&
+               DictionaryContainsAndStringValueEquals(requestObj, "SecretAccessKey", this.testSecretKey) &&
+               DictionaryContainsAndStringValueEquals(requestObj, "SessionToken", this.testSessionToken) &&
+               DictionaryContainsAndStringValueEquals(requestObj, "Region", this.testRegion);
     }
 
     private bool VerifyListObjectsV2Request(
@@ -664,25 +677,12 @@ public class JavaScriptS3ClientTests
             return false;
         }
 
-        return this.DictionaryContainsAndValueEquals(requestObj, "Bucket", expectedBucket) &&
-               this.DictionaryContainsAndValueEquals(requestObj, "Prefix", expectedPrefix) &&
-               this.DictionaryContainsAndValueEquals(requestObj, "MaxKeys", expectedMaxKeys) &&
-               this.DictionaryContainsAndValueEquals(requestObj, "AccessKeyId", this.testAccessKey) &&
-               this.DictionaryContainsAndValueEquals(requestObj, "SecretAccessKey", this.testSecretKey) &&
-               this.DictionaryContainsAndValueEquals(requestObj, "SessionToken", this.testSessionToken) &&
-               this.DictionaryContainsAndValueEquals(requestObj, "Region", this.testRegion);
-    }
-
-    private bool DictionaryContainsAndValueEquals(
-        Dictionary<string, object> dictionary,
-        string key,
-        object expectedValue)
-    {
-        if (!dictionary.TryGetValue(key, out var value))
-        {
-            return false;
-        }
-
-        return value.ToString() == expectedValue.ToString();
+        return DictionaryContainsAndStringValueEquals(requestObj, "Bucket", expectedBucket) &&
+               DictionaryContainsAndStringValueEquals(requestObj, "Prefix", expectedPrefix) &&
+               DictionaryContainsAndStringValueEquals(requestObj, "MaxKeys", expectedMaxKeys) &&
+               DictionaryContainsAndStringValueEquals(requestObj, "AccessKeyId", this.testAccessKey) &&
+               DictionaryContainsAndStringValueEquals(requestObj, "SecretAccessKey", this.testSecretKey) &&
+               DictionaryContainsAndStringValueEquals(requestObj, "SessionToken", this.testSessionToken) &&
+               DictionaryContainsAndStringValueEquals(requestObj, "Region", this.testRegion);
     }
 }

@@ -19,5 +19,5 @@ public class S3OperationResult
     /// <summary>
     /// Gets or sets the optional data payload returned from the S3 operation.
     /// </summary>
-    public Dictionary<string, object>? Data { get; set; }
+    public Dictionary<string, object?>? Data { get; set; }
 }
