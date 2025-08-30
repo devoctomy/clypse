@@ -1,0 +1,145 @@
+@using clypse.portal.Models
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Create New Vault</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="vaultName" class="form-label">Name</label>
+                                <input type="text" class="form-control" id="vaultName" @bind="vaultName" placeholder="Enter vault name">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="vaultDescription" class="form-label">Description</label>
+                                <input type="text" class="form-control" id="vaultDescription" @bind="vaultDescription" placeholder="Enter vault description">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="vaultPassphrase" class="form-label">Passphrase</label>
+                                <input type="password" class="form-control" id="vaultPassphrase" @bind="vaultPassphrase" placeholder="Enter passphrase">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="vaultPassphraseConfirm" class="form-label">Confirm Passphrase</label>
+                                <input type="password" class="form-control" id="vaultPassphraseConfirm" @bind="vaultPassphraseConfirm" placeholder="Confirm passphrase">
+                            </div>
+                        </div>
+                    </div>
+                    @if (!string.IsNullOrEmpty(errorMessage))
+                    {
+                        <div class="alert alert-danger" role="alert">
+                            @errorMessage
+                        </div>
+                    }
+                    <div class="d-flex gap-2">
+                        <button type="button" class="btn btn-primary" @onclick="DoCreateVault" disabled="@isCreating">
+                            @if (isCreating)
+                            {
+                                <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                            }
+                            Create Vault
+                        </button>
+                        <button type="button" class="btn btn-secondary" @onclick="Cancel">
+                            Cancel
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private string vaultName = string.Empty;
+    private string vaultDescription = string.Empty;
+    private string vaultPassphrase = string.Empty;
+    private string vaultPassphraseConfirm = string.Empty;
+    private string errorMessage = string.Empty;
+    private bool isCreating = false;
+
+    [Parameter] public EventCallback<VaultCreationRequest> OnCreateVault { get; set; }
+    [Parameter] public EventCallback OnCancel { get; set; }
+
+    private async Task DoCreateVault()
+    {
+        errorMessage = string.Empty;
+
+        // Validation
+        if (string.IsNullOrWhiteSpace(vaultName))
+        {
+            errorMessage = "Vault name is required.";
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(vaultDescription))
+        {
+            errorMessage = "Vault description is required.";
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(vaultPassphrase))
+        {
+            errorMessage = "Passphrase is required.";
+            return;
+        }
+
+        if (vaultPassphrase != vaultPassphraseConfirm)
+        {
+            errorMessage = "Passphrases do not match.";
+            return;
+        }
+
+        if (vaultPassphrase.Length < 8)
+        {
+            errorMessage = "Passphrase must be at least 8 characters long.";
+            return;
+        }
+
+        isCreating = true;
+        StateHasChanged();
+
+        try
+        {
+            var request = new VaultCreationRequest
+            {
+                Name = vaultName.Trim(),
+                Description = vaultDescription.Trim(),
+                Passphrase = vaultPassphrase
+            };
+
+            await OnCreateVault.InvokeAsync(request);
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error creating vault: {ex.Message}";
+        }
+        finally
+        {
+            isCreating = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task Cancel()
+    {
+        // Clear form
+        vaultName = string.Empty;
+        vaultDescription = string.Empty;
+        vaultPassphrase = string.Empty;
+        vaultPassphraseConfirm = string.Empty;
+        errorMessage = string.Empty;
+
+        await OnCancel.InvokeAsync();
+    }
+}
