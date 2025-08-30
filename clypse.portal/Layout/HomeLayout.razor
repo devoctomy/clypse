@@ -1,4 +1,6 @@
 @inherits LayoutComponentBase
+@inject IJSRuntime JSRuntime
+@inject NavigationManager Navigation
 
 <div class="d-flex flex-column vh-100">
     <!-- Title Bar -->
@@ -8,8 +10,17 @@
 
     <div class="flex-grow-1 d-flex">
         <!-- Navigation Sidebar -->
-        <nav class="bg-light p-3" style="width: 250px;">
-            <!-- Navigation content can change depending on context -->
+        <nav class="bg-light p-3 d-flex flex-column" style="width: 250px;">
+            <div class="flex-grow-1">
+                <!-- Navigation content can change depending on context -->
+            </div>
+            
+            <!-- Logout at bottom -->
+            <div class="mt-auto pt-3 border-top">
+                <button class="btn btn-outline-danger btn-sm w-100" @onclick="HandleLogout">
+                    Logout
+                </button>
+            </div>
         </nav>
 
         <!-- Main Content Area -->
@@ -18,3 +29,14 @@
         </main>
     </div>
 </div>
+
+@code {
+    private async Task HandleLogout()
+    {
+        // Clear credentials from local storage
+        await JSRuntime.InvokeVoidAsync("localStorage.removeItem", "clypse_credentials");
+        
+        // Redirect to login page
+        Navigation.NavigateTo("/login");
+    }
+}
