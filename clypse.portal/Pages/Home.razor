@@ -1,7 +1,22 @@
-﻿@page "/home"
+﻿@page "/"
+@page "/home"
 @layout HomeLayout
+@inject NavigationManager Navigation
 
 <PageTitle>Clypse Portal - Home</PageTitle>
 
 <h1>Home</h1>
 <p>This is the home page.</p>
+
+@code {
+    private bool isLoggedIn = false; // Placeholder - will be false for now
+
+    protected override void OnInitialized()
+    {
+        // Check if user is logged in (placeholder logic)
+        if (!isLoggedIn)
+        {
+            Navigation.NavigateTo("/login");
+        }
+    }
+}
