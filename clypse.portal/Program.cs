@@ -14,4 +14,9 @@ var cognitoConfig = new AwsCognitoConfig();
 builder.Configuration.GetSection("AwsCognito").Bind(cognitoConfig);
 builder.Services.AddSingleton(cognitoConfig);
 
+// Configure App settings from appsettings.json
+var appSettings = new AppSettings();
+builder.Configuration.GetSection("AppSettings").Bind(appSettings);
+builder.Services.AddSingleton(appSettings);
+
 await builder.Build().RunAsync();

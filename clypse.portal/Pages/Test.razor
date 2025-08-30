@@ -1,4 +1,4 @@
-﻿@page "/"
+﻿@page "/test"
 @using System.Security
 @using clypse.core.Cloud
 @using clypse.core.Cloud.Aws.S3
@@ -11,7 +11,7 @@
 @inject IJSRuntime JSRuntime
 @inject AwsCognitoConfig CognitoConfig
 
-<PageTitle>Clypse Portal - Home</PageTitle>
+<PageTitle>Clypse Portal - Test</PageTitle>
 
 <div class="container mt-4">
     <div class="row justify-content-center">
@@ -145,6 +145,9 @@
                         </div>
                     }
                 </div>
+            </div>
+            <div class="text-center mt-3">
+                <a href="/" class="btn btn-link">Back to Login Page</a>
             </div>
         </div>
     </div>
