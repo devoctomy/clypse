@@ -343,10 +343,12 @@ else if (currentPage == "create-vault")
             }
 
             // Derive encryption key from passphrase
-            var key = await CryptoHelpers.DeriveKeyFromPassphraseUsingRfc2898Async(
+            var keyDerivationService = new KeyDerivationService();
+            var keyBytes = await keyDerivationService.DeriveKeyFromPassphraseAsync(
+                core.Enums.KeyDerivationAlgorithm.Rfc2898,
                 password,
                 vault.Info.Base64Salt);
-            var base64Key = Convert.ToBase64String(key);
+            var base64Key = Convert.ToBase64String(keyBytes);
 
             // Save the vault
             Console.WriteLine("Saving vault...");

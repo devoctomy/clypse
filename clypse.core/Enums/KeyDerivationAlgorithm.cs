@@ -1,7 +1,7 @@
 ﻿namespace clypse.core.Enums;
 
 /// <summary>
-/// Represents a specific password derivation algorithm
+/// Represents a specific password derivation algorithm.
 /// </summary>
 public enum KeyDerivationAlgorithm
 {

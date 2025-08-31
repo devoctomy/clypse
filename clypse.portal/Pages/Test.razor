@@ -330,22 +330,25 @@
         {
             password.AppendChar(curChar);
         };
-        var base64Key = await CryptoHelpers.DeriveKeyFromPassphraseUsingRfc2898Async(
+        var keyDerivationService = new KeyDerivationService();
+        var keyBytes = await keyDerivationService.DeriveKeyFromPassphraseAsync(
+            core.Enums.KeyDerivationAlgorithm.Rfc2898,
             password,
             vault.Info.Base64Salt);
+        var base64Key = Convert.ToBase64String(keyBytes);
         await vaultManager.SaveAsync(
             vault,
-            Convert.ToBase64String(base64Key),
+            base64Key,
             CancellationToken.None);
 
         var loadedVault = await vaultManager.LoadAsync(
             vault.Info.Id,
-            Convert.ToBase64String(base64Key),
+            base64Key,
             CancellationToken.None);
         var loadedWebSecret = await vaultManager.GetSecretAsync(
             loadedVault,
             loadedVault.Index.Entries[0].Id,
-            Convert.ToBase64String(base64Key),
+            base64Key,
             CancellationToken.None);
     }
 
