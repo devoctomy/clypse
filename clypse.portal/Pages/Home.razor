@@ -25,7 +25,7 @@
 }
 else if (currentPage == "credentials")
 {
-    <Credentials CurrentVault="@currentVault" CurrentVaultKey="@currentVaultKey" OnLockVault="HandleLockVault" />
+    <Credentials CurrentVault="@currentVault" CurrentVaultKey="@currentVaultKey" VaultManager="@vaultManager" OnLockVault="HandleLockVault" />
 }
 else if (currentPage == "create-vault")
 {
@@ -396,6 +396,18 @@ else if (currentPage == "create-vault")
     {
         currentVault = vaultData.vault;
         currentVaultKey = vaultData.key;
+        
+        // Create vault manager if not already instantiated
+        if (vaultManager == null)
+        {
+            vaultManager = await CreateVaultManager();
+            if (vaultManager == null)
+            {
+                Console.WriteLine("Failed to create vault manager");
+                return;
+            }
+        }
+        
         currentPage = "credentials";
         StateHasChanged();
         await UpdateNavigation();
