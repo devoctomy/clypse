@@ -253,11 +253,19 @@
             selectedVault.Description = vault.Info.Description;
             await VaultStorage.UpdateVaultAsync(selectedVault);
 
+            // Create a copy of the vault metadata before clearing selectedVault
+            var unlockedVault = new VaultMetadata
+            {
+                Id = selectedVault.Id,
+                Name = selectedVault.Name,
+                Description = selectedVault.Description
+            };
+
             HidePassphrasePanel();
             await RefreshVaults();
             
             // Notify parent that vault was unlocked
-            await OnVaultUnlocked.InvokeAsync(selectedVault);
+            await OnVaultUnlocked.InvokeAsync(unlockedVault);
         }
         catch (Exception ex)
         {
