@@ -50,17 +50,23 @@ public class CryptoHelpers
     /// <param name="passphrase">The secure passphrase to derive the key from.</param>
     /// <param name="base64Salt">The base64-encoded salt for key derivation.</param>
     /// <param name="keyLength">The desired length of the derived key in bytes (default: 32).</param>
+    /// <param name="degreeOfParallelism">Number of threads to use when deriving the key. This is wasted in WASM.</param>
+    /// <param name="memorySize">How much RAM Argon2 forces the computation to use.</param>
+    /// <param name="iterations">How many times Argon2 runs over that allocated memory.</param>
     /// <returns>A byte array containing the derived cryptographic key.</returns>
     public static async Task<byte[]> DeriveKeyFromPassphraseUsingArgon2Async(
         SecureString passphrase,
         string base64Salt,
-        int keyLength = 32)
+        int keyLength = 32,
+        int degreeOfParallelism = 16,
+        int memorySize = 8192,
+        int iterations = 40)
     {
         var argon2 = new Argon2d(passphrase.ToUtf8Bytes())
         {
-            DegreeOfParallelism = 16,
-            MemorySize = 8192,
-            Iterations = 40,
+            DegreeOfParallelism = degreeOfParallelism,
+            MemorySize = memorySize,
+            Iterations = iterations,
             KnownSecret = Sha256HashString("13E3288E-445F-4A44-858C-483B8A3566BC", 32),
             Salt = Convert.FromBase64String(base64Salt),
         };

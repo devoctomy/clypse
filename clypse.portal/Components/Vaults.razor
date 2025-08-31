@@ -247,7 +247,7 @@
 
             var keyDerivationService = new KeyDerivationService();
             var keyBytes = await keyDerivationService.DeriveKeyFromPassphraseAsync(
-                core.Enums.KeyDerivationAlgorithm.Rfc2898,
+                core.Enums.KeyDerivationAlgorithm.Argon2,
                 securePassphrase,
                 base64Salt);
 
