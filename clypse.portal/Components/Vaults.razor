@@ -96,7 +96,8 @@
                                    class="form-control" 
                                    id="passphrase" 
                                    @bind="passphrase" 
-                                   @onkeypress="OnPassphraseKeyPress"
+                                   @bind:event="oninput"
+                                   @onkeydown="OnPassphraseKeyDown"
                                    placeholder="Enter vault passphrase"
                                    disabled="@isUnlocking" />
                         </div>
@@ -192,11 +193,20 @@
         StateHasChanged();
     }
 
-    private async Task OnPassphraseKeyPress(KeyboardEventArgs e)
+    private async Task OnPassphraseKeyDown(KeyboardEventArgs e)
     {
         if (e.Key == "Enter" && !isUnlocking)
         {
-            await UnlockVault();
+            try
+            {
+                await UnlockVault();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error during Enter key unlock: {ex.Message}");
+                errorMessage = $"Failed to unlock vault: {ex.Message}";
+                StateHasChanged();
+            }
         }
     }
 

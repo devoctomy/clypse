@@ -347,6 +347,31 @@ else if (currentPage == "create-vault")
 
             Console.WriteLine($"Vault saved successfully. Results: {saveResults}");
             
+            // Persist vault metadata immediately since we know the name and description
+            var existingVaults = await VaultStorage.GetVaultsAsync();
+            var existingVault = existingVaults.FirstOrDefault(v => v.Id == vault.Info.Id);
+            
+            if (existingVault != null)
+            {
+                // Update existing vault with the metadata
+                existingVault.Name = vault.Info.Name;
+                existingVault.Description = vault.Info.Description;
+            }
+            else
+            {
+                // Add new vault with full metadata
+                existingVaults.Add(new VaultMetadata 
+                { 
+                    Id = vault.Info.Id,
+                    Name = vault.Info.Name,
+                    Description = vault.Info.Description
+                });
+            }
+            
+            // Save the updated vault list
+            await VaultStorage.SaveVaultsAsync(existingVaults);
+            Console.WriteLine("Vault metadata persisted to localStorage");
+            
             // Navigate back to vaults page
             currentPage = "vaults";
             StateHasChanged();
