@@ -133,6 +133,8 @@
     private string? errorMessage = null;
     private IVaultManager? vaultManager = null;
 
+    [Parameter] public EventCallback<VaultMetadata> OnVaultUnlocked { get; set; }
+
     protected override async Task OnInitializedAsync()
     {
         await LoadVaults();
@@ -232,7 +234,6 @@
             {
                 securePassphrase.AppendChar(c);
             }
-            securePassphrase.MakeReadOnly();
             var keyBytes = await CryptoHelpers.DeriveKeyFromPassphraseUsingRfc2898Async(
                 securePassphrase, 
                 base64Salt);
@@ -244,6 +245,9 @@
 
             HidePassphrasePanel();
             await RefreshVaults();
+            
+            // Notify parent that vault was unlocked
+            await OnVaultUnlocked.InvokeAsync(selectedVault);
         }
         catch (Exception ex)
         {

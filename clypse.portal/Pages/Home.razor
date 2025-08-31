@@ -14,16 +14,17 @@
 @inject IVaultStorageService VaultStorage
 @inject AppSettings AppSettings
 @inject AwsS3Config AwsS3Config
+@inject AwsCognitoConfig CognitoConfig
 
 <PageTitle>Clypse Portal - Home</PageTitle>
 
 @if (currentPage == "vaults")
 {
-    <Vaults @ref="vaultsComponent" />
+    <Vaults @ref="vaultsComponent" OnVaultUnlocked="HandleVaultUnlocked" />
 }
 else if (currentPage == "credentials")
 {
-    <Credentials />
+    <Credentials CurrentVault="@currentVault" OnLockVault="HandleLockVault" />
 }
 else if (currentPage == "create-vault")
 {
@@ -31,10 +32,12 @@ else if (currentPage == "create-vault")
 }
 
 @code {
+
     private bool isLoggedIn = false;
     private string currentPage = "vaults"; // Default to vaults page
     private IVaultManager? vaultManager = null;
     private Components.Vaults? vaultsComponent;
+    private VaultMetadata? currentVault = null;
 
     [CascadingParameter] public Layout.HomeLayout? Layout { get; set; }
 
@@ -42,6 +45,18 @@ else if (currentPage == "create-vault")
     {
         if (firstRender)
         {
+            // Initialize Cognito with configuration
+            await JSRuntime.InvokeVoidAsync("eval", $@"
+                window.cognitoConfig = {{
+                    userPoolId: '{CognitoConfig.UserPoolId}',
+                    userPoolClientId: '{CognitoConfig.UserPoolClientId}',
+                    region: '{CognitoConfig.Region}',
+                    identityPoolId: '{CognitoConfig.IdentityPoolId}'
+                }};
+            ");
+
+            await JSRuntime.InvokeAsync<string>("CognitoAuth.initialize", CognitoConfig);
+            
             await CheckAuthentication();
             if (isLoggedIn)
             {
@@ -57,14 +72,33 @@ else if (currentPage == "create-vault")
         try
         {
             var credentialsJson = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "clypse_credentials");
-            
+
             if (!string.IsNullOrEmpty(credentialsJson))
             {
                 var credentials = System.Text.Json.JsonSerializer.Deserialize<StoredCredentials>(credentialsJson);
-                
+
                 // Check if credentials are still valid
                 if (credentials != null && DateTime.Parse(credentials.ExpirationTime) > DateTime.UtcNow)
                 {
+                    // Restore the Cognito session using the stored IdToken
+                    if (!string.IsNullOrEmpty(credentials.IdToken))
+                    {
+                        try
+                        {
+                            // Restore AWS credentials using the stored IdToken
+                            await JSRuntime.InvokeAsync<object>("CognitoAuth.getAwsCredentials", credentials.IdToken);
+                            Console.WriteLine("AWS Cognito session restored successfully");
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine($"Failed to restore Cognito session: {ex.Message}");
+                            // Remove invalid credentials
+                            await JSRuntime.InvokeVoidAsync("localStorage.removeItem", "clypse_credentials");
+                            Navigation.NavigateTo("/login");
+                            return;
+                        }
+                    }
+                    
                     isLoggedIn = true;
                     StateHasChanged();
                     return;
@@ -92,14 +126,11 @@ else if (currentPage == "create-vault")
     {
         switch (action)
         {
-            case "show-credentials":
-                currentPage = "credentials";
+            case "create-vault":
+                currentPage = "create-vault";
                 break;
             case "show-vaults":
                 currentPage = "vaults";
-                break;
-            case "create-vault":
-                currentPage = "create-vault";
                 break;
             case "delete-vault":
                 // TODO: Implement delete vault
@@ -110,11 +141,14 @@ else if (currentPage == "create-vault")
             case "delete-credential":
                 // TODO: Implement delete credential
                 break;
+            case "lock-vault":
+                await HandleLockVault();
+                return; // HandleLockVault already calls StateHasChanged and UpdateNavigation
             case "refresh":
                 await HandleRefresh();
                 break;
         }
-        
+
         StateHasChanged();
         await UpdateNavigation();
     }
@@ -134,15 +168,14 @@ else if (currentPage == "create-vault")
             {
                 new() { Text = "Create Vault", Action = "create-vault", Icon = "bi bi-plus-circle" },
                 new() { Text = "Delete Vault", Action = "delete-vault", Icon = "bi bi-trash", ButtonClass = "btn-outline-danger" },
-                new() { Text = "Refresh", Action = "refresh", Icon = "bi bi-arrow-clockwise" },
-                new() { Text = "Show Credentials", Action = "show-credentials", Icon = "bi bi-key" }
+                new() { Text = "Refresh", Action = "refresh", Icon = "bi bi-arrow-clockwise" }
             },
             "credentials" => new List<NavigationItem>
             {
                 new() { Text = "Create Credential", Action = "create-credential", Icon = "bi bi-plus-circle" },
                 new() { Text = "Delete Credential", Action = "delete-credential", Icon = "bi bi-trash", ButtonClass = "btn-outline-danger" },
                 new() { Text = "Refresh", Action = "refresh", Icon = "bi bi-arrow-clockwise" },
-                new() { Text = "Show Vaults", Action = "show-vaults", Icon = "bi bi-safe" }
+                new() { Text = "Lock Vault", Action = "lock-vault", Icon = "bi bi-lock", ButtonClass = "btn-outline-secondary" }
             },
             "create-vault" => new List<NavigationItem>
             {
@@ -157,7 +190,7 @@ else if (currentPage == "create-vault")
         try
         {
             Console.WriteLine("Refreshing vaults...");
-            
+
             // Create vault manager if not already instantiated
             if (vaultManager == null)
             {
@@ -173,12 +206,12 @@ else if (currentPage == "create-vault")
             Console.WriteLine("About to call ListVaultIdsAsync...");
             var vaultIds = await vaultManager.ListVaultIdsAsync(CancellationToken.None);
             Console.WriteLine("ListVaultIdsAsync completed successfully");
-            
+
             if (vaultIds == null || vaultIds.Count == 0)
             {
                 Console.WriteLine("No vaults found");
                 await VaultStorage.SaveVaultsAsync(new List<VaultMetadata>());
-                
+
                 // Refresh the vaults component if we're on the vaults page
                 if (currentPage == "vaults" && vaultsComponent != null)
                 {
@@ -188,15 +221,15 @@ else if (currentPage == "create-vault")
             else
             {
                 Console.WriteLine($"Found {vaultIds.Count} vault(s):");
-                
+
                 // Get existing vaults to preserve any unlocked metadata
                 var existingVaults = await VaultStorage.GetVaultsAsync();
                 var vaultMetadataList = new List<VaultMetadata>();
-                
+
                 foreach (var vaultId in vaultIds)
                 {
                     Console.WriteLine($"  - {vaultId}");
-                    
+
                     // Check if this vault already exists in storage
                     var existingVault = existingVaults.FirstOrDefault(v => v.Id == vaultId);
                     if (existingVault != null)
@@ -210,11 +243,11 @@ else if (currentPage == "create-vault")
                         vaultMetadataList.Add(new VaultMetadata { Id = vaultId });
                     }
                 }
-                
+
                 // Save the updated vault list
                 await VaultStorage.SaveVaultsAsync(vaultMetadataList);
                 Console.WriteLine("Vault metadata saved to localStorage");
-                
+
                 // Refresh the vaults component if we're on the vaults page
                 if (currentPage == "vaults" && vaultsComponent != null)
                 {
@@ -234,7 +267,7 @@ else if (currentPage == "create-vault")
         {
             // Get stored credentials from localStorage
             var credentialsJson = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "clypse_credentials");
-            
+
             if (string.IsNullOrEmpty(credentialsJson))
             {
                 Console.WriteLine("No stored credentials found");
@@ -276,7 +309,7 @@ else if (currentPage == "create-vault")
         try
         {
             Console.WriteLine($"Creating vault: {request.Name} - {request.Description}");
-            
+
             // Create vault manager if not already instantiated
             if (vaultManager == null)
             {
@@ -300,15 +333,16 @@ else if (currentPage == "create-vault")
             }
 
             // Derive encryption key from passphrase
-            var base64Key = await CryptoHelpers.DeriveKeyFromPassphraseUsingRfc2898Async(
+            var key = await CryptoHelpers.DeriveKeyFromPassphraseUsingRfc2898Async(
                 password,
                 vault.Info.Base64Salt);
+            var base64Key = Convert.ToBase64String(key);
 
             // Save the vault
             Console.WriteLine("Saving vault...");
             var saveResults = await vaultManager.SaveAsync(
                 vault,
-                Convert.ToBase64String(base64Key),
+                base64Key,
                 CancellationToken.None);
 
             Console.WriteLine($"Vault saved successfully. Results: {saveResults}");
@@ -327,6 +361,22 @@ else if (currentPage == "create-vault")
 
     private async Task HandleCancelCreateVault()
     {
+        currentPage = "vaults";
+        StateHasChanged();
+        await UpdateNavigation();
+    }
+
+    private async Task HandleVaultUnlocked(VaultMetadata vault)
+    {
+        currentVault = vault;
+        currentPage = "credentials";
+        StateHasChanged();
+        await UpdateNavigation();
+    }
+
+    public async Task HandleLockVault()
+    {
+        currentVault = null;
         currentPage = "vaults";
         StateHasChanged();
         await UpdateNavigation();

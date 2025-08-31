@@ -45,7 +45,7 @@ window.S3Client = {
     getObject: async function(request) {
         try {
             AWS.config.update({
-                accessKeyId: request.cccessKeyId,
+                accessKeyId: request.accessKeyId,
                 secretAccessKey: request.secretAccessKey,
                 sessionToken: request.sessionToken,
                 region: request.region

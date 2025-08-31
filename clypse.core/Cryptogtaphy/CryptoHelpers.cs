@@ -84,6 +84,7 @@ public class CryptoHelpers
         return await Task.Run(() =>
         {
             var passphraseBytes = passphrase.ToUtf8Bytes();
+            var pop = System.Text.Encoding.UTF8.GetString(passphraseBytes);
             var salt = Convert.FromBase64String(base64Salt);
             using var pbkdf2 = new Rfc2898DeriveBytes(passphraseBytes, salt, iterations, HashAlgorithmName.SHA256);
             return pbkdf2.GetBytes(keyLength);
