@@ -2,6 +2,7 @@
 @using clypse.portal.Models
 @inject IJSRuntime JSRuntime
 @inject NavigationManager Navigation
+@implements IDisposable
 
 <CascadingValue Value="this">
     <div class="d-flex flex-column vh-100">
@@ -29,6 +30,13 @@
                 
                 <!-- Logout at bottom -->
                 <div class="mt-auto pt-3 border-top">
+                    @if (!string.IsNullOrEmpty(sessionTimeRemaining))
+                    {
+                        <div class="text-center mb-3 text-muted small">
+                            <i class="bi bi-clock me-1"></i>
+                            Session expires in @sessionTimeRemaining
+                        </div>
+                    }
                     <button class="btn btn-outline-danger btn-sm w-100" @onclick="HandleLogout">
                         Logout
                     </button>
@@ -46,6 +54,8 @@
 @code {
     private List<NavigationItem>? navigationItems;
     private Pages.Home? homePageRef;
+    private string? sessionTimeRemaining;
+    private Timer? sessionTimer;
 
     public void SetNavigationItems(List<NavigationItem> items)
     {
@@ -56,6 +66,79 @@
     public void SetHomePageReference(Pages.Home homeRef)
     {
         homePageRef = homeRef;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await StartSessionTimer();
+        }
+    }
+
+    private async Task StartSessionTimer()
+    {
+        await UpdateSessionTimer();
+        
+        // Update timer every minute
+        sessionTimer = new Timer(async _ =>
+        {
+            await InvokeAsync(async () =>
+            {
+                await UpdateSessionTimer();
+                StateHasChanged();
+            });
+        }, null, TimeSpan.FromMinutes(1), TimeSpan.FromMinutes(1));
+    }
+
+    private async Task UpdateSessionTimer()
+    {
+        try
+        {
+            var credentialsJson = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "clypse_credentials");
+            
+            if (!string.IsNullOrEmpty(credentialsJson))
+            {
+                var credentials = System.Text.Json.JsonSerializer.Deserialize<StoredCredentials>(credentialsJson);
+                
+                if (credentials != null && !string.IsNullOrEmpty(credentials.ExpirationTime))
+                {
+                    var expirationTime = DateTime.Parse(credentials.ExpirationTime);
+                    var timeRemaining = expirationTime - DateTime.UtcNow;
+                    
+                    if (timeRemaining.TotalMinutes > 0)
+                    {
+                        if (timeRemaining.TotalHours >= 1)
+                        {
+                            var hours = (int)timeRemaining.TotalHours;
+                            var minutes = timeRemaining.Minutes;
+                            sessionTimeRemaining = minutes > 0 ? $"{hours}h {minutes}m" : $"{hours}h";
+                        }
+                        else
+                        {
+                            var minutes = (int)timeRemaining.TotalMinutes;
+                            sessionTimeRemaining = $"{minutes} minute{(minutes != 1 ? "s" : "")}";
+                        }
+                    }
+                    else
+                    {
+                        sessionTimeRemaining = "expired";
+                    }
+                }
+                else
+                {
+                    sessionTimeRemaining = null;
+                }
+            }
+            else
+            {
+                sessionTimeRemaining = null;
+            }
+        }
+        catch
+        {
+            sessionTimeRemaining = null;
+        }
     }
 
     private async Task HandleNavigationAction(string action)
@@ -73,5 +156,10 @@
         
         // Redirect to login page
         Navigation.NavigateTo("/login");
+    }
+
+    public void Dispose()
+    {
+        sessionTimer?.Dispose();
     }
 }
