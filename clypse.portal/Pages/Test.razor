@@ -316,12 +316,14 @@
             "This is a test vault"
         );
 
-        var secret = vault.AddSecret(new WebSecret
-        {
-            Name = "Foobar",
-            Description = "This is a test secret.",
-            Password = "password123"
-        });
+        var webSecret = new WebSecret
+            {
+                Name = "Foobar",
+                Description = "This is a test secret.",
+                Password = "password123",
+            };
+        webSecret.UpdateTags(["apple", "orange"]);
+        var secret = vault.AddSecret(webSecret);
 
         var password = new SecureString();
         foreach (var curChar in "password123")
@@ -340,7 +342,7 @@
             vault.Info.Id,
             Convert.ToBase64String(base64Key),
             CancellationToken.None);
-        var webSecret = await vaultManager.GetSecretAsync(
+        var loadedWebSecret = await vaultManager.GetSecretAsync(
             loadedVault,
             loadedVault.Index.Entries[0].Id,
             Convert.ToBase64String(base64Key),

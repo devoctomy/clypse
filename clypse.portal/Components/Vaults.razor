@@ -253,12 +253,13 @@
             selectedVault.Description = vault.Info.Description;
             await VaultStorage.UpdateVaultAsync(selectedVault);
 
-            // Create a copy of the vault metadata before clearing selectedVault
+            // Create a copy of the vault metadata with index entries before clearing selectedVault
             var unlockedVault = new VaultMetadata
             {
                 Id = selectedVault.Id,
                 Name = selectedVault.Name,
-                Description = selectedVault.Description
+                Description = selectedVault.Description,
+                IndexEntries = vault.Index.Entries.ToList()
             };
 
             HidePassphrasePanel();
