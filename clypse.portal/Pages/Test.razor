@@ -127,6 +127,42 @@
                                 </button>
                                 <button class="btn btn-secondary" @onclick="HandleLogout">Logout</button>
                             </div>
+
+                            @if (showKeyDerivationResults && keyDerivationResults != null)
+                            {
+                                <div class="modal" tabindex="-1" style="display: block; background-color: rgba(0,0,0,0.5);">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title">Key Derivation Benchmark Results</h5>
+                                                <button type="button" class="btn-close" @onclick="() => showKeyDerivationResults = false"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <table class="table">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>Algorithm</th>
+                                                            <th>Average Time (ms)</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        @foreach (var result in keyDerivationResults.Results)
+                                                        {
+                                                            <tr>
+                                                                <td>@result.Algorithm</td>
+                                                                <td>@result.Average!.Value.TotalMilliseconds.ToString("F2")</td>
+                                                            </tr>
+                                                        }
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary" @onclick="() => showKeyDerivationResults = false">Close</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
                             
                             @if (!string.IsNullOrEmpty(clypseTestResult))
                             {
@@ -152,19 +188,83 @@
             </div>
         </div>
     </div>
+
+    <div class="row justify-content-center mt-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="text-center">Cryptography Tests</h3>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid">
+                        <button class="btn btn-primary" @onclick="HandleTestKeyDerivation" disabled="@isTestingKeyDerivation">
+                            @if (isTestingKeyDerivation)
+                            {
+                                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                <span>Testing Key Derivation...</span>
+                            }
+                            else
+                            {
+                                <span>Test Key Derivation Algorithms</span>
+                            }
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
+
+@if (showKeyDerivationResults && keyDerivationResults != null)
+{
+    <div class="modal" tabindex="-1" style="display: block; background-color: rgba(0,0,0,0.5);">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Key Derivation Benchmark Results</h5>
+                    <button type="button" class="btn-close" @onclick="() => showKeyDerivationResults = false"></button>
+                </div>
+                <div class="modal-body">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Algorithm</th>
+                                <th>Average Time (ms)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var result in keyDerivationResults.Results)
+                            {
+                                <tr>
+                                    <td>@result.Algorithm</td>
+                                    <td>@result.Average!.Value.TotalMilliseconds.ToString("F2")</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @onclick="() => showKeyDerivationResults = false">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
 
 @code {
     private LoginModel loginModel = new();
     private bool isLoading = false;
     private bool isAuthenticated = false;
     private bool isTestingClypse = false;
+    private bool isTestingKeyDerivation = false;
+    private bool showKeyDerivationResults = false;
     private string? errorMessage;
     private string? accessToken;
     private string? idToken;
     private string? clypseTestResult;
     private string? clypseTestError;
     private AwsCredentials? awsCredentials;
+    private KeyDerivationBenchmarkResults? keyDerivationResults;
 
     private class LoginModel
     {
@@ -256,7 +356,31 @@
         errorMessage = null;
         clypseTestResult = null;
         clypseTestError = null;
+        keyDerivationResults = null;
+        showKeyDerivationResults = false;
         StateHasChanged();
+    }
+
+    private async Task HandleTestKeyDerivation()
+    {
+        isTestingKeyDerivation = true;
+        StateHasChanged();
+
+        try
+        {
+            var keyDerivationService = new KeyDerivationService();
+            keyDerivationResults = await keyDerivationService.BenchmarkAllAsync(3);
+            showKeyDerivationResults = true;
+        }
+        catch (Exception ex)
+        {
+            clypseTestError = $"Key derivation benchmark failed: {ex.Message}";
+        }
+        finally
+        {
+            isTestingKeyDerivation = false;
+            StateHasChanged();
+        }
     }
 
     private async Task HandleTestClypse()
