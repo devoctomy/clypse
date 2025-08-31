@@ -7,6 +7,7 @@
 @using clypse.core.Vault
 @using clypse.core.Cryptogtaphy
 @using System.Security
+@using Microsoft.JSInterop
 @layout HomeLayout
 @inject NavigationManager Navigation
 @inject IJSRuntime JSRuntime
@@ -24,7 +25,7 @@
 }
 else if (currentPage == "credentials")
 {
-    <Credentials CurrentVault="@currentVault" OnLockVault="HandleLockVault" />
+    <Credentials CurrentVault="@currentVault" CurrentVaultKey="@currentVaultKey" OnLockVault="HandleLockVault" />
 }
 else if (currentPage == "create-vault")
 {
@@ -38,6 +39,7 @@ else if (currentPage == "create-vault")
     private IVaultManager? vaultManager = null;
     private Components.Vaults? vaultsComponent;
     private VaultMetadata? currentVault = null;
+    private string? currentVaultKey = null;
 
     [CascadingParameter] public Layout.HomeLayout? Layout { get; set; }
 
@@ -174,7 +176,6 @@ else if (currentPage == "create-vault")
             {
                 new() { Text = "Create Credential", Action = "create-credential", Icon = "bi bi-plus-circle" },
                 new() { Text = "Delete Credential", Action = "delete-credential", Icon = "bi bi-trash", ButtonClass = "btn-outline-danger" },
-                new() { Text = "Refresh", Action = "refresh", Icon = "bi bi-arrow-clockwise" },
                 new() { Text = "Lock Vault", Action = "lock-vault", Icon = "bi bi-lock", ButtonClass = "btn-outline-secondary" }
             },
             "create-vault" => new List<NavigationItem>
@@ -391,9 +392,10 @@ else if (currentPage == "create-vault")
         await UpdateNavigation();
     }
 
-    private async Task HandleVaultUnlocked(VaultMetadata vault)
+    private async Task HandleVaultUnlocked((VaultMetadata vault, string key) vaultData)
     {
-        currentVault = vault;
+        currentVault = vaultData.vault;
+        currentVaultKey = vaultData.key;
         currentPage = "credentials";
         StateHasChanged();
         await UpdateNavigation();
@@ -402,8 +404,11 @@ else if (currentPage == "create-vault")
     public async Task HandleLockVault()
     {
         currentVault = null;
+        currentVaultKey = null;
         currentPage = "vaults";
         StateHasChanged();
         await UpdateNavigation();
     }
+
+
 }
