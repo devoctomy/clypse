@@ -1,5 +1,7 @@
-/* Clypse Color Scheme */
-:root {
+/* Clypse Theme System */
+
+/* Default Light Theme */
+:root, [data-theme="light"] {
     /* Primary Brand Colors */
     --clypse-primary: #0d6efd;
     --clypse-primary-dark: #0a58ca;
@@ -49,10 +51,183 @@
     --clypse-vault-lock-icon: var(--clypse-text-secondary);
     
     /* Error/Loading Colors */
-    --clypse-error-background: lightyellow;
+    --clypse-error-background: #fff3cd;
     --clypse-error-border: #b32121;
     --clypse-loading-primary: #e0e0e0;
-    --clypse-loading-secondary: #1b6ec2;
+    --clypse-loading-secondary: var(--clypse-primary);
+}
+
+/* Dark Theme */
+[data-theme="dark"] {
+    /* Primary Brand Colors */
+    --clypse-primary: #6ea8fe;
+    --clypse-primary-dark: #4dabf7;
+    --clypse-primary-light: #a3d5ff;
+    
+    /* Secondary Colors */
+    --clypse-secondary: #adb5bd;
+    --clypse-secondary-dark: #868e96;
+    --clypse-secondary-light: #ced4da;
+    
+    /* Surface Colors */
+    --clypse-surface-primary: #212529;
+    --clypse-surface-secondary: #343a40;
+    --clypse-surface-tertiary: #495057;
+    --clypse-surface-dark: #0d1117;
+    
+    /* Text Colors */
+    --clypse-text-primary: #f8f9fa;
+    --clypse-text-secondary: #adb5bd;
+    --clypse-text-muted: #868e96;
+    --clypse-text-light: #6c757d;
+    --clypse-text-on-dark: #ffffff;
+    
+    /* Status Colors */
+    --clypse-success: #26b050;
+    --clypse-success-light: #4caf50;
+    --clypse-warning: #ffd43b;
+    --clypse-danger: #ff4757;
+    --clypse-info: #22d3ee;
+    
+    /* Border Colors */
+    --clypse-border-light: #495057;
+    --clypse-border-medium: #6c757d;
+    --clypse-border-dark: #adb5bd;
+    
+    /* Shadow Colors */
+    --clypse-shadow-light: rgba(0, 0, 0, 0.3);
+    --clypse-shadow-medium: rgba(0, 0, 0, 0.4);
+    --clypse-shadow-dark: rgba(0, 0, 0, 0.5);
+    
+    /* Vault-specific Colors */
+    --clypse-vault-background: var(--clypse-surface-secondary);
+    --clypse-vault-border: var(--clypse-border-light);
+    --clypse-vault-shadow: var(--clypse-shadow-light);
+    --clypse-vault-shadow-hover: var(--clypse-shadow-medium);
+    --clypse-vault-text: var(--clypse-text-secondary);
+    --clypse-vault-lock-icon: var(--clypse-text-secondary);
+    
+    /* Error/Loading Colors */
+    --clypse-error-background: #2d1b0e;
+    --clypse-error-border: #dc3545;
+    --clypse-loading-primary: #495057;
+    --clypse-loading-secondary: var(--clypse-primary);
+}
+
+/* Theme Transitions & Body Styles */
+* {
+    transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+body {
+    background-color: var(--clypse-surface-secondary);
+    color: var(--clypse-text-primary);
+}
+
+/* Theme Switcher Button */
+.theme-switcher {
+    background: none;
+    border: none;
+    color: var(--clypse-text-on-dark);
+    font-size: 1.2rem;
+    padding: 0.5rem;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: background-color 0.2s ease;
+}
+
+.theme-switcher:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Override Bootstrap text utilities to use theme variables */
+.text-muted {
+    color: var(--clypse-text-muted) !important;
+}
+
+/* Card and component styles */
+.card {
+    background-color: var(--clypse-surface-primary);
+    border-color: var(--clypse-border-light);
+}
+
+.card-header {
+    background-color: var(--clypse-surface-tertiary);
+    border-bottom-color: var(--clypse-border-light);
+}
+
+/* Modal styles */
+.modal-content {
+    background-color: var(--clypse-surface-primary);
+    border-color: var(--clypse-border-light);
+}
+
+.modal-header {
+    border-bottom-color: var(--clypse-border-light);
+}
+
+.modal-footer {
+    border-top-color: var(--clypse-border-light);
+}
+
+/* Form controls */
+.form-control {
+    background-color: var(--clypse-surface-primary);
+    border-color: var(--clypse-border-medium);
+    color: var(--clypse-text-primary);
+}
+
+.form-control:focus {
+    background-color: var(--clypse-surface-primary);
+    border-color: var(--clypse-primary);
+    color: var(--clypse-text-primary);
+}
+
+/* Buttons */
+.btn-primary {
+    background-color: var(--clypse-primary);
+    border-color: var(--clypse-primary);
+}
+
+.btn-secondary {
+    background-color: var(--clypse-secondary);
+    border-color: var(--clypse-secondary);
+}
+
+.btn-outline-secondary {
+    color: var(--clypse-secondary);
+    border-color: var(--clypse-secondary);
+}
+
+.btn-outline-danger {
+    color: var(--clypse-danger);
+    border-color: var(--clypse-danger);
+}
+
+/* Table styles */
+.table {
+    color: var(--clypse-text-primary);
+}
+
+.table-striped > tbody > tr:nth-of-type(odd) > td,
+.table-striped > tbody > tr:nth-of-type(odd) > th {
+    background-color: var(--clypse-surface-tertiary);
+}
+
+.table > :not(caption) > * > * {
+    border-bottom-color: var(--clypse-border-light);
+}
+
+.table > thead > tr > th {
+    border-bottom-color: var(--clypse-border-medium);
+    background-color: var(--clypse-surface-secondary);
+    color: var(--clypse-text-primary);
+}
+
+/* Badge styles */
+.badge {
+    background-color: var(--clypse-secondary) !important;
+    color: var(--clypse-text-on-dark) !important;
 }
 
 .valid.modified:not([type=checkbox]) {

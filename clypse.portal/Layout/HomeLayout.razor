@@ -7,13 +7,16 @@
 <CascadingValue Value="this">
     <div class="d-flex flex-column vh-100">
         <!-- Title Bar -->
-        <div class="bg-primary text-white p-3">
+        <div class="bg-primary text-white p-3 d-flex justify-content-between align-items-center">
             <h4 class="mb-0">Clypse Portal</h4>
+            <button class="theme-switcher" @onclick="ToggleTheme" title="Toggle theme">
+                <i class="bi @themeIcon"></i>
+            </button>
         </div>
 
         <div class="flex-grow-1 d-flex">
             <!-- Navigation Sidebar -->
-            <nav class="bg-light p-3 d-flex flex-column" style="width: 250px;">
+            <nav class="p-3 d-flex flex-column" style="width: 250px; background-color: var(--clypse-surface-tertiary); border-right: 1px solid var(--clypse-border-light);">
                 <div class="flex-grow-1">
                     @if (navigationItems != null && navigationItems.Any())
                     {
@@ -56,6 +59,8 @@
     private Pages.Home? homePageRef;
     private string? sessionTimeRemaining;
     private Timer? sessionTimer;
+    private string currentTheme = "light";
+    private string themeIcon = "bi-moon";
 
     public void SetNavigationItems(List<NavigationItem> items)
     {
@@ -72,8 +77,37 @@
     {
         if (firstRender)
         {
+            await InitializeTheme();
             await StartSessionTimer();
         }
+    }
+
+    private async Task InitializeTheme()
+    {
+        try
+        {
+            var savedTheme = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "clypse_theme");
+            currentTheme = !string.IsNullOrEmpty(savedTheme) ? savedTheme : "light";
+            themeIcon = currentTheme == "light" ? "bi-moon" : "bi-sun";
+            
+            await JSRuntime.InvokeVoidAsync("document.documentElement.setAttribute", "data-theme", currentTheme);
+        }
+        catch
+        {
+            currentTheme = "light";
+            themeIcon = "bi-moon";
+        }
+    }
+
+    private async Task ToggleTheme()
+    {
+        currentTheme = currentTheme == "light" ? "dark" : "light";
+        themeIcon = currentTheme == "light" ? "bi-moon" : "bi-sun";
+        
+        await JSRuntime.InvokeVoidAsync("localStorage.setItem", "clypse_theme", currentTheme);
+        await JSRuntime.InvokeVoidAsync("document.documentElement.setAttribute", "data-theme", currentTheme);
+        
+        StateHasChanged();
     }
 
     private async Task StartSessionTimer()
