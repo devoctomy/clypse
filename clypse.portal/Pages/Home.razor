@@ -1,6 +1,7 @@
 ﻿@page "/"
 @page "/home"
 @using clypse.portal.Models
+@using clypse.core.Vault
 @using clypse.portal.Components
 @using clypse.portal.Services
 @using clypse.core.Cloud.Aws.S3
@@ -25,12 +26,14 @@
 }
 else if (currentPage == "credentials")
 {
-    <Credentials CurrentVault="@currentVault" CurrentVaultKey="@currentVaultKey" VaultManager="@vaultManager" OnLockVault="HandleLockVault" />
+    <Credentials CurrentVault="@currentVault" CurrentVaultKey="@currentVaultKey" LoadedVault="@loadedVault" VaultManager="@vaultManager" OnLockVault="HandleLockVault" />
 }
 else if (currentPage == "create-vault")
 {
     <CreateVault OnCreateVault="HandleCreateVault" OnCancel="HandleCancelCreateVault" />
 }
+
+<VerifyDialog Show="showVerifyDialog" Results="verifyResults" OnClose="() => { showVerifyDialog = false; verifyResults = null; }" />
 
 @code {
 
@@ -40,6 +43,9 @@ else if (currentPage == "create-vault")
     private Components.Vaults? vaultsComponent;
     private VaultMetadata? currentVault = null;
     private string? currentVaultKey = null;
+    private IVault? loadedVault = null;
+    private bool showVerifyDialog = false;
+    private VaultVerifyResults? verifyResults = null;
 
     [CascadingParameter] public Layout.HomeLayout? Layout { get; set; }
 
@@ -149,6 +155,9 @@ else if (currentPage == "create-vault")
             case "refresh":
                 await HandleRefresh();
                 break;
+            case "verify":
+                await HandleVerify();
+                break;
         }
 
         StateHasChanged();
@@ -176,6 +185,7 @@ else if (currentPage == "create-vault")
             {
                 new() { Text = "Create Credential", Action = "create-credential", Icon = "bi bi-plus-circle" },
                 new() { Text = "Delete Credential", Action = "delete-credential", Icon = "bi bi-trash", ButtonClass = "btn-outline-danger" },
+                new() { Text = "Verify Vault", Action = "verify", Icon = "bi bi-shield-check", ButtonClass = "btn-outline-info" },
                 new() { Text = "Lock Vault", Action = "lock-vault", Icon = "bi bi-lock", ButtonClass = "btn-outline-secondary" }
             },
             "create-vault" => new List<NavigationItem>
@@ -407,6 +417,9 @@ else if (currentPage == "create-vault")
                 return;
             }
         }
+
+        // Load and store the vault instance
+        loadedVault = await vaultManager.LoadAsync(currentVault.Id, currentVaultKey, CancellationToken.None);
         
         currentPage = "credentials";
         StateHasChanged();
@@ -417,9 +430,35 @@ else if (currentPage == "create-vault")
     {
         currentVault = null;
         currentVaultKey = null;
+        loadedVault = null;
         currentPage = "vaults";
         StateHasChanged();
         await UpdateNavigation();
+    }
+
+    private async Task HandleVerify()
+    {
+        if (loadedVault == null || currentVaultKey == null || vaultManager == null)
+        {
+            return;
+        }
+
+        try
+        {
+            showVerifyDialog = true;
+            verifyResults = null;
+            StateHasChanged();
+
+            verifyResults = await vaultManager.VerifyAsync(loadedVault, currentVaultKey, CancellationToken.None);
+            StateHasChanged();
+        }
+        catch (Exception)
+        {
+            // Close dialog on error
+            showVerifyDialog = false;
+            verifyResults = null;
+            StateHasChanged();
+        }
     }
 
 
