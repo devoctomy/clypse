@@ -1,5 +1,4 @@
-﻿using Amazon.S3.Model;
-using clypse.core.Secrets;
+﻿using clypse.core.Secrets;
 
 namespace clypse.core.Vault;
 
