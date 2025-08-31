@@ -1,4 +1,5 @@
 ﻿using System.Security;
+using clypse.core.Cryptogtaphy;
 using clypse.core.Enums;
 
 namespace clypse.core.Cryptography;
@@ -19,4 +20,11 @@ public interface IKeyDerivationService
         KeyDerivationAlgorithm keyDerivationAlgorithm,
         SecureString passphrase,
         string base64Salt);
+
+    /// <summary>
+    /// Perform a benchmark of all key derivation algorithms currently supported.
+    /// </summary>
+    /// <param name="count">Number of tests to run for each algorithm.</param>
+    /// <returns>Benchmark results.</returns>
+    public Task<KeyDerivationBenchmarkResults> BenchmarkAllAsync(int count);
 }

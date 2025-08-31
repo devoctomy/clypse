@@ -36,5 +36,20 @@ namespace clypse.core.UnitTests.Cryptography
             // Assert
             Assert.Equal(expectedBase64Key, base64Key);
         }
+
+        [Fact]
+        public async Task GivenCount_WhenBenchmarkAllAsync_ThenAllAlgorithmsBenchmarked_AndResultsReturned()
+        {
+            // Arrange
+            var sut = new KeyDerivationService();
+
+            // Act
+            var results = await sut.BenchmarkAllAsync(3);
+
+            // Assert
+            Assert.Equal(2, results.Results.Count);
+            Assert.Equal(3, results.Results[0].Timings.Count);
+            Assert.Equal(3, results.Results[1].Timings.Count);
+        }
     }
 }
