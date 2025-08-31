@@ -6,6 +6,7 @@
 @inject IVaultStorageService VaultStorage
 @inject IVaultManagerFactoryService VaultManagerFactory
 @inject IJSRuntime JSRuntime
+@inject AwsS3Config AwsS3Config
 
 <div class="vaults-page">
     <h2>Vaults</h2>
@@ -286,7 +287,7 @@
                 credentials.AwsCredentials.SecretAccessKey,
                 credentials.AwsCredentials.SessionToken,
                 "eu-west-2", // TODO: Get from configuration
-                "clypse-testing", // TODO: Get from configuration  
+                AwsS3Config.BucketName,  
                 credentials.AwsCredentials.IdentityId);
 
             Console.WriteLine("Vault manager created successfully");

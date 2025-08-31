@@ -10,6 +10,7 @@
 @using Microsoft.JSInterop
 @inject IJSRuntime JSRuntime
 @inject AwsCognitoConfig CognitoConfig
+@inject AwsS3Config AwsS3Config
 
 <PageTitle>Clypse Portal - Test</PageTitle>
 
@@ -302,7 +303,7 @@
             "eu-west-2");
 
         var awsS3E2eCloudStorageProvider = new AwsS3E2eCloudStorageProvider(
-            "clypse-testing",
+            AwsS3Config.BucketName,
             jsS3Client,
             new BouncyCastleAesGcmCryptoService());
         var vaultManager = new VaultManager(
