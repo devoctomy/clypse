@@ -1,3 +1,5 @@
+using clypse.core.Cryptogtaphy;
+using clypse.core.Cryptogtaphy.Interfaces;
 using clypse.portal;
 using clypse.portal.Models;
 using clypse.portal.Services;
@@ -14,6 +16,7 @@ builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.
 builder.Services.AddScoped<IVaultManagerFactoryService, VaultManagerFactoryService>();
 builder.Services.AddScoped<IVaultStorageService, VaultStorageService>();
 builder.Services.AddScoped<IAuthenticationService, AwsCognitoAuthenticationService>();
+builder.Services.AddScoped<IKeyDerivationService, KeyDerivationService>();
 
 // Configure AWS Cognito settings from appsettings.json
 var cognitoConfig = new AwsCognitoConfig();

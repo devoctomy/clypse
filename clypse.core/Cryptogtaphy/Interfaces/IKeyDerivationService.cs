@@ -1,8 +1,7 @@
 ﻿using System.Security;
-using clypse.core.Cryptogtaphy;
 using clypse.core.Enums;
 
-namespace clypse.core.Cryptography;
+namespace clypse.core.Cryptogtaphy.Interfaces;
 
 /// <summary>
 /// Interface key derivation serivce, which key derivation from a single place.

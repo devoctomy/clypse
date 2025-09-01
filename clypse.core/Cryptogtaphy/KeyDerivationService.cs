@@ -1,5 +1,5 @@
 ﻿using System.Security;
-using clypse.core.Cryptography;
+using clypse.core.Cryptogtaphy.Interfaces;
 using clypse.core.Enums;
 using Microsoft.VisualBasic;
 

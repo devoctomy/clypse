@@ -1,13 +1,14 @@
 ﻿@page "/"
 @page "/home"
-@using clypse.portal.Models
-@using clypse.core.Vault
-@using clypse.portal.Components
-@using clypse.portal.Services
-@using clypse.core.Cloud.Aws.S3
-@using clypse.core.Cryptogtaphy
 @using System.Security
 @using Microsoft.JSInterop
+@using clypse.core.Cloud.Aws.S3
+@using clypse.core.Cryptogtaphy
+@using clypse.core.Cryptogtaphy.Interfaces
+@using clypse.core.Vault
+@using clypse.portal.Components
+@using clypse.portal.Models
+@using clypse.portal.Services
 @layout HomeLayout
 @inject NavigationManager Navigation
 @inject IJSRuntime JSRuntime
@@ -16,6 +17,7 @@
 @inject IAuthenticationService AuthService
 @inject AppSettings AppSettings
 @inject AwsS3Config AwsS3Config
+@inject IKeyDerivationService KeyDerivationService
 
 <PageTitle>Clypse Portal - Home</PageTitle>
 
@@ -272,8 +274,7 @@ else if (currentPage == "create-vault")
             }
 
             // Derive encryption key from passphrase
-            var keyDerivationService = new KeyDerivationService();
-            var keyBytes = await keyDerivationService.DeriveKeyFromPassphraseAsync(
+            var keyBytes = await KeyDerivationService.DeriveKeyFromPassphraseAsync(
                 core.Enums.KeyDerivationAlgorithm.Argon2,
                 password,
                 vault.Info.Base64Salt);
