@@ -10,11 +10,10 @@ builder.RootComponents.Add<HeadOutlet>("head::after");
 
 builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
 
-// Register VaultManagerFactoryService
+// Register services
 builder.Services.AddScoped<IVaultManagerFactoryService, VaultManagerFactoryService>();
-
-// Register VaultStorageService
 builder.Services.AddScoped<IVaultStorageService, VaultStorageService>();
+builder.Services.AddScoped<IAuthenticationService, AwsCognitoAuthenticationService>();
 
 // Configure AWS Cognito settings from appsettings.json
 var cognitoConfig = new AwsCognitoConfig();

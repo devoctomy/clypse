@@ -4,18 +4,18 @@ namespace clypse.portal.Models;
 
 public class StoredCredentials
 {
-    [JsonPropertyName("AccessToken")]
+    [JsonPropertyName("accessToken")]
     public string? AccessToken { get; set; }
-    
-    [JsonPropertyName("IdToken")]
+
+    [JsonPropertyName("idToken")]
     public string? IdToken { get; set; }
-    
-    [JsonPropertyName("AwsCredentials")]
+
+    [JsonPropertyName("awsCredentials")]
     public AwsCredentials? AwsCredentials { get; set; }
-    
-    [JsonPropertyName("ExpirationTime")]
+
+    [JsonPropertyName("expirationTime")]
     public string ExpirationTime { get; set; } = string.Empty;
-    
-    [JsonPropertyName("StoredAt")]
+
+    [JsonPropertyName("storedAt")]
     public DateTime StoredAt { get; set; }
 }

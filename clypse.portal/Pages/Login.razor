@@ -1,7 +1,7 @@
 @page "/login"
 @using clypse.portal.Models
-@inject IJSRuntime JSRuntime
-@inject AwsCognitoConfig CognitoConfig
+@using clypse.portal.Services
+@inject IAuthenticationService AuthService
 @inject NavigationManager Navigation
 
 <PageTitle>Clypse Portal - Login</PageTitle>
@@ -74,17 +74,13 @@
     {
         if (firstRender)
         {
-            // Initialize Cognito with configuration
-            await JSRuntime.InvokeVoidAsync("eval", $@"
-                window.cognitoConfig = {{
-                    userPoolId: '{CognitoConfig.UserPoolId}',
-                    userPoolClientId: '{CognitoConfig.UserPoolClientId}',
-                    region: '{CognitoConfig.Region}',
-                    identityPoolId: '{CognitoConfig.IdentityPoolId}'
-                }};
-            ");
-
-            await JSRuntime.InvokeAsync<string>("CognitoAuth.initialize", CognitoConfig);
+            await AuthService.Initialize();
+            
+            // Check if already authenticated
+            if (await AuthService.CheckAuthentication())
+            {
+                Navigation.NavigateTo("/");
+            }
         }
     }
 
@@ -96,14 +92,10 @@
 
         try
         {
-            var result = await JSRuntime.InvokeAsync<LoginResult>("CognitoAuth.login", loginModel.Username, loginModel.Password);
+            var result = await AuthService.Login(loginModel.Username, loginModel.Password);
 
             if (result.Success)
             {
-                // Store credentials in local storage
-                await StoreCredentials(result);
-                
-                // Redirect to home page
                 Navigation.NavigateTo("/");
             }
             else
@@ -120,21 +112,6 @@
             isLoading = false;
             StateHasChanged();
         }
-    }
-
-    private async Task StoreCredentials(LoginResult result)
-    {
-        var credentials = new
-        {
-            AccessToken = result.AccessToken,
-            IdToken = result.IdToken,
-            AwsCredentials = result.AwsCredentials,
-            ExpirationTime = result.AwsCredentials?.Expiration ?? DateTime.UtcNow.AddHours(1).ToString(),
-            StoredAt = DateTime.UtcNow
-        };
-
-        var credentialsJson = System.Text.Json.JsonSerializer.Serialize(credentials);
-        await JSRuntime.InvokeVoidAsync("localStorage.setItem", "clypse_credentials", credentialsJson);
     }
 
 
