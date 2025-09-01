@@ -424,7 +424,7 @@
             accessKey,
             secretAccessKey,
             awsCredentials?.SessionToken ?? string.Empty,
-            "eu-west-2");
+            AwsS3Config.Region);
 
         var awsS3E2eCloudStorageProvider = new AwsS3E2eCloudStorageProvider(
             AwsS3Config.BucketName,
