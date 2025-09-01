@@ -2,13 +2,14 @@
 @using clypse.portal.Models
 @inject IJSRuntime JSRuntime
 @inject NavigationManager Navigation
+@inject AppSettings AppSettings
 @implements IDisposable
 
 <CascadingValue Value="this">
     <div class="d-flex flex-column vh-100">
         <!-- Title Bar -->
         <div class="bg-primary text-white p-3 d-flex justify-content-between align-items-center">
-            <h4 class="mb-0">Clypse Portal</h4>
+            <h4 class="mb-0">@AppSettings.ApplicationTitle</h4>
             <button class="theme-switcher" @onclick="ToggleTheme" title="Toggle theme">
                 <i class="bi @themeIcon"></i>
             </button>
