@@ -27,7 +27,7 @@
 }
 else if (currentPage == "credentials")
 {
-    <Credentials CurrentVault="@currentVault" CurrentVaultKey="@currentVaultKey" LoadedVault="@loadedVault" VaultManager="@vaultManager" OnLockVault="HandleLockVault" OnVaultUpdated="HandleVaultUpdated" />
+    <Credentials @ref="credentialsComponent" CurrentVault="@currentVault" CurrentVaultKey="@currentVaultKey" LoadedVault="@loadedVault" VaultManager="@vaultManager" OnLockVault="HandleLockVault" OnVaultUpdated="HandleVaultUpdated" />
 }
 else if (currentPage == "create-vault")
 {
@@ -42,6 +42,7 @@ else if (currentPage == "create-vault")
     private string currentPage = "vaults"; // Default to vaults page
     private IVaultManager? vaultManager = null;
     private Components.Vaults? vaultsComponent;
+    private Components.Credentials? credentialsComponent;
     private VaultMetadata? currentVault = null;
     private string? currentVaultKey = null;
     private IVault? loadedVault = null;
@@ -83,8 +84,8 @@ else if (currentPage == "create-vault")
                 // TODO: Implement delete vault
                 break;
             case "create-credential":
-                // TODO: Implement create credential
-                break;
+                credentialsComponent?.ShowCreateDialog();
+                return; // Don't call StateHasChanged or UpdateNavigation as this is just showing a dialog
             case "delete-credential":
                 // TODO: Implement delete credential
                 break;
