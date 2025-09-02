@@ -27,7 +27,7 @@
 }
 else if (currentPage == "credentials")
 {
-    <Credentials CurrentVault="@currentVault" CurrentVaultKey="@currentVaultKey" LoadedVault="@loadedVault" VaultManager="@vaultManager" OnLockVault="HandleLockVault" />
+    <Credentials CurrentVault="@currentVault" CurrentVaultKey="@currentVaultKey" LoadedVault="@loadedVault" VaultManager="@vaultManager" OnLockVault="HandleLockVault" OnVaultUpdated="HandleVaultUpdated" />
 }
 else if (currentPage == "create-vault")
 {
@@ -365,6 +365,29 @@ else if (currentPage == "create-vault")
         currentPage = "vaults";
         StateHasChanged();
         await UpdateNavigation();
+    }
+
+    private async Task HandleVaultUpdated()
+    {
+        if (vaultManager == null || currentVault == null || currentVaultKey == null)
+        {
+            return;
+        }
+
+        try
+        {
+            // Reload the vault to get the updated index
+            loadedVault = await vaultManager.LoadAsync(currentVault.Id, currentVaultKey, CancellationToken.None);
+            
+            // Update the current vault metadata with the fresh index entries
+            currentVault.IndexEntries = loadedVault.Index.Entries.ToList();
+            
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error refreshing vault: {ex.Message}");
+        }
     }
 
     private async Task HandleVerify()
