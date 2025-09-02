@@ -95,6 +95,47 @@ public class SecretTests
     }
 
     [Fact]
+    public void GivenSecret_WhenRemoveExistingTag_ThenTagRemoved_AndTrueReturned()
+    {
+        // Arrange
+        var sut = new Secret
+        {
+            Name = "Foobar",
+            Description = "Hello World!",
+        };
+        var tag = "apple";
+        sut.AddTag(tag);
+
+        // Act
+        var result = sut.RemoveTag(tag);
+
+        // Assert
+        Assert.True(result);
+        Assert.Empty(sut.Tags);
+    }
+
+    [Fact]
+    public void GivenSecret_WhenRemoveNonExistingTag_ThenTagNotRemoved_AndFalseReturned()
+    {
+        // Arrange
+        var sut = new Secret
+        {
+            Name = "Foobar",
+            Description = "Hello World!",
+        };
+        var tag = "apple";
+        sut.AddTag(tag);
+
+        // Act
+        var result = sut.RemoveTag("banana");
+
+        // Assert
+        Assert.False(result);
+        Assert.Single(sut.Tags);
+        Assert.Equal(tag, sut.Tags[0]);
+    }
+
+    [Fact]
     public void GivenSecret_AndExistingTag_WhenAddTag_ThenTagNotAdded_AndFalseReturned()
     {
         // Arrange

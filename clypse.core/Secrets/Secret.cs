@@ -94,6 +94,24 @@ public class Secret : ClypseObject
     }
 
     /// <summary>
+    /// Remove a tag from this secret.
+    /// </summary>
+    /// <param name="tag">Tag to remove.</param>
+    /// <returns>True when successfully removed.</returns>
+    public bool RemoveTag(string tag)
+    {
+        var tags = this.Tags;
+        if (!tags.Contains(tag))
+        {
+            return false;
+        }
+
+        tags.Remove(tag);
+        this.UpdateTags(tags);
+        return true;
+    }
+
+    /// <summary>
     /// Clear all tags for this secret.
     /// </summary>
     public void ClearTags()
