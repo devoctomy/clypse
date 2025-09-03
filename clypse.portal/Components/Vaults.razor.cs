@@ -5,6 +5,7 @@ using System.Security;
 using clypse.portal.Models;
 using clypse.portal.Services;
 using clypse.core.Cryptogtaphy;
+using clypse.core.Cryptogtaphy.Interfaces;
 using clypse.core.Vault;
 
 namespace clypse.portal.Components;
@@ -15,6 +16,7 @@ public partial class Vaults : ComponentBase
     [Inject] public IVaultManagerFactoryService VaultManagerFactory { get; set; } = default!;
     [Inject] public IJSRuntime JSRuntime { get; set; } = default!;
     [Inject] public AwsS3Config AwsS3Config { get; set; } = default!;
+    [Inject] public IKeyDerivationService KeyDerivationService { get; set; } = default!;
 
     private List<VaultMetadata> vaults = new();
     private bool isLoading = true;
@@ -141,8 +143,7 @@ public partial class Vaults : ComponentBase
                 securePassphrase.AppendChar(c);
             }
 
-            var keyDerivationService = new KeyDerivationService();
-            var keyBytes = await keyDerivationService.DeriveKeyFromPassphraseAsync(
+            var keyBytes = await KeyDerivationService.DeriveKeyFromPassphraseAsync(
                 core.Enums.KeyDerivationAlgorithm.Argon2,
                 securePassphrase,
                 base64Salt);
