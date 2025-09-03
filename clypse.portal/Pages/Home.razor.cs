@@ -263,7 +263,7 @@ public partial class Home : ComponentBase
 
             // Derive encryption key from passphrase
             var keyBytes = await KeyDerivationService.DeriveKeyFromPassphraseAsync(
-                core.Enums.KeyDerivationAlgorithm.Argon2,
+                core.Enums.KeyDerivationAlgorithm.Argon2id,
                 password,
                 vault.Info.Base64Salt);
             var base64Key = Convert.ToBase64String(keyBytes);

@@ -94,7 +94,7 @@ public sealed class VaultStepDefinitions(TestContext testContext)
             secureString.AppendChar(c);
         }
 
-        var key = await CryptoHelpers.DeriveKeyFromPassphraseUsingArgon2Async(
+        var key = await CryptoHelpers.DeriveKeyFromPassphraseUsingArgon2idAsync(
             secureString,
             this.testContext.Vault!.Info.Base64Salt);
         this.testContext.Base64Key = Convert.ToBase64String(key);

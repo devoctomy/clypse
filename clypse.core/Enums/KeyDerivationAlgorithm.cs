@@ -13,5 +13,5 @@ public enum KeyDerivationAlgorithm
     /// <summary>
     /// Argon2
     /// </summary>
-    Argon2 = 2,
+    Argon2id = 2,
 }

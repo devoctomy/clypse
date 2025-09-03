@@ -32,8 +32,7 @@ public class NativeAesGcmCryptoService : ICryptoService
 
         byte[] key = Convert.FromBase64String(base64Key);
 
-        byte[] nonce = new byte[NonceSize];
-        RandomNumberGenerator.Fill(nonce);
+        byte[] nonce = CryptoHelpers.GenerateRandomBytes(NonceSize);
 
         await outputStream.WriteAsync(nonce);
 

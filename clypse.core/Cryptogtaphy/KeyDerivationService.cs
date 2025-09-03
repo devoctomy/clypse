@@ -25,7 +25,7 @@ public class KeyDerivationService : IKeyDerivationService
         return keyDerivationAlgorithm switch
         {
             KeyDerivationAlgorithm.Rfc2898 => await CryptoHelpers.DeriveKeyFromPassphraseUsingRfc2898Async(passphrase, base64Salt),
-            KeyDerivationAlgorithm.Argon2 => await CryptoHelpers.DeriveKeyFromPassphraseUsingArgon2Async(passphrase, base64Salt, 32, 2, 4096, 4),
+            KeyDerivationAlgorithm.Argon2id => await CryptoHelpers.DeriveKeyFromPassphraseUsingArgon2idAsync(passphrase, base64Salt, 32, 2, 65536, 1),
             _ => throw new NotImplementedException($"KeyDerivationAlgorithm '{keyDerivationAlgorithm}' not supported by KeyDerivationService."),
         };
     }

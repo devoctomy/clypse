@@ -45,16 +45,16 @@ public class CryptoHelpers
     }
 
     /// <summary>
-    /// Derives a cryptographic key from a passphrase using the Argon2d key derivation function.
+    /// Derives a cryptographic key from a passphrase using the Argon2id key derivation function.
     /// </summary>
     /// <param name="passphrase">The secure passphrase to derive the key from.</param>
     /// <param name="base64Salt">The base64-encoded salt for key derivation.</param>
     /// <param name="keyLength">The desired length of the derived key in bytes (default: 32).</param>
     /// <param name="degreeOfParallelism">Number of threads to use when deriving the key. This is wasted in WASM.</param>
-    /// <param name="memorySize">How much RAM Argon2 forces the computation to use.</param>
-    /// <param name="iterations">How many times Argon2 runs over that allocated memory.</param>
+    /// <param name="memorySize">How much RAM Argon2id forces the computation to use.</param>
+    /// <param name="iterations">How many times Argon2id runs over that allocated memory.</param>
     /// <returns>A byte array containing the derived cryptographic key.</returns>
-    public static async Task<byte[]> DeriveKeyFromPassphraseUsingArgon2Async(
+    public static async Task<byte[]> DeriveKeyFromPassphraseUsingArgon2idAsync(
         SecureString passphrase,
         string base64Salt,
         int keyLength = 32,
@@ -62,7 +62,7 @@ public class CryptoHelpers
         int memorySize = 8192,
         int iterations = 40)
     {
-        var argon2 = new Argon2d(passphrase.ToUtf8Bytes())
+        var argon2 = new Argon2id(passphrase.ToUtf8Bytes())
         {
             DegreeOfParallelism = degreeOfParallelism,
             MemorySize = memorySize,

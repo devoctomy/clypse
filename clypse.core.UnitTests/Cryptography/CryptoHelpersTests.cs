@@ -35,13 +35,13 @@ public class CryptoHelpersTests
         var salt = new byte[32];
 
         // Act
-        var key = await CryptoHelpers.DeriveKeyFromPassphraseUsingArgon2Async(
+        var key = await CryptoHelpers.DeriveKeyFromPassphraseUsingArgon2idAsync(
             securePassphrase,
             Convert.ToBase64String(salt));
         var base64Key = Convert.ToBase64String(key);
 
         // Assert
-        Assert.Equal("NIc4A4c2wQHU3xVNNc4dDb6umub01XVPiJtEontyBDM=", base64Key);
+        Assert.Equal("saC/6pNtxQdlqG93JCeBLFs2FilLvaqAjug4oACkvmw=", base64Key);
     }
 
     [Fact]
