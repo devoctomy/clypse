@@ -31,7 +31,7 @@
         <div class="vaults-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 1rem; margin-top: 1rem;">
             @foreach (var vault in vaults)
             {
-                <div class="vault-card" style="background: #ffffff; border: 1px solid #dee2e6; border-radius: 8px; padding: 1.5rem; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); position: relative; margin-bottom: 1rem; cursor: pointer;" @onclick="() => ShowPassphrasePanel(vault)">
+                <div class="vault-card" style="background: #ffffff; border: 1px solid #dee2e6; border-radius: 8px; padding: 1.5rem; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); position: relative; margin-bottom: 1rem; cursor: pointer;" @onclick="async () => await ShowPassphrasePanel(vault)">
                     <div class="vault-lock-icon" style="position: absolute; top: 12px; left: 12px; color: #6c757d; font-size: 1rem;">
                         <i class="bi bi-lock-fill"></i>
                     </div>
@@ -95,6 +95,7 @@
                             <input type="password" 
                                    class="form-control" 
                                    id="passphrase" 
+                                   @ref="passphraseInput"
                                    @bind="passphrase" 
                                    @bind:event="oninput"
                                    @onkeydown="OnPassphraseKeyDown"
@@ -133,6 +134,7 @@
     private string passphrase = string.Empty;
     private string? errorMessage = null;
     private IVaultManager? vaultManager = null;
+    private ElementReference passphraseInput;
 
     [Parameter] public EventCallback<(VaultMetadata vault, string key)> OnVaultUnlocked { get; set; }
 
@@ -175,13 +177,17 @@
         await LoadVaults();
     }
 
-    private void ShowPassphrasePanel(VaultMetadata vault)
+    private async Task ShowPassphrasePanel(VaultMetadata vault)
     {
         selectedVault = vault;
         passphrase = string.Empty;
         errorMessage = null;
         showPassphrasePanel = true;
         StateHasChanged();
+        
+        // Focus the password input after a small delay to ensure the modal is rendered
+        await Task.Delay(100);
+        await passphraseInput.FocusAsync();
     }
 
     private void HidePassphrasePanel()
