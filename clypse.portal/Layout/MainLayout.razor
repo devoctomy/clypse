@@ -20,21 +20,5 @@
 </div>
 
 @using clypse.portal.Models
-@inject AppSettings AppSettings
 
-@code {
-    [Inject] private NavigationManager Navigation { get; set; } = default!;
-    
-    private string GetCurrentPageName()
-    {
-        var uri = Navigation.ToAbsoluteUri(Navigation.Uri);
-        var path = uri.AbsolutePath;
-        
-        return path switch
-        {
-            "/" => "Login Page",
-            "/test" => "Test Page",
-            _ => "Unknown Page"
-        };
-    }
-}
+
