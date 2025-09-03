@@ -403,6 +403,19 @@ public class VaultManagerTests
         var vault = this.sut.Create(name, description);
         var cancellationTokenSource = new CancellationTokenSource();
         var objects = new List<string>(["1", "2"]);
+        var info = new VaultInfo(name, description);
+
+        this.mockEncryptedCloudStorageProvider.Setup(
+            x => x.GetEncryptedObjectAsync(
+            It.Is<string>(y => y == $"foobar/{vault.Info.Id}/info.json"),
+            It.Is<string>(y => y == base64Key),
+            It.Is<CancellationToken>(y => y == cancellationTokenSource.Token)))
+            .Returns(async (string key, string base64EncryptionKey, CancellationToken ct) =>
+            {
+                var output = new MemoryStream();
+                await JsonSerializer.SerializeAsync(output, info, this.jsonSerializerOptions, ct);
+                return output;
+            });
 
         this.mockEncryptedCloudStorageProvider.Setup(
             x => x.ListObjectsAsync(
@@ -424,6 +437,18 @@ public class VaultManagerTests
             It.Is<string>(y => y == base64Key),
             It.Is<CancellationToken>(y => y == cancellationTokenSource.Token)))
         .ReturnsAsync(true);
+
+        this.mockCompressionService.Setup(
+            x => x.DecompressAsync(
+            It.IsAny<Stream>(),
+            It.IsAny<Stream>(),
+            It.IsAny<CancellationToken>()))
+            .Callback(async (Stream input, Stream output, CancellationToken ct) =>
+            {
+                input.Seek(0, SeekOrigin.Begin);
+                await input.CopyToAsync(output, ct);
+                await output.FlushAsync(ct);
+            });
 
         // Act
         await this.sut.DeleteAsync(
@@ -459,6 +484,19 @@ public class VaultManagerTests
         var vault = this.sut.Create(name, description);
         var cancellationTokenSource = new CancellationTokenSource();
         var objects = new List<string>(["1", "2", "3"]);
+        var info = new VaultInfo(name, description);
+
+        this.mockEncryptedCloudStorageProvider.Setup(
+            x => x.GetEncryptedObjectAsync(
+            It.Is<string>(y => y == $"foobar/{vault.Info.Id}/info.json"),
+            It.Is<string>(y => y == base64Key),
+            It.Is<CancellationToken>(y => y == cancellationTokenSource.Token)))
+            .Returns(async (string key, string base64EncryptionKey, CancellationToken ct) =>
+            {
+                var output = new MemoryStream();
+                await JsonSerializer.SerializeAsync(output, info, this.jsonSerializerOptions, ct);
+                return output;
+            });
 
         this.mockEncryptedCloudStorageProvider.Setup(
             x => x.ListObjectsAsync(
@@ -480,6 +518,18 @@ public class VaultManagerTests
             It.Is<string>(y => y == base64Key),
             It.Is<CancellationToken>(y => y == cancellationTokenSource.Token)))
         .ReturnsAsync(true);
+
+        this.mockCompressionService.Setup(
+            x => x.DecompressAsync(
+            It.IsAny<Stream>(),
+            It.IsAny<Stream>(),
+            It.IsAny<CancellationToken>()))
+            .Callback(async (Stream input, Stream output, CancellationToken ct) =>
+            {
+                input.Seek(0, SeekOrigin.Begin);
+                await input.CopyToAsync(output, ct);
+                await output.FlushAsync(ct);
+            });
 
         // Act & Assert
         await Assert.ThrowsAnyAsync<CloudStorageProviderException>(async () =>
@@ -517,7 +567,7 @@ public class VaultManagerTests
         var vault = this.sut.Create(name, description);
         var cancellationTokenSource = new CancellationTokenSource();
 
-        var secret1 = new core.Secrets.Secret
+        var secret1 = new Secret
         {
             Name = "Secret1",
             Description = description,

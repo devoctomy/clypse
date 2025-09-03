@@ -186,6 +186,10 @@ public class VaultManager(
         string base64Key,
         CancellationToken cancellationToken)
     {
+        await this.LoadInfoAsync(
+            vault.Info.Id,
+            base64Key,
+            cancellationToken);
         var allKeys = await encryptedCloudStorageProvider.ListObjectsAsync(
             $"{prefix}/{vault.Info.Id}/",
             null,

@@ -8,7 +8,7 @@ namespace clypse.core.UnitTests.Cryptography
     {
         [Theory]
         [InlineData(KeyDerivationAlgorithm.Rfc2898, "password123", "pHCLgS6uUD+4G7ikp7J1m4DtHEueBLt1y5CH8ZK5NF8=")]
-        [InlineData(KeyDerivationAlgorithm.Argon2, "password123", "fmrfIUeZXhOOGqHY2fBxDZA6gSrisuSiaJNojxsf6pY=")]
+        [InlineData(KeyDerivationAlgorithm.Argon2, "password123", "41ZEJ4II4F6Uz+v2wCK6H3P8VrhBLulZPHpJgRyqjME=")]
         public async Task GivenAlgorithm_AndPassphrase_AndBase64Salt_WhenDeriveKeyFromPassphraseAsync_ThenKeyDerivedCorrectly(
             KeyDerivationAlgorithm algorithm,
             string passphrase,
