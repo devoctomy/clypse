@@ -9,6 +9,7 @@ public interface IVaultStorageService
     Task<List<VaultMetadata>> GetVaultsAsync();
     Task SaveVaultsAsync(List<VaultMetadata> vaults);
     Task UpdateVaultAsync(VaultMetadata vault);
+    Task RemoveVaultAsync(string vaultId);
     Task ClearVaultsAsync();
 }
 
@@ -84,6 +85,25 @@ public class VaultStorageService : IVaultStorageService
         catch (Exception ex)
         {
             Console.WriteLine($"Error updating vault in storage: {ex.Message}");
+        }
+    }
+
+    public async Task RemoveVaultAsync(string vaultId)
+    {
+        try
+        {
+            var vaults = await GetVaultsAsync();
+            var vaultToRemove = vaults.FirstOrDefault(v => v.Id == vaultId);
+            
+            if (vaultToRemove != null)
+            {
+                vaults.Remove(vaultToRemove);
+                await SaveVaultsAsync(vaults);
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error removing vault from storage: {ex.Message}");
         }
     }
 

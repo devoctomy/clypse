@@ -1,0 +1,113 @@
+@using clypse.portal.Models
+
+@if (Show)
+{
+    <div class="modal" style="display: block; background-color: rgba(0,0,0,0.5);" @onclick="OnCancel">
+        <div class="modal-dialog modal-dialog-centered" @onclick:stopPropagation="true">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title">
+                        <i class="bi bi-exclamation-triangle me-2"></i>
+                        Delete Vault
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" @onclick="OnCancel"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-warning" role="alert">
+                        <strong>Warning:</strong> This action cannot be undone. All secrets and data in this vault will be permanently deleted.
+                    </div>
+                    
+                    @if (VaultToDelete != null)
+                    {
+                        <p class="mb-3">
+                            <strong>Vault to delete:</strong><br/>
+                            <span class="text-muted">ID:</span> @VaultToDelete.Id<br/>
+                            @if (!string.IsNullOrEmpty(VaultToDelete.Name))
+                            {
+                                <span class="text-muted">Name:</span> @VaultToDelete.Name<br/>
+                            }
+                            @if (!string.IsNullOrEmpty(VaultToDelete.Description))
+                            {
+                                <span class="text-muted">Description:</span> @VaultToDelete.Description<br/>
+                            }
+                        </p>
+                        
+                        <div class="mb-3">
+                            <label for="confirmName" class="form-label">
+                                To confirm deletion, type <strong>"@GetConfirmationText()"</strong> below:
+                            </label>
+                            <input type="text" 
+                                   class="form-control" 
+                                   id="confirmName" 
+                                   @bind="confirmationText" 
+                                   @bind:event="oninput"
+                                   placeholder="Type the vault name to confirm"
+                                   disabled="@IsDeleting" />
+                        </div>
+                        
+                        @if (!string.IsNullOrEmpty(ErrorMessage))
+                        {
+                            <div class="alert alert-danger" role="alert">
+                                @ErrorMessage
+                            </div>
+                        }
+                    }
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @onclick="OnCancel" disabled="@IsDeleting">
+                        Cancel
+                    </button>
+                    <button type="button" 
+                            class="btn btn-danger" 
+                            @onclick="OnConfirm" 
+                            disabled="@(!IsConfirmationValid() || IsDeleting)">
+                        @if (IsDeleting)
+                        {
+                            <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                            <span>Deleting...</span>
+                        }
+                        else
+                        {
+                            <span>Delete Vault</span>
+                        }
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public bool Show { get; set; }
+    [Parameter] public VaultMetadata? VaultToDelete { get; set; }
+    [Parameter] public bool IsDeleting { get; set; }
+    [Parameter] public string? ErrorMessage { get; set; }
+    [Parameter] public EventCallback OnConfirm { get; set; }
+    [Parameter] public EventCallback OnCancel { get; set; }
+    
+    private string confirmationText = string.Empty;
+
+    protected override void OnParametersSet()
+    {
+        if (!Show)
+        {
+            confirmationText = string.Empty;
+        }
+    }
+
+    private string GetConfirmationText()
+    {
+        if (VaultToDelete == null) return "";
+        
+        // If vault has a name, use that, otherwise use ID
+        return !string.IsNullOrEmpty(VaultToDelete.Name) ? VaultToDelete.Name : VaultToDelete.Id;
+    }
+    
+    private bool IsConfirmationValid()
+    {
+        if (VaultToDelete == null) return false;
+        
+        var expectedText = GetConfirmationText();
+        return confirmationText.Trim().Equals(expectedText, StringComparison.Ordinal);
+    }
+}

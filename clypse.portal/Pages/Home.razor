@@ -35,6 +35,12 @@ else if (currentPage == "create-vault")
 }
 
 <VerifyDialog Show="showVerifyDialog" Results="verifyResults" OnClose="() => { showVerifyDialog = false; verifyResults = null; }" />
+<VaultDeleteConfirmDialog Show="showDeleteVaultDialog" 
+                          VaultToDelete="vaultToDelete" 
+                          IsDeleting="isDeletingVault"
+                          ErrorMessage="deleteVaultErrorMessage"
+                          OnConfirm="HandleDeleteVaultConfirm" 
+                          OnCancel="CancelDeleteVault" />
 
 @code {
 
@@ -48,6 +54,10 @@ else if (currentPage == "create-vault")
     private IVault? loadedVault = null;
     private bool showVerifyDialog = false;
     private VaultVerifyResults? verifyResults = null;
+    private bool showDeleteVaultDialog = false;
+    private VaultMetadata? vaultToDelete = null;
+    private bool isDeletingVault = false;
+    private string? deleteVaultErrorMessage = null;
 
     [CascadingParameter] public Layout.HomeLayout? Layout { get; set; }
 
@@ -81,8 +91,11 @@ else if (currentPage == "create-vault")
                 currentPage = "vaults";
                 break;
             case "delete-vault":
-                // TODO: Implement delete vault
-                break;
+                if (currentVault != null)
+                {
+                    ShowDeleteVaultDialog();
+                }
+                return; // Don't call StateHasChanged or UpdateNavigation as this is just showing a dialog
             case "create-credential":
                 credentialsComponent?.ShowCreateDialog();
                 return; // Don't call StateHasChanged or UpdateNavigation as this is just showing a dialog
@@ -118,13 +131,13 @@ else if (currentPage == "create-vault")
             "vaults" => new List<NavigationItem>
             {
                 new() { Text = "Create Vault", Action = "create-vault", Icon = "bi bi-plus-circle" },
-                new() { Text = "Delete Vault", Action = "delete-vault", Icon = "bi bi-trash", ButtonClass = "btn-outline-danger" },
                 new() { Text = "Refresh", Action = "refresh", Icon = "bi bi-arrow-clockwise" }
             },
             "credentials" => new List<NavigationItem>
             {
                 new() { Text = "Create Credential", Action = "create-credential", Icon = "bi bi-plus-circle" },
                 new() { Text = "Delete Credential", Action = "delete-credential", Icon = "bi bi-trash", ButtonClass = "btn-outline-danger" },
+                new() { Text = "Delete Vault", Action = "delete-vault", Icon = "bi bi-trash3", ButtonClass = "btn-outline-danger" },
                 new() { Text = "Verify Vault", Action = "verify", Icon = "bi bi-shield-check", ButtonClass = "btn-outline-info" },
                 new() { Text = "Lock Vault", Action = "lock-vault", Icon = "bi bi-lock", ButtonClass = "btn-outline-secondary" }
             },
@@ -412,6 +425,73 @@ else if (currentPage == "create-vault")
             // Close dialog on error
             showVerifyDialog = false;
             verifyResults = null;
+            StateHasChanged();
+        }
+    }
+
+    private void ShowDeleteVaultDialog()
+    {
+        if (currentVault == null) return;
+        
+        vaultToDelete = currentVault;
+        deleteVaultErrorMessage = null;
+        showDeleteVaultDialog = true;
+        StateHasChanged();
+    }
+    
+    private void CancelDeleteVault()
+    {
+        showDeleteVaultDialog = false;
+        vaultToDelete = null;
+        deleteVaultErrorMessage = null;
+        isDeletingVault = false;
+        StateHasChanged();
+    }
+    
+    private async Task HandleDeleteVaultConfirm()
+    {
+        if (vaultToDelete == null || vaultManager == null || currentVaultKey == null || loadedVault == null)
+        {
+            CancelDeleteVault();
+            return;
+        }
+
+        try
+        {
+            isDeletingVault = true;
+            deleteVaultErrorMessage = null;
+            StateHasChanged();
+            
+            // Delete the vault using the vault manager
+            await vaultManager.DeleteAsync(loadedVault, currentVaultKey, CancellationToken.None);
+            
+            // Remove the vault from local storage
+            await VaultStorage.RemoveVaultAsync(vaultToDelete.Id);
+            
+            // Close the dialog
+            CancelDeleteVault();
+            
+            // Clear current vault state since we just deleted it
+            currentVault = null;
+            currentVaultKey = null;
+            loadedVault = null;
+            
+            // Navigate back to vaults page and refresh
+            currentPage = "vaults";
+            StateHasChanged();
+            await UpdateNavigation();
+            
+            // Refresh the vaults list
+            await HandleRefresh();
+        }
+        catch (Exception ex)
+        {
+            deleteVaultErrorMessage = $"Failed to delete vault: {ex.Message}";
+            Console.WriteLine($"Error deleting vault: {ex.Message}");
+        }
+        finally
+        {
+            isDeletingVault = false;
             StateHasChanged();
         }
     }
