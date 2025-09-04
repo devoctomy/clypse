@@ -1,4 +1,6 @@
-﻿namespace clypse.core.Cloud.Interfaces;
+﻿using Amazon.S3.Model;
+
+namespace clypse.core.Cloud.Interfaces;
 
 /// <summary>
 /// Defines the contract for encrypted cloud storage operations with built-in encryption and decryption capabilities.
@@ -23,12 +25,14 @@ public interface IEncryptedCloudStorageProvider
     /// <param name="key">The unique key to identify the object.</param>
     /// <param name="data">The stream containing the object data to encrypt.</param>
     /// <param name="base64EncryptionKey">The base64-encoded encryption key for encryption.</param>
+    /// <param name="metaData">Optional metadata to associate with the object.</param>
     /// <param name="cancellationToken">The cancellation token.</param>
     /// <returns>True if the object was successfully encrypted and stored; otherwise, false.</returns>
     public Task<bool> PutEncryptedObjectAsync(
         string key,
         Stream data,
         string base64EncryptionKey,
+        MetadataCollection? metaData,
         CancellationToken cancellationToken);
 
     /// <summary>

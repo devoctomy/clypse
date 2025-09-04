@@ -137,7 +137,7 @@ public partial class Credentials : ComponentBase
             LoadedVault.UpdateSecret(editedSecret);
             
             // Save the vault with the changes (this automatically updates the index)
-            await VaultManager.SaveAsync(LoadedVault, CurrentVaultKey, CancellationToken.None);
+            await VaultManager.SaveAsync(LoadedVault, CurrentVaultKey, null, CancellationToken.None);
             
             // Close the dialog
             CloseEditDialog();
@@ -172,7 +172,7 @@ public partial class Credentials : ComponentBase
             LoadedVault.AddSecret(newSecret);
             
             // Save the vault with the changes (this automatically updates the index)
-            await VaultManager.SaveAsync(LoadedVault, CurrentVaultKey, CancellationToken.None);
+            await VaultManager.SaveAsync(LoadedVault, CurrentVaultKey, null, CancellationToken.None);
             
             // Close the dialog
             CloseCreateDialog();
@@ -274,7 +274,7 @@ public partial class Credentials : ComponentBase
             if (deleted)
             {
                 // Save the vault with the changes (this automatically handles the deletion)
-                await VaultManager.SaveAsync(LoadedVault, CurrentVaultKey, CancellationToken.None);
+                await VaultManager.SaveAsync(LoadedVault, CurrentVaultKey, null, CancellationToken.None);
                 
                 // Notify parent that vault was updated so it can refresh the index
                 await OnVaultUpdated.InvokeAsync();

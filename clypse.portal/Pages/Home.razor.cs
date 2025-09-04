@@ -273,6 +273,7 @@ public partial class Home : ComponentBase
             var saveResults = await vaultManager.SaveAsync(
                 vault,
                 base64Key,
+                null,
                 CancellationToken.None);
 
             Console.WriteLine($"Vault saved successfully. Results: {saveResults}");

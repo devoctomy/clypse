@@ -128,6 +128,7 @@ public sealed class VaultStepDefinitions(TestContext testContext)
         this.testContext.SaveResults = await this.vaultManager!.SaveAsync(
             this.testContext.Vault!,
             this.testContext.Base64Key!,
+            null,
             CancellationToken.None);
     }
 

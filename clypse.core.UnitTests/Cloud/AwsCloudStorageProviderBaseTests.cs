@@ -314,6 +314,7 @@ public class AwsCloudStorageProviderBaseTests
         var result = await sut.PutObjectAsync(
             key,
             data,
+            null,
             cancellationTokenSource.Token);
 
         // Assert
@@ -350,6 +351,7 @@ public class AwsCloudStorageProviderBaseTests
             _ = await sut.PutObjectAsync(
                 key,
                 data,
+                null,
                 cancellationTokenSource.Token);
         });
     }

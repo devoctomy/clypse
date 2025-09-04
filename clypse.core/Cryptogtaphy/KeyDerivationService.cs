@@ -67,7 +67,7 @@ public class KeyDerivationService : IKeyDerivationService
             for (var i = 0; i < count; i++)
             {
                 var startedAt = DateTime.Now;
-                var key = await this.DeriveKeyFromPassphraseAsync(
+                _ = await this.DeriveKeyFromPassphraseAsync(
                     algorithm,
                     GetDefaults(algorithm),
                     securePassphrase,

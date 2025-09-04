@@ -38,7 +38,12 @@ public class AwsS3SseCCloudStorageProviderTests
 
         // Act
         var retrievedData = (byte[]?)null;
-        var put = await sut.PutEncryptedObjectAsync(key, dataStream, Convert.ToBase64String(encryptionKey), CancellationToken.None);
+        var put = await sut.PutEncryptedObjectAsync(
+            key,
+            dataStream,
+            Convert.ToBase64String(encryptionKey),
+            null,
+            CancellationToken.None);
         var deleted = false;
         if (put)
         {
@@ -99,7 +104,12 @@ public class AwsS3SseCCloudStorageProviderTests
 
         // Act & Assert
         var retrievedData = (byte[]?)null;
-        var put = await sut.PutEncryptedObjectAsync(key, dataStream, Convert.ToBase64String(encryptionKey), CancellationToken.None);
+        var put = await sut.PutEncryptedObjectAsync(
+            key,
+            dataStream,
+            Convert.ToBase64String(encryptionKey),
+            null,
+            CancellationToken.None);
         var deleted = false;
         if (put)
         {

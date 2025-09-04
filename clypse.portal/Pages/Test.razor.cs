@@ -229,13 +229,14 @@ public partial class Test : ComponentBase
         await vaultManager.SaveAsync(
             vault,
             base64Key,
+            null,
             CancellationToken.None);
 
         var loadedVault = await vaultManager.LoadAsync(
             vault.Info.Id,
             base64Key,
             CancellationToken.None);
-        var loadedWebSecret = await vaultManager.GetSecretAsync(
+        _ = await vaultManager.GetSecretAsync(
             loadedVault,
             loadedVault.Index.Entries[0].Id,
             base64Key,

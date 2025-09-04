@@ -66,11 +66,13 @@ public class VaultManager(
     /// </summary>
     /// <param name="vault">The vault to save.</param>
     /// <param name="base64Key">The base64-encoded encryption key.</param>
+    /// <param name="metaData">Optional metadata to associate with the vault.</param>
     /// <param name="cancellationToken">The cancellation token.</param>
     /// <returns>The results of the save operation.</returns>
     public async Task<VaultSaveResults> SaveAsync(
         IVault vault,
         string base64Key,
+        Dictionary<string, string>? metaData,
         CancellationToken cancellationToken)
     {
         var results = new VaultSaveResults();
@@ -82,6 +84,7 @@ public class VaultManager(
         await this.SaveInfoAsync(
             vault.Info,
             base64Key,
+            metaData,
             cancellationToken);
 
         foreach (var secret in vault.PendingSecrets)
@@ -106,6 +109,7 @@ public class VaultManager(
                 vault.Info.Id,
                 $"secrets/{secret.Id}",
                 base64Key,
+                null,
                 cancellationToken);
 
             if (updating)
@@ -305,24 +309,33 @@ public class VaultManager(
             vaultInfo.Id,
             "index.json",
             base64Key,
+            null,
             cancellationToken);
     }
 
     private async Task SaveInfoAsync(
         VaultInfo vaultInfo,
         string base64Key,
+        Dictionary<string, string>? metaData,
         CancellationToken cancellationToken)
     {
-        // we need to gather all of the correct metadata here
-        var metaData = new MetadataCollection();
-        metaData.Add("clypse-compressionservice-name", compressionService.GetType().Name);
-        metaData.Add("clypse-encryptedcloudstorageprovider-name", encryptedCloudStorageProvider.GetType().Name);
+        var metaDataCollection = new MetadataCollection();
+        metaDataCollection.Add("clypse-compressionservice-name", compressionService.GetType().Name);
+        metaDataCollection.Add("clypse-encryptedcloudstorageprovider-name", encryptedCloudStorageProvider.GetType().Name);
+        if (metaData != null)
+        {
+            foreach (var curKey in metaData.Keys)
+            {
+                metaDataCollection.Add($"clypse-{curKey.ToLower()}", metaData[curKey]);
+            }
+        }
 
         await this.SaveObjectAsync(
             vaultInfo,
             vaultInfo.Id,
             "info.json",
             base64Key,
+            metaDataCollection,
             cancellationToken);
     }
 
@@ -367,6 +380,7 @@ public class VaultManager(
         string vaultId,
         string key,
         string base64Key,
+        MetadataCollection? metaData,
         CancellationToken cancellationToken)
     {
         var objectKey = $"{prefix}/{vaultId}/{key}";
@@ -389,6 +403,7 @@ public class VaultManager(
             objectKey,
             compressedObject,
             base64Key,
+            metaData,
             cancellationToken);
     }
 

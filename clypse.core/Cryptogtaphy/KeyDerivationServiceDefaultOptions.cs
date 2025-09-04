@@ -30,5 +30,4 @@ public class KeyDerivationServiceDefaultOptions
         options.Parameters[KeyDerivationParameterKeys.Argon2_Iterations] = 1;
         return options;
     }
-
 }

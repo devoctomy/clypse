@@ -106,12 +106,14 @@ public class AwsS3SseCCloudStorageProvider : AwsCloudStorageProviderBase, IEncry
     /// <param name="key">The unique key to identify the object.</param>
     /// <param name="data">The stream containing the object data to encrypt and store.</param>
     /// <param name="base64EncryptionKey">The base64-encoded customer-provided encryption key used for SSE-C encryption.</param>
+    /// <param name="metaData">Optional metadata to associate with the object.</param>
     /// <param name="cancellationToken">The cancellation token.</param>
     /// <returns>True if the object was successfully encrypted and stored; otherwise, false.</returns>
     public async Task<bool> PutEncryptedObjectAsync(
         string key,
         Stream data,
         string base64EncryptionKey,
+        MetadataCollection? metaData,
         CancellationToken cancellationToken)
     {
         Task BeforePutObjectAsync(PutObjectRequest request)
@@ -124,6 +126,7 @@ public class AwsS3SseCCloudStorageProvider : AwsCloudStorageProviderBase, IEncry
         return await this.PutObjectAsync(
             key,
             data,
+            metaData,
             BeforePutObjectAsync,
             cancellationToken);
     }

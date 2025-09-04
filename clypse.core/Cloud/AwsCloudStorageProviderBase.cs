@@ -86,16 +86,19 @@ public class AwsCloudStorageProviderBase : ICloudStorageProvider
     /// </summary>
     /// <param name="key">The unique key to identify the object.</param>
     /// <param name="data">The stream containing the object data to store.</param>
+    /// <param name="metaData">Optional metadata to associate with the object.</param>
     /// <param name="cancellationToken">The cancellation token.</param>
     /// <returns>True if the object was successfully stored; otherwise, false.</returns>
     public async Task<bool> PutObjectAsync(
         string key,
         Stream data,
+        MetadataCollection? metaData,
         CancellationToken cancellationToken)
     {
         return await this.PutObjectAsync(
             key,
             data,
+            metaData,
             null,
             cancellationToken);
     }
@@ -196,6 +199,7 @@ public class AwsCloudStorageProviderBase : ICloudStorageProvider
     /// </summary>
     /// <param name="key">The unique key to identify the object.</param>
     /// <param name="data">The stream containing the object data to store.</param>
+    /// <param name="metaData">Optional metadata to associate with the object.</param>
     /// <param name="beforePutObjectAsync">Optional asynchronous function to modify the PutObjectRequest before execution.</param>
     /// <param name="cancellationToken">The cancellation token.</param>
     /// <returns>True if the object was successfully stored; otherwise, false.</returns>
@@ -203,6 +207,7 @@ public class AwsCloudStorageProviderBase : ICloudStorageProvider
     protected async Task<bool> PutObjectAsync(
         string key,
         Stream data,
+        MetadataCollection? metaData,
         Func<PutObjectRequest, Task>? beforePutObjectAsync,
         CancellationToken cancellationToken)
     {
@@ -212,6 +217,14 @@ public class AwsCloudStorageProviderBase : ICloudStorageProvider
             Key = key,
             InputStream = data,
         };
+
+        if (metaData != null)
+        {
+            foreach (var curKey in metaData.Keys)
+            {
+                putObjectRequest.Metadata.Add(curKey, metaData[curKey]);
+            }
+        }
 
         try
         {

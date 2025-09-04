@@ -29,11 +29,13 @@ public interface IVaultManager
     /// </summary>
     /// <param name="vault">The vault to save.</param>
     /// <param name="base64Key">The base64-encoded encryption key.</param>
+    /// <param name="metaData">Optional metadata to associate with the vault.</param>
     /// <param name="cancellationToken">The cancellation token.</param>
     /// <returns>The results of the save operation.</returns>
     public Task<VaultSaveResults> SaveAsync(
         IVault vault,
         string base64Key,
+        Dictionary<string, string>? metaData,
         CancellationToken cancellationToken);
 
     /// <summary>

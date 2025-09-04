@@ -1,4 +1,6 @@
-﻿namespace clypse.core.Cloud.Interfaces;
+﻿using Amazon.S3.Model;
+
+namespace clypse.core.Cloud.Interfaces;
 
 /// <summary>
 /// Defines the contract for cloud storage operations including object retrieval, storage, listing, and deletion.
@@ -20,11 +22,13 @@ public interface ICloudStorageProvider
     /// </summary>
     /// <param name="key">The unique key to identify the object.</param>
     /// <param name="data">The stream containing the object data.</param>
+    /// <param name="metaData">Optional metadata to associate with the object.</param>
     /// <param name="cancellationToken">The cancellation token.</param>
     /// <returns>True if the object was successfully stored; otherwise, false.</returns>
     public Task<bool> PutObjectAsync(
         string key,
         Stream data,
+        MetadataCollection? metaData,
         CancellationToken cancellationToken);
 
     /// <summary>

@@ -1,5 +1,6 @@
 ﻿using System.Text.Json;
 using System.Text.Json.Serialization;
+using Amazon.S3.Model;
 using clypse.core.Cloud.Exceptions;
 using clypse.core.Cloud.Interfaces;
 using clypse.core.Compression.Interfaces;
@@ -64,6 +65,7 @@ public class VaultManagerTests
         await this.sut.SaveAsync(
             vault,
             base64Key,
+            null,
             cancellationTokenSource.Token);
 
         // Assert
@@ -72,12 +74,14 @@ public class VaultManagerTests
             It.Is<string>(y => y == $"foobar/{vault.Info.Id}/info.json"),
             It.IsAny<Stream>(),
             It.Is<string>(y => y == base64Key),
+            It.IsAny<MetadataCollection?>(),
             It.Is<CancellationToken>(y => y == cancellationTokenSource.Token)), Times.Once);
         this.mockEncryptedCloudStorageProvider.Verify(
             x => x.PutEncryptedObjectAsync(
             It.Is<string>(y => y == $"foobar/{vault.Info.Id}/index.json"),
             It.IsAny<Stream>(),
             It.Is<string>(y => y == base64Key),
+            It.IsAny<MetadataCollection?>(),
             It.Is<CancellationToken>(y => y == cancellationTokenSource.Token)), Times.Once);
     }
 
@@ -93,6 +97,7 @@ public class VaultManagerTests
         var results = await this.sut.SaveAsync(
             mockVault.Object,
             base64Key,
+            null,
             cancellationTokenSource.Token);
 
         // Assert
@@ -146,6 +151,7 @@ public class VaultManagerTests
         var results = await this.sut.SaveAsync(
             mockVault.Object,
             base64Key,
+            null,
             cancellationTokenSource.Token);
 
         // Assert
@@ -157,6 +163,7 @@ public class VaultManagerTests
             It.Is<string>(y => y == $"foobar/{info.Id}/info.json"),
             It.IsAny<Stream>(),
             It.Is<string>(y => y == base64Key),
+            It.IsAny<MetadataCollection?>(),
             It.Is<CancellationToken>(y => y == cancellationTokenSource.Token)), Times.Once);
         this.mockEncryptedCloudStorageProvider.Verify(
             x => x.DeleteEncryptedObjectAsync(
@@ -173,6 +180,7 @@ public class VaultManagerTests
             It.Is<string>(y => y == $"foobar/{info.Id}/index.json"),
             It.IsAny<Stream>(),
             It.Is<string>(y => y == base64Key),
+            It.IsAny<MetadataCollection?>(),
             It.Is<CancellationToken>(y => y == cancellationTokenSource.Token)), Times.Once);
     }
 
@@ -576,6 +584,7 @@ public class VaultManagerTests
         await this.sut.SaveAsync(
             vault,
             base64Key,
+            null,
             cancellationTokenSource.Token);
 
         this.mockEncryptedCloudStorageProvider.Reset();
@@ -586,6 +595,7 @@ public class VaultManagerTests
         var results = await this.sut.SaveAsync(
             vault,
             base64Key,
+            null,
             cancellationTokenSource.Token);
 
         // Assert
@@ -598,18 +608,21 @@ public class VaultManagerTests
             It.Is<string>(y => y == $"foobar/{vault.Info.Id}/info.json"),
             It.IsAny<Stream>(),
             It.Is<string>(y => y == base64Key),
+            It.IsAny<MetadataCollection?>(),
             It.Is<CancellationToken>(y => y == cancellationTokenSource.Token)), Times.Once);
         this.mockEncryptedCloudStorageProvider.Verify(
             x => x.PutEncryptedObjectAsync(
             It.Is<string>(y => y == $"foobar/{vault.Info.Id}/secrets/{secret1.Id}"),
             It.IsAny<Stream>(),
             It.Is<string>(y => y == base64Key),
+            It.IsAny<MetadataCollection?>(),
             It.Is<CancellationToken>(y => y == cancellationTokenSource.Token)), Times.Once);
         this.mockEncryptedCloudStorageProvider.Verify(
             x => x.PutEncryptedObjectAsync(
             It.Is<string>(y => y == $"foobar/{vault.Info.Id}/index.json"),
             It.IsAny<Stream>(),
             It.Is<string>(y => y == base64Key),
+            It.IsAny<MetadataCollection?>(),
             It.Is<CancellationToken>(y => y == cancellationTokenSource.Token)), Times.Once);
         Assert.Equal(secret1.Id, vault.Index.Entries[0].Id);
         Assert.False(vault.IsDirty);
