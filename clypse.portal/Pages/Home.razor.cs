@@ -5,7 +5,6 @@ using clypse.core.Cloud.Aws.S3;
 using clypse.core.Cryptogtaphy;
 using clypse.core.Cryptogtaphy.Interfaces;
 using clypse.core.Vault;
-using clypse.portal.Components;
 using clypse.portal.Models;
 using clypse.portal.Services;
 
@@ -264,6 +263,7 @@ public partial class Home : ComponentBase
             // Derive encryption key from passphrase
             var keyBytes = await KeyDerivationService.DeriveKeyFromPassphraseAsync(
                 core.Enums.KeyDerivationAlgorithm.Argon2id,
+                KeyDerivationServiceDefaultOptions.Blazor_Argon2id(),
                 password,
                 vault.Info.Base64Salt);
             var base64Key = Convert.ToBase64String(keyBytes);

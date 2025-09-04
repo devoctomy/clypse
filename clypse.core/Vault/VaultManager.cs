@@ -1,5 +1,6 @@
 ﻿using System.Text.Json;
 using System.Text.Json.Serialization;
+using Amazon.S3.Model;
 using clypse.core.Cloud.Exceptions;
 using clypse.core.Cloud.Interfaces;
 using clypse.core.Compression.Interfaces;
@@ -312,6 +313,11 @@ public class VaultManager(
         string base64Key,
         CancellationToken cancellationToken)
     {
+        // we need to gather all of the correct metadata here
+        var metaData = new MetadataCollection();
+        metaData.Add("clypse-compressionservice-name", compressionService.GetType().Name);
+        metaData.Add("clypse-encryptedcloudstorageprovider-name", encryptedCloudStorageProvider.GetType().Name);
+
         await this.SaveObjectAsync(
             vaultInfo,
             vaultInfo.Id,

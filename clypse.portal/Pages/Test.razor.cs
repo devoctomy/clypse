@@ -222,6 +222,7 @@ public partial class Test : ComponentBase
         var keyDerivationService = new KeyDerivationService();
         var keyBytes = await keyDerivationService.DeriveKeyFromPassphraseAsync(
             core.Enums.KeyDerivationAlgorithm.Argon2id,
+            KeyDerivationServiceDefaultOptions.Blazor_Argon2id(),
             password,
             vault.Info.Base64Salt);
         var base64Key = Convert.ToBase64String(keyBytes);

@@ -29,6 +29,7 @@ namespace clypse.core.UnitTests.Cryptography
             // Act
             var key = await sut.DeriveKeyFromPassphraseAsync(
                 algorithm,
+                GetDefaults(algorithm),
                 securePassphrase,
                 base64Salt);
             var base64Key = Convert.ToBase64String(key);
@@ -50,6 +51,16 @@ namespace clypse.core.UnitTests.Cryptography
             Assert.Equal(2, results.Results.Count);
             Assert.Equal(3, results.Results[0].Timings.Count);
             Assert.Equal(3, results.Results[1].Timings.Count);
+        }
+
+        private static KeyDerivationServiceOptions GetDefaults(KeyDerivationAlgorithm algorithm)
+        {
+            return algorithm switch
+            {
+                KeyDerivationAlgorithm.Rfc2898 => KeyDerivationServiceDefaultOptions.Blazor_Rfc2898(),
+                KeyDerivationAlgorithm.Argon2id => KeyDerivationServiceDefaultOptions.Blazor_Argon2id(),
+                _ => throw new NotImplementedException($"KeyDerivationAlgorithm '{algorithm}' not supported by KeyDerivationService."),
+            };
         }
     }
 }
