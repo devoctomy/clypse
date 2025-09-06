@@ -137,14 +137,8 @@ public partial class Vaults : ComponentBase
 
             var saltBytes = CryptoHelpers.Sha256HashString(selectedVault.Id);
             var base64Salt = Convert.ToBase64String(saltBytes);
-            var securePassphrase = new SecureString();
-            foreach (char c in passphrase)
-            {
-                securePassphrase.AppendChar(c);
-            }
-
             var keyBytes = await KeyDerivationService.DeriveKeyFromPassphraseAsync(
-                securePassphrase,
+                passphrase,
                 base64Salt);
 
             var base64Key = Convert.ToBase64String(keyBytes);

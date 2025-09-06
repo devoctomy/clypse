@@ -28,11 +28,11 @@ public class KeyDerivationService : IKeyDerivationService
     /// <summary>
     /// Derive a key from a password, using a specified key derivation algorithm.
     /// </summary>
-    /// <param name="passphrase">Passphrase as a SecureString.</param>
+    /// <param name="passphrase">The passphrase to derive the key from.</param>
     /// <param name="base64Salt">The base64-encoded salt for key derivation.</param>
     /// <returns>A byte array containing the derived cryptographic key.</returns>
     public async Task<byte[]> DeriveKeyFromPassphraseAsync(
-        SecureString passphrase,
+        string passphrase,
         string base64Salt)
     {
         var algorithm = Enum.Parse<KeyDerivationAlgorithm>(
@@ -67,12 +67,7 @@ public class KeyDerivationService : IKeyDerivationService
     {
         var results = new List<KeyDerivationBenchmarkResult>();
         var algirithmNames = Enum.GetNames<KeyDerivationAlgorithm>();
-        var securePassphrase = new SecureString();
-        foreach (var curChar in "password123")
-        {
-            securePassphrase.AppendChar(curChar);
-        }
-
+        var passphrase = "password123";
         var salt = CryptoHelpers.GenerateRandomBytes(16);
         var base64Salt = Convert.ToBase64String(salt);
         foreach (var curAlgorithm in algirithmNames)
@@ -84,7 +79,7 @@ public class KeyDerivationService : IKeyDerivationService
             {
                 var startedAt = DateTime.Now;
                 _ = await keyDerivationService.DeriveKeyFromPassphraseAsync(
-                    securePassphrase,
+                    passphrase,
                     base64Salt);
                 var elapsed = DateTime.Now - startedAt;
                 timings.Add(elapsed);

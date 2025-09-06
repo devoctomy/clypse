@@ -97,7 +97,7 @@ public sealed class VaultStepDefinitions(TestContext testContext)
     [Given("key derived from password (.*)")]
     public async Task KeyDerivedFromPassword(string password)
     {
-        var key = await this.vaultManager!.DeriveKeyFromPassphrase(
+        var key = await this.vaultManager!.DeriveKeyFromPassphraseAsync(
             this.testContext.Vault!,
             password);
         this.testContext.Base64Key = Convert.ToBase64String(key);

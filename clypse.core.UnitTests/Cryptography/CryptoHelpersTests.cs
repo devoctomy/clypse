@@ -26,17 +26,11 @@ public class CryptoHelpersTests
     {
         // Arrange
         var passphrase = "The quick brown fox jumps over the lazy dog.";
-        var securePassphrase = new SecureString();
-        foreach (var curChar in passphrase)
-        {
-            securePassphrase.AppendChar(curChar);
-        }
-
         var salt = new byte[32];
 
         // Act
         var key = await CryptoHelpers.DeriveKeyFromPassphraseUsingArgon2idAsync(
-            securePassphrase,
+            passphrase,
             Convert.ToBase64String(salt));
         var base64Key = Convert.ToBase64String(key);
 
@@ -49,17 +43,11 @@ public class CryptoHelpersTests
     {
         // Arrange
         var passphrase = "The quick brown fox jumps over the lazy dog.";
-        var securePassphrase = new SecureString();
-        foreach (var curChar in passphrase)
-        {
-            securePassphrase.AppendChar(curChar);
-        }
-
         var salt = new byte[32];
 
         // Act
         var key = await CryptoHelpers.DeriveKeyFromPassphraseUsingRfc2898Async(
-            securePassphrase,
+            passphrase,
             Convert.ToBase64String(salt));
         var base64Key = Convert.ToBase64String(key);
 

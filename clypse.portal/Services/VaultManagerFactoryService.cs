@@ -28,6 +28,7 @@ namespace clypse.portal.Services
             string bucketName,
             string identityId)
         {
+            var keyDerivationService = new KeyDerivationService(KeyDerivationServiceDefaultOptions.Blazor_Argon2id());
             var jsS3Client = new JavaScriptS3Client(
                 jsInvoker,
                 accessKey,
@@ -40,6 +41,7 @@ namespace clypse.portal.Services
                 new BouncyCastleAesGcmCryptoService());
             var vaultManager = new VaultManager(
                 identityId,
+                keyDerivationService,
                 new GZipCompressionService(),
                 awsS3E2eCloudStorageProvider);
             return vaultManager;

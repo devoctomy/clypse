@@ -253,16 +253,9 @@ public partial class Home : ComponentBase
             var vault = vaultManager.Create(request.Name, request.Description);
             Console.WriteLine($"Vault created with ID: {vault.Info.Id}");
 
-            // Convert passphrase to SecureString
-            var password = new SecureString();
-            foreach (var curChar in request.Passphrase)
-            {
-                password.AppendChar(curChar);
-            }
-
             // Derive encryption key from passphrase
             var keyBytes = await KeyDerivationService.DeriveKeyFromPassphraseAsync(
-                password,
+                request.Passphrase,
                 vault.Info.Base64Salt);
             var base64Key = Convert.ToBase64String(keyBytes);
 

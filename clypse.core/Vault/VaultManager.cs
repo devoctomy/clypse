@@ -41,20 +41,14 @@ public class VaultManager(
     /// <param name="vault">The vault to derive they key for.</param>
     /// <param name="passphrase">The passphrase to derive the key from.</param>
     /// <returns>A byte array containing the derived cryptographic key.</returns>
-    public async Task<byte[]> DeriveKeyFromPassphrase(
+    public async Task<byte[]> DeriveKeyFromPassphraseAsync(
         IVault vault,
         string passphrase)
     {
-        var secureString = new SecureString();
-        foreach (char c in passphrase)
-        {
-            secureString.AppendChar(c);
-        }
-
         var salt = CryptoHelpers.Sha256HashString(vault.Info.Id, 16);
         var base64Salt = Convert.ToBase64String(salt);
         return await keyDerivationService.DeriveKeyFromPassphraseAsync(
-            secureString,
+            passphrase,
             base64Salt);
     }
 

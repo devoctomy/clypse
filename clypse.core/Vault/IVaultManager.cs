@@ -13,7 +13,7 @@ public interface IVaultManager
     /// <param name="vault">The vault to derive they key for.</param>
     /// <param name="passphrase">The passphrase to derive the key from.</param>
     /// <returns>A byte array containing the derived cryptographic key.</returns>
-    public Task<byte[]> DeriveKeyFromPassphrase(
+    public Task<byte[]> DeriveKeyFromPassphraseAsync(
         IVault vault,
         string passphrase);
 

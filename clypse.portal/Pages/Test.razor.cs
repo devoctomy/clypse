@@ -191,12 +191,14 @@ public partial class Test : ComponentBase
             awsCredentials?.SessionToken ?? string.Empty,
             AwsS3Config.Region);
 
+        var keyDerivationService = new KeyDerivationService(KeyDerivationServiceDefaultOptions.Blazor_Argon2id());
         var awsS3E2eCloudStorageProvider = new AwsS3E2eCloudStorageProvider(
             AwsS3Config.BucketName,
             jsS3Client,
             new BouncyCastleAesGcmCryptoService());
         var vaultManager = new VaultManager(
             awsCredentials?.IdentityId ?? string.Empty,
+            keyDerivationService,
             compressionService,
             awsS3E2eCloudStorageProvider);
 
@@ -214,16 +216,10 @@ public partial class Test : ComponentBase
         webSecret.UpdateTags(["apple", "orange"]);
         var secret = vault.AddSecret(webSecret);
 
-        var password = new SecureString();
-        foreach (var curChar in "password123")
-        {
-            password.AppendChar(curChar);
-        };
-        var keyDerivationArgon2idDefaultOptions = KeyDerivationServiceDefaultOptions.Blazor_Argon2id();
-        var keyDerivationService = new KeyDerivationService(keyDerivationArgon2idDefaultOptions);
-        var keyBytes = await keyDerivationService.DeriveKeyFromPassphraseAsync(
-            password,
-            vault.Info.Base64Salt);
+        var passphrase = "password123";
+        var keyBytes = await vaultManager.DeriveKeyFromPassphraseAsync(
+            vault,
+            passphrase);
         var base64Key = Convert.ToBase64String(keyBytes);
         await vaultManager.SaveAsync(
             vault,

@@ -15,12 +15,6 @@ namespace clypse.core.UnitTests.Cryptography
             string expectedBase64Key)
         {
             // Arrange
-            var securePassphrase = new SecureString();
-            foreach (var curChar in passphrase)
-            {
-                securePassphrase.AppendChar(curChar);
-            }
-
             var salt = new byte[16];
             var base64Salt = Convert.ToBase64String(salt);
 
@@ -29,7 +23,7 @@ namespace clypse.core.UnitTests.Cryptography
 
             // Act
             var key = await sut.DeriveKeyFromPassphraseAsync(
-                securePassphrase,
+                passphrase,
                 base64Salt);
             var base64Key = Convert.ToBase64String(key);
 
