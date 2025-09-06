@@ -159,12 +159,17 @@ public sealed class VaultStepDefinitions(TestContext testContext)
     [Given("vaultmanager is recreated successfully")]
     public async Task GivenVaultmanagerIsRecreatedSuccessfully()
     {
-        var vaultManager = await VaultManager.CreateVaultManagerForVaultAsync(
+         var vaultManagerBootstrapperService = new AwsS3VaultManagerBootstrapperService(
             this.testContext.IdentityId!,
+            new AwsCloudStorageProviderBase(
+                this.testContext.BucketName!,
+                new AmazonS3ClientWrapper(
+                    this.testContext.AwsAccessKey!,
+                    this.testContext.SecretAccessKey!,
+                    Amazon.RegionEndpoint.EUWest2)));
+
+        var vaultManager = await vaultManagerBootstrapperService.CreateVaultManagerForVaultAsync(
             this.testContext.Vault!.Info.Id,
-            this.keyDerivationService!,
-            this.compressionService!,
-            this.encryptedCloudStorageProvider!,
             CancellationToken.None);
         Assert.NotNull(vaultManager);
     }
