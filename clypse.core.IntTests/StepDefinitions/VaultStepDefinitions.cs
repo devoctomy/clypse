@@ -15,6 +15,7 @@ namespace clypse.core.IntTests.StepDefinitions;
 public sealed class VaultStepDefinitions(TestContext testContext)
 {
     private readonly TestContext testContext = testContext;
+    private IKeyDerivationService? keyDerivationService;
     private ICompressionService? compressionService;
     private IVaultManager? vaultManager;
     private IEncryptedCloudStorageProvider? encryptedCloudStorageProvider;
@@ -36,6 +37,13 @@ public sealed class VaultStepDefinitions(TestContext testContext)
     public void AwsBucketNameLoadedFromEnvironmentVariable()
     {
         this.testContext.BucketName = Environment.GetEnvironmentVariable("CLYPSE_AWS_BUCKETNAME") !;
+    }
+
+    [Given("key derivation service is initialised")]
+    public void GivenKeyDerivationServiceIsInitialised()
+    {
+        var options = KeyDerivationServiceDefaultOptions.Blazor_Argon2id();
+        this.keyDerivationService = new KeyDerivationService(options);
     }
 
     [Given("crypto service is initialised")]
@@ -73,6 +81,7 @@ public sealed class VaultStepDefinitions(TestContext testContext)
     {
         this.vaultManager = new VaultManager(
             this.testContext.IdentityId!,
+            this.keyDerivationService!,
             this.compressionService!,
             this.encryptedCloudStorageProvider!);
     }
@@ -88,15 +97,9 @@ public sealed class VaultStepDefinitions(TestContext testContext)
     [Given("key derived from password (.*)")]
     public async Task KeyDerivedFromPassword(string password)
     {
-        var secureString = new SecureString();
-        foreach (char c in password)
-        {
-            secureString.AppendChar(c);
-        }
-
-        var key = await CryptoHelpers.DeriveKeyFromPassphraseUsingArgon2idAsync(
-            secureString,
-            this.testContext.Vault!.Info.Base64Salt);
+        var key = await this.vaultManager!.DeriveKeyFromPassphrase(
+            this.testContext.Vault!,
+            password);
         this.testContext.Base64Key = Convert.ToBase64String(key);
     }
 

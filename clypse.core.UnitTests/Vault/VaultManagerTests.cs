@@ -4,6 +4,7 @@ using Amazon.S3.Model;
 using clypse.core.Cloud.Exceptions;
 using clypse.core.Cloud.Interfaces;
 using clypse.core.Compression.Interfaces;
+using clypse.core.Cryptogtaphy.Interfaces;
 using clypse.core.Secrets;
 using clypse.core.Vault;
 using clypse.core.Vault.Exceptions;
@@ -23,6 +24,7 @@ public class VaultManagerTests
         },
     };
 
+    private readonly Mock<IKeyDerivationService> mockKeyDerivationService;
     private readonly Mock<ICompressionService> mockCompressionService;
     private readonly Mock<ICloudStorageProvider> mockInnerCloudStorageProvider;
     private readonly Mock<IEncryptedCloudStorageProvider> mockEncryptedCloudStorageProvider;
@@ -30,9 +32,14 @@ public class VaultManagerTests
 
     public VaultManagerTests()
     {
+        this.mockKeyDerivationService = new Mock<IKeyDerivationService>();
         this.mockCompressionService = new Mock<ICompressionService>();
         this.mockInnerCloudStorageProvider = new Mock<ICloudStorageProvider>();
         this.mockEncryptedCloudStorageProvider = new Mock<IEncryptedCloudStorageProvider>();
+
+        this.mockKeyDerivationService.SetupGet(
+            x => x.Options)
+            .Returns(new Cryptogtaphy.KeyDerivationServiceOptions());
 
         this.mockEncryptedCloudStorageProvider.SetupGet(
             x => x.InnerProvider)
@@ -40,6 +47,7 @@ public class VaultManagerTests
 
         this.sut = new VaultManager(
             "foobar",
+            this.mockKeyDerivationService.Object,
             this.mockCompressionService.Object,
             this.mockEncryptedCloudStorageProvider.Object);
     }

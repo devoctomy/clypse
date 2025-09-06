@@ -9,6 +9,11 @@ namespace clypse.core.Cryptogtaphy.Interfaces;
 public interface IKeyDerivationService
 {
     /// <summary>
+    /// Gets options to use for key derivation.
+    /// </summary>
+    public KeyDerivationServiceOptions Options { get; }
+
+    /// <summary>
     /// Derive a key from a password, using a specified key derivation algorithm.
     /// </summary>
     /// <param name="passphrase">Passphrase as a SecureString.</param>

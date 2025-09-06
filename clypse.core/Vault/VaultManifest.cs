@@ -23,5 +23,5 @@ public class VaultManifest
     /// <summary>
     /// Gets or sets Parameters used to configure the compression service, encrypted cloud storage provider, and key derivation service.
     /// </summary>
-    public Dictionary<string, string> Parameters { get; set; } = [];
+    public Dictionary<string, object> Parameters { get; set; } = [];
 }

@@ -1,9 +1,11 @@
-﻿using System.Text.Json;
+﻿using System.Security;
+using System.Text.Json;
 using System.Text.Json.Serialization;
 using Amazon.S3.Model;
 using clypse.core.Cloud.Exceptions;
 using clypse.core.Cloud.Interfaces;
 using clypse.core.Compression.Interfaces;
+using clypse.core.Cryptogtaphy;
 using clypse.core.Cryptogtaphy.Interfaces;
 using clypse.core.Secrets;
 using clypse.core.Vault.Exceptions;
@@ -14,10 +16,12 @@ namespace clypse.core.Vault;
 /// Manages vault operations including creation, saving, loading, and deletion of vaults and their secrets.
 /// </summary>
 /// <param name="prefix">Prefix to use for all S3 object keys.</param>
+/// <param name="keyDerivationService">The key derivation service for deriving cryptographic keys.</param>
 /// <param name="compressionService">The compression service for data compression.</param>
 /// <param name="encryptedCloudStorageProvider">The encrypted cloud storage provider for secure data storage.</param>
 public class VaultManager(
     string prefix,
+    IKeyDerivationService keyDerivationService,
     ICompressionService compressionService,
     IEncryptedCloudStorageProvider encryptedCloudStorageProvider)
     : IVaultManager
@@ -32,6 +36,29 @@ public class VaultManager(
     };
 
     /// <summary>
+    /// Derives a cryptographic key from the provided passphrase for the specified vault.
+    /// </summary>
+    /// <param name="vault">The vault to derive they key for.</param>
+    /// <param name="passphrase">The passphrase to derive the key from.</param>
+    /// <returns>A byte array containing the derived cryptographic key.</returns>
+    public async Task<byte[]> DeriveKeyFromPassphrase(
+        IVault vault,
+        string passphrase)
+    {
+        var secureString = new SecureString();
+        foreach (char c in passphrase)
+        {
+            secureString.AppendChar(c);
+        }
+
+        var salt = CryptoHelpers.Sha256HashString(vault.Info.Id, 16);
+        var base64Salt = Convert.ToBase64String(salt);
+        return await keyDerivationService.DeriveKeyFromPassphraseAsync(
+            secureString,
+            base64Salt);
+    }
+
+    /// <summary>
     /// Creates a new vault with the specified name and description.
     /// </summary>
     /// <param name="name">The name of the vault.</param>
@@ -42,13 +69,7 @@ public class VaultManager(
         string description)
     {
         var parameters = new Dictionary<string, string>();
-        var manifest = new VaultManifest
-        {
-            ClypseCoreVersion = typeof(Vault).Assembly.GetName().Version?.ToString(),
-            CompressionServiceName = compressionService.GetType().Name,
-            EncryptedCloudStorageProviderName = encryptedCloudStorageProvider.GetType().Name,
-            //// Parameters can be added here as needed
-        };
+        var manifest = this.CreateManifest();
         var vaultInfo = new VaultInfo(name, description);
         return new Vault(
             manifest,
@@ -545,5 +566,25 @@ public class VaultManager(
             base64Key,
             cancellationToken);
         return deleted!;
+    }
+
+    private VaultManifest CreateManifest()
+    {
+        var manifest = new VaultManifest
+        {
+            ClypseCoreVersion = System.Reflection.Assembly
+                .GetExecutingAssembly()
+                .GetName()
+                .Version?
+                .ToString(),
+            CompressionServiceName = compressionService.GetType().Name,
+            EncryptedCloudStorageProviderName = encryptedCloudStorageProvider.GetType().Name,
+        };
+        foreach (var param in keyDerivationService.Options.Parameters)
+        {
+            manifest.Parameters.Add(param.Key, param.Value);
+        }
+
+        return manifest;
     }
 }

@@ -8,6 +8,16 @@ namespace clypse.core.Vault;
 public interface IVaultManager
 {
     /// <summary>
+    /// Derives a cryptographic key from the provided passphrase for the specified vault.
+    /// </summary>
+    /// <param name="vault">The vault to derive they key for.</param>
+    /// <param name="passphrase">The passphrase to derive the key from.</param>
+    /// <returns>A byte array containing the derived cryptographic key.</returns>
+    public Task<byte[]> DeriveKeyFromPassphrase(
+        IVault vault,
+        string passphrase);
+
+    /// <summary>
     /// Creates a new vault with the specified name and description.
     /// </summary>
     /// <param name="name">The name of the vault.</param>
