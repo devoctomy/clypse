@@ -14,17 +14,25 @@ public class Vault : IVault
     /// <summary>
     /// Initializes a new instance of the <see cref="Vault"/> class with the specified vault information and index.
     /// </summary>
+    /// <param name="manifest">The vault manifest.</param>
     /// <param name="info">The vault information.</param>
     /// <param name="index">The vault index containing metadata about stored secrets.</param>
     public Vault(
+        VaultManifest manifest,
         VaultInfo info,
         VaultIndex index)
     {
+        this.Manifest = manifest;
         this.Info = info;
         this.Index = index;
         this.pendingSecrets = [];
         this.secretsToDelete = [];
     }
+
+    /// <summary>
+    /// Gets or sets the vault manifest.
+    /// </summary>
+    public VaultManifest Manifest { get; set; }
 
     /// <summary>
     /// Gets or sets the vault information.

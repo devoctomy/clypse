@@ -7,6 +7,7 @@ using clypse.core.Compression.Interfaces;
 using clypse.core.Secrets;
 using clypse.core.Vault;
 using clypse.core.Vault.Exceptions;
+using Microsoft.VisualBasic;
 using Moq;
 
 namespace clypse.core.UnitTests.Vault;
@@ -23,13 +24,20 @@ public class VaultManagerTests
     };
 
     private readonly Mock<ICompressionService> mockCompressionService;
+    private readonly Mock<ICloudStorageProvider> mockInnerCloudStorageProvider;
     private readonly Mock<IEncryptedCloudStorageProvider> mockEncryptedCloudStorageProvider;
     private readonly VaultManager sut;
 
     public VaultManagerTests()
     {
         this.mockCompressionService = new Mock<ICompressionService>();
+        this.mockInnerCloudStorageProvider = new Mock<ICloudStorageProvider>();
         this.mockEncryptedCloudStorageProvider = new Mock<IEncryptedCloudStorageProvider>();
+
+        this.mockEncryptedCloudStorageProvider.SetupGet(
+            x => x.InnerProvider)
+            .Returns(this.mockInnerCloudStorageProvider.Object);
+
         this.sut = new VaultManager(
             "foobar",
             this.mockCompressionService.Object,
@@ -191,6 +199,7 @@ public class VaultManagerTests
         var name = "Foobar";
         var description = "Description of vault";
         var base64Key = "super secret base64 encoded encryption key";
+        var manifest = new VaultManifest();
         var info = new VaultInfo(name, description);
         var index = new VaultIndex
         {
@@ -209,6 +218,18 @@ public class VaultManagerTests
                 ],
         };
         var cancellationTokenSource = new CancellationTokenSource();
+
+        this.mockInnerCloudStorageProvider.Setup(
+            x => x.GetObjectAsync(
+                It.Is<string>(y => y == $"foobar/{info.Id}/manifest.json"),
+                It.Is<CancellationToken>(y => y == cancellationTokenSource.Token)))
+            .Returns(async (string key, CancellationToken ct) =>
+            {
+                var output = new MemoryStream();
+                await JsonSerializer.SerializeAsync(output, manifest, this.jsonSerializerOptions, ct);
+                output.Seek(0, SeekOrigin.Begin);
+                return output;
+            });
 
         this.mockEncryptedCloudStorageProvider.Setup(
             x => x.GetEncryptedObjectAsync(
@@ -276,6 +297,7 @@ public class VaultManagerTests
         var name = "Foobar";
         var description = "Description of vault";
         var base64Key = "super secret base64 encoded encryption key";
+        var manifest = new VaultManifest();
         var info = new VaultInfo(name, description);
         var index = new VaultIndex
         {
@@ -294,6 +316,18 @@ public class VaultManagerTests
                 ],
         };
         var cancellationTokenSource = new CancellationTokenSource();
+
+        this.mockInnerCloudStorageProvider.Setup(
+            x => x.GetObjectAsync(
+                It.Is<string>(y => y == $"foobar/{info.Id}/manifest.json"),
+                It.Is<CancellationToken>(y => y == cancellationTokenSource.Token)))
+            .Returns(async (string key, CancellationToken ct) =>
+            {
+                var output = new MemoryStream();
+                await JsonSerializer.SerializeAsync(output, manifest, this.jsonSerializerOptions, ct);
+                output.Seek(0, SeekOrigin.Begin);
+                return output;
+            });
 
         this.mockEncryptedCloudStorageProvider.Setup(x => x.GetEncryptedObjectAsync(
             It.Is<string>(y => y == $"{info.Id}/info.json"),
@@ -327,6 +361,7 @@ public class VaultManagerTests
         var name = "Foobar";
         var description = "Description of vault";
         var base64Key = "super secret base64 encoded encryption key";
+        var manifest = new VaultManifest();
         var info = new VaultInfo(name, description);
         var index = new VaultIndex
         {
@@ -345,6 +380,18 @@ public class VaultManagerTests
                 ],
         };
         var cancellationTokenSource = new CancellationTokenSource();
+
+        this.mockInnerCloudStorageProvider.Setup(
+            x => x.GetObjectAsync(
+                It.Is<string>(y => y == $"foobar/{info.Id}/manifest.json"),
+                It.Is<CancellationToken>(y => y == cancellationTokenSource.Token)))
+            .Returns(async (string key, CancellationToken ct) =>
+            {
+                var output = new MemoryStream();
+                await JsonSerializer.SerializeAsync(output, manifest, this.jsonSerializerOptions, ct);
+                output.Seek(0, SeekOrigin.Begin);
+                return output;
+            });
 
         this.mockEncryptedCloudStorageProvider.Setup(
             x => x.GetEncryptedObjectAsync(
@@ -572,8 +619,21 @@ public class VaultManagerTests
         var description = "Description of vault";
         var updatedDescription = "Hello World!";
         var base64Key = "super secret base64 encoded encryption key";
+        var manifest = new VaultManifest();
         var vault = this.sut.Create(name, description);
         var cancellationTokenSource = new CancellationTokenSource();
+
+        this.mockInnerCloudStorageProvider.Setup(
+            x => x.GetObjectAsync(
+                It.Is<string>(y => y == $"foobar/{vault.Info.Id}/manifest.json"),
+                It.Is<CancellationToken>(y => y == cancellationTokenSource.Token)))
+            .Returns(async (string key, CancellationToken ct) =>
+            {
+                var output = new MemoryStream();
+                await JsonSerializer.SerializeAsync(output, manifest, this.jsonSerializerOptions, ct);
+                output.Seek(0, SeekOrigin.Begin);
+                return output;
+            });
 
         var secret1 = new Secret
         {
@@ -588,6 +648,10 @@ public class VaultManagerTests
             cancellationTokenSource.Token);
 
         this.mockEncryptedCloudStorageProvider.Reset();
+
+        this.mockEncryptedCloudStorageProvider.SetupGet(
+            x => x.InnerProvider)
+            .Returns(this.mockInnerCloudStorageProvider.Object);
 
         // Act
         secret1.Description = updatedDescription;

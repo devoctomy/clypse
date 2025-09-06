@@ -24,12 +24,11 @@ namespace clypse.core.UnitTests.Cryptography
             var salt = new byte[16];
             var base64Salt = Convert.ToBase64String(salt);
 
-            var sut = new KeyDerivationService();
+            var defaultOptions = GetDefaults(algorithm);
+            var sut = new KeyDerivationService(defaultOptions);
 
             // Act
             var key = await sut.DeriveKeyFromPassphraseAsync(
-                algorithm,
-                GetDefaults(algorithm),
                 securePassphrase,
                 base64Salt);
             var base64Key = Convert.ToBase64String(key);
@@ -42,7 +41,8 @@ namespace clypse.core.UnitTests.Cryptography
         public async Task GivenCount_WhenBenchmarkAllAsync_ThenAllAlgorithmsBenchmarked_AndResultsReturned()
         {
             // Arrange
-            var sut = new KeyDerivationService();
+            ////var defaultOptions = GetDefaults(algorithm);
+            var sut = new KeyDerivationService(new KeyDerivationServiceOptions());
 
             // Act
             var results = await sut.BenchmarkAllAsync(3);

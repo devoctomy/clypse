@@ -24,6 +24,11 @@ public class AwsS3SseCCloudStorageProvider : AwsCloudStorageProviderBase, IEncry
     }
 
     /// <summary>
+    /// Gets the inner cloud storage provider used for actual storage operations.
+    /// </summary>
+    public ICloudStorageProvider InnerProvider => this;
+
+    /// <summary>
     /// Deletes an encrypted object from S3 using server-side encryption with customer-provided keys (SSE-C).
     /// </summary>
     /// <param name="key">The unique key identifying the object to delete.</param>

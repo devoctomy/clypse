@@ -4,6 +4,7 @@ using Amazon.S3.Model;
 using clypse.core.Cloud.Exceptions;
 using clypse.core.Cloud.Interfaces;
 using clypse.core.Compression.Interfaces;
+using clypse.core.Cryptogtaphy.Interfaces;
 using clypse.core.Secrets;
 using clypse.core.Vault.Exceptions;
 
@@ -40,8 +41,17 @@ public class VaultManager(
         string name,
         string description)
     {
+        var parameters = new Dictionary<string, string>();
+        var manifest = new VaultManifest
+        {
+            ClypseCoreVersion = typeof(Vault).Assembly.GetName().Version?.ToString(),
+            CompressionServiceName = compressionService.GetType().Name,
+            EncryptedCloudStorageProviderName = encryptedCloudStorageProvider.GetType().Name,
+            //// Parameters can be added here as needed
+        };
         var vaultInfo = new VaultInfo(name, description);
         return new Vault(
+            manifest,
             vaultInfo,
             new VaultIndex());
     }
@@ -81,6 +91,11 @@ public class VaultManager(
             return results;
         }
 
+        await this.SaveManifestAsync(
+            vault.Info,
+            vault.Manifest,
+            cancellationToken);
+
         await this.SaveInfoAsync(
             vault.Info,
             base64Key,
@@ -104,7 +119,7 @@ public class VaultManager(
                     secret.Name!,
                     secret.Description,
                     string.Join(',', secret.Tags)));
-            await this.SaveObjectAsync(
+            await this.SaveEncryptedCompressedObjectAsync(
                 secret,
                 vault.Info.Id,
                 $"secrets/{secret.Id}",
@@ -162,6 +177,10 @@ public class VaultManager(
         string base64Key,
         CancellationToken cancellationToken)
     {
+        var manifest = await this.LoadManifestAsync(
+            id,
+            cancellationToken);
+
         var info = await this.LoadInfoAsync(
             id,
             base64Key,
@@ -173,6 +192,7 @@ public class VaultManager(
             cancellationToken);
 
         var vault = new Vault(
+            manifest,
             info,
             index);
         vault.MakeClean();
@@ -226,7 +246,7 @@ public class VaultManager(
         string base64Key,
         CancellationToken cancellationToken)
     {
-        var secret = await this.LoadObjectAsync<Secret>(
+        var secret = await this.LoadEncryptedCompressedObjectAsync<Secret>(
             vault.Info.Id,
             $"secrets/{secretId}",
             base64Key,
@@ -298,13 +318,26 @@ public class VaultManager(
         return results;
     }
 
+    private async Task SaveManifestAsync(
+        VaultInfo vaultInfo,
+        VaultManifest vaultManifest,
+        CancellationToken cancellationToken)
+    {
+        await this.SavePlainTextObjectAsync(
+            vaultManifest,
+            vaultInfo.Id,
+            "manifest.json",
+            null,
+            cancellationToken);
+    }
+
     private async Task SaveIndexAsync(
         VaultInfo vaultInfo,
         VaultIndex vaultIndex,
         string base64Key,
         CancellationToken cancellationToken)
     {
-        await this.SaveObjectAsync(
+        await this.SaveEncryptedCompressedObjectAsync(
             vaultIndex,
             vaultInfo.Id,
             "index.json",
@@ -320,8 +353,6 @@ public class VaultManager(
         CancellationToken cancellationToken)
     {
         var metaDataCollection = new MetadataCollection();
-        metaDataCollection.Add("clypse-compressionservice-name", compressionService.GetType().Name);
-        metaDataCollection.Add("clypse-encryptedcloudstorageprovider-name", encryptedCloudStorageProvider.GetType().Name);
         if (metaData != null)
         {
             foreach (var curKey in metaData.Keys)
@@ -330,7 +361,7 @@ public class VaultManager(
             }
         }
 
-        await this.SaveObjectAsync(
+        await this.SaveEncryptedCompressedObjectAsync(
             vaultInfo,
             vaultInfo.Id,
             "info.json",
@@ -339,12 +370,28 @@ public class VaultManager(
             cancellationToken);
     }
 
+    private async Task<VaultManifest> LoadManifestAsync(
+        string id,
+        CancellationToken cancellationToken)
+    {
+        var manifest = await this.LoadPlainTextObjectAsync<VaultManifest>(
+            id,
+            "manifest.json",
+            cancellationToken);
+        if (manifest == null)
+        {
+            throw new FailedToLoadVaultInfoException($"Failed to load manifest for vault '{id}'.");
+        }
+
+        return manifest!;
+    }
+
     private async Task<VaultInfo> LoadInfoAsync(
         string id,
         string base64Key,
         CancellationToken cancellationToken)
     {
-        var info = await this.LoadObjectAsync<VaultInfo>(
+        var info = await this.LoadEncryptedCompressedObjectAsync<VaultInfo>(
             id,
             "info.json",
             base64Key,
@@ -362,7 +409,7 @@ public class VaultManager(
         string base64Key,
         CancellationToken cancellationToken)
     {
-        var index = await this.LoadObjectAsync<VaultIndex>(
+        var index = await this.LoadEncryptedCompressedObjectAsync<VaultIndex>(
             id,
             "index.json",
             base64Key,
@@ -375,7 +422,31 @@ public class VaultManager(
         return index!;
     }
 
-    private async Task SaveObjectAsync(
+    private async Task SavePlainTextObjectAsync(
+        object obj,
+        string vaultId,
+        string key,
+        MetadataCollection? metaData,
+        CancellationToken cancellationToken)
+    {
+        var objectKey = $"{prefix}/{vaultId}/{key}";
+        var objectStream = new MemoryStream();
+        await JsonSerializer.SerializeAsync(
+            objectStream,
+            obj,
+            this.jsonSerializerOptions,
+            cancellationToken);
+        objectStream.Seek(0, SeekOrigin.Begin);
+
+        var cloudStorageProvider = encryptedCloudStorageProvider.InnerProvider;
+        await cloudStorageProvider!.PutObjectAsync(
+            objectKey,
+            objectStream,
+            metaData,
+            cancellationToken);
+    }
+
+    private async Task SaveEncryptedCompressedObjectAsync(
         object obj,
         string vaultId,
         string key,
@@ -407,7 +478,31 @@ public class VaultManager(
             cancellationToken);
     }
 
-    private async Task<T?> LoadObjectAsync<T>(
+    private async Task<T?> LoadPlainTextObjectAsync<T>(
+        string vaultId,
+        string key,
+        CancellationToken cancellationToken)
+    {
+        var objectKey = $"{prefix}/{vaultId}/{key}";
+
+        var cloudStorageProvider = encryptedCloudStorageProvider.InnerProvider;
+        var plainTextStream = await cloudStorageProvider!.GetObjectAsync(
+            objectKey,
+            cancellationToken);
+        if (plainTextStream == null)
+        {
+            return default;
+        }
+
+        var value = await JsonSerializer.DeserializeAsync<T>(
+            plainTextStream,
+            this.jsonSerializerOptions,
+            cancellationToken);
+
+        return value!;
+    }
+
+    private async Task<T?> LoadEncryptedCompressedObjectAsync<T>(
         string vaultId,
         string key,
         string base64Key,

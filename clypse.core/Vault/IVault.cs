@@ -8,6 +8,11 @@ namespace clypse.core.Vault;
 public interface IVault
 {
     /// <summary>
+    /// Gets or sets the vault manifest containing essential information about the vault.
+    /// </summary>
+    public VaultManifest Manifest { get; set; }
+
+    /// <summary>
     /// Gets or sets the vault information containing metadata about the vault.
     /// </summary>
     public VaultInfo Info { get; set; }

@@ -8,9 +8,11 @@ public class VaultTests
     public void GivenVault_WithNoSecrets_WhenAddSecret_AndSecretAddedToPending_AndVaultIsDirty()
     {
         // Arrange
+        var manifest = new VaultManifest();
         var info = new VaultInfo("Foo", "Bar");
         var index = new VaultIndex();
         var vault = new core.Vault.Vault(
+            manifest,
             info,
             index);
         vault.MakeClean();
@@ -27,9 +29,11 @@ public class VaultTests
     public void GivenDirtyVault_WhenMakeClean_ThenVaultNotDirty()
     {
         // Arrange
+        var manifest = new VaultManifest();
         var info = new VaultInfo("Foo", "Bar");
         var index = new VaultIndex();
         var vault = new core.Vault.Vault(
+            manifest,
             info,
             index);
 
@@ -43,6 +47,7 @@ public class VaultTests
     public void GivenVault_WithSecrets_WhenAddSecret_AndSecretAlreadyExists_TheSecretNotAdded_AndFalseReturned_AndVaultNotDirty()
     {
         // Arrange
+        var manifest = new VaultManifest();
         var info = new VaultInfo("Foo", "Bar");
         var index = new VaultIndex
         {
@@ -56,6 +61,7 @@ public class VaultTests
             ],
         };
         var vault = new core.Vault.Vault(
+            manifest,
             info,
             index);
         vault.MakeClean();
@@ -76,6 +82,7 @@ public class VaultTests
     public void GivenVault_WithSecrets_WhenUpdateSecret_AndSecretAlreadyExists_TheSecretAddedToPending_AndTrueReturned_AndVaultIsDirty()
     {
         // Arrange
+        var manifest = new VaultManifest();
         var info = new VaultInfo("Foo", "Bar");
         var index = new VaultIndex
         {
@@ -89,6 +96,7 @@ public class VaultTests
             ],
         };
         var vault = new core.Vault.Vault(
+            manifest,
             info,
             index);
         vault.MakeClean();
@@ -109,6 +117,7 @@ public class VaultTests
     public void GivenVault_WithSecrets_WhenUpdateSecret_AndSecretNotExists_TheSecretNotAddedToPending_AndFalseReturned_AndVaultBotDirty()
     {
         // Arrange
+        var manifest = new VaultManifest();
         var info = new VaultInfo("Foo", "Bar");
         var index = new VaultIndex
         {
@@ -122,6 +131,7 @@ public class VaultTests
             ],
         };
         var vault = new core.Vault.Vault(
+            manifest,
             info,
             index);
         vault.MakeClean();
@@ -142,6 +152,7 @@ public class VaultTests
     public void GivenVault_WithSecrets_WhenDeleteSecret_AndSecretExists_TheSecretAddedToList_AndTrueReturned_AndVaultIsDirty()
     {
         // Arrange
+        var manifest = new VaultManifest();
         var info = new VaultInfo("Foo", "Bar");
         var index = new VaultIndex
         {
@@ -155,6 +166,7 @@ public class VaultTests
             ],
         };
         var vault = new core.Vault.Vault(
+            manifest,
             info,
             index);
 
@@ -172,6 +184,7 @@ public class VaultTests
     public void GivenVault_WithSecrets_WhenDeleteSecret_AndSecretNotExists_TheSecretNotAddedToList_AndFalseReturned()
     {
         // Arrange
+        var manifest = new VaultManifest();
         var info = new VaultInfo("Foo", "Bar");
         var index = new VaultIndex
         {
@@ -185,6 +198,7 @@ public class VaultTests
             ],
         };
         var vault = new core.Vault.Vault(
+            manifest,
             info,
             index);
 

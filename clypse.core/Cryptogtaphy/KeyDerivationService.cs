@@ -9,37 +9,47 @@ namespace clypse.core.Cryptogtaphy;
 /// </summary>
 public class KeyDerivationService : IKeyDerivationService
 {
+    private readonly KeyDerivationServiceOptions options;
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="KeyDerivationService"/> class with the provided options.
+    /// </summary>
+    /// <param name="options">Options to use for key derivation.</param>
+    public KeyDerivationService(KeyDerivationServiceOptions options)
+    {
+        this.options = options;
+    }
+
     /// <summary>
     /// Derive a key from a password, using a specified key derivation algorithm.
     /// </summary>
-    /// <param name="keyDerivationAlgorithm">Key derivation algorithm to use.</param>
-    /// <param name="options">Options for the key derivation algorithm.</param>
     /// <param name="passphrase">Passphrase as a SecureString.</param>
     /// <param name="base64Salt">The base64-encoded salt for key derivation.</param>
     /// <returns>A byte array containing the derived cryptographic key.</returns>
     public async Task<byte[]> DeriveKeyFromPassphraseAsync(
-        KeyDerivationAlgorithm keyDerivationAlgorithm,
-        KeyDerivationServiceOptions options,
         SecureString passphrase,
         string base64Salt)
     {
-        return keyDerivationAlgorithm switch
+        var algorithm = Enum.Parse<KeyDerivationAlgorithm>(
+            this.options.GetAsString(KeyDerivationParameterKeys.Algorithm),
+            true);
+        return algorithm switch
         {
             KeyDerivationAlgorithm.Rfc2898 =>
                 await CryptoHelpers.DeriveKeyFromPassphraseUsingRfc2898Async(
                     passphrase,
                     base64Salt,
-                    options.GetAsInt(KeyDerivationParameterKeys.Rfc2898_KeyLength),
-                    options.GetAsInt(KeyDerivationParameterKeys.Rfc2898_Iterations)),
+                    this.options.GetAsInt(KeyDerivationParameterKeys.Rfc2898_KeyLength),
+                    this.options.GetAsInt(KeyDerivationParameterKeys.Rfc2898_Iterations)),
             KeyDerivationAlgorithm.Argon2id =>
                 await CryptoHelpers.DeriveKeyFromPassphraseUsingArgon2idAsync(
                     passphrase,
                     base64Salt,
-                    options.GetAsInt(KeyDerivationParameterKeys.Argon2_KeyLength),
-                    options.GetAsInt(KeyDerivationParameterKeys.Argon2_Parallelism),
-                    options.GetAsInt(KeyDerivationParameterKeys.Argon2_MemorySizeKb),
-                    options.GetAsInt(KeyDerivationParameterKeys.Argon2_Iterations)),
-            _ => throw new NotImplementedException($"KeyDerivationAlgorithm '{keyDerivationAlgorithm}' not supported by KeyDerivationService."),
+                    this.options.GetAsInt(KeyDerivationParameterKeys.Argon2id_KeyLength),
+                    this.options.GetAsInt(KeyDerivationParameterKeys.Argon2id_Parallelism),
+                    this.options.GetAsInt(KeyDerivationParameterKeys.Argon2id_MemorySizeKb),
+                    this.options.GetAsInt(KeyDerivationParameterKeys.Argon2id_Iterations)),
+            _ => throw new NotImplementedException($"KeyDerivationAlgorithm '{algorithm}' not supported by KeyDerivationService."),
         };
     }
 
@@ -64,12 +74,11 @@ public class KeyDerivationService : IKeyDerivationService
         {
             var timings = new List<TimeSpan>();
             var algorithm = Enum.Parse<KeyDerivationAlgorithm>(curAlgorithm, true);
+            var keyDerivationService = new KeyDerivationService(GetDefaults(algorithm));
             for (var i = 0; i < count; i++)
             {
                 var startedAt = DateTime.Now;
-                _ = await this.DeriveKeyFromPassphraseAsync(
-                    algorithm,
-                    GetDefaults(algorithm),
+                _ = await keyDerivationService.DeriveKeyFromPassphraseAsync(
                     securePassphrase,
                     base64Salt);
                 var elapsed = DateTime.Now - startedAt;

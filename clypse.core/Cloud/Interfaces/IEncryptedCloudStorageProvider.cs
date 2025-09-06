@@ -8,6 +8,11 @@ namespace clypse.core.Cloud.Interfaces;
 public interface IEncryptedCloudStorageProvider
 {
     /// <summary>
+    /// Gets the inner cloud storage provider used for actual storage operations.
+    /// </summary>
+    public ICloudStorageProvider InnerProvider { get; }
+
+    /// <summary>
     /// Retrieves and decrypts an encrypted object from cloud storage.
     /// </summary>
     /// <param name="key">The unique key identifying the object.</param>

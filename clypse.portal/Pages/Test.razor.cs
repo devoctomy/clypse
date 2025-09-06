@@ -133,7 +133,7 @@ public partial class Test : ComponentBase
 
         try
         {
-            var keyDerivationService = new KeyDerivationService();
+            var keyDerivationService = new KeyDerivationService(new KeyDerivationServiceOptions());
             keyDerivationResults = await keyDerivationService.BenchmarkAllAsync(3);
             showKeyDerivationResults = true;
         }
@@ -219,10 +219,9 @@ public partial class Test : ComponentBase
         {
             password.AppendChar(curChar);
         };
-        var keyDerivationService = new KeyDerivationService();
+        var keyDerivationArgon2idDefaultOptions = KeyDerivationServiceDefaultOptions.Blazor_Argon2id();
+        var keyDerivationService = new KeyDerivationService(keyDerivationArgon2idDefaultOptions);
         var keyBytes = await keyDerivationService.DeriveKeyFromPassphraseAsync(
-            core.Enums.KeyDerivationAlgorithm.Argon2id,
-            KeyDerivationServiceDefaultOptions.Blazor_Argon2id(),
             password,
             vault.Info.Base64Salt);
         var base64Key = Convert.ToBase64String(keyBytes);

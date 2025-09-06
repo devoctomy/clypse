@@ -144,8 +144,6 @@ public partial class Vaults : ComponentBase
             }
 
             var keyBytes = await KeyDerivationService.DeriveKeyFromPassphraseAsync(
-                core.Enums.KeyDerivationAlgorithm.Argon2id,
-                KeyDerivationServiceDefaultOptions.Blazor_Argon2id(),
                 securePassphrase,
                 base64Salt);
 

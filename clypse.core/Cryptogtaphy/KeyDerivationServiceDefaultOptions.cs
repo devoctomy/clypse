@@ -1,4 +1,6 @@
-﻿namespace clypse.core.Cryptogtaphy;
+﻿using clypse.core.Enums;
+
+namespace clypse.core.Cryptogtaphy;
 
 /// <summary>
 /// Provides default configuration options for the KeyDerivationService.
@@ -12,6 +14,7 @@ public class KeyDerivationServiceDefaultOptions
     public static KeyDerivationServiceOptions Blazor_Rfc2898()
     {
         var options = new KeyDerivationServiceOptions();
+        options.Parameters[KeyDerivationParameterKeys.Algorithm] = KeyDerivationAlgorithm.Rfc2898.ToString();
         options.Parameters[KeyDerivationParameterKeys.Rfc2898_KeyLength] = 32;
         options.Parameters[KeyDerivationParameterKeys.Rfc2898_Iterations] = 100000;
         return options;
@@ -24,10 +27,11 @@ public class KeyDerivationServiceDefaultOptions
     public static KeyDerivationServiceOptions Blazor_Argon2id()
     {
         var options = new KeyDerivationServiceOptions();
-        options.Parameters[KeyDerivationParameterKeys.Argon2_KeyLength] = 32;
-        options.Parameters[KeyDerivationParameterKeys.Argon2_Parallelism] = 2;
-        options.Parameters[KeyDerivationParameterKeys.Argon2_MemorySizeKb] = 65536;
-        options.Parameters[KeyDerivationParameterKeys.Argon2_Iterations] = 1;
+        options.Parameters[KeyDerivationParameterKeys.Algorithm] = KeyDerivationAlgorithm.Argon2id.ToString();
+        options.Parameters[KeyDerivationParameterKeys.Argon2id_KeyLength] = 32;
+        options.Parameters[KeyDerivationParameterKeys.Argon2id_Parallelism] = 2;
+        options.Parameters[KeyDerivationParameterKeys.Argon2id_MemorySizeKb] = 65536;
+        options.Parameters[KeyDerivationParameterKeys.Argon2id_Iterations] = 1;
         return options;
     }
 }
