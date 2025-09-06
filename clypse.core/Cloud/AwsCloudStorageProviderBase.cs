@@ -3,6 +3,7 @@ using Amazon.S3.Model;
 using clypse.core.Cloud.Aws.S3;
 using clypse.core.Cloud.Exceptions;
 using clypse.core.Cloud.Interfaces;
+using clypse.core.Cryptogtaphy.Interfaces;
 
 namespace clypse.core.Cloud;
 
@@ -101,6 +102,30 @@ public class AwsCloudStorageProviderBase : ICloudStorageProvider
             metaData,
             null,
             cancellationToken);
+    }
+
+    /// <summary>
+    /// Creates an end-to-end encrypted AWS S3 cloud storage provider using the specified cryptographic service.
+    /// </summary>
+    /// <param name="cryptoService">Cryptographic service to use for the encryption process.</param>
+    /// <returns>Instance of AwsS3E2eCloudStorageProvider.</returns>
+    public AwsS3E2eCloudStorageProvider CreateE2eProvider(ICryptoService cryptoService)
+    {
+        return new AwsS3E2eCloudStorageProvider(
+            this.bucketName,
+            this.amazonS3Client,
+            cryptoService);
+    }
+
+    /// <summary>
+    /// Creates an server-side encrypted AWS S3 cloud storage provider using the specified cryptographic service.
+    /// </summary>
+    /// <returns>Instance of AwsS3SseCCloudStorageProvider.</returns>
+    public AwsS3SseCCloudStorageProvider CreateSseProvider()
+    {
+        return new AwsS3SseCCloudStorageProvider(
+            this.bucketName,
+            this.amazonS3Client);
     }
 
     /// <summary>
