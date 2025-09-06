@@ -15,7 +15,7 @@ public class AwsS3VaultManagerBootstrapperServiceTests
     private readonly Mock<ICloudStorageProvider> mockCloudStorageProvider;
     private readonly Mock<IAwsEncryptedCloudStorageProviderTransformer> mockAwsEncryptedCloudStorageProviderTransformer;
     private readonly Mock<ICryptoService> mockCryptoService;
-    private readonly AwsS3VaultManagerBootstrapperService sut;
+    private AwsS3VaultManagerBootstrapperService sut;
 
     private string prefix = "foobar";
 
@@ -29,6 +29,39 @@ public class AwsS3VaultManagerBootstrapperServiceTests
             new TestAwsCloudStorageProvider(
                 this.mockCloudStorageProvider,
                 this.mockAwsEncryptedCloudStorageProviderTransformer));
+    }
+
+    [Fact]
+    public async Task GivenId_AndInvalidTestAwsCloudStorageProvider_WhenCreateVaultManagerForVaultAsync_ThenExceptionThrown()
+    {
+        // Arrange
+        var cancellationTokenSource = new CancellationTokenSource();
+        var id = Guid.NewGuid().ToString();
+        var manifest = new VaultManifest
+        {
+            ClypseCoreVersion = "1.0.0",
+            CompressionServiceName = "GZipCompressionService",
+            CryptoServiceName = "BouncyCastleAesGcmCryptoService",
+            EncryptedCloudStorageProviderName = "AwsS3E2eCloudStorageProvider",
+            Parameters = [],
+        };
+
+        var defaultKeyDerivationOptions = KeyDerivationServiceDefaultOptions.Blazor_Argon2id();
+        foreach (var curParam in defaultKeyDerivationOptions.Parameters)
+        {
+            manifest.Parameters[$"KeyDerivationService_{curParam.Key}"] = curParam.Value;
+        }
+
+        this.sut = new AwsS3VaultManagerBootstrapperService(
+            this.prefix,
+            new InvalidTestAwsCloudStorageProvider(
+                this.mockCloudStorageProvider));
+
+        // Act & Assert
+        await Assert.ThrowsAnyAsync<CloudStorageProviderDoesNotImplementIAwsEncryptedCloudStorageProviderTransformerException>(async () =>
+        {
+            await this.sut.CreateVaultManagerForVaultAsync(id, cancellationTokenSource.Token);
+        });
     }
 
     [Fact]
