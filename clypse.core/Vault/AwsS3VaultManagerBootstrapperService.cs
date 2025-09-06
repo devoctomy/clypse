@@ -1,7 +1,11 @@
 ﻿using System.Text.Json;
 using System.Text.Json.Serialization;
 using clypse.core.Cloud;
+using clypse.core.Cloud.Interfaces;
+using clypse.core.Compression;
+using clypse.core.Compression.Interfaces;
 using clypse.core.Cryptogtaphy;
+using clypse.core.Cryptogtaphy.Interfaces;
 using clypse.core.Vault.Exceptions;
 
 namespace clypse.core.Vault;
@@ -42,8 +46,52 @@ public class AwsS3VaultManagerBootstrapperService(
 
         var keyDerivationServiceForVault = new KeyDerivationService(keyDerivationServiceOptions);
 
-        // TODO: Need to finish setting up the vault manager for the vault
-        return null;
+        ICompressionService compressionServiceForVault;
+        switch (manifest.CompressionServiceName)
+        {
+            case "GZipCompressionService":
+                compressionServiceForVault = new GZipCompressionService();
+                break;
+
+            default:
+                throw new Exception($"Unsupported compression service '{manifest.CompressionServiceName}' in vault '{id}'.");
+        }
+
+        ICryptoService cryptoServiceForVault;
+        switch (manifest.CompressionServiceName)
+        {
+            case "NativeAesGcmCryptoService":
+                cryptoServiceForVault = new NativeAesGcmCryptoService();
+                break;
+
+            case "BouncyCastleAesGcmCryptoService":
+                cryptoServiceForVault = new BouncyCastleAesGcmCryptoService();
+                break;
+
+            default:
+                throw new Exception($"Unsupported compression service '{manifest.CompressionServiceName}' in vault '{id}'.");
+        }
+
+        IEncryptedCloudStorageProvider encryptedCloudStorageProviderForVault;
+        switch (manifest.EncryptedCloudStorageProviderName)
+        {
+            case "AwsS3SseCCloudStorageProvider":
+                encryptedCloudStorageProviderForVault = awsCloudStorageProviderBase.CreateSseProvider();
+                break;
+
+            case "AwsS3E2eCCloudStorageProvider":
+                encryptedCloudStorageProviderForVault = awsCloudStorageProviderBase.CreateE2eProvider(cryptoServiceForVault);
+                break;
+
+            default:
+                throw new Exception($"Unsupported encrypted cloud storage provider '{manifest.EncryptedCloudStorageProviderName}' in vault '{id}'.");
+        }
+
+        return new VaultManager(
+            prefix,
+            keyDerivationServiceForVault,
+            compressionServiceForVault,
+            encryptedCloudStorageProviderForVault);
     }
 
     /// <summary>
