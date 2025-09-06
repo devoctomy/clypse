@@ -14,16 +14,7 @@ namespace clypse.core.Vault;
 /// <summary>
 /// Manages vault operations including creation, saving, loading, and deletion of vaults and their secrets.
 /// </summary>
-/// <param name="prefix">Prefix to use for all S3 object keys.</param>
-/// <param name="keyDerivationService">The key derivation service for deriving cryptographic keys.</param>
-/// <param name="compressionService">The compression service for data compression.</param>
-/// <param name="encryptedCloudStorageProvider">The encrypted cloud storage provider for secure data storage.</param>
-public class VaultManager(
-    string prefix,
-    IKeyDerivationService keyDerivationService,
-    ICompressionService compressionService,
-    IEncryptedCloudStorageProvider encryptedCloudStorageProvider)
-    : IVaultManager
+public class VaultManager : IVaultManager
 {
     private readonly JsonSerializerOptions jsonSerializerOptions = new ()
     {
@@ -33,6 +24,50 @@ public class VaultManager(
             new JsonStringEnumConverter(JsonNamingPolicy.CamelCase),
         },
     };
+
+    private readonly IKeyDerivationService keyDerivationService;
+    private readonly ICompressionService compressionService;
+    private readonly IEncryptedCloudStorageProvider encryptedCloudStorageProvider;
+    private readonly string prefix;
+
+    /// <summary>
+    /// Gets the key derivation service used by this vault manager.
+    /// </summary>
+    public IKeyDerivationService KeyDerivationService => this.keyDerivationService;
+
+    /// <summary>
+    /// Gets the compression service used by this vault manager.
+    /// </summary>
+    public ICompressionService CompressionService => this.compressionService;
+
+    /// <summary>
+    /// Gets the encrypted cloud storage provider used by this vault manager.
+    /// </summary>
+    public IEncryptedCloudStorageProvider EncryptedCloudStorageProvider => this.encryptedCloudStorageProvider;
+
+    /// <summary>
+    /// Gets the prefix used for all S3 object keys.
+    /// </summary>
+    public string Prefix => this.prefix;
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="VaultManager"/> class with the specified parameters.
+    /// </summary>
+    /// <param name="prefix">Prefix to use for all S3 object keys.</param>
+    /// <param name="keyDerivationService">The key derivation service for deriving cryptographic keys.</param>
+    /// <param name="compressionService">The compression service for data compression.</param>
+    /// <param name="encryptedCloudStorageProvider">The encrypted cloud storage provider for secure data storage.</param>
+    public VaultManager(
+        string prefix,
+        IKeyDerivationService keyDerivationService,
+        ICompressionService compressionService,
+        IEncryptedCloudStorageProvider encryptedCloudStorageProvider)
+    {
+        this.prefix = prefix;
+        this.keyDerivationService = keyDerivationService;
+        this.compressionService = compressionService;
+        this.encryptedCloudStorageProvider = encryptedCloudStorageProvider;
+    }
 
     /// <summary>
     /// Derives a cryptographic key from the provided passphrase for the specified vault.

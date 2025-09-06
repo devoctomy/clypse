@@ -11,7 +11,7 @@ namespace clypse.core.Cloud;
 /// Base class for AWS S3 cloud storage providers, implementing common S3 operations and providing extensible hooks for derived classes.
 /// This class provides the foundation for both encrypted and unencrypted S3 storage implementations.
 /// </summary>
-public class AwsCloudStorageProviderBase : ICloudStorageProvider
+public class AwsCloudStorageProviderBase : ICloudStorageProvider, IAwsEncryptedCloudStorageProviderTransformer
 {
     private readonly string bucketName;
     private readonly IAmazonS3Client amazonS3Client;

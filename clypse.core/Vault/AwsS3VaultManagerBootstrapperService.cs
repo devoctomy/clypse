@@ -1,6 +1,5 @@
 ﻿using System.Text.Json;
 using System.Text.Json.Serialization;
-using clypse.core.Cloud;
 using clypse.core.Cloud.Interfaces;
 using clypse.core.Compression;
 using clypse.core.Compression.Interfaces;
@@ -15,7 +14,7 @@ namespace clypse.core.Vault;
 /// </summary>
 public class AwsS3VaultManagerBootstrapperService(
     string prefix,
-    AwsCloudStorageProviderBase awsCloudStorageProviderBase) : IVaultManagerBootstrapperService
+    ICloudStorageProvider awsCloudStorageProvider) : IVaultManagerBootstrapperService
 {
     private readonly JsonSerializerOptions jsonSerializerOptions = new ()
     {
@@ -36,6 +35,12 @@ public class AwsS3VaultManagerBootstrapperService(
         string id,
         CancellationToken cancellationToken)
     {
+        var awsEncryptedCloudStorageProviderTransformer = awsCloudStorageProvider as IAwsEncryptedCloudStorageProviderTransformer;
+        if (awsEncryptedCloudStorageProviderTransformer == null)
+        {
+            throw new CloudStorageProviderDoesNotImplementIAwsEncryptedCloudStorageProviderTransformerException(awsCloudStorageProvider);
+        }
+
         var manifest = await this.LoadManifestAsync(id, cancellationToken);
         var keyDerivationServiceOptions = new KeyDerivationServiceOptions();
         foreach (var param in manifest.Parameters)
@@ -54,7 +59,7 @@ public class AwsS3VaultManagerBootstrapperService(
                 break;
 
             default:
-                throw new Exception($"Unsupported compression service '{manifest.CompressionServiceName}' in vault '{id}'.");
+                throw new CompressionServiceNotSupportedByVaultManagerBootstrapperException(manifest.CompressionServiceName);
         }
 
         ICryptoService? cryptoServiceForVault = null;
@@ -71,7 +76,7 @@ public class AwsS3VaultManagerBootstrapperService(
                     break;
 
                 default:
-                    throw new Exception($"Unsupported compression service '{manifest.CompressionServiceName}' in vault '{id}'.");
+                    throw new CryptoServiceNotSupportedByVaultManagerBootstrapperException(manifest.CryptoServiceName);
             }
         }
 
@@ -79,15 +84,15 @@ public class AwsS3VaultManagerBootstrapperService(
         switch (manifest.EncryptedCloudStorageProviderName)
         {
             case "AwsS3SseCloudStorageProvider":
-                encryptedCloudStorageProviderForVault = awsCloudStorageProviderBase.CreateSseProvider();
+                encryptedCloudStorageProviderForVault = awsEncryptedCloudStorageProviderTransformer!.CreateSseProvider();
                 break;
 
             case "AwsS3E2eCloudStorageProvider":
-                encryptedCloudStorageProviderForVault = awsCloudStorageProviderBase.CreateE2eProvider(cryptoServiceForVault!);
+                encryptedCloudStorageProviderForVault = awsEncryptedCloudStorageProviderTransformer!.CreateE2eProvider(cryptoServiceForVault!);
                 break;
 
             default:
-                throw new Exception($"Unsupported encrypted cloud storage provider '{manifest.EncryptedCloudStorageProviderName}' in vault '{id}'.");
+                throw new EncryptedCloudStorageProviderNotSupportedByVaultManagerBootstrapperException(manifest.EncryptedCloudStorageProviderName);
         }
 
         return new VaultManager(
@@ -105,7 +110,7 @@ public class AwsS3VaultManagerBootstrapperService(
     public async Task<List<string>> ListVaultIdsAsync(CancellationToken cancellationToken)
     {
         var allObjectsPrefix = $"{prefix}/";
-        var allObjects = await awsCloudStorageProviderBase.ListObjectsAsync(
+        var allObjects = await awsCloudStorageProvider.ListObjectsAsync(
             allObjectsPrefix,
             "/",
             cancellationToken);
@@ -135,7 +140,7 @@ public class AwsS3VaultManagerBootstrapperService(
     {
         var objectKey = $"{prefix}/{vaultId}/{key}";
 
-        var plainTextStream = await awsCloudStorageProviderBase.GetObjectAsync(
+        var plainTextStream = await awsCloudStorageProvider.GetObjectAsync(
             objectKey,
             cancellationToken);
         if (plainTextStream == null)
