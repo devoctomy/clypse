@@ -33,6 +33,11 @@ public class AwsS3E2eCloudStorageProvider : AwsCloudStorageProviderBase, IEncryp
     public ICloudStorageProvider InnerProvider => this;
 
     /// <summary>
+    /// Gets the underlying cryptographic service provider used for cryptographic operations.
+    /// </summary>
+    public ICryptoService InnerCryptoServiceProvider => this.cryptoService;
+
+    /// <summary>
     /// Deletes an encrypted object from S3. Since the object is stored encrypted, no decryption key is needed for deletion.
     /// </summary>
     /// <param name="key">The unique key identifying the object to delete.</param>

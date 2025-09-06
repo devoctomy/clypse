@@ -1,4 +1,5 @@
 ﻿using Amazon.S3.Model;
+using clypse.core.Cryptogtaphy.Interfaces;
 
 namespace clypse.core.Cloud.Interfaces;
 
@@ -11,6 +12,11 @@ public interface IEncryptedCloudStorageProvider
     /// Gets the inner cloud storage provider used for actual storage operations.
     /// </summary>
     public ICloudStorageProvider InnerProvider { get; }
+
+    /// <summary>
+    /// Gets the inner cryptographic service used for encryption and decryption operations.
+    /// </summary>
+    public ICryptoService? InnerCryptoServiceProvider { get; }
 
     /// <summary>
     /// Retrieves and decrypts an encrypted object from cloud storage.

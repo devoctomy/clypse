@@ -571,6 +571,7 @@ public class VaultManager(
                 .Version?
                 .ToString(),
             CompressionServiceName = compressionService.GetType().Name,
+            CryptoServiceName = encryptedCloudStorageProvider.InnerCryptoServiceProvider?.GetType().Name,
             EncryptedCloudStorageProviderName = encryptedCloudStorageProvider.GetType().Name,
         };
         foreach (var param in keyDerivationService.Options.Parameters)

@@ -2,6 +2,7 @@
 using Amazon.S3.Model;
 using clypse.core.Cloud.Aws.S3;
 using clypse.core.Cloud.Interfaces;
+using clypse.core.Cryptogtaphy.Interfaces;
 
 namespace clypse.core.Cloud;
 
@@ -27,6 +28,11 @@ public class AwsS3SseCCloudStorageProvider : AwsCloudStorageProviderBase, IEncry
     /// Gets the inner cloud storage provider used for actual storage operations.
     /// </summary>
     public ICloudStorageProvider InnerProvider => this;
+
+    /// <summary>
+    /// Gets the underlying cryptographic service provider used for cryptographic operations.
+    /// </summary>
+    public ICryptoService? InnerCryptoServiceProvider => null;
 
     /// <summary>
     /// Deletes an encrypted object from S3 using server-side encryption with customer-provided keys (SSE-C).

@@ -16,6 +16,11 @@ public class VaultManifest
     public string? CompressionServiceName { get; set; }
 
     /// <summary>
+    /// Gets or sets the cryptographic service used for this vault.
+    /// </summary>
+    public string? CryptoServiceName { get; set; }
+
+    /// <summary>
     /// Gets or sets name of the encrypted cloud storage provider used for this vault.
     /// </summary>
     public string? EncryptedCloudStorageProviderName { get; set; }

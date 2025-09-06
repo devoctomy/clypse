@@ -57,30 +57,33 @@ public class AwsS3VaultManagerBootstrapperService(
                 throw new Exception($"Unsupported compression service '{manifest.CompressionServiceName}' in vault '{id}'.");
         }
 
-        ICryptoService cryptoServiceForVault;
-        switch (manifest.CompressionServiceName)
+        ICryptoService? cryptoServiceForVault = null;
+        if (!string.IsNullOrEmpty(manifest.CryptoServiceName))
         {
-            case "NativeAesGcmCryptoService":
-                cryptoServiceForVault = new NativeAesGcmCryptoService();
-                break;
+            switch (manifest.CryptoServiceName)
+            {
+                case "NativeAesGcmCryptoService":
+                    cryptoServiceForVault = new NativeAesGcmCryptoService();
+                    break;
 
-            case "BouncyCastleAesGcmCryptoService":
-                cryptoServiceForVault = new BouncyCastleAesGcmCryptoService();
-                break;
+                case "BouncyCastleAesGcmCryptoService":
+                    cryptoServiceForVault = new BouncyCastleAesGcmCryptoService();
+                    break;
 
-            default:
-                throw new Exception($"Unsupported compression service '{manifest.CompressionServiceName}' in vault '{id}'.");
+                default:
+                    throw new Exception($"Unsupported compression service '{manifest.CompressionServiceName}' in vault '{id}'.");
+            }
         }
 
         IEncryptedCloudStorageProvider encryptedCloudStorageProviderForVault;
         switch (manifest.EncryptedCloudStorageProviderName)
         {
-            case "AwsS3SseCCloudStorageProvider":
+            case "AwsS3SseCloudStorageProvider":
                 encryptedCloudStorageProviderForVault = awsCloudStorageProviderBase.CreateSseProvider();
                 break;
 
-            case "AwsS3E2eCCloudStorageProvider":
-                encryptedCloudStorageProviderForVault = awsCloudStorageProviderBase.CreateE2eProvider(cryptoServiceForVault);
+            case "AwsS3E2eCloudStorageProvider":
+                encryptedCloudStorageProviderForVault = awsCloudStorageProviderBase.CreateE2eProvider(cryptoServiceForVault!);
                 break;
 
             default:
