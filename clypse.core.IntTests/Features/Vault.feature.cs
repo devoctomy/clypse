@@ -191,7 +191,7 @@ await this.FeatureBackgroundAsync();
  await testRunner.AndAsync("save results report 2 secrets created", ((string)(null)), ((global::Reqnroll.Table)(null)), "And ");
 #line hidden
 #line 27
- await testRunner.AndAsync("vaultmanager is recreated successfully", ((string)(null)), ((global::Reqnroll.Table)(null)), "And ");
+ await testRunner.AndAsync("vaultmanager is recreated successfully via bootstrapping", ((string)(null)), ((global::Reqnroll.Table)(null)), "And ");
 #line hidden
 #line 28
  await testRunner.WhenAsync("vault is loaded", ((string)(null)), ((global::Reqnroll.Table)(null)), "When ");

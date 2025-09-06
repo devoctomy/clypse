@@ -18,6 +18,7 @@ public sealed class VaultStepDefinitions(TestContext testContext)
     private IKeyDerivationService? keyDerivationService;
     private ICompressionService? compressionService;
     private IVaultManager? vaultManager;
+    private IVaultManager? bootstrappedVaultManager;
     private IEncryptedCloudStorageProvider? encryptedCloudStorageProvider;
     private ICryptoService? cryptoService;
 
@@ -156,10 +157,10 @@ public sealed class VaultStepDefinitions(TestContext testContext)
         Assert.Equal(created, this.testContext.SaveResults!.SecretsCreated);
     }
 
-    [Given("vaultmanager is recreated successfully")]
+    [Given("vaultmanager is recreated successfully via bootstrapping")]
     public async Task GivenVaultmanagerIsRecreatedSuccessfully()
     {
-         var vaultManagerBootstrapperService = new AwsS3VaultManagerBootstrapperService(
+        var vaultManagerBootstrapperService = new AwsS3VaultManagerBootstrapperService(
             this.testContext.IdentityId!,
             new AwsCloudStorageProviderBase(
                 this.testContext.BucketName!,
@@ -172,6 +173,8 @@ public sealed class VaultStepDefinitions(TestContext testContext)
             this.testContext.Vault!.Info.Id,
             CancellationToken.None);
         Assert.NotNull(vaultManager);
+
+        this.vaultManager = vaultManager;
     }
 
     [StepDefinition("save results report (.*) secrets updated")]
