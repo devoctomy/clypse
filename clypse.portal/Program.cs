@@ -12,6 +12,9 @@ builder.RootComponents.Add<HeadOutlet>("head::after");
 
 builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
 
+// Default key derivation service options
+builder.Services.AddSingleton(KeyDerivationServiceDefaultOptions.Blazor_Argon2id());
+
 // Register services
 builder.Services.AddScoped<IVaultManagerFactoryService, VaultManagerFactoryService>();
 builder.Services.AddScoped<IVaultStorageService, VaultStorageService>();

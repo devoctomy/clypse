@@ -24,6 +24,7 @@ Scenario: Create and save vault to S3, perform basic CRUD operations on secrets,
 	And vault is saved
 	And save results successful
 	And save results report 2 secrets created
+	And vaultmanager is recreated successfully
 	When vault is loaded
 	And secret Secret1 is loaded and matches added
 	And secret Secret2 is loaded and matches added

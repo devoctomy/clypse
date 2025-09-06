@@ -4,6 +4,7 @@ using System.Text.Json.Serialization;
 using Amazon.S3.Model;
 using clypse.core.Cloud.Exceptions;
 using clypse.core.Cloud.Interfaces;
+using clypse.core.Compression;
 using clypse.core.Compression.Interfaces;
 using clypse.core.Cryptogtaphy;
 using clypse.core.Cryptogtaphy.Interfaces;
@@ -34,6 +35,43 @@ public class VaultManager(
             new JsonStringEnumConverter(JsonNamingPolicy.CamelCase),
         },
     };
+
+    /// <summary>
+    /// Creates a vault manager which is suitable for use with a specific vault identified by its Id.
+    /// </summary>
+    /// <param name="prefix">Prefix to use for all S3 object keys.</param>
+    /// <param name="id">The unique identifier of the vault.</param>
+    /// <param name="keyDerivationService">The key derivation service for deriving cryptographic keys.</param>
+    /// <param name="compressionService">The compression service for data compression.</param>
+    /// <param name="encryptedCloudStorageProvider">The encrypted cloud storage provider for secure data storage.</param>
+    /// <param name="cancellationToken">The cancellation token.</param>
+    /// <returns>On success returns an instance of IVaultManager suitable for use on the specified vault, otherwise null.</returns>
+    public static async Task<IVaultManager?> CreateVaultManagerForVaultAsync(
+        string prefix,
+        string id,
+        IKeyDerivationService keyDerivationService,
+        ICompressionService compressionService,
+        IEncryptedCloudStorageProvider encryptedCloudStorageProvider,
+        CancellationToken cancellationToken)
+    {
+        var bootstrappedVaultManager = new VaultManager(
+            prefix,
+            keyDerivationService,
+            compressionService,
+            encryptedCloudStorageProvider);
+        var manifest = await bootstrappedVaultManager.LoadManifestAsync(id, cancellationToken);
+        var keyDerivationServiceOptions = new KeyDerivationServiceOptions();
+        foreach (var param in manifest.Parameters)
+        {
+            var key = param.Key.Replace("KeyDerivationService_", string.Empty);
+            keyDerivationServiceOptions.Parameters.Add(key, param.Value);
+        }
+
+        var keyDerivationServiceForVault = new KeyDerivationService(keyDerivationServiceOptions);
+
+        // TODO: Need to finish setting up the vault manager for the vault
+        return null;
+    }
 
     /// <summary>
     /// Derives a cryptographic key from the provided passphrase for the specified vault.
@@ -576,7 +614,7 @@ public class VaultManager(
         };
         foreach (var param in keyDerivationService.Options.Parameters)
         {
-            manifest.Parameters.Add(param.Key, param.Value);
+            manifest.Parameters.Add($"KeyDerivationService_{param.Key}", param.Value);
         }
 
         return manifest;

@@ -156,6 +156,19 @@ public sealed class VaultStepDefinitions(TestContext testContext)
         Assert.Equal(created, this.testContext.SaveResults!.SecretsCreated);
     }
 
+    [Given("vaultmanager is recreated successfully")]
+    public async Task GivenVaultmanagerIsRecreatedSuccessfully()
+    {
+        var vaultManager = await VaultManager.CreateVaultManagerForVaultAsync(
+            this.testContext.IdentityId!,
+            this.testContext.Vault!.Info.Id,
+            this.keyDerivationService!,
+            this.compressionService!,
+            this.encryptedCloudStorageProvider!,
+            CancellationToken.None);
+        Assert.NotNull(vaultManager);
+    }
+
     [StepDefinition("save results report (.*) secrets updated")]
     public void SaveResultsReportSecretsUpdated(int updated)
     {
