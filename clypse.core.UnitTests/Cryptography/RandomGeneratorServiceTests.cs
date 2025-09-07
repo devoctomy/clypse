@@ -94,18 +94,16 @@ public class RandomGeneratorServiceTests
     }
 
     [Fact]
-    public void GivenDisposedRngService_AndMin_AndMax_WhenGetRandomInt_ThenObjectDisposedExceptionThrown()
+    public void GivenDisposedRngService_WhenGetDouble_ThenObjectDisposedExceptionThrown()
     {
         // Arrange
-        var min = 10;
-        var max = 20;
         var sut = new RandomGeneratorService();
         sut.Dispose();
 
         // Act & Assert
         Assert.Throws<ObjectDisposedException>(() =>
         {
-            sut.GetRandomInt(min, max);
+            sut.GetRandomDouble();
         });
     }
 }
