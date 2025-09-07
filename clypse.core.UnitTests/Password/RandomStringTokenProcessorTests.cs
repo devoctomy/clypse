@@ -1,4 +1,5 @@
 ﻿using clypse.core.Cryptogtaphy;
+using clypse.core.Enums;
 using clypse.core.Password;
 using Moq;
 
@@ -55,5 +56,39 @@ public class RandomStringTokenProcessorTests
             x => x.GetRandomStringContainingCharacters(
             It.Is<int>(y => y == 3),
             It.Is<string>(y => y == "Foobar123")), Times.Once);
+    }
+
+    [Theory]
+    [InlineData("randstr([lowercase],6)", CharacterGroup.Lowercase)]
+    [InlineData("randstr([uppercase],6)", CharacterGroup.Uppercase)]
+    [InlineData("randstr([digits],6)", CharacterGroup.Digits)]
+    [InlineData("randstr([special],6)", CharacterGroup.Special)]
+    public void GivenToken_WhenProcess_ThenExpectedLettersReturned(
+        string token,
+        CharacterGroup characterGroup)
+    {
+        // Arrange
+        var mockRandomGeneratorService = new Mock<IRandomGeneratorService>();
+        var mockPasswordGeneratorService = new Mock<IPasswordGeneratorService>();
+        var charGroup = CharacterGroups.GetGroup(characterGroup);
+        var sut = new RandomStringTokenProcessor();
+
+        mockPasswordGeneratorService.SetupGet(
+            x => x.RandomGeneratorService)
+            .Returns(mockRandomGeneratorService.Object);
+
+        mockRandomGeneratorService.Setup(x => x.GetRandomStringContainingCharacters(
+            It.IsAny<int>(),
+            It.IsAny<string>()))
+            .Returns((int length, string chars) =>
+            {
+                return chars;
+            });
+
+        // Act
+        var result = sut.Process(mockPasswordGeneratorService.Object, token);
+
+        // Assert
+        Assert.All(result, c => Assert.Contains(c, charGroup));
     }
 }
