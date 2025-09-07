@@ -1,6 +1,8 @@
 ﻿using clypse.core.Cryptogtaphy;
+using clypse.core.Enums;
 using clypse.core.Password;
 using Moq;
+using System.Security.Cryptography;
 
 namespace clypse.core.UnitTests.Password;
 
@@ -98,5 +100,51 @@ public class DictionaryTokenProcessorTests
 
         // Assert
         Assert.Empty(result);
+    }
+
+    [Fact]
+    public void GivenToken_AndMultipleDictionaries_WhenProcess_ThenDictionaryLoaded_AndRandomWordReturned()
+    {
+        // Arrange
+        var token = $"dict({DictionaryType.Verb.ToString().ToLower()}|{DictionaryType.Adjective.ToString().ToLower()}|{DictionaryType.Noun.ToString().ToLower()})";
+        using var randomGeneratorService = new RandomGeneratorService();
+        var mockRandomGeneratorService = new Mock<IRandomGeneratorService>();
+        var mockPasswordGeneratorService = new Mock<IPasswordGeneratorService>();
+        var sut = new DictionaryTokenProcessor();
+
+        var words = new List<string>
+        {
+            "verb",
+            "adjective",
+            "noun",
+        };
+        var expectedWord = words[1];
+
+        mockPasswordGeneratorService.Setup(
+            x => x.GetOrLoadDictionary(
+            It.IsAny<DictionaryType>()))
+            .Returns((DictionaryType dictType) =>
+            {
+                return [dictType.ToString()];
+            });
+
+        mockPasswordGeneratorService.SetupGet(
+            x => x.RandomGeneratorService)
+            .Returns(mockRandomGeneratorService.Object);
+
+        mockRandomGeneratorService.Setup(
+            x => x.GetRandomArrayEntry<string>(
+            It.IsAny<string[]>()))
+            .Returns((string[] array) =>
+            {
+                return randomGeneratorService.GetRandomArrayEntry<string>(array);
+            });
+
+        // Act
+        var result = sut.Process(mockPasswordGeneratorService.Object, token);
+
+        // Assert
+        Assert.NotEmpty(result);
+        Assert.Contains(words, x => x.Equals(result, StringComparison.InvariantCultureIgnoreCase));
     }
 }

@@ -28,6 +28,12 @@ public class DictionaryTokenProcessor : IPasswordGeneratorTokenProcessor
         string token)
     {
         var dictionary = token.Replace("dict", string.Empty).Trim('(', ')');
+        if (dictionary.Contains("|"))
+        {
+            var allDicts = dictionary.Split('|', StringSplitOptions.RemoveEmptyEntries);
+            dictionary = passwordGeneratorService.RandomGeneratorService.GetRandomArrayEntry<string>(allDicts);
+        }
+
         if (Enum.TryParse<DictionaryType>(dictionary, true, out var dictType))
         {
             var words = passwordGeneratorService.GetOrLoadDictionary(dictType);
