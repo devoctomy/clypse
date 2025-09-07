@@ -7,6 +7,7 @@ using clypse.portal.Services;
 using clypse.core.Cryptogtaphy;
 using clypse.core.Cryptogtaphy.Interfaces;
 using clypse.core.Vault;
+using clypse.core.Cloud.Aws.S3;
 
 namespace clypse.portal.Components;
 
@@ -14,6 +15,7 @@ public partial class Vaults : ComponentBase
 {
     [Inject] public IVaultStorageService VaultStorage { get; set; } = default!;
     [Inject] public IVaultManagerFactoryService VaultManagerFactory { get; set; } = default!;
+    [Inject] public IVaultManagerBootstrapperFactoryService VaultManagerBootstrapperFactory { get; set; } = default!;
     [Inject] public IJSRuntime JSRuntime { get; set; } = default!;
     [Inject] public AwsS3Config AwsS3Config { get; set; } = default!;
     [Inject] public IKeyDerivationService KeyDerivationService { get; set; } = default!;
@@ -25,10 +27,10 @@ public partial class Vaults : ComponentBase
     private VaultMetadata? selectedVault = null;
     private string passphrase = string.Empty;
     private string? errorMessage = null;
-    private IVaultManager? vaultManager = null;
+    private IVaultManagerBootstrapperService? bootstrapperService = null;
     private ElementReference passphraseInput;
 
-    [Parameter] public EventCallback<(VaultMetadata vault, string key)> OnVaultUnlocked { get; set; }
+    [Parameter] public EventCallback<(VaultMetadata vault, string key, IVaultManager manager)> OnVaultUnlocked { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
@@ -50,7 +52,37 @@ public partial class Vaults : ComponentBase
             isLoading = true;
             StateHasChanged();
 
-            vaults = await VaultStorage.GetVaultsAsync();
+            // Create bootstrapper service if not already created
+            if (bootstrapperService == null)
+            {
+                bootstrapperService = await CreateBootstrapperService();
+                if (bootstrapperService == null)
+                {
+                    Console.WriteLine("Failed to create bootstrapper service");
+                    vaults = new List<VaultMetadata>();
+                    isLoading = false;
+                    StateHasChanged();
+                    return;
+                }
+            }
+
+            // Use bootstrapper to list vaults
+            var vaultListings = await bootstrapperService.ListVaultsAsync(CancellationToken.None);
+            
+            // Get stored vault metadata from localStorage
+            var storedVaults = await VaultStorage.GetVaultsAsync();
+            
+            // Convert VaultListing objects to VaultMetadata objects, combining with stored metadata
+            vaults = vaultListings.Select(listing => 
+            {
+                var storedVault = storedVaults.FirstOrDefault(v => v.Id == listing.Id);
+                return new VaultMetadata
+                {
+                    Id = listing.Id ?? string.Empty,
+                    Name = storedVault?.Name, // Use stored name if available
+                    Description = storedVault?.Description // Use stored description if available
+                };
+            }).ToList();
 
             isLoading = false;
             StateHasChanged();
@@ -58,6 +90,7 @@ public partial class Vaults : ComponentBase
         catch (Exception ex)
         {
             Console.WriteLine($"Error loading vaults: {ex.Message}");
+            vaults = new List<VaultMetadata>();
             isLoading = false;
             StateHasChanged();
         }
@@ -123,16 +156,27 @@ public partial class Vaults : ComponentBase
             errorMessage = null;
             StateHasChanged();
 
-            if (vaultManager == null)
+            // Create bootstrapper service if not already created
+            if (bootstrapperService == null)
             {
-                vaultManager = await CreateVaultManager();
-                if (vaultManager == null)
+                bootstrapperService = await CreateBootstrapperService();
+                if (bootstrapperService == null)
                 {
-                    errorMessage = "Failed to create vault manager";
+                    errorMessage = "Failed to create bootstrapper service";
                     isUnlocking = false;
                     StateHasChanged();
                     return;
                 }
+            }
+
+            // Use bootstrapper to create a vault-specific manager for this vault
+            var vaultSpecificManager = await bootstrapperService.CreateVaultManagerForVaultAsync(selectedVault.Id, CancellationToken.None);
+            if (vaultSpecificManager == null)
+            {
+                errorMessage = "Failed to create vault-specific manager";
+                isUnlocking = false;
+                StateHasChanged();
+                return;
             }
 
             var saltBytes = CryptoHelpers.Sha256HashString(selectedVault.Id);
@@ -142,7 +186,7 @@ public partial class Vaults : ComponentBase
                 base64Salt);
 
             var base64Key = Convert.ToBase64String(keyBytes);
-            var vault = await vaultManager.LoadAsync(selectedVault.Id, base64Key, CancellationToken.None);
+            var vault = await vaultSpecificManager.LoadAsync(selectedVault.Id, base64Key, CancellationToken.None);
             selectedVault.Name = vault.Info.Name;
             selectedVault.Description = vault.Info.Description;
             await VaultStorage.UpdateVaultAsync(selectedVault);
@@ -159,8 +203,8 @@ public partial class Vaults : ComponentBase
             HidePassphrasePanel();
             await RefreshVaults();
             
-            // Notify parent that vault was unlocked
-            await OnVaultUnlocked.InvokeAsync((unlockedVault, base64Key));
+            // Notify parent that vault was unlocked with the vault-specific manager
+            await OnVaultUnlocked.InvokeAsync((unlockedVault, base64Key, vaultSpecificManager));
         }
         catch (Exception ex)
         {
@@ -174,7 +218,7 @@ public partial class Vaults : ComponentBase
         }
     }
 
-    private async Task<IVaultManager?> CreateVaultManager()
+    private async Task<IVaultManagerBootstrapperService?> CreateBootstrapperService()
     {
         try
         {
@@ -195,10 +239,10 @@ public partial class Vaults : ComponentBase
             }
 
             // Create JavaScript S3 invoker
-            var jsInvoker = new clypse.core.Cloud.Aws.S3.JavaScriptS3Invoker(JSRuntime);
+            var jsInvoker = new JavaScriptS3Invoker(JSRuntime);
 
-            // Create vault manager using the factory
-            var manager = VaultManagerFactory.CreateForBlazor(
+            // Create bootstrapper service using the factory
+            var bootstrapper = VaultManagerBootstrapperFactory.CreateForBlazor(
                 jsInvoker,
                 credentials.AwsCredentials.AccessKeyId,
                 credentials.AwsCredentials.SecretAccessKey,
@@ -207,12 +251,12 @@ public partial class Vaults : ComponentBase
                 AwsS3Config.BucketName,  
                 credentials.AwsCredentials.IdentityId);
 
-            Console.WriteLine("Vault manager created successfully");
-            return manager;
+            Console.WriteLine("Bootstrapper service created successfully");
+            return bootstrapper;
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error creating vault manager: {ex.Message}");
+            Console.WriteLine($"Error creating bootstrapper service: {ex.Message}");
             return null;
         }
     }

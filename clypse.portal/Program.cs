@@ -17,6 +17,7 @@ builder.Services.AddSingleton(KeyDerivationServiceDefaultOptions.Blazor_Argon2id
 
 // Register services
 builder.Services.AddScoped<IVaultManagerFactoryService, VaultManagerFactoryService>();
+builder.Services.AddScoped<IVaultManagerBootstrapperFactoryService, VaultManagerBootstrapperFactoryService>();
 builder.Services.AddScoped<IVaultStorageService, VaultStorageService>();
 builder.Services.AddScoped<IAuthenticationService, AwsCognitoAuthenticationService>();
 builder.Services.AddScoped<IKeyDerivationService, KeyDerivationService>();

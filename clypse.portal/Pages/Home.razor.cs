@@ -298,6 +298,12 @@ public partial class Home : ComponentBase
             currentPage = "vaults";
             StateHasChanged();
             await UpdateNavigation();
+            
+            // Refresh the vault list to show the newly created vault
+            if (vaultsComponent != null)
+            {
+                await vaultsComponent.RefreshVaults();
+            }
         }
         catch (Exception ex)
         {
@@ -313,23 +319,15 @@ public partial class Home : ComponentBase
         await UpdateNavigation();
     }
 
-    private async Task HandleVaultUnlocked((VaultMetadata vault, string key) vaultData)
+    private async Task HandleVaultUnlocked((VaultMetadata vault, string key, IVaultManager manager) vaultData)
     {
         currentVault = vaultData.vault;
         currentVaultKey = vaultData.key;
         
-        // Create vault manager if not already instantiated
-        if (vaultManager == null)
-        {
-            vaultManager = await CreateVaultManager();
-            if (vaultManager == null)
-            {
-                Console.WriteLine("Failed to create vault manager");
-                return;
-            }
-        }
+        // Use the vault-specific manager provided by the bootstrapper
+        vaultManager = vaultData.manager;
 
-        // Load and store the vault instance
+        // Load and store the vault instance using the vault-specific manager
         loadedVault = await vaultManager.LoadAsync(currentVault.Id, currentVaultKey, CancellationToken.None);
         
         currentPage = "credentials";
@@ -342,6 +340,7 @@ public partial class Home : ComponentBase
         currentVault = null;
         currentVaultKey = null;
         loadedVault = null;
+        vaultManager = null; // Clear the vault-specific manager
         currentPage = "vaults";
         StateHasChanged();
         await UpdateNavigation();
