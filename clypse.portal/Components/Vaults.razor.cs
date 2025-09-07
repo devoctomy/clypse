@@ -21,10 +21,13 @@ public partial class Vaults : ComponentBase
     [Inject] public IKeyDerivationService KeyDerivationService { get; set; } = default!;
 
     private List<VaultMetadata> vaults = new();
+    private List<VaultListing> vaultListings = new(); // Store the original listings with manifests
     private bool isLoading = true;
     private bool showPassphrasePanel = false;
+    private bool showVaultDetailsPanel = false; // New property for vault details modal
     private bool isUnlocking = false;
     private VaultMetadata? selectedVault = null;
+    private VaultListing? selectedVaultListing = null; // Store selected vault listing for details
     private string passphrase = string.Empty;
     private string? errorMessage = null;
     private IVaultManagerBootstrapperService? bootstrapperService = null;
@@ -67,7 +70,8 @@ public partial class Vaults : ComponentBase
             }
 
             // Use bootstrapper to list vaults
-            var vaultListings = await bootstrapperService.ListVaultsAsync(CancellationToken.None);
+            var vaultListingsResult = await bootstrapperService.ListVaultsAsync(CancellationToken.None);
+            vaultListings = vaultListingsResult.ToList(); // Store the original listings
             
             // Get stored vault metadata from localStorage
             var storedVaults = await VaultStorage.GetVaultsAsync();
@@ -121,6 +125,22 @@ public partial class Vaults : ComponentBase
         selectedVault = null;
         passphrase = string.Empty;
         errorMessage = null;
+        StateHasChanged();
+    }
+
+    private void ShowVaultDetailsPanel(VaultMetadata vault)
+    {
+        selectedVault = vault;
+        selectedVaultListing = vaultListings.FirstOrDefault(vl => vl.Id == vault.Id);
+        showVaultDetailsPanel = true;
+        StateHasChanged();
+    }
+
+    private void HideVaultDetailsPanel()
+    {
+        showVaultDetailsPanel = false;
+        selectedVault = null;
+        selectedVaultListing = null;
         StateHasChanged();
     }
 
