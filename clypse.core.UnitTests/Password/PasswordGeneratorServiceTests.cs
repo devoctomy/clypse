@@ -1,16 +1,27 @@
-﻿namespace clypse.core.UnitTests.Password;
+﻿using clypse.core.Cryptogtaphy;
+using clypse.core.Password;
 
-public class PasswordGeneratorServiceTests
+namespace clypse.core.UnitTests.Password;
+
+public class PasswordGeneratorServiceTests : IDisposable
 {
+    private readonly RandomGeneratorService randomGeneratorService;
+    private readonly PasswordGeneratorService sut;
+
+    public PasswordGeneratorServiceTests()
+    {
+        this.randomGeneratorService = new RandomGeneratorService();
+        this.sut = new core.Password.PasswordGeneratorService(this.randomGeneratorService);
+    }
+
     [Fact]
     public void GivenDictionaryType_WhenLoadDictionary_ThenReturnsListOfWords()
     {
         // Arrange
-        var sut = new core.Password.PasswordGeneratorService();
         var dictionaryType = Enums.DictionaryType.Adjective;
 
         // Act
-        var result = sut.LoadDictionary(dictionaryType);
+        var result = this.sut.LoadDictionary(dictionaryType);
 
         // Assert
         Assert.NotNull(result);
@@ -21,14 +32,13 @@ public class PasswordGeneratorServiceTests
     public void GivenTemplateWithDictionarySelections_WhenGenerateMemorablePassword_ThenReturnsPassword()
     {
         // Arrange
-        var sut = new core.Password.PasswordGeneratorService();
         var template = "{dict(adjective):upper}-{dict(noun):lower}-{dict(verb):upper}";
-        var adjectives = sut.LoadDictionary(Enums.DictionaryType.Adjective);
-        var nouns = sut.LoadDictionary(Enums.DictionaryType.Noun);
-        var verbs = sut.LoadDictionary(Enums.DictionaryType.Verb);
+        var adjectives = this.sut.LoadDictionary(Enums.DictionaryType.Adjective);
+        var nouns = this.sut.LoadDictionary(Enums.DictionaryType.Noun);
+        var verbs = this.sut.LoadDictionary(Enums.DictionaryType.Verb);
 
         // Act
-        var result = sut.GenerateMemorablePassword(template);
+        var result = this.sut.GenerateMemorablePassword(template);
 
         // Assert
         Assert.NotNull(result);
@@ -43,11 +53,10 @@ public class PasswordGeneratorServiceTests
     public void GivenTemplateWithRandStrSection__WhenGenerateMemorablePassword_ThenReturnsPassword()
     {
         // Arrange
-        var sut = new core.Password.PasswordGeneratorService();
         var template = "{randstr(abcdefghijklmnopqrstuvwxyz,8):upper}-{randstr(abcdefghijklmnopqrstuvwxyz,8):lower}";
 
         // Act
-        var result = sut.GenerateMemorablePassword(template);
+        var result = this.sut.GenerateMemorablePassword(template);
 
         // Assert
         Assert.NotNull(result);
@@ -55,5 +64,10 @@ public class PasswordGeneratorServiceTests
         var parts = result.Split('-');
         Assert.Matches("^[A-Z]{8}$", parts[0]);
         Assert.Matches("^[a-z]{8}$", parts[1]);
+    }
+
+    public void Dispose()
+    {
+        this.sut.Dispose();
     }
 }

@@ -1,5 +1,6 @@
 using clypse.core.Cryptogtaphy;
 using clypse.core.Cryptogtaphy.Interfaces;
+using clypse.core.Password;
 using clypse.portal;
 using clypse.portal.Models;
 using clypse.portal.Services;
@@ -36,5 +37,9 @@ builder.Services.AddSingleton(awsS3Config);
 var appSettings = new AppSettings();
 builder.Configuration.GetSection("AppSettings").Bind(appSettings);
 builder.Services.AddSingleton(appSettings);
+
+// Misc Services
+builder.Services.AddSingleton<IRandomGeneratorService, RandomGeneratorService>();
+builder.Services.AddSingleton<IPasswordGeneratorService, PasswordGeneratorService>();
 
 await builder.Build().RunAsync();

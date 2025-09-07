@@ -9,9 +9,20 @@ namespace clypse.core.Password;
 /// <summary>
 /// Default implementation of IPasswordGeneratorService.
 /// </summary>
-public partial class PasswordGeneratorService : IPasswordGeneratorService
+public partial class PasswordGeneratorService : IPasswordGeneratorService, IDisposable
 {
+    private readonly IRandomGeneratorService randomGeneratorService;
     private readonly Dictionary<string, List<string>> dictionaryCache = [];
+    private bool disposed = false;
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="PasswordGeneratorService"/> class.
+    /// </summary>
+    /// <param name="randomGeneratorService">An instance of IRandomGeneratorService for generating random values.</param>
+    public PasswordGeneratorService(IRandomGeneratorService randomGeneratorService)
+    {
+        this.randomGeneratorService = randomGeneratorService;
+    }
 
     /// <summary>
     /// Loads a dictionary of words based on the specified dictionary type.
@@ -41,6 +52,7 @@ public partial class PasswordGeneratorService : IPasswordGeneratorService
     /// <returns>Returns a password adhering to the format specified by the provided template.</returns>
     public string GenerateMemorablePassword(string template)
     {
+        this.ThrowIfDisposed();
         var password = template;
         var tokens = ExtractTokensFromTemplate(template);
         for (var i = tokens.Count - 1; i >= 0; i--)
@@ -55,6 +67,32 @@ public partial class PasswordGeneratorService : IPasswordGeneratorService
         }
 
         return password;
+    }
+
+    /// <summary>
+    /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+    /// </summary>
+    public void Dispose()
+    {
+        this.Dispose(true);
+        GC.SuppressFinalize(this);
+    }
+
+    /// <summary>
+    /// Releases the unmanaged resources used by the RandomGeneratorService and optionally releases the managed resources.
+    /// </summary>
+    /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
+    protected virtual void Dispose(bool disposing)
+    {
+        if (!this.disposed)
+        {
+            if (disposing)
+            {
+                ((IDisposable)this.randomGeneratorService)?.Dispose();
+            }
+
+            this.disposed = true;
+        }
     }
 
     private static List<Match> ExtractTokensFromTemplate(string template)
@@ -102,7 +140,7 @@ public partial class PasswordGeneratorService : IPasswordGeneratorService
                         if (Enum.TryParse<DictionaryType>(dictionary, true, out var dictType))
                         {
                             var words = this.GetOrLoadDictionary(dictType);
-                            var randomWord = CryptoHelpers.GetRandomArrayEntry<string>(words.ToArray());
+                            var randomWord = this.randomGeneratorService.GetRandomArrayEntry<string>(words.ToArray());
                             processedToken.Append(randomWord);
                         }
                         else
@@ -116,7 +154,7 @@ public partial class PasswordGeneratorService : IPasswordGeneratorService
                         var argsParts = randstrArgs.Split(',');
                         var chars = argsParts[0];
                         var length = int.Parse(argsParts[1]);
-                        processedToken.Append(CryptoHelpers.GetRandomStringContainingCharacters(length, chars));
+                        processedToken.Append(this.randomGeneratorService.GetRandomStringContainingCharacters(length, chars));
                     }
 
                     break;
@@ -137,5 +175,13 @@ public partial class PasswordGeneratorService : IPasswordGeneratorService
         }
 
         return value;
+    }
+
+    /// <summary>
+    /// Throws an ObjectDisposedException if the service has been disposed.
+    /// </summary>
+    private void ThrowIfDisposed()
+    {
+        ObjectDisposedException.ThrowIf(this.disposed, nameof(RandomGeneratorService));
     }
 }
