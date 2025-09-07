@@ -43,6 +43,19 @@ public class RandomGeneratorServiceTests
     }
 
     [Fact]
+    public void GivenLength_WhenGetRandomByteArray_ThenArrayReturnedIsOfCorrectLength()
+    {
+        // Arrange
+        var length = 32;
+
+        // Act
+        var value = this.sut.GetRandomBytes(length);
+
+        // Assert
+        Assert.Equal(length, value.Length);
+    }
+
+    [Fact]
     public void GivenArray_WhenGetRandomArrayEntry_ThenValueReturnedIsFromArray()
     {
         // Arrange
@@ -78,5 +91,21 @@ public class RandomGeneratorServiceTests
         {
             Assert.Contains(c, validCharacters);
         }
+    }
+
+    [Fact]
+    public void GivenDisposedRngService_AndMin_AndMax_WhenGetRandomInt_ThenObjectDisposedExceptionThrown()
+    {
+        // Arrange
+        var min = 10;
+        var max = 20;
+        var sut = new RandomGeneratorService();
+        sut.Dispose();
+
+        // Act & Assert
+        Assert.Throws<ObjectDisposedException>(() =>
+        {
+            sut.GetRandomInt(min, max);
+        });
     }
 }

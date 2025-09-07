@@ -24,7 +24,7 @@ public class RandomGeneratorService : IRandomGeneratorService, IDisposable
     /// </summary>
     /// <param name="length">The number of random bytes to generate.</param>
     /// <returns>An array of cryptographically secure random bytes.</returns>
-    public byte[] GenerateRandomBytes(int length)
+    public byte[] GetRandomBytes(int length)
     {
         this.ThrowIfDisposed();
         var data = new byte[length];

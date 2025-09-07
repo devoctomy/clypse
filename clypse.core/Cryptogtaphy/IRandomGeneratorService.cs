@@ -10,7 +10,7 @@ public interface IRandomGeneratorService
     /// </summary>
     /// <param name="length">The number of random bytes to generate.</param>
     /// <returns>An array of cryptographically secure random bytes.</returns>
-    public byte[] GenerateRandomBytes(int length);
+    public byte[] GetRandomBytes(int length);
 
     /// <summary>
     /// Generates a cryptographically secure random double between 0.0 and 1.0.
