@@ -200,7 +200,7 @@ public partial class Test : ComponentBase
             AwsS3Config.BucketName,
             jsS3Client,
             new BouncyCastleAesGcmCryptoService());
-        var vaultManager = new VaultManager(
+        using var vaultManager = new VaultManager(
             awsCredentials?.IdentityId ?? string.Empty,
             keyDerivationService,
             compressionService,
@@ -218,7 +218,7 @@ public partial class Test : ComponentBase
                 Password = "password123",
             };
         webSecret.UpdateTags(["apple", "orange"]);
-        var secret = vault.AddSecret(webSecret);
+        vault.AddSecret(webSecret);
 
         var passphrase = "password123";
         var keyBytes = await vaultManager.DeriveKeyFromPassphraseAsync(

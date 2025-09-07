@@ -337,10 +337,11 @@ public partial class Home : ComponentBase
 
     public async Task HandleLockVault()
     {
+        vaultManager?.Dispose();
+        vaultManager = null;
         currentVault = null;
         currentVaultKey = null;
         loadedVault = null;
-        vaultManager = null; // Clear the vault-specific manager
         currentPage = "vaults";
         StateHasChanged();
         await UpdateNavigation();
