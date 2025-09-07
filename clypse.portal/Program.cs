@@ -1,5 +1,6 @@
 using clypse.core.Cryptogtaphy;
 using clypse.core.Cryptogtaphy.Interfaces;
+using clypse.core.Extensions;
 using clypse.core.Password;
 using clypse.portal;
 using clypse.portal.Models;
@@ -21,17 +22,9 @@ builder.Services.AddScoped<IVaultManagerFactoryService, VaultManagerFactoryServi
 builder.Services.AddScoped<IVaultManagerBootstrapperFactoryService, VaultManagerBootstrapperFactoryService>();
 builder.Services.AddScoped<IVaultStorageService, VaultStorageService>();
 builder.Services.AddScoped<IAuthenticationService, AwsCognitoAuthenticationService>();
-builder.Services.AddScoped<IRandomGeneratorService, RandomGeneratorService>();
-builder.Services.AddScoped<IPasswordGeneratorService, PasswordGeneratorService>();
-builder.Services.AddScoped<IKeyDerivationService, KeyDerivationService>();
 
-// Token processors
-var tokenProcessorAssembly = typeof(IPasswordGeneratorTokenProcessor).Assembly;
-var allTokenProcessors = tokenProcessorAssembly.GetTypes().Where(x => typeof(IPasswordGeneratorTokenProcessor).IsAssignableFrom(x) && !x.IsInterface).ToList();
-foreach (var tokenProcessor in allTokenProcessors)
-{
-    builder.Services.AddScoped(typeof(IPasswordGeneratorTokenProcessor), tokenProcessor);
-}
+// Add Clypse core services
+builder.Services.AddClypseCoreServices();
 
 // Configure AWS Cognito settings from appsettings.json
 var cognitoConfig = new AwsCognitoConfig();
