@@ -6,12 +6,20 @@ namespace clypse.core.UnitTests.Password;
 public class PasswordGeneratorServiceTests : IDisposable
 {
     private readonly RandomGeneratorService randomGeneratorService;
+    private readonly List<IPasswordGeneratorTokenProcessor> tokenProcessors;
     private readonly PasswordGeneratorService sut;
 
     public PasswordGeneratorServiceTests()
     {
         this.randomGeneratorService = new RandomGeneratorService();
-        this.sut = new core.Password.PasswordGeneratorService(this.randomGeneratorService);
+        this.tokenProcessors =
+        [
+            new DictionaryTokenProcessor(),
+            new RandomStringTokenProcessor(),
+        ];
+        this.sut = new PasswordGeneratorService(
+            this.randomGeneratorService,
+            this.tokenProcessors);
     }
 
     [Fact]
@@ -21,7 +29,7 @@ public class PasswordGeneratorServiceTests : IDisposable
         var dictionaryType = Enums.DictionaryType.Adjective;
 
         // Act
-        var result = this.sut.LoadDictionary(dictionaryType);
+        var result = this.sut.GetOrLoadDictionary(dictionaryType);
 
         // Assert
         Assert.NotNull(result);
@@ -33,9 +41,9 @@ public class PasswordGeneratorServiceTests : IDisposable
     {
         // Arrange
         var template = "{dict(adjective):upper}-{dict(noun):lower}-{dict(verb):upper}";
-        var adjectives = this.sut.LoadDictionary(Enums.DictionaryType.Adjective);
-        var nouns = this.sut.LoadDictionary(Enums.DictionaryType.Noun);
-        var verbs = this.sut.LoadDictionary(Enums.DictionaryType.Verb);
+        var adjectives = this.sut.GetOrLoadDictionary(Enums.DictionaryType.Adjective);
+        var nouns = this.sut.GetOrLoadDictionary(Enums.DictionaryType.Noun);
+        var verbs = this.sut.GetOrLoadDictionary(Enums.DictionaryType.Verb);
 
         // Act
         var result = this.sut.GenerateMemorablePassword(template);

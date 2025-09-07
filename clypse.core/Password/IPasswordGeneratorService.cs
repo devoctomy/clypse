@@ -1,4 +1,5 @@
-﻿using clypse.core.Enums;
+﻿using clypse.core.Cryptogtaphy;
+using clypse.core.Enums;
 
 namespace clypse.core.Password;
 
@@ -8,11 +9,16 @@ namespace clypse.core.Password;
 public interface IPasswordGeneratorService
 {
     /// <summary>
-    /// Loads a dictionary of words based on the specified dictionary type.
+    /// Gets the random generator service.
+    /// </summary>
+    public IRandomGeneratorService RandomGeneratorService { get; }
+
+    /// <summary>
+    /// Gets a dictionary of words from cache or loads it and caches it.
     /// </summary>
     /// <param name="dictionaryType">The type of dictionary to load.</param>
     /// <returns>A list of words from the specified dictionary.</returns>
-    public List<string> LoadDictionary(DictionaryType dictionaryType);
+    public List<string> GetOrLoadDictionary(DictionaryType dictionaryType);
 
     /// <summary>
     /// Generates a memorable password based on the provided template.

@@ -12,6 +12,7 @@ namespace clypse.core.Password;
 public partial class PasswordGeneratorService : IPasswordGeneratorService, IDisposable
 {
     private readonly IRandomGeneratorService randomGeneratorService;
+    private readonly IEnumerable<IPasswordGeneratorTokenProcessor> tokenProcessors;
     private readonly Dictionary<string, List<string>> dictionaryCache = [];
     private bool disposed = false;
 
@@ -19,30 +20,36 @@ public partial class PasswordGeneratorService : IPasswordGeneratorService, IDisp
     /// Initializes a new instance of the <see cref="PasswordGeneratorService"/> class.
     /// </summary>
     /// <param name="randomGeneratorService">An instance of IRandomGeneratorService for generating random values.</param>
-    public PasswordGeneratorService(IRandomGeneratorService randomGeneratorService)
+    /// <param name="tokenProcessors">A collection of token processors for handling different token types in password generation.</param>
+    public PasswordGeneratorService(
+        IRandomGeneratorService randomGeneratorService,
+        IEnumerable<IPasswordGeneratorTokenProcessor> tokenProcessors)
     {
         this.randomGeneratorService = randomGeneratorService;
+        this.tokenProcessors = tokenProcessors;
     }
 
     /// <summary>
-    /// Loads a dictionary of words based on the specified dictionary type.
+    /// Gets the random generator service.
+    /// </summary>
+    public IRandomGeneratorService RandomGeneratorService => this.randomGeneratorService;
+
+    /// <summary>
+    /// Gets a dictionary of words from cache or loads it and caches it.
     /// </summary>
     /// <param name="dictionaryType">The type of dictionary to load.</param>
     /// <returns>A list of words from the specified dictionary.</returns>
-    public List<string> LoadDictionary(DictionaryType dictionaryType)
+    public List<string> GetOrLoadDictionary(DictionaryType dictionaryType)
     {
-        var dictionaryKey = $"clypse.core.Data.Dictionaries.{dictionaryType.ToString().ToLower()}.txt";
-        var assembly = Assembly.GetExecutingAssembly();
-        using Stream? stream = assembly.GetManifestResourceStream(dictionaryKey) ?? throw new InvalidOperationException($"Resource '{dictionaryKey}' not found.");
-        using var reader = new StreamReader(stream);
-        var lines = new List<string>();
-        string? line;
-        while ((line = reader.ReadLine()) != null)
+        var key = dictionaryType.ToString();
+        if (!this.dictionaryCache.TryGetValue(key, out List<string>? value))
         {
-            lines.Add(line);
+            var words = this.LoadDictionary(dictionaryType);
+            value = words;
+            this.dictionaryCache[key] = value;
         }
 
-        return lines;
+        return value;
     }
 
     /// <summary>
@@ -58,7 +65,7 @@ public partial class PasswordGeneratorService : IPasswordGeneratorService, IDisp
         for (var i = tokens.Count - 1; i >= 0; i--)
         {
             var curToken = tokens[i];
-            var processedToken = this.ProcessToken(curToken);
+            var processedToken = this.ProcessToken(curToken.Value);
             password = ReplaceAt(
                 password,
                 curToken.Index,
@@ -116,10 +123,31 @@ public partial class PasswordGeneratorService : IPasswordGeneratorService, IDisp
             input.AsSpan(index + length));
     }
 
-    private string ProcessToken(Match token)
+    private List<string> LoadDictionary(DictionaryType dictionaryType)
+    {
+        var dictionaryKey = $"clypse.core.Data.Dictionaries.{dictionaryType.ToString().ToLower()}.txt";
+        var assembly = Assembly.GetExecutingAssembly();
+        using Stream? stream = assembly.GetManifestResourceStream(dictionaryKey) ?? throw new InvalidOperationException($"Resource '{dictionaryKey}' not found.");
+        using var reader = new StreamReader(stream);
+        var lines = new List<string>();
+        string? line;
+        while ((line = reader.ReadLine()) != null)
+        {
+            lines.Add(line);
+        }
+
+        return lines;
+    }
+
+    private void ThrowIfDisposed()
+    {
+        ObjectDisposedException.ThrowIf(this.disposed, nameof(this.randomGeneratorService));
+    }
+
+    private string ProcessToken(string token)
     {
         StringBuilder processedToken = new StringBuilder();
-        var tokenValue = token.Value.Trim('{', '}');
+        var tokenValue = token.Trim('{', '}');
         var tokenParts = tokenValue.Split(':');
         foreach (var curPart in tokenParts)
         {
@@ -134,27 +162,10 @@ public partial class PasswordGeneratorService : IPasswordGeneratorService, IDisp
                     break;
 
                 default:
-                    if (curPart.StartsWith("dict("))
+                    var processor = this.tokenProcessors.FirstOrDefault(x => x.IsApplicable(curPart));
+                    if (processor != null)
                     {
-                        var dictionary = curPart.Replace("dict", string.Empty).Trim('(', ')');
-                        if (Enum.TryParse<DictionaryType>(dictionary, true, out var dictType))
-                        {
-                            var words = this.GetOrLoadDictionary(dictType);
-                            var randomWord = this.randomGeneratorService.GetRandomArrayEntry<string>(words.ToArray());
-                            processedToken.Append(randomWord);
-                        }
-                        else
-                        {
-                            throw new InvalidOperationException($"Invalid dictionary type: {dictionary}");
-                        }
-                    }
-                    else if (curPart.StartsWith("randstr("))
-                    {
-                        var randstrArgs = curPart.Replace("randstr", string.Empty).Trim('(', ')');
-                        var argsParts = randstrArgs.Split(',');
-                        var chars = argsParts[0];
-                        var length = int.Parse(argsParts[1]);
-                        processedToken.Append(this.randomGeneratorService.GetRandomStringContainingCharacters(length, chars));
+                        processedToken.Append(processor.Process(this, curPart));
                     }
 
                     break;
@@ -162,26 +173,5 @@ public partial class PasswordGeneratorService : IPasswordGeneratorService, IDisp
         }
 
         return processedToken.ToString();
-    }
-
-    private List<string> GetOrLoadDictionary(DictionaryType dictionaryType)
-    {
-        var key = dictionaryType.ToString();
-        if (!this.dictionaryCache.TryGetValue(key, out List<string>? value))
-        {
-            var words = this.LoadDictionary(dictionaryType);
-            value = words;
-            this.dictionaryCache[key] = value;
-        }
-
-        return value;
-    }
-
-    /// <summary>
-    /// Throws an ObjectDisposedException if the service has been disposed.
-    /// </summary>
-    private void ThrowIfDisposed()
-    {
-        ObjectDisposedException.ThrowIf(this.disposed, nameof(RandomGeneratorService));
     }
 }
