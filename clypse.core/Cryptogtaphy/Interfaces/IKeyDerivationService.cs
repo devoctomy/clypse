@@ -6,7 +6,7 @@ namespace clypse.core.Cryptogtaphy.Interfaces;
 /// <summary>
 /// Interface key derivation serivce, which key derivation from a single place.
 /// </summary>
-public interface IKeyDerivationService
+public interface IKeyDerivationService : IDisposable
 {
     /// <summary>
     /// Gets options to use for key derivation.

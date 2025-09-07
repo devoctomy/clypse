@@ -6,7 +6,7 @@ namespace clypse.core.Vault;
 /// <summary>
 /// Defines the contract for vault management operations including creation, storage, and retrieval of vaults and secrets.
 /// </summary>
-public interface IVaultManager
+public interface IVaultManager : IDisposable
 {
     /// <summary>
     /// Derives a cryptographic key from the provided passphrase for the specified vault.

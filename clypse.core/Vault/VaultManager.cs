@@ -29,6 +29,7 @@ public class VaultManager : IVaultManager
     private readonly ICompressionService compressionService;
     private readonly IEncryptedCloudStorageProvider encryptedCloudStorageProvider;
     private readonly string prefix;
+    private bool disposed = false;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="VaultManager"/> class with the specified parameters.
@@ -367,6 +368,32 @@ public class VaultManager : IVaultManager
         return results;
     }
 
+    /// <summary>
+    /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+    /// </summary>
+    public void Dispose()
+    {
+        this.Dispose(true);
+        GC.SuppressFinalize(this);
+    }
+
+    /// <summary>
+    /// Releases the unmanaged resources used by the VaultManager and optionally releases the managed resources.
+    /// </summary>
+    /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
+    protected virtual void Dispose(bool disposing)
+    {
+        if (!this.disposed)
+        {
+            if (disposing)
+            {
+                this.keyDerivationService?.Dispose();
+            }
+
+            this.disposed = true;
+        }
+    }
+
     private async Task SaveManifestAsync(
         VaultInfo vaultInfo,
         VaultManifest vaultManifest,
@@ -615,5 +642,13 @@ public class VaultManager : IVaultManager
         }
 
         return manifest;
+    }
+
+    /// <summary>
+    /// Throws an ObjectDisposedException if the service has been disposed.
+    /// </summary>
+    private void ThrowIfDisposed()
+    {
+        ObjectDisposedException.ThrowIf(this.disposed, nameof(VaultManager));
     }
 }
