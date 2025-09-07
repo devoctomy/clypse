@@ -1,7 +1,7 @@
 ﻿namespace clypse.core.Enums;
 
 /// <summary>
-/// Represents different character groups that can be used in password generation. 
+/// Represents different character groups that can be used in password generation.
 /// </summary>
 [Flags]
 public enum CharacterGroup

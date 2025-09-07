@@ -35,5 +35,4 @@ public static class ServiceCollectionExtensions
             services.AddScoped(typeof(T), curType);
         }
     }
-
 }

@@ -106,4 +106,24 @@ public class RandomGeneratorServiceTests
             sut.GetRandomDouble();
         });
     }
+
+    [Fact]
+    public void GivenList_WhenRandomiseList_ThenReturnsRandomisedList()
+    {
+        // Arrange
+        var length = 100;
+        var list = new List<int>();
+        for (var i = 0; i < length; i++)
+        {
+            list.Add(i);
+        }
+
+        // Act
+        var randomisedList = this.sut.RandomiseList(list);
+
+        // Assert
+        Assert.Equal(length, randomisedList.Count);
+        Assert.True(list.All(randomisedList.Contains));
+        Assert.NotEqual(list, randomisedList);
+    }
 }

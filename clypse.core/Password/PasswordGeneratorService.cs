@@ -86,30 +86,26 @@ public partial class PasswordGeneratorService : IPasswordGeneratorService, IDisp
         CharacterGroup groups,
         int length)
     {
-        var lowercase = "abcdefghijklmnopqrstuvwxyz";
-        var uppercase = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-        var digits = "0123456789";
-        var special = "!@#$%^&*()-_=+[]{}|;:,.<>?";
-        var characterGroup = string.Empty;
+        var characterGroup = new StringBuilder();
 
         if (groups.HasFlag(CharacterGroup.Lowercase))
         {
-            characterGroup += lowercase;
+            characterGroup.Append(CharacterGroups.GetGroup(CharacterGroup.Lowercase));
         }
 
         if (groups.HasFlag(CharacterGroup.Uppercase))
         {
-            characterGroup += uppercase;
+            characterGroup.Append(CharacterGroups.GetGroup(CharacterGroup.Uppercase));
         }
 
         if (groups.HasFlag(CharacterGroup.Digits))
         {
-            characterGroup += digits;
+            characterGroup.Append(CharacterGroups.GetGroup(CharacterGroup.Digits));
         }
 
         if (groups.HasFlag(CharacterGroup.Special))
         {
-            characterGroup += special;
+            characterGroup.Append(CharacterGroups.GetGroup(CharacterGroup.Special));
         }
 
         var password = new StringBuilder();

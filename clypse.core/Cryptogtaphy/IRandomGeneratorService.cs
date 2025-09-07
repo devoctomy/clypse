@@ -45,4 +45,12 @@ public interface IRandomGeneratorService
     public string GetRandomStringContainingCharacters(
         int length,
         string validCharacters);
+
+    /// <summary>
+    /// Randomises the order of elements in the provided list.
+    /// </summary>
+    /// <typeparam name="T">The type of elements in the list.</typeparam>
+    /// <param name="list">The list to randomise.</param>
+    /// <returns>A new list with the elements in random order.</returns>
+    public List<T> RandomiseList<T>(List<T> list);
 }

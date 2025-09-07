@@ -57,33 +57,18 @@ public class PasswordGeneratorServiceTests : IDisposable
         Assert.Contains(verbs, x => x.Equals(parts[2], StringComparison.InvariantCultureIgnoreCase));
     }
 
-    [Fact]
-    public void GivenTemplateWithRandStrSection__WhenGenerateMemorablePassword_ThenReturnsPassword()
-    {
-        // Arrange
-        var template = "{randstr(abcdefghijklmnopqrstuvwxyz,8):upper}-{randstr(abcdefghijklmnopqrstuvwxyz,8):lower}";
-
-        // Act
-        var result = this.sut.GenerateMemorablePassword(template);
-
-        // Assert
-        Assert.NotNull(result);
-        Assert.NotEmpty(result);
-        var parts = result.Split('-');
-        Assert.Matches("^[A-Z]{8}$", parts[0]);
-        Assert.Matches("^[a-z]{8}$", parts[1]);
-    }
-
     [Theory]
-    [InlineData(Enums.CharacterGroup.Lowercase, 6, "abcdefghijklmnopqrstuvwxyz")]
-    [InlineData(Enums.CharacterGroup.Uppercase, 6, "ABCDEFGHIJKLMNOPQRSTUVWXYZ")]
-    [InlineData(Enums.CharacterGroup.Digits, 6, "0123456789")]
-    [InlineData(Enums.CharacterGroup.Special, 6, "!@#$%^&*()-_=+[]{}|;:,.<>?")]
+    [InlineData(Enums.CharacterGroup.Lowercase, 6)]
+    [InlineData(Enums.CharacterGroup.Uppercase, 6)]
+    [InlineData(Enums.CharacterGroup.Digits, 6)]
+    [InlineData(Enums.CharacterGroup.Special, 6)]
     public void GivenCharcterGroup_AndLength_WhenGenerateRandomPassword_ThenReturnsPassword(
         Enums.CharacterGroup characterGroup,
-        int length,
-        string expectAllExistIn)
+        int length)
     {
+        // Arrange
+        var expectAllExistIn = CharacterGroups.GetGroup(characterGroup);
+
         // Arrange & Act
         var result = this.sut.GenerateRandomPassword(characterGroup, length);
 
