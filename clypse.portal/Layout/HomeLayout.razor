@@ -182,15 +182,21 @@
     @@media (max-width: 768px) {
         .sidebar.expanded {
             position: fixed;
-            top: 0;
+            top: 60px; /* Start below the title bar */
             left: 0;
-            height: 100vh;
+            height: calc(100vh - 60px); /* Full height minus title bar */
             z-index: 1050;
             box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
         }
         
         .sidebar.expanded ~ main {
             margin-left: 0;
+        }
+
+        /* Ensure burger button stays visible on mobile */
+        .burger-btn {
+            z-index: 1060;
+            position: relative;
         }
     }
 
