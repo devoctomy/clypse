@@ -22,13 +22,7 @@ public partial class PasswordGeneratorService : IPasswordGeneratorService
     {
         var dictionaryKey = $"clypse.core.Data.Dictionaries.{dictionaryType.ToString().ToLower()}.txt";
         var assembly = Assembly.GetExecutingAssembly();
-        using Stream? stream = assembly.GetManifestResourceStream(dictionaryKey);
-
-        if (stream == null)
-        {
-            throw new InvalidOperationException("Resource not found. Check namespace and file name.");
-        }
-
+        using Stream? stream = assembly.GetManifestResourceStream(dictionaryKey) ?? throw new InvalidOperationException($"Resource '{dictionaryKey}' not found.");
         using var reader = new StreamReader(stream);
         var lines = new List<string>();
         string? line;
@@ -53,7 +47,7 @@ public partial class PasswordGeneratorService : IPasswordGeneratorService
         {
             var curToken = tokens[i];
             var processedToken = this.ProcessToken(curToken);
-            password = this.ReplaceAt(
+            password = ReplaceAt(
                 password,
                 curToken.Index,
                 curToken.Length,
@@ -72,7 +66,7 @@ public partial class PasswordGeneratorService : IPasswordGeneratorService
     [GeneratedRegex(@"\{[^}]+\}")]
     private static partial Regex TokenExtractionRegex();
 
-    private string ReplaceAt(
+    private static string ReplaceAt(
         string input,
         int index,
         int length,
@@ -115,6 +109,14 @@ public partial class PasswordGeneratorService : IPasswordGeneratorService
                         {
                             throw new InvalidOperationException($"Invalid dictionary type: {dictionary}");
                         }
+                    }
+                    else if (curPart.StartsWith("randstr("))
+                    {
+                        var randstrArgs = curPart.Replace("randstr", string.Empty).Trim('(', ')');
+                        var argsParts = randstrArgs.Split(',');
+                        var chars = argsParts[0];
+                        var length = int.Parse(argsParts[1]);
+                        processedToken.Append(CryptoHelpers.GetRandomStringContainingCharacters(length, chars));
                     }
 
                     break;

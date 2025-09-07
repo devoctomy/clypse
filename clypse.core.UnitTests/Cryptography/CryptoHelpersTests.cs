@@ -1,5 +1,4 @@
-﻿using System.Security;
-using clypse.core.Cryptogtaphy;
+﻿using clypse.core.Cryptogtaphy;
 
 namespace clypse.core.UnitTests.Cryptography;
 
@@ -104,5 +103,23 @@ public class CryptoHelpersTests
 
         // Assert
         Assert.Contains(value, array);
+    }
+
+    [Fact]
+    public void GivenLength_AndValidCharacters_WhenGetRandomStringContainingCharacters_ThenStringReturnedIsOfCorrectLengthAndContainsOnlyValidCharacters()
+    {
+        // Arrange
+        var length = 16;
+        var validCharacters = "abcdef0123456789";
+
+        // Act
+        var value = CryptoHelpers.GetRandomStringContainingCharacters(length, validCharacters);
+
+        // Assert
+        Assert.Equal(length, value.Length);
+        foreach (var c in value)
+        {
+            Assert.Contains(c, validCharacters);
+        }
     }
 }

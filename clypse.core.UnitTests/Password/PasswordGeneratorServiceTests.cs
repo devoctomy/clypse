@@ -18,7 +18,7 @@ public class PasswordGeneratorServiceTests
     }
 
     [Fact]
-    public void GivenTemplate_WhenGenerateMemorablePassword_ThenReturnsPassword()
+    public void GivenTemplateWithDictionarySelections_WhenGenerateMemorablePassword_ThenReturnsPassword()
     {
         // Arrange
         var sut = new core.Password.PasswordGeneratorService();
@@ -37,5 +37,23 @@ public class PasswordGeneratorServiceTests
         Assert.Contains(adjectives, x => x.Equals(parts[0], StringComparison.InvariantCultureIgnoreCase));
         Assert.Contains(nouns, x => x.Equals(parts[1], StringComparison.InvariantCultureIgnoreCase));
         Assert.Contains(verbs, x => x.Equals(parts[2], StringComparison.InvariantCultureIgnoreCase));
+    }
+
+    [Fact]
+    public void GivenTemplateWithRandStrSection__WhenGenerateMemorablePassword_ThenReturnsPassword()
+    {
+        // Arrange
+        var sut = new core.Password.PasswordGeneratorService();
+        var template = "{randstr(abcdefghijklmnopqrstuvwxyz,8):upper}-{randstr(abcdefghijklmnopqrstuvwxyz,8):lower}";
+
+        // Act
+        var result = sut.GenerateMemorablePassword(template);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.NotEmpty(result);
+        var parts = result.Split('-');
+        Assert.Matches("^[A-Z]{8}$", parts[0]);
+        Assert.Matches("^[a-z]{8}$", parts[1]);
     }
 }

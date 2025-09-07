@@ -66,6 +66,25 @@ public class CryptoHelpers
     }
 
     /// <summary>
+    /// Generates a random string of the specified length using the provided set of valid characters.
+    /// </summary>
+    /// <param name="length">The length of the random string to generate.</param>
+    /// <param name="validCharacters">A string containing the set of valid characters to use for generating the random string.</param>
+    /// <returns>A random string of the specified length composed of characters from the validCharacters set.</returns>
+    public static string GetRandomStringContainingCharacters(
+        int length,
+        string validCharacters)
+    {
+        var sb = new StringBuilder(length);
+        for (var i = 0; i < length; i++)
+        {
+            sb.Append(GetRandomArrayEntry<char>(validCharacters.ToCharArray()));
+        }
+
+        return sb.ToString();
+    }
+
+    /// <summary>
     /// Computes a SHA-256 hash of the specified string and returns a truncated portion of the hash.
     /// </summary>
     /// <param name="value">The string value to hash.</param>
