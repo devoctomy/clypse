@@ -131,16 +131,16 @@
     @if (showVaultDetailsPanel && selectedVault != null && selectedVaultListing != null)
     {
         <div class="modal" style="display: block; background-color: rgba(0,0,0,0.5);" @onclick="HideVaultDetailsPanel">
-            <div class="modal-dialog modal-dialog-centered modal-lg" @onclick:stopPropagation="true">
-                <div class="modal-content">
-                    <div class="modal-header">
+            <div class="modal-dialog modal-dialog-centered modal-lg" style="max-height: 90vh; margin: 5vh auto;" @onclick:stopPropagation="true">
+                <div class="modal-content" style="max-height: 90vh; display: flex; flex-direction: column;">
+                    <div class="modal-header" style="flex-shrink: 0;">
                         <h5 class="modal-title">
                             <i class="bi bi-info-circle me-2"></i>
                             Vault Details
                         </h5>
                         <button type="button" class="btn-close" @onclick="HideVaultDetailsPanel"></button>
                     </div>
-                    <div class="modal-body">
+                    <div class="modal-body" style="overflow-y: auto; flex: 1; min-height: 0;">
                         <div class="row">
                             <div class="col-12">
                                 <h6 class="text-primary mb-3">Vault Information</h6>
@@ -178,10 +178,10 @@
                                 <h6 class="text-primary mb-3">Vault Manifest</h6>
                                 @if (selectedVaultListing.Manifest != null)
                                 {
-                                    <div class="list-group">
+                                    <div class="list-group list-group-flush">
                                         @if (!string.IsNullOrEmpty(selectedVaultListing.Manifest.ClypseCoreVersion))
                                         {
-                                            <div class="list-group-item d-flex align-items-center">
+                                            <div class="list-group-item list-group-item-action d-flex align-items-center bg-transparent border-secondary text-white">
                                                 <i class="bi bi-file-text me-2 text-muted"></i>
                                                 <div>
                                                     <strong>Clypse Core Version:</strong> @selectedVaultListing.Manifest.ClypseCoreVersion
@@ -190,7 +190,7 @@
                                         }
                                         @if (!string.IsNullOrEmpty(selectedVaultListing.Manifest.CompressionServiceName))
                                         {
-                                            <div class="list-group-item d-flex align-items-center">
+                                            <div class="list-group-item list-group-item-action d-flex align-items-center bg-transparent border-secondary text-white">
                                                 <i class="bi bi-file-text me-2 text-muted"></i>
                                                 <div>
                                                     <strong>Compression Service:</strong> @selectedVaultListing.Manifest.CompressionServiceName
@@ -199,7 +199,7 @@
                                         }
                                         @if (!string.IsNullOrEmpty(selectedVaultListing.Manifest.CryptoServiceName))
                                         {
-                                            <div class="list-group-item d-flex align-items-center">
+                                            <div class="list-group-item list-group-item-action d-flex align-items-center bg-transparent border-secondary text-white">
                                                 <i class="bi bi-file-text me-2 text-muted"></i>
                                                 <div>
                                                     <strong>Crypto Service:</strong> @selectedVaultListing.Manifest.CryptoServiceName
@@ -208,7 +208,7 @@
                                         }
                                         @if (!string.IsNullOrEmpty(selectedVaultListing.Manifest.EncryptedCloudStorageProviderName))
                                         {
-                                            <div class="list-group-item d-flex align-items-center">
+                                            <div class="list-group-item list-group-item-action d-flex align-items-center bg-transparent border-secondary text-white">
                                                 <i class="bi bi-file-text me-2 text-muted"></i>
                                                 <div>
                                                     <strong>Encrypted Cloud Storage Provider:</strong> @selectedVaultListing.Manifest.EncryptedCloudStorageProviderName
@@ -219,7 +219,7 @@
                                         {
                                             @foreach (var parameter in selectedVaultListing.Manifest.Parameters)
                                             {
-                                                <div class="list-group-item d-flex align-items-center">
+                                                <div class="list-group-item list-group-item-action d-flex align-items-center bg-transparent border-secondary text-white">
                                                     <i class="bi bi-file-text me-2 text-muted"></i>
                                                     <div>
                                                         <strong>@parameter.Key:</strong> @parameter.Value
@@ -239,7 +239,7 @@
                             </div>
                         </div>
                     </div>
-                    <div class="modal-footer">
+                    <div class="modal-footer" style="flex-shrink: 0;">
                         <button type="button" class="btn btn-secondary" @onclick="HideVaultDetailsPanel">
                             Close
                         </button>

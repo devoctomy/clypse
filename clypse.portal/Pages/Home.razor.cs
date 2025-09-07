@@ -110,9 +110,9 @@ public partial class Home : ComponentBase
             "credentials" => new List<NavigationItem>
             {
                 new() { Text = "Create Credential", Action = "create-credential", Icon = "bi bi-plus-circle" },
-                new() { Text = "Delete Vault", Action = "delete-vault", Icon = "bi bi-trash3", ButtonClass = "btn-outline-danger" },
-                new() { Text = "Verify Vault", Action = "verify", Icon = "bi bi-shield-check", ButtonClass = "btn-outline-info" },
-                new() { Text = "Lock Vault", Action = "lock-vault", Icon = "bi bi-lock", ButtonClass = "btn-outline-secondary" }
+                new() { Text = "Delete Vault", Action = "delete-vault", Icon = "bi bi-trash3", ButtonClass = "btn-danger" },
+                new() { Text = "Verify Vault", Action = "verify", Icon = "bi bi-shield-check", ButtonClass = "btn-success" },
+                new() { Text = "Lock Vault", Action = "lock-vault", Icon = "bi bi-lock", ButtonClass = "btn-primary" }
             },
             "create-vault" => new List<NavigationItem>
             {
