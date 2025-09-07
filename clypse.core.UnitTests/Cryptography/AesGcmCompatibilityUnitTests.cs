@@ -8,8 +8,9 @@ namespace clypse.core.UnitTests.Cryptography;
 /// Cross-compatibility unit tests for AES-GCM ICryptoService implementations
 /// Tests that all specified implementations can encrypt/decrypt each other's data.
 /// </summary>
-public class AesGcmCompatibilityUnitTests
+public class AesGcmCompatibilityUnitTests : IDisposable
 {
+    private readonly RandomGeneratorService randomGeneratorService;
     private readonly string testKey;
     private readonly List<(string Name, ICryptoService Service)> cryptoServices;
 
@@ -22,7 +23,8 @@ public class AesGcmCompatibilityUnitTests
 
     public AesGcmCompatibilityUnitTests()
     {
-        byte[] keyBytes = CryptoHelpers.GenerateRandomBytes(32);
+        this.randomGeneratorService = new RandomGeneratorService();
+        byte[] keyBytes = this.randomGeneratorService.GetRandomBytes(32);
         this.testKey = Convert.ToBase64String(keyBytes);
 
         this.cryptoServices = this.LoadCryptoServices();
@@ -88,7 +90,7 @@ public class AesGcmCompatibilityUnitTests
     public async Task GivenAllAesGcmServices_WhenCrossTestingLargeData_ThenAllCombinationsPreserveData()
     {
         // Arrange
-        byte[] largeData = CryptoHelpers.GenerateRandomBytes(1024 * 100); // 100KB test data
+        byte[] largeData = this.randomGeneratorService.GetRandomBytes(1024 * 100); // 100KB test data
 
         // Act & Assert - Test every service encrypting and every other service decrypting
         for (int encryptorIndex = 0; encryptorIndex < this.cryptoServices.Count; encryptorIndex++)
@@ -162,7 +164,7 @@ public class AesGcmCompatibilityUnitTests
         // Arrange
         string testText = "Authentication test data";
         byte[] testData = Encoding.UTF8.GetBytes(testText);
-        byte[] wrongKeyBytes = CryptoHelpers.GenerateRandomBytes(32);
+        byte[] wrongKeyBytes = this.randomGeneratorService.GetRandomBytes(32);
         string wrongKey = Convert.ToBase64String(wrongKeyBytes);
 
         // Act & Assert - Test every service encrypting and every other service failing to decrypt with wrong key
@@ -189,6 +191,11 @@ public class AesGcmCompatibilityUnitTests
                     async () => await decryptorService.DecryptAsync(encryptedDataStream, decryptedStream, wrongKey));
             }
         }
+    }
+
+    public void Dispose()
+    {
+        ((IDisposable)this.randomGeneratorService)?.Dispose();
     }
 
     private List<(string Name, ICryptoService Service)> LoadCryptoServices()

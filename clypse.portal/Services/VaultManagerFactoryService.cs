@@ -28,7 +28,9 @@ namespace clypse.portal.Services
             string bucketName,
             string identityId)
         {
-            var keyDerivationService = new KeyDerivationService(KeyDerivationServiceDefaultOptions.Blazor_Argon2id());
+            var keyDerivationService = new KeyDerivationService(
+                new RandomGeneratorService(),
+                KeyDerivationServiceDefaultOptions.Blazor_Argon2id());
             var jsS3Client = new JavaScriptS3Client(
                 jsInvoker,
                 accessKey,

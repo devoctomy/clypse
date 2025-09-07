@@ -4,15 +4,17 @@ using clypse.core.Cryptogtaphy;
 
 namespace clypse.core.UnitTests.Cryptography;
 
-public class NativeAesGcmCryptoServiceTests
+public class NativeAesGcmCryptoServiceTests : IDisposable
 {
+    private readonly RandomGeneratorService randomGeneratorService;
     private readonly NativeAesGcmCryptoService sut;
     private readonly string testKey;
 
     public NativeAesGcmCryptoServiceTests()
     {
+        this.randomGeneratorService = new RandomGeneratorService();
         this.sut = new NativeAesGcmCryptoService();
-        byte[] keyBytes = CryptoHelpers.GenerateRandomBytes(32);
+        byte[] keyBytes = this.randomGeneratorService.GetRandomBytes(32);
         this.testKey = Convert.ToBase64String(keyBytes);
     }
 
@@ -62,7 +64,7 @@ public class NativeAesGcmCryptoServiceTests
     public async Task GivenLargeDataStream_WhenEncryptingAndDecrypting_ThenDataIsPreservedCorrectly()
     {
         // Arrange
-        byte[] largeData = CryptoHelpers.GenerateRandomBytes(1024 * 1024);
+        byte[] largeData = this.randomGeneratorService.GetRandomBytes(1024 * 1024);
         using var inputStream = new MemoryStream(largeData);
         using var encryptedStream = new MemoryStream();
         using var decryptedStream = new MemoryStream();
@@ -198,5 +200,10 @@ public class NativeAesGcmCryptoServiceTests
             async () => await this.sut.DecryptAsync(inputStream, outputStream, this.testKey));
 
         Assert.Equal("Input data is too short to contain authentication tag.", ex.Message);
+    }
+
+    public void Dispose()
+    {
+        ((IDisposable)this.randomGeneratorService)?.Dispose();
     }
 }

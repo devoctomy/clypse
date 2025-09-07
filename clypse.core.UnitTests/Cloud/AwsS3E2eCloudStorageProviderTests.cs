@@ -18,6 +18,7 @@ public class AwsS3E2eCloudStorageProviderTests
         var bucketName = "Foo";
         var mockAmazonS3Client = new Mock<IAmazonS3Client>();
         var mockCryptoService = new Mock<ICryptoService>();
+        using var randomGeneratorService = new RandomGeneratorService();
         var sut = new AwsS3E2eCloudStorageProvider(bucketName, mockAmazonS3Client.Object, mockCryptoService.Object);
 
         var key = Guid.NewGuid().ToString();
@@ -25,7 +26,7 @@ public class AwsS3E2eCloudStorageProviderTests
         var data = Encoding.UTF8.GetBytes(plainText);
         using var dataStream = new MemoryStream(data);
         using var getObjectResponseStream = new MemoryStream(data);
-        var encryptionKey = CryptoHelpers.GenerateRandomBytes(32);
+        var encryptionKey = randomGeneratorService.GetRandomBytes(32);
 
         mockAmazonS3Client.Setup(x => x.PutObjectAsync(
             It.IsAny<PutObjectRequest>(),
@@ -112,6 +113,7 @@ public class AwsS3E2eCloudStorageProviderTests
         var bucketName = "Foo";
         var mockAmazonS3Client = new Mock<IAmazonS3Client>();
         var mockCryptoService = new Mock<ICryptoService>();
+        using var randomGeneratorService = new RandomGeneratorService();
         var sut = new AwsS3E2eCloudStorageProvider(bucketName, mockAmazonS3Client.Object, mockCryptoService.Object);
 
         var key = Guid.NewGuid().ToString();
@@ -119,7 +121,7 @@ public class AwsS3E2eCloudStorageProviderTests
         var data = Encoding.UTF8.GetBytes(plainText);
         using var dataStream = new MemoryStream(data);
         using var getObjectResponseStream = new MemoryStream(data);
-        var encryptionKey = CryptoHelpers.GenerateRandomBytes(32);
+        var encryptionKey = randomGeneratorService.GetRandomBytes(32);
         var decyptionKey = encryptionKey;
         decyptionKey[0] = 69;
 

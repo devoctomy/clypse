@@ -14,6 +14,7 @@ public class CryptoHelpers
     /// </summary>
     /// <param name="length">The number of random bytes to generate.</param>
     /// <returns>An array of cryptographically secure random bytes.</returns>
+    [Obsolete("Use RandomNumberGenerator instead.")]
     public static byte[] GenerateRandomBytes(int length)
     {
         using var rng = RandomNumberGenerator.Create();
@@ -26,6 +27,7 @@ public class CryptoHelpers
     /// Generates a cryptographically secure random double between 0.0 and 1.0.
     /// </summary>
     /// <returns>A cryptographically secure random double.</returns>
+    [Obsolete("Use RandomNumberGenerator instead.")]
     public static double GetRandomDouble()
     {
         using var rng = RandomNumberGenerator.Create();
@@ -43,6 +45,7 @@ public class CryptoHelpers
     /// <param name="min">The inclusive lower bound of the random number returned.</param>
     /// <param name="max">The exclusive upper bound of the random number returned. Must be greater than min.</param>
     /// <returns>A cryptographically secure random integer within the specified range.</returns>
+    [Obsolete("Use RandomNumberGenerator instead.")]
     public static int GetRandomInt(
         int min,
         int max)
@@ -59,6 +62,7 @@ public class CryptoHelpers
     /// <typeparam name="T">The type of elements in the array.</typeparam>
     /// <param name="array">The array from which to select a random entry.</param>
     /// <returns>A random entry from the array.</returns>
+    [Obsolete("Use RandomNumberGenerator instead.")]
     public static T GetRandomArrayEntry<T>(Array array)
     {
         using var rng = RandomNumberGenerator.Create();
@@ -71,6 +75,7 @@ public class CryptoHelpers
     /// <param name="length">The length of the random string to generate.</param>
     /// <param name="validCharacters">A string containing the set of valid characters to use for generating the random string.</param>
     /// <returns>A random string of the specified length composed of characters from the validCharacters set.</returns>
+    [Obsolete("Use RandomNumberGenerator instead.")]
     public static string GetRandomStringContainingCharacters(
         int length,
         string validCharacters)

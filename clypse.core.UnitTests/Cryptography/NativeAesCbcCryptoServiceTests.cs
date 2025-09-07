@@ -6,13 +6,15 @@ namespace clypse.core.UnitTests.Cryptography;
 
 public class NativeAesCbcCryptoServiceTests : IDisposable
 {
+    private readonly RandomGeneratorService randomGeneratorService;
     private readonly NativeAesCbcCryptoService sut;
     private readonly string testKey;
 
     public NativeAesCbcCryptoServiceTests()
     {
+        this.randomGeneratorService = new RandomGeneratorService();
         this.sut = new NativeAesCbcCryptoService();
-        byte[] keyBytes = CryptoHelpers.GenerateRandomBytes(32);
+        byte[] keyBytes = this.randomGeneratorService.GetRandomBytes(32);
         this.testKey = Convert.ToBase64String(keyBytes);
     }
 
@@ -62,7 +64,7 @@ public class NativeAesCbcCryptoServiceTests : IDisposable
     public async Task GivenLargeDataStream_WhenEncryptingAndDecrypting_ThenDataIsPreservedCorrectly()
     {
         // Arrange
-        byte[] largeData = CryptoHelpers.GenerateRandomBytes(1024 * 1024);
+        byte[] largeData = this.randomGeneratorService.GetRandomBytes(1024 * 1024);
         using var inputStream = new MemoryStream(largeData);
         using var encryptedStream = new MemoryStream();
         using var decryptedStream = new MemoryStream();

@@ -50,7 +50,9 @@ public class AwsS3VaultManagerBootstrapperService(
             keyDerivationServiceOptions.Parameters.Add(key, param.Value);
         }
 
-        var keyDerivationServiceForVault = new KeyDerivationService(keyDerivationServiceOptions);
+        var keyDerivationServiceForVault = new KeyDerivationService(
+            new RandomGeneratorService(),
+            keyDerivationServiceOptions);
 
         ICompressionService compressionServiceForVault;
         switch (manifest.CompressionServiceName)

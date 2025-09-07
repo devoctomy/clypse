@@ -38,7 +38,8 @@ public class GZipCompressionServiceTests
     public async Task GivenLargeDataStream_WhenCompressingAndDecompressing_ThenDataIsPreservedCorrectly()
     {
         // Arrange
-        byte[] largeData = CryptoHelpers.GenerateRandomBytes(1024 * 1024);
+        using var randomGeneratorService = new RandomGeneratorService();
+        byte[] largeData = randomGeneratorService.GetRandomBytes(1024 * 1024);
         using var inputStream = new MemoryStream(largeData);
         using var compressedStream = new MemoryStream();
         using var decompressedStream = new MemoryStream();

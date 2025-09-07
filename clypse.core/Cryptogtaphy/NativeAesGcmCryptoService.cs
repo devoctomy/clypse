@@ -30,9 +30,9 @@ public class NativeAesGcmCryptoService : ICryptoService
         ArgumentNullException.ThrowIfNull(outputStream, nameof(outputStream));
         ArgumentException.ThrowIfNullOrEmpty(base64Key, nameof(base64Key));
 
+        using var randomGeneratorService = new RandomGeneratorService();
         byte[] key = Convert.FromBase64String(base64Key);
-
-        byte[] nonce = CryptoHelpers.GenerateRandomBytes(NonceSize);
+        byte[] nonce = randomGeneratorService.GetRandomBytes(NonceSize);
 
         await outputStream.WriteAsync(nonce);
 

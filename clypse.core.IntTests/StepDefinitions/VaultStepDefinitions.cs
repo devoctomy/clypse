@@ -15,6 +15,7 @@ namespace clypse.core.IntTests.StepDefinitions;
 public sealed class VaultStepDefinitions(TestContext testContext)
 {
     private readonly TestContext testContext = testContext;
+    private readonly RandomGeneratorService randomGeneratorService = new ();
     private IKeyDerivationService? keyDerivationService;
     private ICompressionService? compressionService;
     private IVaultManager? vaultManager;
@@ -43,7 +44,7 @@ public sealed class VaultStepDefinitions(TestContext testContext)
     public void GivenKeyDerivationServiceIsInitialised()
     {
         var options = KeyDerivationServiceDefaultOptions.Blazor_Argon2id();
-        this.keyDerivationService = new KeyDerivationService(options);
+        this.keyDerivationService = new KeyDerivationService(this.randomGeneratorService, options);
     }
 
     [Given("crypto service is initialised")]

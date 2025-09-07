@@ -1,5 +1,4 @@
-﻿using System.Security;
-using clypse.core.Cryptogtaphy.Interfaces;
+﻿using clypse.core.Cryptogtaphy.Interfaces;
 using clypse.core.Enums;
 
 namespace clypse.core.Cryptogtaphy;
@@ -7,16 +6,22 @@ namespace clypse.core.Cryptogtaphy;
 /// <summary>
 /// Implementation of KeyDerivationService.
 /// </summary>
-public class KeyDerivationService : IKeyDerivationService
+public class KeyDerivationService : IKeyDerivationService, IDisposable
 {
+    private readonly IRandomGeneratorService randomGeneratorService;
     private readonly KeyDerivationServiceOptions options;
+    private bool disposed = false;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="KeyDerivationService"/> class with the provided options.
     /// </summary>
+    /// <param name="randomGeneratorService">An instance of IRandomGeneratorService for generating random values.</param>
     /// <param name="options">Options to use for key derivation.</param>
-    public KeyDerivationService(KeyDerivationServiceOptions options)
+    public KeyDerivationService(
+        IRandomGeneratorService randomGeneratorService,
+        KeyDerivationServiceOptions options)
     {
+        this.randomGeneratorService = randomGeneratorService;
         this.options = options;
     }
 
@@ -35,6 +40,7 @@ public class KeyDerivationService : IKeyDerivationService
         string passphrase,
         string base64Salt)
     {
+        this.ThrowIfDisposed();
         var algorithm = Enum.Parse<KeyDerivationAlgorithm>(
             this.options.GetAsString(KeyDerivationParameterKeys.Algorithm),
             true);
@@ -65,16 +71,19 @@ public class KeyDerivationService : IKeyDerivationService
     /// <returns>Benchmark results.</returns>
     public async Task<KeyDerivationBenchmarkResults> BenchmarkAllAsync(int count)
     {
+        this.ThrowIfDisposed();
         var results = new List<KeyDerivationBenchmarkResult>();
         var algirithmNames = Enum.GetNames<KeyDerivationAlgorithm>();
         var passphrase = "password123";
-        var salt = CryptoHelpers.GenerateRandomBytes(16);
+        var salt = this.randomGeneratorService.GetRandomBytes(16);
         var base64Salt = Convert.ToBase64String(salt);
         foreach (var curAlgorithm in algirithmNames)
         {
             var timings = new List<TimeSpan>();
             var algorithm = Enum.Parse<KeyDerivationAlgorithm>(curAlgorithm, true);
-            var keyDerivationService = new KeyDerivationService(GetDefaults(algorithm));
+            using var keyDerivationService = new KeyDerivationService(
+                new RandomGeneratorService(),
+                GetDefaults(algorithm));
             for (var i = 0; i < count; i++)
             {
                 var startedAt = DateTime.Now;
@@ -95,6 +104,32 @@ public class KeyDerivationService : IKeyDerivationService
         return new KeyDerivationBenchmarkResults(results);
     }
 
+    /// <summary>
+    /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+    /// </summary>
+    public void Dispose()
+    {
+        this.Dispose(true);
+        GC.SuppressFinalize(this);
+    }
+
+    /// <summary>
+    /// Releases the unmanaged resources used by the RandomGeneratorService and optionally releases the managed resources.
+    /// </summary>
+    /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
+    protected virtual void Dispose(bool disposing)
+    {
+        if (!this.disposed)
+        {
+            if (disposing)
+            {
+                ((IDisposable)this.randomGeneratorService)?.Dispose();
+            }
+
+            this.disposed = true;
+        }
+    }
+
     private static KeyDerivationServiceOptions GetDefaults(KeyDerivationAlgorithm algorithm)
     {
         return algorithm switch
@@ -103,5 +138,13 @@ public class KeyDerivationService : IKeyDerivationService
             KeyDerivationAlgorithm.Argon2id => KeyDerivationServiceDefaultOptions.Blazor_Argon2id(),
             _ => throw new NotImplementedException($"KeyDerivationAlgorithm '{algorithm}' not supported by KeyDerivationService."),
         };
+    }
+
+    /// <summary>
+    /// Throws an ObjectDisposedException if the service has been disposed.
+    /// </summary>
+    private void ThrowIfDisposed()
+    {
+        ObjectDisposedException.ThrowIf(this.disposed, nameof(RandomGeneratorService));
     }
 }

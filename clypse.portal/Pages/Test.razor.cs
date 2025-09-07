@@ -133,7 +133,9 @@ public partial class Test : ComponentBase
 
         try
         {
-            var keyDerivationService = new KeyDerivationService(new KeyDerivationServiceOptions());
+            var keyDerivationService = new KeyDerivationService(
+                new RandomGeneratorService(),
+                new KeyDerivationServiceOptions());
             keyDerivationResults = await keyDerivationService.BenchmarkAllAsync(3);
             showKeyDerivationResults = true;
         }
@@ -191,7 +193,9 @@ public partial class Test : ComponentBase
             awsCredentials?.SessionToken ?? string.Empty,
             AwsS3Config.Region);
 
-        var keyDerivationService = new KeyDerivationService(KeyDerivationServiceDefaultOptions.Blazor_Argon2id());
+        var keyDerivationService = new KeyDerivationService(
+            new RandomGeneratorService(),
+            KeyDerivationServiceDefaultOptions.Blazor_Argon2id());
         var awsS3E2eCloudStorageProvider = new AwsS3E2eCloudStorageProvider(
             AwsS3Config.BucketName,
             jsS3Client,

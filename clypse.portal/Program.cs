@@ -21,6 +21,8 @@ builder.Services.AddScoped<IVaultManagerFactoryService, VaultManagerFactoryServi
 builder.Services.AddScoped<IVaultManagerBootstrapperFactoryService, VaultManagerBootstrapperFactoryService>();
 builder.Services.AddScoped<IVaultStorageService, VaultStorageService>();
 builder.Services.AddScoped<IAuthenticationService, AwsCognitoAuthenticationService>();
+builder.Services.AddScoped<IRandomGeneratorService, RandomGeneratorService>();
+builder.Services.AddScoped<IPasswordGeneratorService, PasswordGeneratorService>();
 builder.Services.AddScoped<IKeyDerivationService, KeyDerivationService>();
 
 // Configure AWS Cognito settings from appsettings.json
@@ -37,9 +39,5 @@ builder.Services.AddSingleton(awsS3Config);
 var appSettings = new AppSettings();
 builder.Configuration.GetSection("AppSettings").Bind(appSettings);
 builder.Services.AddSingleton(appSettings);
-
-// Misc Services
-builder.Services.AddSingleton<IRandomGeneratorService, RandomGeneratorService>();
-builder.Services.AddSingleton<IPasswordGeneratorService, PasswordGeneratorService>();
 
 await builder.Build().RunAsync();
