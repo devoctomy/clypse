@@ -1,6 +1,7 @@
-﻿using System.Security.Cryptography;
+﻿using Konscious.Security.Cryptography;
+using System.Security.Cryptography;
 using System.Text;
-using Konscious.Security.Cryptography;
+using static Org.BouncyCastle.Asn1.Cmp.Challenge;
 
 namespace clypse.core.Cryptogtaphy;
 
@@ -20,6 +21,49 @@ public class CryptoHelpers
         var data = new byte[length];
         rng.GetBytes(data, 0, length);
         return data;
+    }
+
+    /// <summary>
+    /// Generates a cryptographically secure random double between 0.0 and 1.0.
+    /// </summary>
+    /// <returns>A cryptographically secure random double.</returns>
+    public static double GetRandomDouble()
+    {
+        using var rng = RandomNumberGenerator.Create();
+        var bytes = new byte[8];
+        rng.GetBytes(bytes);
+        var unscaled = BitConverter.ToUInt64(bytes, 0);
+        unscaled &= (1UL << 53) - 1;
+        var random = (double)unscaled / (double)(1UL << 53);
+        return random;
+    }
+
+    /// <summary>
+    /// Generates a cryptographically secure random integer within the specified range [min, max).
+    /// </summary>
+    /// <param name="min">The inclusive lower bound of the random number returned.</param>
+    /// <param name="max">The exclusive upper bound of the random number returned. Must be greater than min.</param>
+    /// <returns>A cryptographically secure random integer within the specified range.</returns>
+    public static int GetRandomInt(
+        int min,
+        int max)
+    {
+        var fraction = GetRandomDouble();
+        var range = max - min;
+        var retVal = min + (int)(fraction * range);
+        return retVal;
+    }
+
+    /// <summary>
+    /// Selects a random entry from the provided array.
+    /// </summary>
+    /// <typeparam name="T">The type of elements in the array.</typeparam>
+    /// <param name="array">The array from which to select a random entry.</param>
+    /// <returns>A random entry from the array.</returns>
+    public static T GetRandomArrayEntry<T>(Array array)
+    {
+        using var rng = RandomNumberGenerator.Create();
+        return (T)array.GetValue(GetRandomInt(0, array.Length)) !;
     }
 
     /// <summary>

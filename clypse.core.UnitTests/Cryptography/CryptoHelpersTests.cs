@@ -54,4 +54,55 @@ public class CryptoHelpersTests
         // Assert
         Assert.Equal("OWzd57bBuePSJ0W+2iYqxvF95f1Lt04KTvVAmsNd0U0=", base64Key);
     }
+
+    [Fact]
+    public void GivenNoParams_WhenGetRandomDouble100Times_ThenReturnsDifferentValues()
+    {
+        // Arrange
+        var doubles = new List<double>();
+
+        // Act
+        for (var i = 0; i < 100; i++)
+        {
+            doubles.Add(CryptoHelpers.GetRandomDouble());
+        }
+
+        // Assert
+        var distinctDoubles = doubles.Distinct().ToList();
+        Assert.Equal(doubles.Count, distinctDoubles.Count);
+    }
+
+    [Fact]
+    public void GivenMin_AndMax_WhenGetRandomInt_ThenValueReturnedIsInRange()
+    {
+        // Arrange
+        var min = 10;
+        var max = 20;
+
+        // Act
+        var value = CryptoHelpers.GetRandomInt(min, max);
+
+        // Assert
+        Assert.InRange(value, min, max - 1);
+    }
+
+    [Fact]
+    public void GivenArray_WhenGetRandomArrayEntry_ThenValueReturnedIsFromArray()
+    {
+        // Arrange
+        var array = new[]
+        {
+            "apple",
+            "banana",
+            "cherry",
+            "date",
+            "elderberry",
+        };
+
+        // Act
+        var value = CryptoHelpers.GetRandomArrayEntry<string>(array);
+
+        // Assert
+        Assert.Contains(value, array);
+    }
 }
