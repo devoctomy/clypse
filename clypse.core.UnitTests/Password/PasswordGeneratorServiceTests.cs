@@ -74,6 +74,26 @@ public class PasswordGeneratorServiceTests : IDisposable
         Assert.Matches("^[a-z]{8}$", parts[1]);
     }
 
+    [Theory]
+    [InlineData(Enums.CharacterGroup.Lowercase, 6, "abcdefghijklmnopqrstuvwxyz")]
+    [InlineData(Enums.CharacterGroup.Uppercase, 6, "ABCDEFGHIJKLMNOPQRSTUVWXYZ")]
+    [InlineData(Enums.CharacterGroup.Digits, 6, "0123456789")]
+    [InlineData(Enums.CharacterGroup.Special, 6, "!@#$%^&*()-_=+[]{}|;:,.<>?")]
+    public void GivenCharcterGroup_AndLength_WhenGenerateRandomPassword_ThenReturnsPassword(
+        Enums.CharacterGroup characterGroup,
+        int length,
+        string expectAllExistIn)
+    {
+        // Arrange & Act
+        var result = this.sut.GenerateRandomPassword(characterGroup, length);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.NotEmpty(result);
+        Assert.Equal(length, result.Length);
+        Assert.True(result.All(c => expectAllExistIn.Contains(c)));
+    }
+
     public void Dispose()
     {
         this.sut.Dispose();

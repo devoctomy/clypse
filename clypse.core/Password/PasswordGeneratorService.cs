@@ -77,6 +77,52 @@ public partial class PasswordGeneratorService : IPasswordGeneratorService, IDisp
     }
 
     /// <summary>
+    /// Generates a random password based on the specified character groups and length.
+    /// </summary>
+    /// <param name="groups">Character groups to include in the password.</param>
+    /// <param name="length">Length of the password to generate.</param>
+    /// <returns>A randomly generated password.</returns>
+    public string GenerateRandomPassword(
+        CharacterGroup groups,
+        int length)
+    {
+        var lowercase = "abcdefghijklmnopqrstuvwxyz";
+        var uppercase = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+        var digits = "0123456789";
+        var special = "!@#$%^&*()-_=+[]{}|;:,.<>?";
+        var characterGroup = string.Empty;
+
+        if (groups.HasFlag(CharacterGroup.Lowercase))
+        {
+            characterGroup += lowercase;
+        }
+
+        if (groups.HasFlag(CharacterGroup.Uppercase))
+        {
+            characterGroup += uppercase;
+        }
+
+        if (groups.HasFlag(CharacterGroup.Digits))
+        {
+            characterGroup += digits;
+        }
+
+        if (groups.HasFlag(CharacterGroup.Special))
+        {
+            characterGroup += special;
+        }
+
+        var password = new StringBuilder();
+        while (password.Length < length)
+        {
+            var index = this.randomGeneratorService.GetRandomInt(0, characterGroup.Length);
+            password.Append(characterGroup[index]);
+        }
+
+        return password.ToString();
+    }
+
+    /// <summary>
     /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
     /// </summary>
     public void Dispose()
