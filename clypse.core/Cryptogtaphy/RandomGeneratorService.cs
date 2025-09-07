@@ -6,9 +6,10 @@ namespace clypse.core.Cryptogtaphy;
 /// <summary>
 /// Implementation of IRandomGeneratorService.
 /// </summary>
-public class RandomGeneratorService : IRandomGeneratorService
+public class RandomGeneratorService : IRandomGeneratorService, IDisposable
 {
     private readonly RandomNumberGenerator randomNumberGenerator;
+    private bool disposed = false;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="RandomGeneratorService"/> class.
@@ -25,6 +26,7 @@ public class RandomGeneratorService : IRandomGeneratorService
     /// <returns>An array of cryptographically secure random bytes.</returns>
     public byte[] GenerateRandomBytes(int length)
     {
+        this.ThrowIfDisposed();
         var data = new byte[length];
         this.randomNumberGenerator.GetBytes(data, 0, length);
         return data;
@@ -36,6 +38,7 @@ public class RandomGeneratorService : IRandomGeneratorService
     /// <returns>A cryptographically secure random double.</returns>
     public double GetRandomDouble()
     {
+        this.ThrowIfDisposed();
         var bytes = new byte[8];
         this.randomNumberGenerator.GetBytes(bytes);
         var unscaled = BitConverter.ToUInt64(bytes, 0);
@@ -54,6 +57,7 @@ public class RandomGeneratorService : IRandomGeneratorService
         int min,
         int max)
     {
+        this.ThrowIfDisposed();
         var fraction = this.GetRandomDouble();
         var range = max - min;
         var retVal = min + (int)(fraction * range);
@@ -68,6 +72,7 @@ public class RandomGeneratorService : IRandomGeneratorService
     /// <returns>A random entry from the array.</returns>
     public T GetRandomArrayEntry<T>(Array array)
     {
+        this.ThrowIfDisposed();
         using var rng = RandomNumberGenerator.Create();
         return (T)array.GetValue(this.GetRandomInt(0, array.Length)) !;
     }
@@ -82,6 +87,7 @@ public class RandomGeneratorService : IRandomGeneratorService
         int length,
         string validCharacters)
     {
+        this.ThrowIfDisposed();
         var sb = new StringBuilder(length);
         for (var i = 0; i < length; i++)
         {
@@ -89,5 +95,39 @@ public class RandomGeneratorService : IRandomGeneratorService
         }
 
         return sb.ToString();
+    }
+
+    /// <summary>
+    /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+    /// </summary>
+    public void Dispose()
+    {
+        this.Dispose(true);
+        GC.SuppressFinalize(this);
+    }
+
+    /// <summary>
+    /// Releases the unmanaged resources used by the RandomGeneratorService and optionally releases the managed resources.
+    /// </summary>
+    /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
+    protected virtual void Dispose(bool disposing)
+    {
+        if (!this.disposed)
+        {
+            if (disposing)
+            {
+                this.randomNumberGenerator?.Dispose();
+            }
+
+            this.disposed = true;
+        }
+    }
+
+    /// <summary>
+    /// Throws an ObjectDisposedException if the service has been disposed.
+    /// </summary>
+    private void ThrowIfDisposed()
+    {
+        ObjectDisposedException.ThrowIf(this.disposed, nameof(RandomGeneratorService));
     }
 }

@@ -18,7 +18,6 @@ public sealed class VaultStepDefinitions(TestContext testContext)
     private IKeyDerivationService? keyDerivationService;
     private ICompressionService? compressionService;
     private IVaultManager? vaultManager;
-    private IVaultManager? bootstrappedVaultManager;
     private IEncryptedCloudStorageProvider? encryptedCloudStorageProvider;
     private ICryptoService? cryptoService;
 

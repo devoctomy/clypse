@@ -7,7 +7,6 @@ namespace clypse.core.Cloud.Interfaces;
 /// </summary>
 public interface IAwsEncryptedCloudStorageProviderTransformer
 {
-
     /// <summary>
     /// Creates an end-to-end encrypted AWS S3 cloud storage provider using the specified cryptographic service.
     /// </summary>

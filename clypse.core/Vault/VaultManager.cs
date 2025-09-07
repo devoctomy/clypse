@@ -31,6 +31,25 @@ public class VaultManager : IVaultManager
     private readonly string prefix;
 
     /// <summary>
+    /// Initializes a new instance of the <see cref="VaultManager"/> class with the specified parameters.
+    /// </summary>
+    /// <param name="prefix">Prefix to use for all S3 object keys.</param>
+    /// <param name="keyDerivationService">The key derivation service for deriving cryptographic keys.</param>
+    /// <param name="compressionService">The compression service for data compression.</param>
+    /// <param name="encryptedCloudStorageProvider">The encrypted cloud storage provider for secure data storage.</param>
+    public VaultManager(
+        string prefix,
+        IKeyDerivationService keyDerivationService,
+        ICompressionService compressionService,
+        IEncryptedCloudStorageProvider encryptedCloudStorageProvider)
+    {
+        this.prefix = prefix;
+        this.keyDerivationService = keyDerivationService;
+        this.compressionService = compressionService;
+        this.encryptedCloudStorageProvider = encryptedCloudStorageProvider;
+    }
+
+    /// <summary>
     /// Gets the key derivation service used by this vault manager.
     /// </summary>
     public IKeyDerivationService KeyDerivationService => this.keyDerivationService;
@@ -51,25 +70,6 @@ public class VaultManager : IVaultManager
     public string Prefix => this.prefix;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="VaultManager"/> class with the specified parameters.
-    /// </summary>
-    /// <param name="prefix">Prefix to use for all S3 object keys.</param>
-    /// <param name="keyDerivationService">The key derivation service for deriving cryptographic keys.</param>
-    /// <param name="compressionService">The compression service for data compression.</param>
-    /// <param name="encryptedCloudStorageProvider">The encrypted cloud storage provider for secure data storage.</param>
-    public VaultManager(
-        string prefix,
-        IKeyDerivationService keyDerivationService,
-        ICompressionService compressionService,
-        IEncryptedCloudStorageProvider encryptedCloudStorageProvider)
-    {
-        this.prefix = prefix;
-        this.keyDerivationService = keyDerivationService;
-        this.compressionService = compressionService;
-        this.encryptedCloudStorageProvider = encryptedCloudStorageProvider;
-    }
-
-    /// <summary>
     /// Derives a cryptographic key from the provided passphrase for the specified vault.
     /// </summary>
     /// <param name="vault">The vault to derive they key for.</param>
@@ -81,7 +81,7 @@ public class VaultManager : IVaultManager
     {
         var salt = CryptoHelpers.Sha256HashString(vault.Info.Id, 16);
         var base64Salt = Convert.ToBase64String(salt);
-        return await keyDerivationService.DeriveKeyFromPassphraseAsync(
+        return await this.keyDerivationService.DeriveKeyFromPassphraseAsync(
             passphrase,
             base64Salt);
     }
@@ -112,8 +112,8 @@ public class VaultManager : IVaultManager
     /// <returns>List of vault ids found in storage.</returns>
     public async Task<List<string>> ListVaultIdsAsync(CancellationToken cancellationToken)
     {
-        var allObjectsPrefix = $"{prefix}/";
-        var allObjects = await encryptedCloudStorageProvider.ListObjectsAsync(
+        var allObjectsPrefix = $"{this.prefix}/";
+        var allObjects = await this.encryptedCloudStorageProvider.ListObjectsAsync(
             allObjectsPrefix,
             "/",
             cancellationToken);
@@ -264,13 +264,13 @@ public class VaultManager : IVaultManager
             vault.Info.Id,
             base64Key,
             cancellationToken);
-        var allKeys = await encryptedCloudStorageProvider.ListObjectsAsync(
-            $"{prefix}/{vault.Info.Id}/",
+        var allKeys = await this.encryptedCloudStorageProvider.ListObjectsAsync(
+            $"{this.prefix}/{vault.Info.Id}/",
             null,
             cancellationToken);
         foreach (var key in allKeys)
         {
-            var deleted = await encryptedCloudStorageProvider.DeleteEncryptedObjectAsync(
+            var deleted = await this.encryptedCloudStorageProvider.DeleteEncryptedObjectAsync(
                 key,
                 base64Key,
                 cancellationToken);
@@ -356,8 +356,8 @@ public class VaultManager : IVaultManager
             }
         }
 
-        var secretsPrefix = $"{prefix}/{vault.Info.Id}/secrets/";
-        var allSecrets = await encryptedCloudStorageProvider.ListObjectsAsync(
+        var secretsPrefix = $"{this.prefix}/{vault.Info.Id}/secrets/";
+        var allSecrets = await this.encryptedCloudStorageProvider.ListObjectsAsync(
             secretsPrefix,
             null,
             cancellationToken);
@@ -478,7 +478,7 @@ public class VaultManager : IVaultManager
         MetadataCollection? metaData,
         CancellationToken cancellationToken)
     {
-        var objectKey = $"{prefix}/{vaultId}/{key}";
+        var objectKey = $"{this.prefix}/{vaultId}/{key}";
         var objectStream = new MemoryStream();
         await JsonSerializer.SerializeAsync(
             objectStream,
@@ -487,7 +487,7 @@ public class VaultManager : IVaultManager
             cancellationToken);
         objectStream.Seek(0, SeekOrigin.Begin);
 
-        var cloudStorageProvider = encryptedCloudStorageProvider.InnerProvider;
+        var cloudStorageProvider = this.encryptedCloudStorageProvider.InnerProvider;
         await cloudStorageProvider!.PutObjectAsync(
             objectKey,
             objectStream,
@@ -503,7 +503,7 @@ public class VaultManager : IVaultManager
         MetadataCollection? metaData,
         CancellationToken cancellationToken)
     {
-        var objectKey = $"{prefix}/{vaultId}/{key}";
+        var objectKey = $"{this.prefix}/{vaultId}/{key}";
         var objectStream = new MemoryStream();
         await JsonSerializer.SerializeAsync(
             objectStream,
@@ -513,13 +513,13 @@ public class VaultManager : IVaultManager
         objectStream.Seek(0, SeekOrigin.Begin);
 
         var compressedObject = new MemoryStream();
-        await compressionService.CompressAsync(
+        await this.compressionService.CompressAsync(
             objectStream,
             compressedObject,
             cancellationToken);
         compressedObject.Seek(0, SeekOrigin.Begin);
 
-        await encryptedCloudStorageProvider.PutEncryptedObjectAsync(
+        await this.encryptedCloudStorageProvider.PutEncryptedObjectAsync(
             objectKey,
             compressedObject,
             base64Key,
@@ -532,9 +532,9 @@ public class VaultManager : IVaultManager
         string key,
         CancellationToken cancellationToken)
     {
-        var objectKey = $"{prefix}/{vaultId}/{key}";
+        var objectKey = $"{this.prefix}/{vaultId}/{key}";
 
-        var cloudStorageProvider = encryptedCloudStorageProvider.InnerProvider;
+        var cloudStorageProvider = this.encryptedCloudStorageProvider.InnerProvider;
         var plainTextStream = await cloudStorageProvider!.GetObjectAsync(
             objectKey,
             cancellationToken);
@@ -557,8 +557,8 @@ public class VaultManager : IVaultManager
         string base64Key,
         CancellationToken cancellationToken)
     {
-        var objectKey = $"{prefix}/{vaultId}/{key}";
-        var encryptedCompressedStream = await encryptedCloudStorageProvider.GetEncryptedObjectAsync(
+        var objectKey = $"{this.prefix}/{vaultId}/{key}";
+        var encryptedCompressedStream = await this.encryptedCloudStorageProvider.GetEncryptedObjectAsync(
             objectKey,
             base64Key,
             cancellationToken);
@@ -568,7 +568,7 @@ public class VaultManager : IVaultManager
         }
 
         var decompressedStream = new MemoryStream();
-        await compressionService.DecompressAsync(
+        await this.compressionService.DecompressAsync(
             encryptedCompressedStream!,
             decompressedStream,
             cancellationToken);
@@ -588,8 +588,8 @@ public class VaultManager : IVaultManager
         string base64Key,
         CancellationToken cancellationToken)
     {
-        var objectKey = $"{prefix}/{vaultId}/secrets/{secretId}";
-        var deleted = await encryptedCloudStorageProvider.DeleteEncryptedObjectAsync(
+        var objectKey = $"{this.prefix}/{vaultId}/secrets/{secretId}";
+        var deleted = await this.encryptedCloudStorageProvider.DeleteEncryptedObjectAsync(
             objectKey,
             base64Key,
             cancellationToken);
@@ -605,11 +605,11 @@ public class VaultManager : IVaultManager
                 .GetName()
                 .Version?
                 .ToString(),
-            CompressionServiceName = compressionService.GetType().Name,
-            CryptoServiceName = encryptedCloudStorageProvider.InnerCryptoServiceProvider?.GetType().Name,
-            EncryptedCloudStorageProviderName = encryptedCloudStorageProvider.GetType().Name,
+            CompressionServiceName = this.compressionService.GetType().Name,
+            CryptoServiceName = this.encryptedCloudStorageProvider.InnerCryptoServiceProvider?.GetType().Name,
+            EncryptedCloudStorageProviderName = this.encryptedCloudStorageProvider.GetType().Name,
         };
-        foreach (var param in keyDerivationService.Options.Parameters)
+        foreach (var param in this.keyDerivationService.Options.Parameters)
         {
             manifest.Parameters.Add($"KeyDerivationService_{param.Key}", param.Value);
         }
