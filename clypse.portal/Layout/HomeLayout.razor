@@ -18,8 +18,7 @@
                 <div class="flex-grow-1">
                     @if (navigationItems != null && navigationItems.Any())
                     {
-                        <h6 class="text-muted mb-3">Actions</h6>
-                        @foreach (var item in navigationItems)
+                        @foreach (var item in navigationItems.Where(i => i.Action != "delete-vault"))
                         {
                             <button class="btn @item.ButtonClass btn-sm w-100 mb-2 text-start" @onclick="() => HandleNavigationAction(item.Action)">
                                 <i class="@item.Icon me-2"></i>
@@ -28,6 +27,18 @@
                         }
                     }
                 </div>
+                
+                <!-- Delete Vault Section -->
+                @if (navigationItems != null && navigationItems.Any(i => i.Action == "delete-vault"))
+                {
+                    var deleteItem = navigationItems.First(i => i.Action == "delete-vault");
+                    <div class="mb-3">
+                        <button class="btn @deleteItem.ButtonClass btn-sm w-100 mb-2 text-start" @onclick="() => HandleNavigationAction(deleteItem.Action)">
+                            <i class="@deleteItem.Icon me-2"></i>
+                            @deleteItem.Text
+                        </button>
+                    </div>
+                }
                 
                 <!-- Logout at bottom -->
                 <div class="mt-auto pt-3 border-top">
