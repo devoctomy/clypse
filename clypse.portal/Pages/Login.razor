@@ -1,6 +1,17 @@
 @page "/login"
+@using clypse.portal.Models
 
 <PageTitle>Clypse Portal - Login</PageTitle>
+
+<!-- Title Bar (similar to HomeLayout) -->
+<div class="bg-primary text-white p-3 d-flex justify-content-between align-items-center">
+    <div class="d-flex align-items-center">
+        <h4 class="mb-0">@AppSettings.ApplicationTitle</h4>
+    </div>
+    <button class="theme-switcher" @onclick="ToggleTheme" title="Toggle theme">
+        <i class="bi @themeIcon"></i>
+    </button>
+</div>
 
 <div class="container mt-4">
     <div class="row justify-content-center">

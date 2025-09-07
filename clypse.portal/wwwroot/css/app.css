@@ -56,6 +56,9 @@
     --clypse-error-border: #b32121;
     --clypse-loading-primary: #e0e0e0;
     --clypse-loading-secondary: var(--clypse-primary);
+    
+    /* Filter for icons/glyphs */
+    --clypse-invert-filter: 0;
 }
 
 /* Dark Theme */
@@ -114,6 +117,9 @@
     --clypse-error-border: #dc3545;
     --clypse-loading-primary: #495057;
     --clypse-loading-secondary: var(--clypse-primary);
+    
+    /* Filter for icons/glyphs */
+    --clypse-invert-filter: 1;
 }
 
 /* Theme Transitions & Body Styles */
@@ -183,6 +189,41 @@ body {
     background-color: var(--clypse-surface-primary);
     border-color: var(--clypse-primary);
     color: var(--clypse-text-primary);
+}
+
+/* Password field reveal button styling for dark mode */
+.form-control[type="password"]::-ms-reveal,
+.form-control[type="password"]::-webkit-credentials-auto-fill-button {
+    filter: invert(var(--clypse-invert-filter, 0));
+}
+
+/* Form labels */
+.form-label {
+    color: var(--clypse-text-primary);
+    font-weight: 500;
+}
+
+/* Input group styling for dark mode */
+.input-group .btn {
+    border-color: var(--clypse-border-medium);
+}
+
+.input-group .btn-secondary {
+    background-color: var(--clypse-secondary);
+    border-color: var(--clypse-secondary);
+    color: var(--clypse-text-on-dark);
+}
+
+.input-group .btn-secondary:hover,
+.input-group .btn-secondary:focus,
+.input-group .btn-secondary:active {
+    background-color: var(--clypse-secondary-dark);
+    border-color: var(--clypse-secondary-dark);
+    color: var(--clypse-text-on-dark);
+}
+
+.input-group .btn-secondary i {
+    color: var(--clypse-text-on-dark);
 }
 
 /* Buttons */
@@ -273,6 +314,22 @@ body {
 .badge {
     background-color: var(--clypse-secondary) !important;
     color: var(--clypse-text-on-dark) !important;
+}
+
+/* List group styles */
+.list-group-item {
+    background-color: var(--clypse-surface-primary);
+    border-color: var(--clypse-border-light);
+    color: var(--clypse-text-primary);
+}
+
+.list-group-item.bg-transparent {
+    background-color: transparent !important;
+    color: var(--clypse-text-primary);
+}
+
+.list-group-item strong {
+    color: var(--clypse-text-primary);
 }
 
 .valid.modified:not([type=checkbox]) {

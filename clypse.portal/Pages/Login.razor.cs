@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Components;
+using Microsoft.JSInterop;
 using clypse.portal.Services;
+using clypse.portal.Models;
 
 namespace clypse.portal.Pages;
 
@@ -7,10 +9,14 @@ public partial class Login : ComponentBase
 {
     [Inject] public IAuthenticationService AuthService { get; set; } = default!;
     [Inject] public NavigationManager Navigation { get; set; } = default!;
+    [Inject] public IJSRuntime JSRuntime { get; set; } = default!;
+    [Inject] public AppSettings AppSettings { get; set; } = default!;
 
     private LoginModel loginModel = new();
     private bool isLoading = false;
     private string? errorMessage;
+    private string currentTheme = "light";
+    private string themeIcon = "bi-moon";
 
     private class LoginModel
     {
@@ -23,6 +29,7 @@ public partial class Login : ComponentBase
         if (firstRender)
         {
             await AuthService.Initialize();
+            await InitializeTheme();
             
             // Check if already authenticated
             if (await AuthService.CheckAuthentication())
@@ -30,6 +37,34 @@ public partial class Login : ComponentBase
                 Navigation.NavigateTo("/");
             }
         }
+    }
+
+    private async Task InitializeTheme()
+    {
+        try
+        {
+            var savedTheme = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "clypse_theme");
+            currentTheme = !string.IsNullOrEmpty(savedTheme) ? savedTheme : "light";
+            themeIcon = currentTheme == "light" ? "bi-moon" : "bi-sun";
+            
+            await JSRuntime.InvokeVoidAsync("document.documentElement.setAttribute", "data-theme", currentTheme);
+        }
+        catch
+        {
+            currentTheme = "light";
+            themeIcon = "bi-moon";
+        }
+    }
+
+    private async Task ToggleTheme()
+    {
+        currentTheme = currentTheme == "light" ? "dark" : "light";
+        themeIcon = currentTheme == "light" ? "bi-moon" : "bi-sun";
+        
+        await JSRuntime.InvokeVoidAsync("localStorage.setItem", "clypse_theme", currentTheme);
+        await JSRuntime.InvokeVoidAsync("document.documentElement.setAttribute", "data-theme", currentTheme);
+        
+        StateHasChanged();
     }
 
     private async Task HandleLogin()

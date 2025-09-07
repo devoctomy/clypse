@@ -181,7 +181,7 @@
                                     <div class="list-group list-group-flush">
                                         @if (!string.IsNullOrEmpty(selectedVaultListing.Manifest.ClypseCoreVersion))
                                         {
-                                            <div class="list-group-item list-group-item-action d-flex align-items-center bg-transparent border-secondary text-white">
+                                            <div class="list-group-item list-group-item-action d-flex align-items-center bg-transparent border-secondary">
                                                 <i class="bi bi-file-text me-2 text-muted"></i>
                                                 <div>
                                                     <strong>Clypse Core Version:</strong> @selectedVaultListing.Manifest.ClypseCoreVersion
@@ -190,7 +190,7 @@
                                         }
                                         @if (!string.IsNullOrEmpty(selectedVaultListing.Manifest.CompressionServiceName))
                                         {
-                                            <div class="list-group-item list-group-item-action d-flex align-items-center bg-transparent border-secondary text-white">
+                                            <div class="list-group-item list-group-item-action d-flex align-items-center bg-transparent border-secondary">
                                                 <i class="bi bi-file-text me-2 text-muted"></i>
                                                 <div>
                                                     <strong>Compression Service:</strong> @selectedVaultListing.Manifest.CompressionServiceName
@@ -199,7 +199,7 @@
                                         }
                                         @if (!string.IsNullOrEmpty(selectedVaultListing.Manifest.CryptoServiceName))
                                         {
-                                            <div class="list-group-item list-group-item-action d-flex align-items-center bg-transparent border-secondary text-white">
+                                            <div class="list-group-item list-group-item-action d-flex align-items-center bg-transparent border-secondary">
                                                 <i class="bi bi-file-text me-2 text-muted"></i>
                                                 <div>
                                                     <strong>Crypto Service:</strong> @selectedVaultListing.Manifest.CryptoServiceName
@@ -208,7 +208,7 @@
                                         }
                                         @if (!string.IsNullOrEmpty(selectedVaultListing.Manifest.EncryptedCloudStorageProviderName))
                                         {
-                                            <div class="list-group-item list-group-item-action d-flex align-items-center bg-transparent border-secondary text-white">
+                                            <div class="list-group-item list-group-item-action d-flex align-items-center bg-transparent border-secondary">
                                                 <i class="bi bi-file-text me-2 text-muted"></i>
                                                 <div>
                                                     <strong>Encrypted Cloud Storage Provider:</strong> @selectedVaultListing.Manifest.EncryptedCloudStorageProviderName
@@ -219,7 +219,7 @@
                                         {
                                             @foreach (var parameter in selectedVaultListing.Manifest.Parameters)
                                             {
-                                                <div class="list-group-item list-group-item-action d-flex align-items-center bg-transparent border-secondary text-white">
+                                                <div class="list-group-item list-group-item-action d-flex align-items-center bg-transparent border-secondary">
                                                     <i class="bi bi-file-text me-2 text-muted"></i>
                                                     <div>
                                                         <strong>@parameter.Key:</strong> @parameter.Value
