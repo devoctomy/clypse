@@ -60,20 +60,27 @@ public partial class PasswordGeneratorService : IPasswordGeneratorService, IDisp
     public string GenerateMemorablePassword(string template)
     {
         this.ThrowIfDisposed();
-        var password = template;
-        var tokens = ExtractTokensFromTemplate(template);
-        for (var i = tokens.Count - 1; i >= 0; i--)
+        try
         {
-            var curToken = tokens[i];
-            var processedToken = this.ProcessToken(curToken.Value);
-            password = ReplaceAt(
-                password,
-                curToken.Index,
-                curToken.Length,
-                processedToken);
-        }
+            var password = template;
+            var tokens = ExtractTokensFromTemplate(template);
+            for (var i = tokens.Count - 1; i >= 0; i--)
+            {
+                var curToken = tokens[i];
+                var processedToken = this.ProcessToken(curToken.Value);
+                password = ReplaceAt(
+                    password,
+                    curToken.Index,
+                    curToken.Length,
+                    processedToken);
+            }
 
-        return password;
+            return password;
+        }
+        catch
+        {
+            return string.Empty;
+        }
     }
 
     /// <summary>

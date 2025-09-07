@@ -22,6 +22,17 @@ public class PasswordGeneratorServiceTests : IDisposable
             this.tokenProcessors);
     }
 
+    [Theory]
+    [InlineData("{randstr(abcdefg)}")]
+    public void GivenInvalidTemplate_WhenLoadDictionary_ThenEmptyStringReturned(string invalidTemplate)
+    {
+        // Arrange & Act
+        var result = this.sut.GenerateMemorablePassword(invalidTemplate);
+
+        // Assert
+        Assert.Empty(result);
+    }
+
     [Fact]
     public void GivenDictionaryType_WhenLoadDictionary_ThenReturnsListOfWords()
     {
