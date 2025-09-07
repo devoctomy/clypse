@@ -316,12 +316,39 @@ public class AwsS3VaultManagerBootstrapperServiceTests
             It.IsAny<CancellationToken>()))
             .ReturnsAsync(vaults);
 
+        this.mockCloudStorageProvider.Setup(x => x.GetObjectAsync(
+            It.Is<string>(y => y == $"{this.prefix}/{vaults[0]}/manifest.json"),
+            It.IsAny<CancellationToken>()))
+            .ReturnsAsync(() =>
+            {
+                var json = System.Text.Json.JsonSerializer.Serialize(new VaultManifest());
+                var stream = new MemoryStream(System.Text.Encoding.UTF8.GetBytes(json));
+                stream.Seek(0, SeekOrigin.Begin);
+                return stream;
+            });
+
+        this.mockCloudStorageProvider.Setup(x => x.GetObjectAsync(
+            It.Is<string>(y => y == $"{this.prefix}/{vaults[1]}/manifest.json"),
+            It.IsAny<CancellationToken>()))
+            .ReturnsAsync(() =>
+            {
+                var json = System.Text.Json.JsonSerializer.Serialize(new VaultManifest());
+                var stream = new MemoryStream(System.Text.Encoding.UTF8.GetBytes(json));
+                stream.Seek(0, SeekOrigin.Begin);
+                return stream;
+            });
+
         // Act
-        var result = await this.sut.ListVaultIdsAsync(cancellationTokenSource.Token);
+        var results = await this.sut.ListVaultsAsync(cancellationTokenSource.Token);
 
         // Assert
-        Assert.NotNull(result);
-        Assert.Equal(vaults.Count, result.Count);
-        Assert.All(vaults, v => Assert.Contains(v, result));
+        Assert.NotNull(results);
+        Assert.Equal(vaults.Count, results.Count);
+
+        foreach (var curVaultIndex in results)
+        {
+            Assert.Contains(curVaultIndex.Id, vaults);
+            Assert.NotNull(curVaultIndex.Manifest);
+        }
     }
 }

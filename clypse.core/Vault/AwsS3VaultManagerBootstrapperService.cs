@@ -14,7 +14,8 @@ namespace clypse.core.Vault;
 /// </summary>
 public class AwsS3VaultManagerBootstrapperService(
     string prefix,
-    ICloudStorageProvider awsCloudStorageProvider) : IVaultManagerBootstrapperService
+    ICloudStorageProvider awsCloudStorageProvider)
+    : IVaultManagerBootstrapperService
 {
     private readonly JsonSerializerOptions jsonSerializerOptions = new ()
     {
@@ -103,18 +104,35 @@ public class AwsS3VaultManagerBootstrapperService(
     }
 
     /// <summary>
-    /// Fetches a list of all vault Ids available in storage.
+    /// Fetches a list of all vaults available in storage.
     /// </summary>
     /// <param name="cancellationToken">The cancellation token.</param>
-    /// <returns>List of vault ids found in storage.</returns>
-    public async Task<List<string>> ListVaultIdsAsync(CancellationToken cancellationToken)
+    /// <returns>List of vaults found in storage with their associated manifest.</returns>
+    public async Task<List<VaultListing>> ListVaultsAsync(CancellationToken cancellationToken)
     {
         var allObjectsPrefix = $"{prefix}/";
         var allObjects = await awsCloudStorageProvider.ListObjectsAsync(
             allObjectsPrefix,
             "/",
             cancellationToken);
-        return allObjects;
+
+        var vaultListings = new List<VaultListing>();
+        foreach (var curVaultId in allObjects)
+        {
+            var manifest = await this.LoadManifestAsync(
+                curVaultId,
+                cancellationToken);
+            if (manifest != null)
+            {
+                vaultListings.Add(new VaultListing
+                {
+                    Id = curVaultId,
+                    Manifest = manifest,
+                });
+            }
+        }
+
+        return vaultListings;
     }
 
     private async Task<VaultManifest> LoadManifestAsync(

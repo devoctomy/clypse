@@ -16,9 +16,9 @@ public interface IVaultManagerBootstrapperService
         CancellationToken cancellationToken);
 
     /// <summary>
-    /// Fetches a list of all vault Ids available in storage.
+    /// Fetches a list of all vaults available in storage.
     /// </summary>
     /// <param name="cancellationToken">The cancellation token.</param>
     /// <returns>List of vault ids found in storage.</returns>
-    public Task<List<string>> ListVaultIdsAsync(CancellationToken cancellationToken);
+    public Task<List<VaultListing>> ListVaultsAsync(CancellationToken cancellationToken);
 }
