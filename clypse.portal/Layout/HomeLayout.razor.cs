@@ -16,6 +16,7 @@ public partial class HomeLayout : LayoutComponentBase, IDisposable
     private Timer? sessionTimer;
     private string currentTheme = "light";
     private string themeIcon = "bi-moon";
+    private bool isExpanded = true; // Start expanded by default
 
     public void SetNavigationItems(List<NavigationItem> items)
     {
@@ -33,8 +34,49 @@ public partial class HomeLayout : LayoutComponentBase, IDisposable
         if (firstRender)
         {
             await InitializeTheme();
+            await InitializeSidebar();
             await StartSessionTimer();
         }
+    }
+
+    private async Task InitializeSidebar()
+    {
+        try
+        {
+            var savedState = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "clypse_sidebar_expanded");
+            if (!string.IsNullOrEmpty(savedState) && bool.TryParse(savedState, out bool expanded))
+            {
+                isExpanded = expanded;
+            }
+            else
+            {
+                // Default to collapsed on mobile, expanded on desktop
+                var isMobile = await JSRuntime.InvokeAsync<bool>("eval", "window.matchMedia('(max-width: 768px)').matches");
+                isExpanded = !isMobile;
+            }
+            StateHasChanged();
+        }
+        catch
+        {
+            // Default to expanded if we can't determine
+            isExpanded = true;
+        }
+    }
+
+    private async Task ToggleSidebar()
+    {
+        isExpanded = !isExpanded;
+        
+        try
+        {
+            await JSRuntime.InvokeVoidAsync("localStorage.setItem", "clypse_sidebar_expanded", isExpanded.ToString());
+        }
+        catch
+        {
+            // Ignore localStorage errors
+        }
+        
+        StateHasChanged();
     }
 
     private async Task InitializeTheme()
