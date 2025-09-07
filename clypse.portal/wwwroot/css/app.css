@@ -30,6 +30,7 @@
     --clypse-success-light: #26b050;
     --clypse-warning: #ffc107;
     --clypse-danger: #dc3545;
+    --clypse-danger-light: #ff4757;
     --clypse-info: #0dcaf0;
     
     /* Border Colors */
@@ -60,9 +61,9 @@
 /* Dark Theme */
 [data-theme="dark"] {
     /* Primary Brand Colors */
-    --clypse-primary: #6ea8fe;
-    --clypse-primary-dark: #4dabf7;
-    --clypse-primary-light: #a3d5ff;
+    --clypse-primary: #0d6efd;
+    --clypse-primary-dark: #0a58ca;
+    --clypse-primary-light: #6ea8fe;
     
     /* Secondary Colors */
     --clypse-secondary: #adb5bd;
@@ -87,6 +88,7 @@
     --clypse-success-light: #4caf50;
     --clypse-warning: #ffd43b;
     --clypse-danger: #ff4757;
+    --clypse-danger-light: #ff6b7a;
     --clypse-info: #22d3ee;
     
     /* Border Colors */
@@ -185,13 +187,56 @@ body {
 
 /* Buttons */
 .btn-primary {
-    background-color: var(--clypse-primary);
-    border-color: var(--clypse-primary);
+    background-color: var(--clypse-primary) !important;
+    border-color: var(--clypse-primary) !important;
+    color: white !important;
+}
+
+.btn-primary:hover,
+.btn-primary:focus,
+.btn-primary:active,
+.btn-primary.active {
+    background-color: var(--clypse-primary-light) !important;
+    border-color: var(--clypse-primary-light) !important;
+    color: white !important;
+    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25) !important;
 }
 
 .btn-secondary {
     background-color: var(--clypse-secondary);
     border-color: var(--clypse-secondary);
+}
+
+.btn-success {
+    background-color: var(--clypse-success) !important;
+    border-color: var(--clypse-success) !important;
+    color: white !important;
+}
+
+.btn-success:hover,
+.btn-success:focus,
+.btn-success:active,
+.btn-success.active {
+    background-color: var(--clypse-success-light) !important;
+    border-color: var(--clypse-success-light) !important;
+    color: white !important;
+    box-shadow: 0 0 0 0.2rem rgba(25, 135, 84, 0.25) !important;
+}
+
+.btn-danger {
+    background-color: var(--clypse-danger) !important;
+    border-color: var(--clypse-danger) !important;
+    color: white !important;
+}
+
+.btn-danger:hover,
+.btn-danger:focus,
+.btn-danger:active,
+.btn-danger.active {
+    background-color: var(--clypse-danger-light) !important;
+    border-color: var(--clypse-danger-light) !important;
+    color: white !important;
+    box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25) !important;
 }
 
 .btn-outline-secondary {
