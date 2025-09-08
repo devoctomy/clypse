@@ -15,6 +15,7 @@ public partial class WebSecretForm : ComponentBase
     private bool showPassword = false;
     private bool isSaving = false;
     private string newTag = string.Empty;
+    private bool showPasswordGenerator = false;
 
     protected override void OnParametersSet()
     {
@@ -98,5 +99,27 @@ public partial class WebSecretForm : ComponentBase
         {
             StateHasChanged();
         }
+    }
+
+    private void ShowPasswordGenerator()
+    {
+        showPasswordGenerator = true;
+        StateHasChanged();
+    }
+
+    private void HandlePasswordGenerated(string password)
+    {
+        if (EditableSecret != null)
+        {
+            EditableSecret.Password = password;
+        }
+        showPasswordGenerator = false;
+        StateHasChanged();
+    }
+
+    private void HandlePasswordGeneratorCancel()
+    {
+        showPasswordGenerator = false;
+        StateHasChanged();
     }
 }
