@@ -24,9 +24,9 @@ public partial class PasswordGeneratorDialog : ComponentBase
     protected PasswordType selectedPasswordType = PasswordType.Memorable;
     
     // Memorable Password Options
-    protected List<string>? memorablePasswordTemplates;
-    protected string selectedTemplate = string.Empty;
-    protected bool shuffleTokens = false;
+    protected List<MemorablePasswordTemplateItem>? memorablePasswordTemplates;
+    protected string selectedTemplateName = string.Empty;
+    protected bool shuffleTokens = true;
     
     // Random Password Options
     protected int passwordLength = 16;
@@ -40,12 +40,12 @@ public partial class PasswordGeneratorDialog : ComponentBase
         if (Show && memorablePasswordTemplates == null)
         {
             // Initialize templates from AppSettings
-            memorablePasswordTemplates = AppSettings.MemorablePasswordTemplates?.ToList() ?? new List<string>();
+            memorablePasswordTemplates = AppSettings.MemorablePasswordTemplates?.ToList() ?? new List<MemorablePasswordTemplateItem>();
             
             // Set default template if available
             if (memorablePasswordTemplates.Count > 0)
             {
-                selectedTemplate = memorablePasswordTemplates[0];
+                selectedTemplateName = memorablePasswordTemplates[0].Name;
             }
             
             // Generate initial password
@@ -81,9 +81,10 @@ public partial class PasswordGeneratorDialog : ComponentBase
         {
             if (selectedPasswordType == PasswordType.Memorable)
             {
-                if (!string.IsNullOrEmpty(selectedTemplate))
+                var selectedTemplateItem = memorablePasswordTemplates?.FirstOrDefault(t => t.Name == selectedTemplateName);
+                if (selectedTemplateItem != null && !string.IsNullOrEmpty(selectedTemplateItem.Template))
                 {
-                    generatedPassword = PasswordGeneratorService.GenerateMemorablePassword(selectedTemplate, shuffleTokens);
+                    generatedPassword = PasswordGeneratorService.GenerateMemorablePassword(selectedTemplateItem.Template, shuffleTokens);
                 }
                 else
                 {
