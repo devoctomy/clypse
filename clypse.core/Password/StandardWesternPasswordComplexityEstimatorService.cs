@@ -1,6 +1,4 @@
-﻿using clypse.core.Data;
-using clypse.core.Enums;
-using System.Reflection;
+﻿using clypse.core.Enums;
 
 namespace clypse.core.Password;
 
@@ -9,14 +7,6 @@ namespace clypse.core.Password;
 /// </summary>
 public class StandardWesternPasswordComplexityEstimatorService : IPasswordComplexityEstimatorService
 {
-    private readonly IDataPrefetchService dataPrefetchService;
-    private static List<string>? weakPasswords;
-
-    public StandardWesternPasswordComplexityEstimatorService(IDataPrefetchService dataPrefetchService)
-    {
-        this.dataPrefetchService = dataPrefetchService;
-    }
-
     /// <summary>
     /// Estimates the entropy of the given password.
     /// </summary>
@@ -82,16 +72,6 @@ public class StandardWesternPasswordComplexityEstimatorService : IPasswordComple
         var entropy = (int)Math.Round(this.EstimateEntropy(password), 0);
         var complexity = PasswordComplexityEstimation.Unknown;
 
-        if (this.CheckWeakKnownPasswords(password))
-        {
-            return new PasswordComplexityEstimatorResults
-            {
-                EstimatedEntropy = entropy,
-                ComplexityEstimation = PasswordComplexityEstimation.VeryWeak,
-                AdditionalInfo = "This password is found in a list of weak known passwords.",
-            };
-        }
-
         if (entropy < 0)
         {
             complexity = PasswordComplexityEstimation.Unknown;
@@ -127,15 +107,5 @@ public class StandardWesternPasswordComplexityEstimatorService : IPasswordComple
             ComplexityEstimation = complexity,
             AdditionalInfo = string.Empty,
         };
-    }
-
-    private bool CheckWeakKnownPasswords(string password)
-    {
-        if (weakPasswords == null)
-        {
-            weakPasswords = this.dataPrefetchService.GetPrefetchedLines("weakknownpasswords");
-        }
-
-        return weakPasswords.Contains(password);
     }
 }

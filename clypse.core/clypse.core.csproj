@@ -12,7 +12,6 @@
     <EmbeddedResource Include="Data\Dictionaries\adjective.txt" />
     <EmbeddedResource Include="Data\Dictionaries\noun.txt" />
     <EmbeddedResource Include="Data\Dictionaries\verb.txt" />
-    <EmbeddedResource Include="Data\Dictionaries\weakknownpasswords.txt" />
   </ItemGroup>
 
   <ItemGroup>
