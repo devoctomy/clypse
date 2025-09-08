@@ -99,6 +99,11 @@ public partial class PasswordGeneratorService : IPasswordGeneratorService, IDisp
         int length,
         bool atLeastOneOfEachGroup)
     {
+        if (groups == CharacterGroup.None)
+        {
+            return string.Empty;
+        }
+
         var groupsFromFlags = groups.GetGroupsFromFlags();
         if (length < groupsFromFlags.Count)
         {

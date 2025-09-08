@@ -120,14 +120,14 @@ public class PasswordGeneratorServiceTests : IDisposable
     [InlineData(Enums.CharacterGroup.Lowercase | Enums.CharacterGroup.Uppercase | Enums.CharacterGroup.Digits, 16)]
     [InlineData(Enums.CharacterGroup.Lowercase | Enums.CharacterGroup.Uppercase | Enums.CharacterGroup.Digits | Enums.CharacterGroup.Special, 4)]
     [InlineData(Enums.CharacterGroup.Lowercase | Enums.CharacterGroup.Uppercase | Enums.CharacterGroup.Digits | Enums.CharacterGroup.Special, 16)]
-    public void Given_WhenGenerateRandomPassword_ThenReturnsPassword(
+    public void GivenCharacterGroups_AndLength_WhenGenerateRandomPassword_ThenReturnsPassword(
         Enums.CharacterGroup characterGroups,
         int length)
     {
         // Arrange
         var groupsFromFlags = characterGroups.GetGroupsFromFlags();
 
-        // Arrange & Act
+        // Act
         var result = this.sut.GenerateRandomPassword(characterGroups, length, true);
 
         // Assert
@@ -139,6 +139,17 @@ public class PasswordGeneratorServiceTests : IDisposable
         {
             Assert.True(result.ContainsCharactersFromGroup(curGroup));
         }
+    }
+
+    [Fact]
+    public void GivenNone_WhenGenerateRandomPassword_ThenEmptyStringReturned()
+    {
+        // Arrange & Act
+        var result = this.sut.GenerateRandomPassword(Enums.CharacterGroup.None, 16, true);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Empty(result);
     }
 
     public void Dispose()
