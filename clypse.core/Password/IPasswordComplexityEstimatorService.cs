@@ -18,6 +18,6 @@ public interface IPasswordComplexityEstimatorService
     /// Estimates the complexity of the given password.
     /// </summary>
     /// <param name="password">The password to estimate.</param>
-    /// <returns>A <see cref="PasswordComplexityEstimation"/> value representing the estimated complexity.</returns>
-    public PasswordComplexityEstimation Estimate(string password);
+    /// <returns>A <see cref="PasswordComplexityEstimatorResults"/> value representing the estimated complexity and any additional information.</returns>
+    public PasswordComplexityEstimatorResults Estimate(string password);
 }

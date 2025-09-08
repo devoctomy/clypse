@@ -66,41 +66,46 @@ public class StandardWesternPasswordComplexityEstimatorService : IPasswordComple
     /// Estimates the complexity of the given password.
     /// </summary>
     /// <param name="password">The password to estimate.</param>
-    /// <returns>A <see cref="PasswordComplexityEstimation"/> value representing the estimated complexity.</returns>
-    /// <exception cref="ArgumentNullException">Thrown if the password is null.</exception>
-    public PasswordComplexityEstimation Estimate(string password)
+    /// <returns>A <see cref="PasswordComplexityEstimatorResults"/> value representing the estimated complexity and any additional information.</returns>    /// <exception cref="ArgumentNullException">Thrown if the password is null.</exception>
+    public PasswordComplexityEstimatorResults Estimate(string password)
     {
         var entropy = (int)Math.Round(this.EstimateEntropy(password), 0);
+        var complexity = PasswordComplexityEstimation.Unknown;
 
         if (entropy < 0)
         {
-            return PasswordComplexityEstimation.Unknown;
+            complexity = PasswordComplexityEstimation.Unknown;
         }
         else if (entropy == 0)
         {
-            return PasswordComplexityEstimation.None;
+            complexity = PasswordComplexityEstimation.None;
         }
         else if (entropy <= 75)
         {
-            return PasswordComplexityEstimation.VeryWeak;
+            complexity = PasswordComplexityEstimation.VeryWeak;
         }
         else if (entropy <= 91)
         {
-            return PasswordComplexityEstimation.Weak;
+            complexity = PasswordComplexityEstimation.Weak;
         }
         else if (entropy <= 95)
         {
-            return PasswordComplexityEstimation.Medium;
+            complexity = PasswordComplexityEstimation.Medium;
         }
         else if (entropy <= 105)
         {
-            return PasswordComplexityEstimation.Strong;
+            complexity = PasswordComplexityEstimation.Strong;
         }
         else if (entropy > 105)
         {
-            return PasswordComplexityEstimation.VeryStrong;
+            complexity = PasswordComplexityEstimation.VeryStrong;
         }
 
-        return PasswordComplexityEstimation.Unknown;
+        return new PasswordComplexityEstimatorResults
+        {
+            EstimatedEntropy = entropy,
+            ComplexityEstimation = complexity,
+            AdditionalInfo = string.Empty,
+        };
     }
 }

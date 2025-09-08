@@ -20,6 +20,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IRandomGeneratorService, RandomGeneratorService>();
         services.AddScoped<IPasswordGeneratorService, StandardWesternPasswordGeneratorService>();
         services.AddScoped<IKeyDerivationService, KeyDerivationService>();
+        services.AddScoped<IPasswordComplexityEstimatorService, StandardWesternPasswordComplexityEstimatorService>();
 
         AddAllOfType<IPasswordGeneratorTokenProcessor>(services);
 

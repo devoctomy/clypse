@@ -44,6 +44,6 @@ public class StandardWesternPasswordComplexityEstimatorServiceTests
         var estimation = service.Estimate(password);
 
         // Assert
-        Assert.Equal(expectedEstimation, estimation);
+        Assert.Equal(expectedEstimation, estimation.ComplexityEstimation);
     }
 }
