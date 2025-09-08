@@ -1,5 +1,7 @@
-﻿using clypse.core.Enums;
+﻿using clypse.core.Data;
+using clypse.core.Enums;
 using clypse.core.Password;
+using Moq;
 
 namespace clypse.core.UnitTests.Password;
 
@@ -16,7 +18,8 @@ public class StandardWesternPasswordComplexityEstimatorServiceTests
         int estimatedScore)
     {
         // Arrange
-        var service = new StandardWesternPasswordComplexityEstimatorService();
+        var mockDataPrefetchService = new Mock<IDataPrefetchService>();
+        var service = new StandardWesternPasswordComplexityEstimatorService(mockDataPrefetchService.Object);
 
         // Act
         var score = service.EstimateEntropy(password);
@@ -33,15 +36,21 @@ public class StandardWesternPasswordComplexityEstimatorServiceTests
     [InlineData("A1cdB2ghI3klM4op", PasswordComplexityEstimation.Medium)]
     [InlineData("A1+dB2=hI3_lM4-p", PasswordComplexityEstimation.Strong)]
     [InlineData("A1+dB2=hI3_lM4-p!!", PasswordComplexityEstimation.VeryStrong)]
-    public async Task GivenPassword_WhenEstimate_ThenReturnsExpectedEstimation(
+    public void GivenPassword_WhenEstimate_ThenReturnsExpectedEstimation(
         string password,
         PasswordComplexityEstimation expectedEstimation)
     {
         // Arrange
-        var service = new StandardWesternPasswordComplexityEstimatorService();
+        var mockDataPrefetchService = new Mock<IDataPrefetchService>();
+        var service = new StandardWesternPasswordComplexityEstimatorService(mockDataPrefetchService.Object);
+
+        mockDataPrefetchService.Setup(
+            x => x.GetPrefetchedLines(
+            It.IsAny<string>()))
+            .Returns(new List<string>());
 
         // Act
-        var estimation = await service.EstimateAsync(password, CancellationToken.None);
+        var estimation = service.Estimate(password);
 
         // Assert
         Assert.Equal(expectedEstimation, estimation.ComplexityEstimation);

@@ -34,17 +34,7 @@
     <script src="https://unpkg.com/amazon-cognito-identity-js@6.3.12/dist/amazon-cognito-identity.min.js"></script>
     <script src="js/cognito-auth.js"></script>
     <script src="js/s3-client.js"></script>
-    <script src="prefetch.js"></script>
-    <script src="_framework/blazor.webassembly.js" autostart="false">></script>
-    <script>
-        (async () => {
-            // Wait for your prefetch to complete
-            await window.__prefetchPromise;
-
-            // Now start Blazor
-            await Blazor.start();
-        })();
-    </script>
+    <script src="_framework/blazor.webassembly.js"></script>
     <script>navigator.serviceWorker.register('service-worker.js');</script>
 </body>
 

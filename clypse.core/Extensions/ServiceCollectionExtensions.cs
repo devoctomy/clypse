@@ -1,5 +1,6 @@
 ﻿using clypse.core.Cryptogtaphy;
 using clypse.core.Cryptogtaphy.Interfaces;
+using clypse.core.Data;
 using clypse.core.Password;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -17,6 +18,7 @@ public static class ServiceCollectionExtensions
     /// <returns>The updated service collection.</returns>
     public static IServiceCollection AddClypseCoreServices(this IServiceCollection services)
     {
+        services.AddSingleton<IDataPrefetchService, DataPrefetchService>();
         services.AddScoped<IRandomGeneratorService, RandomGeneratorService>();
         services.AddScoped<IPasswordGeneratorService, StandardWesternPasswordGeneratorService>();
         services.AddScoped<IKeyDerivationService, KeyDerivationService>();

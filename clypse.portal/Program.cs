@@ -7,6 +7,7 @@ using clypse.portal.Models;
 using clypse.portal.Services;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
+using clypse.core.Data;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<App>("#app");
@@ -41,4 +42,28 @@ var appSettings = new AppSettings();
 builder.Configuration.GetSection("AppSettings").Bind(appSettings);
 builder.Services.AddSingleton(appSettings);
 
-await builder.Build().RunAsync();
+var app = builder.Build();
+
+var httpClient = app.Services.GetRequiredService<HttpClient>();
+var dataPrefetchService = app.Services.GetRequiredService<IDataPrefetchService>();
+try
+{
+    Console.WriteLine("Loading weak passwords data during startup...");
+    var weakPasswordsData = await httpClient.GetStringAsync("/data/dictionaries/weakknownpasswords.txt");
+    
+    if (!string.IsNullOrEmpty(weakPasswordsData))
+    {
+        var lines = weakPasswordsData
+            .Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries)
+            .ToList();
+        
+        dataPrefetchService.PrefetchLines("weakknownpasswords", lines);
+        Console.WriteLine($"Loaded {lines.Count} weak passwords during startup");
+    }
+}
+catch (Exception ex)
+{
+    Console.WriteLine($"Error loading weak passwords during startup: {ex.Message}");
+}
+
+await app.RunAsync();

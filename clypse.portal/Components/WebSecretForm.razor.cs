@@ -25,7 +25,7 @@ public partial class WebSecretForm : ComponentBase, IDisposable
     private string? lastAnalyzedPassword;
     private System.Timers.Timer? passwordUpdateTimer;
 
-    protected override async Task OnParametersSetAsync()
+    protected override void OnParametersSet()
     {
         if (IsEditMode && Secret != null)
         {
@@ -39,7 +39,7 @@ public partial class WebSecretForm : ComponentBase, IDisposable
         }
         
         // Analyze password complexity after setting up the editable secret
-        await UpdatePasswordComplexity();
+        UpdatePasswordComplexity();
     }
 
     private void TogglePasswordVisibility()
@@ -118,13 +118,13 @@ public partial class WebSecretForm : ComponentBase, IDisposable
         StateHasChanged();
     }
 
-    private async Task HandlePasswordGenerated(string password)
+    private void HandlePasswordGenerated(string password)
     {
         if (EditableSecret != null)
         {
             EditableSecret.Password = password;
             // For generated passwords, update immediately since user didn't type it
-            await UpdatePasswordComplexity();
+            UpdatePasswordComplexity();
         }
         showPasswordGenerator = false;
         StateHasChanged();
@@ -136,7 +136,7 @@ public partial class WebSecretForm : ComponentBase, IDisposable
         StateHasChanged();
     }
 
-    private async Task UpdatePasswordComplexity()
+    private void UpdatePasswordComplexity()
     {
         Console.WriteLine($"UpdatePasswordComplexity called for password: '{EditableSecret?.Password}'");
         
@@ -154,7 +154,7 @@ public partial class WebSecretForm : ComponentBase, IDisposable
         {
             try
             {
-                passwordComplexityResults = await PasswordComplexityEstimator.EstimateAsync(currentPassword, CancellationToken.None);
+                passwordComplexityResults = PasswordComplexityEstimator.Estimate(currentPassword);
                 lastAnalyzedPassword = currentPassword;
                 Console.WriteLine($"Password complexity updated: {passwordComplexityResults.ComplexityEstimation}");
                 StateHasChanged();
@@ -179,12 +179,12 @@ public partial class WebSecretForm : ComponentBase, IDisposable
             Console.WriteLine("Creating new timer");
             passwordUpdateTimer = new System.Timers.Timer(2000); // 2 seconds
             passwordUpdateTimer.AutoReset = false; // Only fire once
-            passwordUpdateTimer.Elapsed += async (sender, e) =>
+            passwordUpdateTimer.Elapsed += (sender, e) =>
             {
                 Console.WriteLine("Timer elapsed, calling UpdatePasswordComplexity");
-                await InvokeAsync(async () =>
+                InvokeAsync(() =>
                 {
-                    await UpdatePasswordComplexity();
+                    UpdatePasswordComplexity();
                 });
             };
         }

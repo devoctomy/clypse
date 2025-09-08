@@ -18,9 +18,6 @@ public interface IPasswordComplexityEstimatorService
     /// Estimates the complexity of the given password.
     /// </summary>
     /// <param name="password">The password to estimate.</param>
-    /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
     /// <returns>A <see cref="PasswordComplexityEstimatorResults"/> value representing the estimated complexity and any additional information.</returns>
-    public Task<PasswordComplexityEstimatorResults> EstimateAsync(
-        string password,
-        CancellationToken cancellationToken);
+    public PasswordComplexityEstimatorResults Estimate(string password);
 }
