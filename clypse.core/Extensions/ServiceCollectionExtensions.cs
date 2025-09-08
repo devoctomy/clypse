@@ -18,7 +18,7 @@ public static class ServiceCollectionExtensions
     public static IServiceCollection AddClypseCoreServices(this IServiceCollection services)
     {
         services.AddScoped<IRandomGeneratorService, RandomGeneratorService>();
-        services.AddScoped<IPasswordGeneratorService, PasswordGeneratorService>();
+        services.AddScoped<IPasswordGeneratorService, StandardWesternPasswordGeneratorService>();
         services.AddScoped<IKeyDerivationService, KeyDerivationService>();
 
         AddAllOfType<IPasswordGeneratorTokenProcessor>(services);

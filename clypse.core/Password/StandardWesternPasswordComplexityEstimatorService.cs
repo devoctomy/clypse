@@ -5,7 +5,7 @@ namespace clypse.core.Password;
 /// <summary>
 /// Service for estimating the complexity of passwords.
 /// </summary>
-public class PasswordComplexityEstimatorService : IPasswordComplexityEstimatorService
+public class StandardWesternPasswordComplexityEstimatorService : IPasswordComplexityEstimatorService
 {
     /// <summary>
     /// Estimates the entropy of the given password.
@@ -80,25 +80,27 @@ public class PasswordComplexityEstimatorService : IPasswordComplexityEstimatorSe
         {
             return PasswordComplexityEstimation.None;
         }
-        else if (entropy < 30)
+        else if (entropy <= 75)
         {
             return PasswordComplexityEstimation.VeryWeak;
         }
-        else if (entropy < 40)
+        else if (entropy <= 91)
         {
             return PasswordComplexityEstimation.Weak;
         }
-        else if (entropy < 50)
+        else if (entropy <= 95)
         {
             return PasswordComplexityEstimation.Medium;
         }
-        else if (entropy < 60)
+        else if (entropy <= 105)
         {
             return PasswordComplexityEstimation.Strong;
         }
-        else
+        else if (entropy > 105)
         {
             return PasswordComplexityEstimation.VeryStrong;
         }
+
+        return PasswordComplexityEstimation.Unknown;
     }
 }

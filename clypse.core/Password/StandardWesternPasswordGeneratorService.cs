@@ -10,7 +10,7 @@ namespace clypse.core.Password;
 /// <summary>
 /// Default implementation of IPasswordGeneratorService.
 /// </summary>
-public partial class PasswordGeneratorService : IPasswordGeneratorService, IDisposable
+public partial class StandardWesternPasswordGeneratorService : IPasswordGeneratorService, IDisposable
 {
     private readonly IRandomGeneratorService randomGeneratorService;
     private readonly IEnumerable<IPasswordGeneratorTokenProcessor> tokenProcessors;
@@ -18,11 +18,11 @@ public partial class PasswordGeneratorService : IPasswordGeneratorService, IDisp
     private bool disposed = false;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="PasswordGeneratorService"/> class.
+    /// Initializes a new instance of the <see cref="StandardWesternPasswordGeneratorService"/> class.
     /// </summary>
     /// <param name="randomGeneratorService">An instance of IRandomGeneratorService for generating random values.</param>
     /// <param name="tokenProcessors">A collection of token processors for handling different token types in password generation.</param>
-    public PasswordGeneratorService(
+    public StandardWesternPasswordGeneratorService(
         IRandomGeneratorService randomGeneratorService,
         IEnumerable<IPasswordGeneratorTokenProcessor> tokenProcessors)
     {

@@ -4,13 +4,13 @@ using clypse.core.Password;
 
 namespace clypse.core.UnitTests.Password;
 
-public class PasswordGeneratorServiceTests : IDisposable
+public class StandardWesternPasswordGeneratorServiceTests : IDisposable
 {
     private readonly RandomGeneratorService randomGeneratorService;
     private readonly List<IPasswordGeneratorTokenProcessor> tokenProcessors;
-    private readonly PasswordGeneratorService sut;
+    private readonly StandardWesternPasswordGeneratorService sut;
 
-    public PasswordGeneratorServiceTests()
+    public StandardWesternPasswordGeneratorServiceTests()
     {
         this.randomGeneratorService = new RandomGeneratorService();
         this.tokenProcessors =
@@ -18,7 +18,7 @@ public class PasswordGeneratorServiceTests : IDisposable
             new DictionaryTokenProcessor(),
             new RandomStringTokenProcessor(),
         ];
-        this.sut = new PasswordGeneratorService(
+        this.sut = new StandardWesternPasswordGeneratorService(
             this.randomGeneratorService,
             this.tokenProcessors);
     }
