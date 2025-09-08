@@ -45,7 +45,7 @@ public partial class StandardWesternPasswordGeneratorService : IPasswordGenerato
         var key = dictionaryType.ToString();
         if (!this.dictionaryCache.TryGetValue(key, out List<string>? value))
         {
-            var words = this.LoadDictionary(dictionaryType);
+            var words = LoadDictionary(dictionaryType);
             value = words;
             this.dictionaryCache[key] = value;
         }
@@ -207,22 +207,7 @@ public partial class StandardWesternPasswordGeneratorService : IPasswordGenerato
             input.AsSpan(index + length));
     }
 
-    private void AddCharGroupChars(
-        CharacterGroup group,
-        List<string> groupsChars,
-        bool atLeastOneOfEachGroup,
-        StringBuilder password)
-    {
-        var curGroupChars = CharacterGroups.GetGroup(group);
-        groupsChars.Add(curGroupChars);
-        if (atLeastOneOfEachGroup)
-        {
-            var randomChar = curGroupChars[this.randomGeneratorService.GetRandomInt(0, curGroupChars.Length)];
-            password.Append(randomChar);
-        }
-    }
-
-    private List<string> LoadDictionary(DictionaryType dictionaryType)
+    private static List<string> LoadDictionary(DictionaryType dictionaryType)
     {
         var dictionaryKey = $"clypse.core.Data.Dictionaries.{dictionaryType.ToString().ToLower()}.txt";
         var assembly = Assembly.GetExecutingAssembly();
@@ -236,6 +221,21 @@ public partial class StandardWesternPasswordGeneratorService : IPasswordGenerato
         }
 
         return lines;
+    }
+
+    private void AddCharGroupChars(
+        CharacterGroup group,
+        List<string> groupsChars,
+        bool atLeastOneOfEachGroup,
+        StringBuilder password)
+    {
+        var curGroupChars = CharacterGroups.GetGroup(group);
+        groupsChars.Add(curGroupChars);
+        if (atLeastOneOfEachGroup)
+        {
+            var randomChar = curGroupChars[this.randomGeneratorService.GetRandomInt(0, curGroupChars.Length)];
+            password.Append(randomChar);
+        }
     }
 
     private void ThrowIfDisposed()
@@ -273,7 +273,7 @@ public partial class StandardWesternPasswordGeneratorService : IPasswordGenerato
 
     private string ProcessToken(string token)
     {
-        StringBuilder processedToken = new StringBuilder();
+        var processedToken = new StringBuilder();
         var tokenValue = token.Trim('{', '}');
         var tokenParts = tokenValue.Split(':');
         foreach (var curPart in tokenParts)

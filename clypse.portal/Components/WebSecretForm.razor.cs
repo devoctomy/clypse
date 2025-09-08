@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using clypse.core.Secrets;
+using clypse.core.Password;
+using clypse.core.Enums;
 
 namespace clypse.portal.Components;
 
@@ -11,11 +13,15 @@ public partial class WebSecretForm : ComponentBase
     [Parameter] public EventCallback<WebSecret> OnSave { get; set; }
     [Parameter] public EventCallback OnCancel { get; set; }
 
+    [Inject] private IPasswordComplexityEstimatorService? PasswordComplexityEstimator { get; set; }
+
     private WebSecret? EditableSecret { get; set; }
     private bool showPassword = false;
     private bool isSaving = false;
     private string newTag = string.Empty;
     private bool showPasswordGenerator = false;
+    private PasswordComplexityEstimatorResults? passwordComplexityResults;
+    private string? lastAnalyzedPassword;
 
     protected override void OnParametersSet()
     {
@@ -29,6 +35,9 @@ public partial class WebSecretForm : ComponentBase
             // Create mode: Create a new empty secret
             EditableSecret = new WebSecret();
         }
+        
+        // Analyze password complexity after setting up the editable secret
+        UpdatePasswordComplexity();
     }
 
     private void TogglePasswordVisibility()
@@ -112,6 +121,7 @@ public partial class WebSecretForm : ComponentBase
         if (EditableSecret != null)
         {
             EditableSecret.Password = password;
+            UpdatePasswordComplexity();
         }
         showPasswordGenerator = false;
         StateHasChanged();
@@ -121,5 +131,105 @@ public partial class WebSecretForm : ComponentBase
     {
         showPasswordGenerator = false;
         StateHasChanged();
+    }
+
+    private void UpdatePasswordComplexity()
+    {
+        if (PasswordComplexityEstimator == null || EditableSecret == null)
+        {
+            passwordComplexityResults = null;
+            lastAnalyzedPassword = null;
+            return;
+        }
+
+        var currentPassword = EditableSecret.Password ?? string.Empty;
+        
+        // Only recalculate if password has changed
+        if (currentPassword != lastAnalyzedPassword)
+        {
+            try
+            {
+                passwordComplexityResults = PasswordComplexityEstimator.Estimate(currentPassword);
+                lastAnalyzedPassword = currentPassword;
+            }
+            catch
+            {
+                // In case of any error, clear the results
+                passwordComplexityResults = null;
+                lastAnalyzedPassword = null;
+            }
+        }
+    }
+
+    private string GetComplexityColorClass()
+    {
+        if (passwordComplexityResults == null)
+            return "text-dark";
+
+        return passwordComplexityResults.ComplexityEstimation switch
+        {
+            PasswordComplexityEstimation.None => "text-dark",
+            PasswordComplexityEstimation.Unknown => "text-dark",
+            PasswordComplexityEstimation.VeryWeak => "text-danger",
+            PasswordComplexityEstimation.Weak => "text-warning",
+            PasswordComplexityEstimation.Medium => "text-warning",
+            PasswordComplexityEstimation.Strong => "text-success",
+            PasswordComplexityEstimation.VeryStrong => "text-primary",
+            _ => "text-dark"
+        };
+    }
+
+    private string GetComplexityBackgroundColorClass()
+    {
+        if (passwordComplexityResults == null)
+            return "bg-dark";
+
+        return passwordComplexityResults.ComplexityEstimation switch
+        {
+            PasswordComplexityEstimation.None => "bg-dark",
+            PasswordComplexityEstimation.Unknown => "bg-dark",
+            PasswordComplexityEstimation.VeryWeak => "bg-danger",
+            PasswordComplexityEstimation.Weak => "bg-warning",
+            PasswordComplexityEstimation.Medium => "bg-warning",
+            PasswordComplexityEstimation.Strong => "bg-success",
+            PasswordComplexityEstimation.VeryStrong => "bg-primary",
+            _ => "bg-dark"
+        };
+    }
+
+    private string GetComplexityText()
+    {
+        if (passwordComplexityResults == null)
+            return "Unknown";
+
+        return passwordComplexityResults.ComplexityEstimation switch
+        {
+            PasswordComplexityEstimation.None => "None",
+            PasswordComplexityEstimation.Unknown => "Unknown",
+            PasswordComplexityEstimation.VeryWeak => "Very Weak",
+            PasswordComplexityEstimation.Weak => "Weak",
+            PasswordComplexityEstimation.Medium => "Medium",
+            PasswordComplexityEstimation.Strong => "Strong",
+            PasswordComplexityEstimation.VeryStrong => "Very Strong",
+            _ => "Unknown"
+        };
+    }
+
+    private int GetComplexityPercentage()
+    {
+        if (passwordComplexityResults == null)
+            return 0;
+
+        return passwordComplexityResults.ComplexityEstimation switch
+        {
+            PasswordComplexityEstimation.None => 0,
+            PasswordComplexityEstimation.Unknown => 0,
+            PasswordComplexityEstimation.VeryWeak => 16,
+            PasswordComplexityEstimation.Weak => 33,
+            PasswordComplexityEstimation.Medium => 50,
+            PasswordComplexityEstimation.Strong => 83,
+            PasswordComplexityEstimation.VeryStrong => 100,
+            _ => 0
+        };
     }
 }
