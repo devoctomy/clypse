@@ -1,0 +1,23 @@
+﻿using clypse.core.Enums;
+
+namespace clypse.core.Password;
+
+/// <summary>
+/// Interface for services that estimate the complexity of passwords.
+/// </summary>
+public interface IPasswordComplexityEstimatorService
+{
+    /// <summary>
+    /// Estimates the entropy of the given password.
+    /// </summary>
+    /// <param name="password">The password to estimate.</param>
+    /// <returns>A double value representing the estimated entropy.</returns>
+    public double EstimateEntropy(string password);
+
+    /// <summary>
+    /// Estimates the complexity of the given password.
+    /// </summary>
+    /// <param name="password">The password to estimate.</param>
+    /// <returns>A <see cref="PasswordComplexityEstimation"/> value representing the estimated complexity.</returns>
+    public PasswordComplexityEstimation Estimate(string password);
+}
