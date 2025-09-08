@@ -3,10 +3,11 @@ using Microsoft.AspNetCore.Components.Web;
 using clypse.core.Secrets;
 using clypse.core.Password;
 using clypse.core.Enums;
+using System.Timers;
 
 namespace clypse.portal.Components;
 
-public partial class WebSecretForm : ComponentBase
+public partial class WebSecretForm : ComponentBase, IDisposable
 {
     [Parameter] public WebSecret? Secret { get; set; }
     [Parameter] public bool IsEditMode { get; set; } = true;
@@ -22,6 +23,7 @@ public partial class WebSecretForm : ComponentBase
     private bool showPasswordGenerator = false;
     private PasswordComplexityEstimatorResults? passwordComplexityResults;
     private string? lastAnalyzedPassword;
+    private System.Timers.Timer? passwordUpdateTimer;
 
     protected override void OnParametersSet()
     {
@@ -121,6 +123,7 @@ public partial class WebSecretForm : ComponentBase
         if (EditableSecret != null)
         {
             EditableSecret.Password = password;
+            // For generated passwords, update immediately since user didn't type it
             UpdatePasswordComplexity();
         }
         showPasswordGenerator = false;
@@ -135,6 +138,8 @@ public partial class WebSecretForm : ComponentBase
 
     private void UpdatePasswordComplexity()
     {
+        Console.WriteLine($"UpdatePasswordComplexity called for password: '{EditableSecret?.Password}'");
+        
         if (PasswordComplexityEstimator == null || EditableSecret == null)
         {
             passwordComplexityResults = null;
@@ -151,13 +156,51 @@ public partial class WebSecretForm : ComponentBase
             {
                 passwordComplexityResults = PasswordComplexityEstimator.Estimate(currentPassword);
                 lastAnalyzedPassword = currentPassword;
+                Console.WriteLine($"Password complexity updated: {passwordComplexityResults.ComplexityEstimation}");
+                StateHasChanged();
             }
-            catch
+            catch (Exception ex)
             {
                 // In case of any error, clear the results
+                Console.WriteLine($"Error estimating password complexity: {ex.Message}");
                 passwordComplexityResults = null;
                 lastAnalyzedPassword = null;
             }
+        }
+    }
+
+    private void OnPasswordChanged()
+    {
+        Console.WriteLine("OnPasswordChanged called");
+        
+        // Initialize timer if not already created
+        if (passwordUpdateTimer == null)
+        {
+            Console.WriteLine("Creating new timer");
+            passwordUpdateTimer = new System.Timers.Timer(2000); // 2 seconds
+            passwordUpdateTimer.AutoReset = false; // Only fire once
+            passwordUpdateTimer.Elapsed += async (sender, e) =>
+            {
+                Console.WriteLine("Timer elapsed, calling UpdatePasswordComplexity");
+                await InvokeAsync(() =>
+                {
+                    UpdatePasswordComplexity();
+                });
+            };
+        }
+        
+        // Stop the timer if it's running and restart it
+        Console.WriteLine("Stopping and starting timer");
+        passwordUpdateTimer.Stop();
+        passwordUpdateTimer.Start();
+    }
+
+    private void OnPasswordInput(ChangeEventArgs e)
+    {
+        if (EditableSecret != null)
+        {
+            EditableSecret.Password = e.Value?.ToString() ?? string.Empty;
+            OnPasswordChanged();
         }
     }
 
@@ -231,5 +274,12 @@ public partial class WebSecretForm : ComponentBase
             PasswordComplexityEstimation.VeryStrong => 100,
             _ => 0
         };
+    }
+
+    public void Dispose()
+    {
+        passwordUpdateTimer?.Stop();
+        passwordUpdateTimer?.Dispose();
+        passwordUpdateTimer = null;
     }
 }
