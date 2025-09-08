@@ -28,7 +28,7 @@ public class PasswordGeneratorServiceTests : IDisposable
     public void GivenInvalidTemplate_WhenLoadDictionary_ThenEmptyStringReturned(string invalidTemplate)
     {
         // Arrange & Act
-        var result = this.sut.GenerateMemorablePassword(invalidTemplate);
+        var result = this.sut.GenerateMemorablePassword(invalidTemplate, false);
 
         // Assert
         Assert.Empty(result);
@@ -58,7 +58,7 @@ public class PasswordGeneratorServiceTests : IDisposable
         var verbs = this.sut.GetOrLoadDictionary(Enums.DictionaryType.Verb);
 
         // Act
-        var result = this.sut.GenerateMemorablePassword(template);
+        var result = this.sut.GenerateMemorablePassword(template, false);
 
         // Assert
         Assert.NotNull(result);
@@ -67,6 +67,26 @@ public class PasswordGeneratorServiceTests : IDisposable
         Assert.Contains(adjectives, x => x.Equals(parts[0], StringComparison.InvariantCultureIgnoreCase));
         Assert.Contains(nouns, x => x.Equals(parts[1], StringComparison.InvariantCultureIgnoreCase));
         Assert.Contains(verbs, x => x.Equals(parts[2], StringComparison.InvariantCultureIgnoreCase));
+    }
+
+    [Theory]
+    [InlineData("{dict(adjective):random}{randstr(0123456789,6):random}{dict(verb):random}{randstr(-=_,1)}{dict(noun):random}", true, null)]
+    [InlineData("{randstr(0,1)}{randstr(1,1)}{randstr(2,1)}{randstr(3,1)}{randstr(4,1)}{randstr(5,1)}{randstr(6,1)}{randstr(7,1)}{randstr(8,1)}{randstr(9,1)}", true, "0123456789")]
+    public void GivenTemplate_AndShuffleTokens_WhenGenerateMemorablePassword_ThenPasswordReturned(
+        string template,
+        bool shuffleTokens,
+        string? notEqualTo)
+    {
+        // Arrange & Act
+        var result = this.sut.GenerateMemorablePassword(template, shuffleTokens);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.NotEmpty(result);
+        if (!string.IsNullOrEmpty(notEqualTo))
+        {
+            Assert.NotEqual(notEqualTo, result);
+        }
     }
 
     [Theory]

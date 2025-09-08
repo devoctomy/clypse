@@ -24,8 +24,11 @@ public interface IPasswordGeneratorService
     /// Generates a memorable password based on the provided template.
     /// </summary>
     /// <param name="template">Template to use for password generation.</param>
+    /// <param name="shuffleTokens">Whether to shuffle the tokens in the generated password.</param>
     /// <returns>Returns a password adhering to the format specified by the provided template.</returns>
-    public string GenerateMemorablePassword(string template);
+    public string GenerateMemorablePassword(
+        string template,
+        bool shuffleTokens);
 
     /// <summary>
     /// Generates a random password based on the specified character groups and length.

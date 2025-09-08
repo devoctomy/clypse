@@ -57,14 +57,17 @@ public partial class PasswordGeneratorService : IPasswordGeneratorService, IDisp
     /// Generates a memorable password based on the provided template.
     /// </summary>
     /// <param name="template">Template to use for password generation.</param>
+    /// <param name="shuffleTokens">Whether to shuffle the tokens in the generated password.</param>
     /// <returns>Returns a password adhering to the format specified by the provided template.</returns>
-    public string GenerateMemorablePassword(string template)
+    public string GenerateMemorablePassword(
+        string template,
+        bool shuffleTokens)
     {
         this.ThrowIfDisposed();
         try
         {
-            var password = template;
-            var tokens = ExtractTokensFromTemplate(template);
+            var password = shuffleTokens ? this.ShuffleTemplateTokens(template) : template;
+            var tokens = ExtractTokensFromTemplate(password);
             for (var i = tokens.Count - 1; i >= 0; i--)
             {
                 var curToken = tokens[i];
@@ -235,6 +238,34 @@ public partial class PasswordGeneratorService : IPasswordGeneratorService, IDisp
         ObjectDisposedException.ThrowIf(this.disposed, nameof(this.randomGeneratorService));
     }
 
+    private string ShuffleTemplateTokens(string template)
+    {
+        var tokens = ExtractTokensFromTemplate(template);
+
+        if (tokens.Count <= 1)
+        {
+            return template;
+        }
+
+        var listSwapped = new List<string>();
+        var swapped = template;
+        for (var i = 0; i < tokens.Count * 10; i++)
+        {
+            var token1 = this.randomGeneratorService.GetRandomArrayEntry<Match>(tokens.ToArray());
+            var token2 = this.randomGeneratorService.GetRandomArrayEntry<Match>(tokens.ToArray());
+            while (token1 == token2)
+            {
+                token2 = this.randomGeneratorService.GetRandomArrayEntry<Match>(tokens.ToArray());
+            }
+
+            swapped = token1.SwapWith(token2, swapped);
+            tokens = ExtractTokensFromTemplate(swapped);
+            listSwapped.Add(token1.Value);
+        }
+
+        return swapped;
+    }
+
     private string ProcessToken(string token)
     {
         StringBuilder processedToken = new StringBuilder();
@@ -242,7 +273,14 @@ public partial class PasswordGeneratorService : IPasswordGeneratorService, IDisp
         var tokenParts = tokenValue.Split(':');
         foreach (var curPart in tokenParts)
         {
-            switch (curPart.ToLower())
+            var curPartLower = curPart.ToLower();
+            if (curPartLower == "random")
+            {
+                var allCasingOptions = new[] { "upper", "lower", "initialupper", "initiallower" };
+                curPartLower = this.randomGeneratorService.GetRandomArrayEntry<string>(allCasingOptions);
+            }
+
+            switch (curPartLower)
             {
                 case "upper":
                     processedToken = new StringBuilder(processedToken.ToString().ToUpper());
@@ -250,6 +288,18 @@ public partial class PasswordGeneratorService : IPasswordGeneratorService, IDisp
 
                 case "lower":
                     processedToken = new StringBuilder(processedToken.ToString().ToLower());
+                    break;
+
+                case "initialupper":
+                    var initialUpper = processedToken.ToString().ToLower();
+                    initialUpper = char.ToUpper(initialUpper[0]) + initialUpper[1..];
+                    processedToken = new StringBuilder(initialUpper);
+                    break;
+
+                case "initiallower":
+                    var initialLower = processedToken.ToString().ToUpper();
+                    initialLower = char.ToLower(initialLower[0]) + initialLower[1..];
+                    processedToken = new StringBuilder(initialLower);
                     break;
 
                 default:

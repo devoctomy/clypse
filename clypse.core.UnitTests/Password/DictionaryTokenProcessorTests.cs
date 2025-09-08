@@ -2,7 +2,6 @@
 using clypse.core.Enums;
 using clypse.core.Password;
 using Moq;
-using System.Security.Cryptography;
 
 namespace clypse.core.UnitTests.Password;
 
@@ -67,7 +66,7 @@ public class DictionaryTokenProcessorTests
 
         mockPasswordGeneratorService.Verify(
             x => x.GetOrLoadDictionary(
-            It.Is<Enums.DictionaryType>(y => y == Enums.DictionaryType.Verb)), Times.Once);
+            It.Is<DictionaryType>(y => y == DictionaryType.Verb)), Times.Once);
         mockRandomGeneratorService.Verify(
             x => x.GetRandomArrayEntry<string>(
             It.Is<string[]>(y => y.SequenceEqual(words))), Times.Once);
