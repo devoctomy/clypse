@@ -26,4 +26,8 @@
     </PackageReference>
   </ItemGroup>
 
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Exec Command="powershell -ExecutionPolicy Bypass -File &quot;$(SolutionDir)compress-dictionaries.ps1&quot;" />
+  </Target>
+
 </Project>
