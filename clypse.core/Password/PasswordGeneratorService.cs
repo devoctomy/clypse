@@ -181,21 +181,6 @@ public partial class PasswordGeneratorService : IPasswordGeneratorService, IDisp
         }
     }
 
-    private void AddCharGroupChars(
-        CharacterGroup group,
-        List<string> groupsChars,
-        bool atLeastOneOfEachGroup,
-        StringBuilder password)
-    {
-        var curGroupChars = CharacterGroups.GetGroup(group);
-        groupsChars.Add(curGroupChars);
-        if (atLeastOneOfEachGroup)
-        {
-            var randomChar = curGroupChars[this.randomGeneratorService.GetRandomInt(0, curGroupChars.Length)];
-            password.Append(randomChar);
-        }
-    }
-
     private static List<Match> ExtractTokensFromTemplate(string template)
     {
         var matches = TokenExtractionRegex().Matches(template);
@@ -215,6 +200,21 @@ public partial class PasswordGeneratorService : IPasswordGeneratorService, IDisp
             input.AsSpan(0, index),
             replacement,
             input.AsSpan(index + length));
+    }
+
+    private void AddCharGroupChars(
+        CharacterGroup group,
+        List<string> groupsChars,
+        bool atLeastOneOfEachGroup,
+        StringBuilder password)
+    {
+        var curGroupChars = CharacterGroups.GetGroup(group);
+        groupsChars.Add(curGroupChars);
+        if (atLeastOneOfEachGroup)
+        {
+            var randomChar = curGroupChars[this.randomGeneratorService.GetRandomInt(0, curGroupChars.Length)];
+            password.Append(randomChar);
+        }
     }
 
     private List<string> LoadDictionary(DictionaryType dictionaryType)

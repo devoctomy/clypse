@@ -35,6 +35,7 @@ public interface IPasswordGeneratorService
     /// </summary>
     /// <param name="groups">Character groups to include in the password.</param>
     /// <param name="length">Length of the password to generate.</param>
+    /// <param name="atLeastOneOfEachGroup">Whether to include at least one character from each specified group.</param>
     /// <returns>A randomly generated password.</returns>
     public string GenerateRandomPassword(
         CharacterGroup groups,
