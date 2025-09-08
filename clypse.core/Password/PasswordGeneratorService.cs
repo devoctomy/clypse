@@ -3,6 +3,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using clypse.core.Cryptogtaphy;
 using clypse.core.Enums;
+using clypse.core.Extensions;
 
 namespace clypse.core.Password;
 
@@ -88,38 +89,64 @@ public partial class PasswordGeneratorService : IPasswordGeneratorService, IDisp
     /// </summary>
     /// <param name="groups">Character groups to include in the password.</param>
     /// <param name="length">Length of the password to generate.</param>
+    /// <param name="atLeastOneOfEachGroup">If true, ensures that at least one character from each selected group is included in the password.</param>
     /// <returns>A randomly generated password.</returns>
     public string GenerateRandomPassword(
         CharacterGroup groups,
-        int length)
+        int length,
+        bool atLeastOneOfEachGroup)
     {
-        var characterGroup = new StringBuilder();
+        var groupsFromFlags = groups.GetGroupsFromFlags();
+        if (length < groupsFromFlags.Count)
+        {
+            throw new ArgumentException("Length must be at least equal to the number of selected character groups.", nameof(length));
+        }
+
+        var password = new StringBuilder();
+        var groupsChars = new List<string>();
 
         if (groups.HasFlag(CharacterGroup.Lowercase))
         {
-            characterGroup.Append(CharacterGroups.GetGroup(CharacterGroup.Lowercase));
+            this.AddCharGroupChars(
+                CharacterGroup.Lowercase,
+                groupsChars,
+                atLeastOneOfEachGroup,
+                password);
         }
 
         if (groups.HasFlag(CharacterGroup.Uppercase))
         {
-            characterGroup.Append(CharacterGroups.GetGroup(CharacterGroup.Uppercase));
+            this.AddCharGroupChars(
+                CharacterGroup.Uppercase,
+                groupsChars,
+                atLeastOneOfEachGroup,
+                password);
         }
 
         if (groups.HasFlag(CharacterGroup.Digits))
         {
-            characterGroup.Append(CharacterGroups.GetGroup(CharacterGroup.Digits));
+            this.AddCharGroupChars(
+                CharacterGroup.Digits,
+                groupsChars,
+                atLeastOneOfEachGroup,
+                password);
         }
 
         if (groups.HasFlag(CharacterGroup.Special))
         {
-            characterGroup.Append(CharacterGroups.GetGroup(CharacterGroup.Special));
+            this.AddCharGroupChars(
+                CharacterGroup.Special,
+                groupsChars,
+                atLeastOneOfEachGroup,
+                password);
         }
 
-        var password = new StringBuilder();
         while (password.Length < length)
         {
-            var index = this.randomGeneratorService.GetRandomInt(0, characterGroup.Length);
-            password.Append(characterGroup[index]);
+            var group = groupsChars[this.randomGeneratorService.GetRandomInt(0, groupsChars.Count)];
+            var index = this.randomGeneratorService.GetRandomInt(0, group.Length);
+            var insertIndex = this.randomGeneratorService.GetRandomInt(0, password.Length + 1);
+            password.Insert(insertIndex, group[index]);
         }
 
         return password.ToString();
@@ -148,6 +175,21 @@ public partial class PasswordGeneratorService : IPasswordGeneratorService, IDisp
             }
 
             this.disposed = true;
+        }
+    }
+
+    private void AddCharGroupChars(
+        CharacterGroup group,
+        List<string> groupsChars,
+        bool atLeastOneOfEachGroup,
+        StringBuilder password)
+    {
+        var curGroupChars = CharacterGroups.GetGroup(group);
+        groupsChars.Add(curGroupChars);
+        if (atLeastOneOfEachGroup)
+        {
+            var randomChar = curGroupChars[this.randomGeneratorService.GetRandomInt(0, curGroupChars.Length)];
+            password.Append(randomChar);
         }
     }
 

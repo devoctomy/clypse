@@ -35,5 +35,6 @@ public interface IPasswordGeneratorService
     /// <returns>A randomly generated password.</returns>
     public string GenerateRandomPassword(
         CharacterGroup groups,
-        int length);
+        int length,
+        bool atLeastOneOfEachGroup);
 }
