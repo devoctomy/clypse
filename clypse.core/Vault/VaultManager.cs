@@ -6,6 +6,7 @@ using clypse.core.Cloud.Interfaces;
 using clypse.core.Compression.Interfaces;
 using clypse.core.Cryptogtaphy;
 using clypse.core.Cryptogtaphy.Interfaces;
+using clypse.core.Json;
 using clypse.core.Secrets;
 using clypse.core.Vault.Exceptions;
 
@@ -22,6 +23,7 @@ public class VaultManager : IVaultManager
         Converters =
         {
             new JsonStringEnumConverter(JsonNamingPolicy.CamelCase),
+            new JElementToPrimativesConverter(),
         },
     };
 

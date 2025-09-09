@@ -1,6 +1,7 @@
 ﻿using System.Text.Json;
 using System.Text.Json.Serialization;
 using clypse.core.Base;
+using clypse.core.Json;
 
 namespace clypse.core.UnitTests.Base;
 
@@ -12,6 +13,7 @@ public class ClypseObjectTests
         Converters =
         {
             new JsonStringEnumConverter(JsonNamingPolicy.CamelCase),
+            new JElementToPrimativesConverter(),
         },
     };
 
