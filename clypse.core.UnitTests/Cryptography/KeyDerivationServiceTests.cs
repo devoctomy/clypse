@@ -7,7 +7,7 @@ public class KeyDerivationServiceTests
 {
     [Theory]
     [InlineData(KeyDerivationAlgorithm.Rfc2898, "password123", "pHCLgS6uUD+4G7ikp7J1m4DtHEueBLt1y5CH8ZK5NF8=")]
-    [InlineData(KeyDerivationAlgorithm.Argon2id, "password123", "vWvrnwF/Un5j7Id/gSxs/KKLT4SXgbcCu2+g06T1Rrw=")]
+    [InlineData(KeyDerivationAlgorithm.Argon2id, "password123", "gvPfoBqAnZTEdUPRnWpt2XDwFN2eH5lxdOt+4bFaIus=")]
     public async Task GivenAlgorithm_AndPassphrase_AndBase64Salt_WhenDeriveKeyFromPassphraseAsync_ThenKeyDerivedCorrectly(
         KeyDerivationAlgorithm algorithm,
         string passphrase,

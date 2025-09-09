@@ -41,7 +41,7 @@ public class StandardWesternPasswordComplexityEstimatorServiceTests
         var sut = new StandardWesternPasswordComplexityEstimatorService();
 
         // Act
-        var estimation = await sut.EstimateAsync(password, CancellationToken.None);
+        var estimation = await sut.EstimateAsync(password, false, CancellationToken.None);
 
         // Assert
         Assert.Equal(expectedEstimation, estimation.ComplexityEstimation);

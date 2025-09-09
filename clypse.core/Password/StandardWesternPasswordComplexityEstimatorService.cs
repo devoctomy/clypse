@@ -71,10 +71,12 @@ public class StandardWesternPasswordComplexityEstimatorService : IPasswordComple
     /// Estimates the complexity of the given password.
     /// </summary>
     /// <param name="password">The password to estimate.</param>
+    /// <param name="checkForPwnedPasswords">Whether to check the password against a database of known compromised passwords.</param>
     /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
     /// <returns>A <see cref="PasswordComplexityEstimatorResults"/> value representing the estimated complexity and any additional information.</returns>    /// <exception cref="ArgumentNullException">Thrown if the password is null.</exception>
     public async Task<PasswordComplexityEstimatorResults> EstimateAsync(
         string password,
+        bool checkForPwnedPasswords,
         CancellationToken cancellationToken)
     {
         if (string.IsNullOrEmpty(password))
@@ -90,7 +92,7 @@ public class StandardWesternPasswordComplexityEstimatorService : IPasswordComple
         var entropy = (int)Math.Round(this.EstimateEntropy(password), 0);
         var complexity = PasswordComplexityEstimation.Unknown;
 
-        if (await IsWeakKnownPasswordAsync(password, cancellationToken))
+        if (checkForPwnedPasswords && await IsWeakKnownPasswordAsync(password, cancellationToken))
         {
             return new PasswordComplexityEstimatorResults
             {

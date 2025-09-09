@@ -154,7 +154,10 @@ public partial class WebSecretForm : ComponentBase, IDisposable
         {
             try
             {
-                passwordComplexityResults = await PasswordComplexityEstimator.EstimateAsync(currentPassword, CancellationToken.None);
+                passwordComplexityResults = await PasswordComplexityEstimator.EstimateAsync(
+                    currentPassword,
+                    true,
+                    CancellationToken.None);
                 lastAnalyzedPassword = currentPassword;
                 Console.WriteLine($"Password complexity updated: {passwordComplexityResults.ComplexityEstimation}");
                 StateHasChanged();
