@@ -1,9 +1,9 @@
-﻿using clypse.core.Base;
+﻿using System.Text.Json;
+using System.Text.Json.Serialization;
+using clypse.core.Base;
 using clypse.core.Base.Exceptions;
 using clypse.core.Json;
 using clypse.core.Secrets;
-using System.Text.Json;
-using System.Text.Json.Serialization;
 
 namespace clypse.core.UnitTests.Secrets;
 

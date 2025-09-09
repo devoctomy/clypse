@@ -1,4 +1,6 @@
-﻿using Amazon.S3.Model;
+﻿using System.Text.Json;
+using System.Text.Json.Serialization;
+using Amazon.S3.Model;
 using clypse.core.Cloud.Exceptions;
 using clypse.core.Cloud.Interfaces;
 using clypse.core.Compression.Interfaces;
@@ -7,10 +9,7 @@ using clypse.core.Json;
 using clypse.core.Secrets;
 using clypse.core.Vault;
 using clypse.core.Vault.Exceptions;
-using Microsoft.VisualBasic;
 using Moq;
-using System.Text.Json;
-using System.Text.Json.Serialization;
 
 namespace clypse.core.UnitTests.Vault;
 
