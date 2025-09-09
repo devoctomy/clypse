@@ -177,8 +177,10 @@ public partial class WebSecretForm : ComponentBase, IDisposable
         if (passwordUpdateTimer == null)
         {
             Console.WriteLine("Creating new timer");
-            passwordUpdateTimer = new System.Timers.Timer(2000); // 2 seconds
-            passwordUpdateTimer.AutoReset = false; // Only fire once
+            passwordUpdateTimer = new System.Timers.Timer(2000)
+            {
+                AutoReset = false
+            };
             passwordUpdateTimer.Elapsed += (sender, e) =>
             {
                 Console.WriteLine("Timer elapsed, calling UpdatePasswordComplexity");
@@ -278,6 +280,7 @@ public partial class WebSecretForm : ComponentBase, IDisposable
 
     public void Dispose()
     {
+        GC.SuppressFinalize(this);
         passwordUpdateTimer?.Stop();
         passwordUpdateTimer?.Dispose();
         passwordUpdateTimer = null;

@@ -41,4 +41,5 @@ Scenario: Create and save vault to S3, perform basic CRUD operations on secrets,
 	And verify results successful
 	And verify results valid
 	And vault listed
+	And bootstrapper lists vault
 	And vault deleted

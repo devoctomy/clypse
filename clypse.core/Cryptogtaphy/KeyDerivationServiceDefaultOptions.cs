@@ -30,7 +30,7 @@ public class KeyDerivationServiceDefaultOptions
         options.Parameters[KeyDerivationParameterKeys.Algorithm] = KeyDerivationAlgorithm.Argon2id.ToString();
         options.Parameters[KeyDerivationParameterKeys.Argon2id_KeyLength] = 32;
         options.Parameters[KeyDerivationParameterKeys.Argon2id_Parallelism] = 2;
-        options.Parameters[KeyDerivationParameterKeys.Argon2id_MemorySizeKb] = 65536;
+        options.Parameters[KeyDerivationParameterKeys.Argon2id_MemorySizeKb] = 131072; // 65536;
         options.Parameters[KeyDerivationParameterKeys.Argon2id_Iterations] = 1;
         return options;
     }

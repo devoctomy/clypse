@@ -1,7 +1,6 @@
-﻿using clypse.core.Compression;
+﻿using System.Reflection;
+using clypse.core.Compression;
 using clypse.core.Enums;
-using System.Linq;
-using System.Reflection;
 
 namespace clypse.core.Password;
 
@@ -70,7 +69,7 @@ public class StandardWesternPasswordComplexityEstimatorService : IPasswordComple
     /// <summary>
     /// Estimates the complexity of the given password.
     /// </summary>
-    /// <param name="password">The password to estimate.</param
+    /// <param name="password">The password to estimate.</param>
     /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
     /// <returns>A <see cref="PasswordComplexityEstimatorResults"/> value representing the estimated complexity and any additional information.</returns>    /// <exception cref="ArgumentNullException">Thrown if the password is null.</exception>
     public async Task<PasswordComplexityEstimatorResults> EstimateAsync(

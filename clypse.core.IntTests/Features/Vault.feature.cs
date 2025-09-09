@@ -242,6 +242,9 @@ await this.FeatureBackgroundAsync();
  await testRunner.AndAsync("vault listed", ((string)(null)), ((global::Reqnroll.Table)(null)), "And ");
 #line hidden
 #line 44
+ await testRunner.AndAsync("bootstrapper lists vault", ((string)(null)), ((global::Reqnroll.Table)(null)), "And ");
+#line hidden
+#line 45
  await testRunner.AndAsync("vault deleted", ((string)(null)), ((global::Reqnroll.Table)(null)), "And ");
 #line hidden
             }

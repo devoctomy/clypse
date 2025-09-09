@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Security;
 using clypse.core.Cloud;
 using clypse.core.Cloud.Aws.S3;
@@ -21,6 +22,7 @@ public sealed class VaultStepDefinitions(TestContext testContext)
     private IVaultManager? vaultManager;
     private IEncryptedCloudStorageProvider? encryptedCloudStorageProvider;
     private ICryptoService? cryptoService;
+    private IVaultManagerBootstrapperService? vaultManagerBootstrapperService;
 
     [Given("aws access key loaded from environment variable")]
     public void AwsAccessKeyLoadedFromEnvironmentVariable()
@@ -80,6 +82,16 @@ public sealed class VaultStepDefinitions(TestContext testContext)
     [Given("vault manager is initialised")]
     public void GivenVaultManagerIsInitialised()
     {
+        this.vaultManagerBootstrapperService = new AwsS3VaultManagerBootstrapperService(
+            this.testContext.IdentityId!,
+            new AwsS3E2eCloudStorageProvider(
+            this.testContext.BucketName!,
+            new AmazonS3ClientWrapper(
+                this.testContext.AwsAccessKey!,
+                this.testContext.SecretAccessKey!,
+                Amazon.RegionEndpoint.EUWest2),
+            this.cryptoService!));
+
         this.vaultManager = new VaultManager(
             this.testContext.IdentityId!,
             this.keyDerivationService!,
@@ -209,6 +221,14 @@ public sealed class VaultStepDefinitions(TestContext testContext)
         var allVaultIds = await this.vaultManager!.ListVaultIdsAsync(CancellationToken.None);
         Assert.Single(allVaultIds);
         Assert.Equal(this.testContext!.Vault!.Info.Id, allVaultIds[0]);
+    }
+
+    [Then("bootstrapper lists vault")]
+    public async Task ThenBootstrapperListsVault()
+    {
+        var vaults = await this.vaultManagerBootstrapperService!.ListVaultsAsync(CancellationToken.None);
+        Assert.Single(vaults);
+        Assert.Equal(this.testContext!.Vault!.Info.Id, vaults[0].Id);
     }
 
     [Then("vault deleted")]
