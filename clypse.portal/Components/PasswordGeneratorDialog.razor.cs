@@ -35,7 +35,7 @@ public partial class PasswordGeneratorDialog : ComponentBase
     protected bool includeDigits = true;
     protected bool includeSpecial = true;
 
-    protected override async Task OnParametersSetAsync()
+    protected override void OnParametersSet()
     {
         if (Show && memorablePasswordTemplates == null)
         {
@@ -49,30 +49,30 @@ public partial class PasswordGeneratorDialog : ComponentBase
             }
             
             // Generate initial password
-            await GeneratePasswordAsync();
+            _ = InvokeAsync(GeneratePasswordAsync);
         }
     }
 
-    protected async Task SetPasswordTypeAsync(PasswordType passwordType)
+    protected void SetPasswordType(PasswordType passwordType)
     {
         selectedPasswordType = passwordType;
-        await GeneratePasswordAsync();
+        _ = InvokeAsync(GeneratePasswordAsync);
         StateHasChanged();
     }
 
-    protected async Task OnTemplateChangedAsync()
+    protected void OnTemplateChanged()
     {
-        await GeneratePasswordAsync();
+        _ = InvokeAsync(GeneratePasswordAsync);
     }
 
-    protected async Task OnOptionsChangedAsync()
+    protected void OnOptionsChanged()
     {
-        await GeneratePasswordAsync();
+        _ = InvokeAsync(GeneratePasswordAsync);
     }
 
-    protected async Task RegeneratePasswordAsync()
+    protected void RegeneratePassword()
     {
-        await GeneratePasswordAsync();
+        _ = InvokeAsync(GeneratePasswordAsync);
     }
 
     private async Task GeneratePasswordAsync()
@@ -84,12 +84,7 @@ public partial class PasswordGeneratorDialog : ComponentBase
                 var selectedTemplateItem = memorablePasswordTemplates?.FirstOrDefault(t => t.Name == selectedTemplateName);
                 if (selectedTemplateItem != null && !string.IsNullOrEmpty(selectedTemplateItem.Template))
                 {
-                    var result = await PasswordGeneratorService.GenerateMemorablePasswordAsync(selectedTemplateItem.Template, shuffleTokens, CancellationToken.None);
-                    generatedPassword = result ?? "Failed to generate password";
-                    if (string.IsNullOrEmpty(generatedPassword))
-                    {
-                        generatedPassword = "Generated password was empty";
-                    }
+                    generatedPassword = await PasswordGeneratorService.GenerateMemorablePasswordAsync(selectedTemplateItem.Template, shuffleTokens, CancellationToken.None);
                 }
                 else
                 {

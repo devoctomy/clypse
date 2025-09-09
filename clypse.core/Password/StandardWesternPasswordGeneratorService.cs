@@ -47,21 +47,27 @@ public partial class StandardWesternPasswordGeneratorService : IPasswordGenerato
         CancellationToken cancellationToken)
     {
         this.ThrowIfDisposed();
-        
-        var password = shuffleTokens ? this.ShuffleTemplateTokens(template) : template;
-        var tokens = ExtractTokensFromTemplate(password);
-        for (var i = tokens.Count - 1; i >= 0; i--)
+        try
         {
-            var curToken = tokens[i];
-            var processedToken = await this.ProcessTokenAsync(curToken.Value, cancellationToken);
-            password = ReplaceAt(
-                password,
-                curToken.Index,
-                curToken.Length,
-                processedToken);
-        }
+            var password = shuffleTokens ? this.ShuffleTemplateTokens(template) : template;
+            var tokens = ExtractTokensFromTemplate(password);
+            for (var i = tokens.Count - 1; i >= 0; i--)
+            {
+                var curToken = tokens[i];
+                var processedToken = await this.ProcessTokenAsync(curToken.Value, cancellationToken);
+                password = ReplaceAt(
+                    password,
+                    curToken.Index,
+                    curToken.Length,
+                    processedToken);
+            }
 
-        return password;
+            return password;
+        }
+        catch
+        {
+            return string.Empty;
+        }
     }
 
     /// <summary>

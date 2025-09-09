@@ -118,13 +118,13 @@ public partial class WebSecretForm : ComponentBase, IDisposable
         StateHasChanged();
     }
 
-    private void HandlePasswordGenerated(string password)
+    private async Task HandlePasswordGenerated(string password)
     {
         if (EditableSecret != null)
         {
             EditableSecret.Password = password;
             // For generated passwords, update immediately since user didn't type it
-            _ = InvokeAsync(async () => await UpdatePasswordComplexityAsync());
+            await UpdatePasswordComplexityAsync();
         }
         showPasswordGenerator = false;
         StateHasChanged();
