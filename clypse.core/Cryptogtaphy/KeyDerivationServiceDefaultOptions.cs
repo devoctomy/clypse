@@ -27,11 +27,19 @@ public class KeyDerivationServiceDefaultOptions
     public static KeyDerivationServiceOptions Blazor_Argon2id()
     {
         var options = new KeyDerivationServiceOptions();
+#if DEBUG
         options.Parameters[KeyDerivationParameterKeys.Algorithm] = KeyDerivationAlgorithm.Argon2id.ToString();
         options.Parameters[KeyDerivationParameterKeys.Argon2id_KeyLength] = 32;
-        options.Parameters[KeyDerivationParameterKeys.Argon2id_Parallelism] = 2;
-        options.Parameters[KeyDerivationParameterKeys.Argon2id_MemorySizeKb] = 131072; // 65536;
+        options.Parameters[KeyDerivationParameterKeys.Argon2id_Parallelism] = 1;
+        options.Parameters[KeyDerivationParameterKeys.Argon2id_MemorySizeKb] = 65536;
         options.Parameters[KeyDerivationParameterKeys.Argon2id_Iterations] = 1;
+#else
+        options.Parameters[KeyDerivationParameterKeys.Algorithm] = KeyDerivationAlgorithm.Argon2id.ToString();
+        options.Parameters[KeyDerivationParameterKeys.Argon2id_KeyLength] = 32;
+        options.Parameters[KeyDerivationParameterKeys.Argon2id_Parallelism] = 1;
+        options.Parameters[KeyDerivationParameterKeys.Argon2id_MemorySizeKb] = 262144;
+        options.Parameters[KeyDerivationParameterKeys.Argon2id_Iterations] = 1;
+#endif
         return options;
     }
 }
