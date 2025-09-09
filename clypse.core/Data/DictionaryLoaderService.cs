@@ -56,7 +56,7 @@ public class DictionaryLoaderService : IDictionaryLoaderService
             return cachedDictionary;
         }
 
-        var dictionaryKey = $"clypse.core.Data.Dictionaries.dictionaryName";
+        var dictionaryKey = $"clypse.core.Data.Dictionaries.{dictionaryName}";
         var assembly = Assembly.GetExecutingAssembly();
         using Stream? stream = assembly.GetManifestResourceStream(dictionaryKey) ?? throw new InvalidOperationException($"Resource '{dictionaryKey}' not found.");
         using var reader = new StreamReader(stream);
