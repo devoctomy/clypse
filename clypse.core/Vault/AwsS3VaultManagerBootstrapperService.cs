@@ -47,7 +47,13 @@ public class AwsS3VaultManagerBootstrapperService(
         foreach (var param in manifest.Parameters)
         {
             var key = param.Key.Replace("KeyDerivationService_", string.Empty);
-            keyDerivationServiceOptions.Parameters.Add(key, param.Value);
+            var value = ExtractValue(param.Value);
+            if (value == null)
+            {
+                continue;
+            }
+
+            keyDerivationServiceOptions.Parameters.Add(key, value);
         }
 
         var keyDerivationServiceForVault = new KeyDerivationService(
@@ -135,6 +141,33 @@ public class AwsS3VaultManagerBootstrapperService(
         }
 
         return vaultListings;
+    }
+
+    /// <summary>
+    /// This annoying method is required because the JS Aws client has a habbit of turning everything
+    /// into json objects.
+    /// </summary>
+    private static object? ExtractValue(object element)
+    {
+        if (element is string)
+        {
+            return element.ToString();
+        }
+        else if (element is int)
+        {
+            return (int)element;
+        }
+
+        var jsonElement = (JsonElement)element;
+        return jsonElement.ValueKind switch
+        {
+            JsonValueKind.String => jsonElement.GetString(),
+            JsonValueKind.Number => jsonElement.TryGetInt32(out var l) ? l : null,
+            JsonValueKind.True => true,
+            JsonValueKind.False => false,
+            JsonValueKind.Null => null,
+            _ => throw new InvalidOperationException($"Unsupported JSON kind: {jsonElement.ValueKind}")
+        };
     }
 
     private async Task<VaultManifest> LoadManifestAsync(

@@ -41,8 +41,9 @@ public class KeyDerivationService : IKeyDerivationService, IDisposable
         string base64Salt)
     {
         this.ThrowIfDisposed();
+        var keyDerivationService = this.options.GetAsString(KeyDerivationParameterKeys.Algorithm);
         var algorithm = Enum.Parse<KeyDerivationAlgorithm>(
-            this.options.GetAsString(KeyDerivationParameterKeys.Algorithm),
+            keyDerivationService,
             true);
         return algorithm switch
         {
