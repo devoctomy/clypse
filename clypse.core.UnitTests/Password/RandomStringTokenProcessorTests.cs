@@ -28,7 +28,7 @@ public class RandomStringTokenProcessorTests
     }
 
     [Fact]
-    public void GivenToken_AndValidDictionary_WhenProcess_ThenDictionaryLoaded_AndRandomWordReturned()
+    public async Task GivenToken_AndValidDictionary_WhenProcess_ThenDictionaryLoaded_AndRandomWordReturned()
     {
         // Arrange
         var token = "randstr(Foobar123,3)";
@@ -47,7 +47,10 @@ public class RandomStringTokenProcessorTests
             .Returns(expectedWord);
 
         // Act
-        var result = sut.Process(mockPasswordGeneratorService.Object, token);
+        var result = await sut.ProcessAsync(
+            mockPasswordGeneratorService.Object,
+            token,
+            CancellationToken.None);
 
         // Assert
         Assert.Equal(expectedWord, result);
@@ -63,7 +66,7 @@ public class RandomStringTokenProcessorTests
     [InlineData("randstr([uppercase],6)", CharacterGroup.Uppercase)]
     [InlineData("randstr([digits],6)", CharacterGroup.Digits)]
     [InlineData("randstr([special],6)", CharacterGroup.Special)]
-    public void GivenToken_WhenProcess_ThenExpectedLettersReturned(
+    public async Task GivenToken_WhenProcess_ThenExpectedLettersReturned(
         string token,
         CharacterGroup characterGroup)
     {
@@ -86,7 +89,10 @@ public class RandomStringTokenProcessorTests
             });
 
         // Act
-        var result = sut.Process(mockPasswordGeneratorService.Object, token);
+        var result = await sut.ProcessAsync(
+            mockPasswordGeneratorService.Object,
+            token,
+            CancellationToken.None);
 
         // Assert
         Assert.All(result, c => Assert.Contains(c, charGroup));

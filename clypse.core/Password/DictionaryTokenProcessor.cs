@@ -1,4 +1,5 @@
-﻿using clypse.core.Enums;
+﻿using clypse.core.Data;
+using clypse.core.Enums;
 
 namespace clypse.core.Password;
 
@@ -7,6 +8,17 @@ namespace clypse.core.Password;
 /// </summary>
 public class DictionaryTokenProcessor : IPasswordGeneratorTokenProcessor
 {
+    private readonly IDictionaryLoaderService dictionaryLoaderService;
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="DictionaryTokenProcessor"/> class.
+    /// </summary>
+    /// <param name="dictionaryLoaderService">The dictionary loader service to use.</param>
+    public DictionaryTokenProcessor(IDictionaryLoaderService dictionaryLoaderService)
+    {
+        this.dictionaryLoaderService = dictionaryLoaderService;
+    }
+
     /// <summary>
     /// Determines if the processor can handle the given token.
     /// </summary>
@@ -23,9 +35,10 @@ public class DictionaryTokenProcessor : IPasswordGeneratorTokenProcessor
     /// <param name="passwordGeneratorService">The password generator service to use for processing.</param>
     /// <param name="token">The token to process.</param>
     /// <returns>The processed result of the token.</returns>
-    public string Process(
+    public async Task<string> ProcessAsync(
         IPasswordGeneratorService passwordGeneratorService,
-        string token)
+        string token,
+        CancellationToken cancellationToken)
     {
         var dictionary = token.Replace("dict", string.Empty).Trim('(', ')');
         if (dictionary.Contains("|"))
@@ -36,7 +49,14 @@ public class DictionaryTokenProcessor : IPasswordGeneratorTokenProcessor
 
         if (Enum.TryParse<DictionaryType>(dictionary, true, out var dictType))
         {
-            var words = passwordGeneratorService.GetOrLoadDictionary(dictType);
+            var words = await this.dictionaryLoaderService.LoadDictionaryAsync(
+                $"{dictType.ToString().ToLower()}.txt",
+                cancellationToken);
+            if (words == null || words.Count == 0)
+            {
+                return string.Empty;
+            }
+
             var randomWord = passwordGeneratorService.RandomGeneratorService.GetRandomArrayEntry<string>(words.ToArray());
             return randomWord;
         }

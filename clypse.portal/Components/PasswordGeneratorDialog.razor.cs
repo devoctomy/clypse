@@ -84,7 +84,7 @@ public partial class PasswordGeneratorDialog : ComponentBase
                 var selectedTemplateItem = memorablePasswordTemplates?.FirstOrDefault(t => t.Name == selectedTemplateName);
                 if (selectedTemplateItem != null && !string.IsNullOrEmpty(selectedTemplateItem.Template))
                 {
-                    generatedPassword = PasswordGeneratorService.GenerateMemorablePassword(selectedTemplateItem.Template, shuffleTokens);
+                    generatedPassword = PasswordGeneratorService.GenerateMemorablePasswordAsync(selectedTemplateItem.Template, shuffleTokens);
                 }
                 else
                 {

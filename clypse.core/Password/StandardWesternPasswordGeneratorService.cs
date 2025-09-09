@@ -1,7 +1,7 @@
-﻿using System.Reflection;
-using System.Text;
+﻿using System.Text;
 using System.Text.RegularExpressions;
 using clypse.core.Cryptogtaphy;
+using clypse.core.Data;
 using clypse.core.Enums;
 using clypse.core.Extensions;
 
@@ -14,7 +14,6 @@ public partial class StandardWesternPasswordGeneratorService : IPasswordGenerato
 {
     private readonly IRandomGeneratorService randomGeneratorService;
     private readonly IEnumerable<IPasswordGeneratorTokenProcessor> tokenProcessors;
-    private readonly Dictionary<string, List<string>> dictionaryCache = [];
     private bool disposed = false;
 
     /// <summary>
@@ -36,32 +35,16 @@ public partial class StandardWesternPasswordGeneratorService : IPasswordGenerato
     public IRandomGeneratorService RandomGeneratorService => this.randomGeneratorService;
 
     /// <summary>
-    /// Gets a dictionary of words from cache or loads it and caches it.
-    /// </summary>
-    /// <param name="dictionaryType">The type of dictionary to load.</param>
-    /// <returns>A list of words from the specified dictionary.</returns>
-    public List<string> GetOrLoadDictionary(DictionaryType dictionaryType)
-    {
-        var key = dictionaryType.ToString();
-        if (!this.dictionaryCache.TryGetValue(key, out List<string>? value))
-        {
-            var words = LoadDictionary(dictionaryType);
-            value = words;
-            this.dictionaryCache[key] = value;
-        }
-
-        return value;
-    }
-
-    /// <summary>
     /// Generates a memorable password based on the provided template.
     /// </summary>
     /// <param name="template">Template to use for password generation.</param>
     /// <param name="shuffleTokens">Whether to shuffle the tokens in the generated password.</param>
+    /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
     /// <returns>Returns a password adhering to the format specified by the provided template.</returns>
-    public string GenerateMemorablePassword(
+    public async Task<string> GenerateMemorablePasswordAsync(
         string template,
-        bool shuffleTokens)
+        bool shuffleTokens,
+        CancellationToken cancellationToken)
     {
         this.ThrowIfDisposed();
         try
@@ -71,7 +54,7 @@ public partial class StandardWesternPasswordGeneratorService : IPasswordGenerato
             for (var i = tokens.Count - 1; i >= 0; i--)
             {
                 var curToken = tokens[i];
-                var processedToken = this.ProcessToken(curToken.Value);
+                var processedToken = await this.ProcessTokenAsync(curToken.Value, cancellationToken);
                 password = ReplaceAt(
                     password,
                     curToken.Index,
@@ -207,22 +190,6 @@ public partial class StandardWesternPasswordGeneratorService : IPasswordGenerato
             input.AsSpan(index + length));
     }
 
-    private static List<string> LoadDictionary(DictionaryType dictionaryType)
-    {
-        var dictionaryKey = $"clypse.core.Data.Dictionaries.{dictionaryType.ToString().ToLower()}.txt";
-        var assembly = Assembly.GetExecutingAssembly();
-        using Stream? stream = assembly.GetManifestResourceStream(dictionaryKey) ?? throw new InvalidOperationException($"Resource '{dictionaryKey}' not found.");
-        using var reader = new StreamReader(stream);
-        var lines = new List<string>();
-        string? line;
-        while ((line = reader.ReadLine()) != null)
-        {
-            lines.Add(line);
-        }
-
-        return lines;
-    }
-
     private void AddCharGroupChars(
         CharacterGroup group,
         List<string> groupsChars,
@@ -271,7 +238,9 @@ public partial class StandardWesternPasswordGeneratorService : IPasswordGenerato
         return swapped;
     }
 
-    private string ProcessToken(string token)
+    private async Task<string> ProcessTokenAsync(
+        string token,
+        CancellationToken cancellationToken)
     {
         var processedToken = new StringBuilder();
         var tokenValue = token.Trim('{', '}');
@@ -311,7 +280,8 @@ public partial class StandardWesternPasswordGeneratorService : IPasswordGenerato
                     var processor = this.tokenProcessors.FirstOrDefault(x => x.IsApplicable(curPart));
                     if (processor != null)
                     {
-                        processedToken.Append(processor.Process(this, curPart));
+                        var processed = await processor.ProcessAsync(this, curPart, cancellationToken);
+                        processedToken.Append(processed);
                     }
 
                     break;

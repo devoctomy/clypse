@@ -1,4 +1,5 @@
 ﻿using clypse.core.Cryptogtaphy;
+using clypse.core.Data;
 using clypse.core.Enums;
 using clypse.core.Password;
 using Moq;
@@ -18,7 +19,8 @@ public class DictionaryTokenProcessorTests
         bool expectedResult)
     {
         // Arrange
-        var sut = new DictionaryTokenProcessor();
+        var mockDictionaryLoaderService = new Mock<IDictionaryLoaderService>();
+        var sut = new DictionaryTokenProcessor(mockDictionaryLoaderService.Object);
 
         // Act
         var result = sut.IsApplicable(token);
@@ -28,13 +30,14 @@ public class DictionaryTokenProcessorTests
     }
 
     [Fact]
-    public void GivenToken_AndValidDictionary_WhenProcess_ThenDictionaryLoaded_AndRandomWordReturned()
+    public async Task GivenToken_AndValidDictionary_WhenProcess_ThenDictionaryLoaded_AndRandomWordReturned()
     {
         // Arrange
         var token = "dict(verb)";
+        var mockDictionaryLoaderService = new Mock<IDictionaryLoaderService>();
         var mockRandomGeneratorService = new Mock<IRandomGeneratorService>();
         var mockPasswordGeneratorService = new Mock<IPasswordGeneratorService>();
-        var sut = new DictionaryTokenProcessor();
+        var sut = new DictionaryTokenProcessor(mockDictionaryLoaderService.Object);
 
         var words = new List<string>
         {
@@ -44,10 +47,11 @@ public class DictionaryTokenProcessorTests
         };
         var expectedWord = words[1];
 
-        mockPasswordGeneratorService.Setup(
-            x => x.GetOrLoadDictionary(
-            It.IsAny<Enums.DictionaryType>()))
-            .Returns(words);
+        mockDictionaryLoaderService.Setup(
+            x => x.LoadDictionaryAsync(
+            It.Is<string>(y => y == "verb.txt"),
+            It.IsAny<CancellationToken>()))
+            .ReturnsAsync([.. words]);
 
         mockPasswordGeneratorService.SetupGet(
             x => x.RandomGeneratorService)
@@ -59,27 +63,32 @@ public class DictionaryTokenProcessorTests
             .Returns(expectedWord);
 
         // Act
-        var result = sut.Process(mockPasswordGeneratorService.Object, token);
+        var result = await sut.ProcessAsync(
+            mockPasswordGeneratorService.Object,
+            token,
+            CancellationToken.None);
 
         // Assert
         Assert.Equal(expectedWord, result);
 
-        mockPasswordGeneratorService.Verify(
-            x => x.GetOrLoadDictionary(
-            It.Is<DictionaryType>(y => y == DictionaryType.Verb)), Times.Once);
+        mockDictionaryLoaderService.Verify(
+            x => x.LoadDictionaryAsync(
+            It.Is<string>(y => y == "verb.txt"),
+            It.IsAny<CancellationToken>()), Times.Once);
         mockRandomGeneratorService.Verify(
             x => x.GetRandomArrayEntry<string>(
             It.Is<string[]>(y => y.SequenceEqual(words))), Times.Once);
     }
 
     [Fact]
-    public void GivenToken_AndInvalidDictionary_WhenProcess_ThenDictionaryLoaded_AndRandomWordReturned()
+    public async Task GivenToken_AndInvalidDictionary_WhenProcess_ThenDictionaryLoaded_AndRandomWordReturned()
     {
         // Arrange
         var token = "dict(foo)";
+        var mockDictionaryLoaderService = new Mock<IDictionaryLoaderService>();
         var mockRandomGeneratorService = new Mock<IRandomGeneratorService>();
         var mockPasswordGeneratorService = new Mock<IPasswordGeneratorService>();
-        var sut = new DictionaryTokenProcessor();
+        var sut = new DictionaryTokenProcessor(mockDictionaryLoaderService.Object);
 
         var words = new List<string>
         {
@@ -89,27 +98,31 @@ public class DictionaryTokenProcessorTests
         };
         var expectedWord = words[1];
 
-        mockPasswordGeneratorService.Setup(
-            x => x.GetOrLoadDictionary(
-            It.IsAny<Enums.DictionaryType>()))
-            .Returns(words);
+        ////mockPasswordGeneratorService.Setup(
+        ////    x => x.GetOrLoadDictionary(
+        ////    It.IsAny<Enums.DictionaryType>()))
+        ////    .Returns(words);
 
         // Act
-        var result = sut.Process(mockPasswordGeneratorService.Object, token);
+        var result = await sut.ProcessAsync(
+            mockPasswordGeneratorService.Object,
+            token,
+            CancellationToken.None);
 
         // Assert
         Assert.Empty(result);
     }
 
     [Fact]
-    public void GivenToken_AndMultipleDictionaries_WhenProcess_ThenDictionaryLoaded_AndRandomWordReturned()
+    public async Task GivenToken_AndMultipleDictionaries_WhenProcess_ThenDictionaryLoaded_AndRandomWordReturned()
     {
         // Arrange
         var token = $"dict({DictionaryType.Verb.ToString().ToLower()}|{DictionaryType.Adjective.ToString().ToLower()}|{DictionaryType.Noun.ToString().ToLower()})";
         using var randomGeneratorService = new RandomGeneratorService();
+        var mockDictionaryLoaderService = new Mock<IDictionaryLoaderService>();
         var mockRandomGeneratorService = new Mock<IRandomGeneratorService>();
         var mockPasswordGeneratorService = new Mock<IPasswordGeneratorService>();
-        var sut = new DictionaryTokenProcessor();
+        var sut = new DictionaryTokenProcessor(mockDictionaryLoaderService.Object);
 
         var words = new List<string>
         {
@@ -119,13 +132,23 @@ public class DictionaryTokenProcessorTests
         };
         var expectedWord = words[1];
 
-        mockPasswordGeneratorService.Setup(
-            x => x.GetOrLoadDictionary(
-            It.IsAny<DictionaryType>()))
-            .Returns((DictionaryType dictType) =>
-            {
-                return [dictType.ToString()];
-            });
+        mockDictionaryLoaderService.Setup(
+            x => x.LoadDictionaryAsync(
+                It.Is<string>(y => y == $"{DictionaryType.Verb.ToString().ToLower()}.txt"),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(["verb"]);
+
+        mockDictionaryLoaderService.Setup(
+            x => x.LoadDictionaryAsync(
+                It.Is<string>(y => y == $"{DictionaryType.Adjective.ToString().ToLower()}.txt"),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(["adjective"]);
+
+        mockDictionaryLoaderService.Setup(
+            x => x.LoadDictionaryAsync(
+                It.Is<string>(y => y == $"{DictionaryType.Noun.ToString().ToLower()}.txt"),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(["noun"]);
 
         mockPasswordGeneratorService.SetupGet(
             x => x.RandomGeneratorService)
@@ -136,11 +159,15 @@ public class DictionaryTokenProcessorTests
             It.IsAny<string[]>()))
             .Returns((string[] array) =>
             {
-                return randomGeneratorService.GetRandomArrayEntry<string>(array);
+                var randomEntry = randomGeneratorService.GetRandomArrayEntry<string>(array);
+                return randomEntry;
             });
 
         // Act
-        var result = sut.Process(mockPasswordGeneratorService.Object, token);
+        var result = await sut.ProcessAsync(
+            mockPasswordGeneratorService.Object,
+            token,
+            CancellationToken.None);
 
         // Assert
         Assert.NotEmpty(result);

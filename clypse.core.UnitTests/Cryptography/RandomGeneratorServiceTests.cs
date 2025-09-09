@@ -1,4 +1,5 @@
 ﻿using clypse.core.Cryptogtaphy;
+using System;
 
 namespace clypse.core.UnitTests.Cryptography;
 
@@ -26,6 +27,25 @@ public class RandomGeneratorServiceTests
         // Assert
         var distinctDoubles = doubles.Distinct().ToList();
         Assert.Equal(doubles.Count, distinctDoubles.Count);
+    }
+
+    [Fact]
+    public void GivenMin_AndMax_WhenGetRandomInt500Times_ThenReturnsDifferentValues()
+    {
+        // Arrange
+        var ints = new List<int>();
+        var min = 0;
+        var max = 20;
+
+        // Act
+        for (var i = 0; i < 500; i++)
+        {
+            ints.Add(this.sut.GetRandomInt(min, max));
+        }
+
+        // Assert
+        var distinctDoubles = ints.Distinct().ToList();
+        Assert.True(distinctDoubles.Count == max);
     }
 
     [Fact]
@@ -73,6 +93,36 @@ public class RandomGeneratorServiceTests
 
         // Assert
         Assert.Contains(value, array);
+    }
+
+    [Fact]
+    public void GivenArray_WhenGetRandomArrayEntry500Times_ThenReturnsDifferentValues()
+    {
+        // Arrange
+        var values = new List<string>();
+        var array = new[]
+        {
+            "apple",
+            "banana",
+            "cherry",
+            "date",
+            "elderberry",
+            "fig",
+            "grape",
+            "honeydew",
+            "kiwi",
+            "lemon",
+        };
+
+        // Act
+        for (var i = 0; i < 500; i++)
+        {
+            values.Add(this.sut.GetRandomArrayEntry<string>(array));
+        }
+
+        // Assert
+        var distinctDoubles = values.Distinct().ToList();
+        Assert.True(distinctDoubles.Count == array.Length);
     }
 
     [Fact]

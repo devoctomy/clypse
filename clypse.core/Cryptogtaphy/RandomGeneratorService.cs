@@ -74,7 +74,8 @@ public class RandomGeneratorService : IRandomGeneratorService, IDisposable
     {
         this.ThrowIfDisposed();
         using var rng = RandomNumberGenerator.Create();
-        return (T)array.GetValue(this.GetRandomInt(0, array.Length)) !;
+        int randomIndex = this.GetRandomInt(0, array.Length);
+        return (T)array.GetValue(randomIndex) !;
     }
 
     /// <summary>

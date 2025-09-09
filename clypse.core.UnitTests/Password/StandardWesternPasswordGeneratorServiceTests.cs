@@ -1,21 +1,25 @@
 ﻿using clypse.core.Cryptogtaphy;
+using clypse.core.Data;
 using clypse.core.Extensions;
 using clypse.core.Password;
+using Moq;
 
 namespace clypse.core.UnitTests.Password;
 
 public class StandardWesternPasswordGeneratorServiceTests : IDisposable
 {
     private readonly RandomGeneratorService randomGeneratorService;
+    private readonly Mock<IDictionaryLoaderService> mockDictionaryLoaderService;
     private readonly List<IPasswordGeneratorTokenProcessor> tokenProcessors;
     private readonly StandardWesternPasswordGeneratorService sut;
 
     public StandardWesternPasswordGeneratorServiceTests()
     {
         this.randomGeneratorService = new RandomGeneratorService();
+        this.mockDictionaryLoaderService = new Mock<IDictionaryLoaderService>();
         this.tokenProcessors =
         [
-            new DictionaryTokenProcessor(),
+            new DictionaryTokenProcessor(this.mockDictionaryLoaderService.Object),
             new RandomStringTokenProcessor(),
         ];
         this.sut = new StandardWesternPasswordGeneratorService(
@@ -25,60 +29,69 @@ public class StandardWesternPasswordGeneratorServiceTests : IDisposable
 
     [Theory]
     [InlineData("{randstr(abcdefg)}")]
-    public void GivenInvalidTemplate_WhenLoadDictionary_ThenEmptyStringReturned(string invalidTemplate)
+    public async Task GivenInvalidTemplate_WhenLoadDictionary_ThenEmptyStringReturned(string invalidTemplate)
     {
         // Arrange & Act
-        var result = this.sut.GenerateMemorablePassword(invalidTemplate, false);
+        var result = await this.sut.GenerateMemorablePasswordAsync(
+            invalidTemplate,
+            false,
+            CancellationToken.None);
 
         // Assert
         Assert.Empty(result);
     }
 
     [Fact]
-    public void GivenDictionaryType_WhenLoadDictionary_ThenReturnsListOfWords()
-    {
-        // Arrange
-        var dictionaryType = Enums.DictionaryType.Adjective;
-
-        // Act
-        var result = this.sut.GetOrLoadDictionary(dictionaryType);
-
-        // Assert
-        Assert.NotNull(result);
-        Assert.NotEmpty(result);
-    }
-
-    [Fact]
-    public void GivenTemplateWithDictionarySelections_WhenGenerateMemorablePassword_ThenReturnsPassword()
+    public async Task GivenTemplateWithDictionarySelections_WhenGenerateMemorablePassword_ThenReturnsPassword()
     {
         // Arrange
         var template = "{dict(adjective):upper}-{dict(noun):lower}-{dict(verb):upper}";
-        var adjectives = this.sut.GetOrLoadDictionary(Enums.DictionaryType.Adjective);
-        var nouns = this.sut.GetOrLoadDictionary(Enums.DictionaryType.Noun);
-        var verbs = this.sut.GetOrLoadDictionary(Enums.DictionaryType.Verb);
+
+        this.mockDictionaryLoaderService.Setup(x => x.LoadDictionaryAsync(
+            It.IsAny<string>(),
+            It.IsAny<CancellationToken>()))
+            .ReturnsAsync((string name, CancellationToken ct) =>
+            {
+                return [name.Split('.')[0]];
+            });
 
         // Act
-        var result = this.sut.GenerateMemorablePassword(template, false);
+        var result = await this.sut.GenerateMemorablePasswordAsync(
+            template,
+            false,
+            CancellationToken.None);
 
         // Assert
         Assert.NotNull(result);
         Assert.NotEmpty(result);
         var parts = result.Split('-');
-        Assert.Contains(adjectives, x => x.Equals(parts[0], StringComparison.InvariantCultureIgnoreCase));
-        Assert.Contains(nouns, x => x.Equals(parts[1], StringComparison.InvariantCultureIgnoreCase));
-        Assert.Contains(verbs, x => x.Equals(parts[2], StringComparison.InvariantCultureIgnoreCase));
+        Assert.Equal("ADJECTIVE", parts[0]);
+        Assert.Equal("noun", parts[1]);
+        Assert.Equal("VERB", parts[2]);
     }
 
     [Theory]
     [InlineData("{dict(adjective):random}{randstr(0123456789,6):random}{dict(verb):random}{randstr(-=_,1)}{dict(noun):random}", true, null)]
     [InlineData("{randstr(0,1)}{randstr(1,1)}{randstr(2,1)}{randstr(3,1)}{randstr(4,1)}{randstr(5,1)}{randstr(6,1)}{randstr(7,1)}{randstr(8,1)}{randstr(9,1)}", true, "0123456789")]
-    public void GivenTemplate_AndShuffleTokens_WhenGenerateMemorablePassword_ThenPasswordReturned(
+    public async Task GivenTemplate_AndShuffleTokens_WhenGenerateMemorablePassword_ThenPasswordReturned(
         string template,
         bool shuffleTokens,
         string? notEqualTo)
     {
-        // Arrange & Act
-        var result = this.sut.GenerateMemorablePassword(template, shuffleTokens);
+        // Arrange
+        this.mockDictionaryLoaderService.Setup(x => x.LoadDictionaryAsync(
+            It.IsAny<string>(),
+            It.IsAny<CancellationToken>()))
+            .ReturnsAsync((string name, CancellationToken ct) =>
+            {
+                return [name.Split('.')[0]];
+            });
+
+        // Act
+        var result = await this.sut.GenerateMemorablePasswordAsync(
+            template,
+            shuffleTokens,
+            CancellationToken.None);
 
         // Assert
         Assert.NotNull(result);

@@ -17,8 +17,10 @@ public interface IPasswordGeneratorTokenProcessor
     /// </summary>
     /// <param name="passwordGeneratorService">The password generator service to use for processing.</param>
     /// <param name="token">The token to process.</param>
+    /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
     /// <returns>The processed result of the token.</returns>
-    public string Process(
+    public Task<string> ProcessAsync(
         IPasswordGeneratorService passwordGeneratorService,
-        string token);
+        string token,
+        CancellationToken cancellationToken);
 }

@@ -23,19 +23,21 @@ public class RandomStringTokenProcessor : IPasswordGeneratorTokenProcessor
     /// </summary>
     /// <param name="passwordGeneratorService">The password generator service to use for processing.</param>
     /// <param name="token">The token to process.</param>
+    /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
     /// <returns>The processed result of the token.</returns>
-    public string Process(
+    public Task<string> ProcessAsync(
         IPasswordGeneratorService passwordGeneratorService,
-        string token)
+        string token,
+        CancellationToken cancellationToken)
     {
         var randstrArgs = token.Replace("randstr", string.Empty).Trim('(', ')');
         var lastCommaIndex = randstrArgs.LastIndexOf(',');
-        var chars = randstrArgs.Substring(0, lastCommaIndex);
+        var chars = randstrArgs[..lastCommaIndex];
         chars = ReplaceCharactersFromCharGroup(chars);
         var lengthStr = randstrArgs.Substring(lastCommaIndex + 1, randstrArgs.Length - (lastCommaIndex + 1));
         var length = int.Parse(lengthStr);
         var result = passwordGeneratorService.RandomGeneratorService.GetRandomStringContainingCharacters(length, chars);
-        return result;
+        return Task.FromResult(result);
     }
 
     private static string ReplaceCharactersFromCharGroup(string chars)

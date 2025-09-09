@@ -14,21 +14,16 @@ public interface IPasswordGeneratorService
     public IRandomGeneratorService RandomGeneratorService { get; }
 
     /// <summary>
-    /// Gets a dictionary of words from cache or loads it and caches it.
-    /// </summary>
-    /// <param name="dictionaryType">The type of dictionary to load.</param>
-    /// <returns>A list of words from the specified dictionary.</returns>
-    public List<string> GetOrLoadDictionary(DictionaryType dictionaryType);
-
-    /// <summary>
     /// Generates a memorable password based on the provided template.
     /// </summary>
     /// <param name="template">Template to use for password generation.</param>
     /// <param name="shuffleTokens">Whether to shuffle the tokens in the generated password.</param>
+    /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
     /// <returns>Returns a password adhering to the format specified by the provided template.</returns>
-    public string GenerateMemorablePassword(
+    public Task<string> GenerateMemorablePasswordAsync(
         string template,
-        bool shuffleTokens);
+        bool shuffleTokens,
+        CancellationToken cancellationToken);
 
     /// <summary>
     /// Generates a random password based on the specified character groups and length.
