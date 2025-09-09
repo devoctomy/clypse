@@ -41,16 +41,4 @@ builder.Configuration.GetSection("AppSettings").Bind(appSettings);
 builder.Services.AddSingleton(appSettings);
 
 var app = builder.Build();
-
-using var httpClient = app.Services.GetRequiredService<HttpClient>();
-using var fileData = await httpClient.GetStreamAsync("data/dictionaries/weakknownpasswords.txt.gz");
-var compressionService = new GZipCompressionService();
-var decompressedStream = new MemoryStream();
-await compressionService.DecompressAsync(fileData, decompressedStream, CancellationToken.None);
-decompressedStream.Seek(0, SeekOrigin.Begin);
-using var reader = new StreamReader(decompressedStream);
-string content = await reader.ReadToEndAsync();
-var lines = content.Split("\r\n");
-Console.WriteLine($"Loaded {lines.Length} weak/known passwords");
-
 await app.RunAsync();

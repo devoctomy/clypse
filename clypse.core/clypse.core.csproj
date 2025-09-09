@@ -9,9 +9,16 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Data\Dictionaries\weakknownpasswords.txt" />
+    <None Remove="Data\Dictionaries\weakknownpasswords.txt.gz" />
+  </ItemGroup>
+
+  <ItemGroup>
     <EmbeddedResource Include="Data\Dictionaries\adjective.txt" />
     <EmbeddedResource Include="Data\Dictionaries\noun.txt" />
     <EmbeddedResource Include="Data\Dictionaries\verb.txt" />
+    <EmbeddedResource Include="Data\Dictionaries\weakknownpasswords.txt" />
+    <EmbeddedResource Include="Data\Dictionaries\weakknownpasswords.txt.gz" />
   </ItemGroup>
 
   <ItemGroup>
@@ -27,7 +34,7 @@
   </ItemGroup>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="powershell -ExecutionPolicy Bypass -File &quot;$(SolutionDir)compress-dictionaries.ps1&quot;" />
+    <Exec Command="powershell -ExecutionPolicy Bypass -File &quot;$(MSBuildProjectDirectory)\..\compress-dictionaries.ps1&quot;" />
   </Target>
 
 </Project>

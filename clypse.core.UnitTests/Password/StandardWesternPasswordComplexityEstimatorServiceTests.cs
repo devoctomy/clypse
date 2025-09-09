@@ -33,7 +33,7 @@ public class StandardWesternPasswordComplexityEstimatorServiceTests
     [InlineData("A1cdB2ghI3klM4op", PasswordComplexityEstimation.Medium)]
     [InlineData("A1+dB2=hI3_lM4-p", PasswordComplexityEstimation.Strong)]
     [InlineData("A1+dB2=hI3_lM4-p!!", PasswordComplexityEstimation.VeryStrong)]
-    public void GivenPassword_WhenEstimate_ThenReturnsExpectedEstimation(
+    public async Task GivenPassword_WhenEstimate_ThenReturnsExpectedEstimation(
         string password,
         PasswordComplexityEstimation expectedEstimation)
     {
@@ -41,7 +41,7 @@ public class StandardWesternPasswordComplexityEstimatorServiceTests
         var service = new StandardWesternPasswordComplexityEstimatorService();
 
         // Act
-        var estimation = service.Estimate(password);
+        var estimation = await service.EstimateAsync(password, CancellationToken.None);
 
         // Assert
         Assert.Equal(expectedEstimation, estimation.ComplexityEstimation);

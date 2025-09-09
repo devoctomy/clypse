@@ -5,9 +5,13 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <ServiceWorkerAssetsManifest>service-worker-assets.js</ServiceWorkerAssetsManifest>
-	<RuntimeFrameworkVersion>8.0.7</RuntimeFrameworkVersion>
+	  <RuntimeFrameworkVersion>8.0.7</RuntimeFrameworkVersion>
+  </PropertyGroup>
+  
+  <PropertyGroup Condition="'$(RuntimeIdentifier)' == 'browser-wasm'">
     <RunAOTCompilation>true</RunAOTCompilation>
-	<WasmEnableSIMD>true</WasmEnableSIMD>
+    <WasmEnableSIMD>true</WasmEnableSIMD>
+    <InvariantGlobalization>true</InvariantGlobalization>
   </PropertyGroup>
 
   <ItemGroup>

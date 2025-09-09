@@ -39,7 +39,7 @@ public partial class WebSecretForm : ComponentBase, IDisposable
         }
         
         // Analyze password complexity after setting up the editable secret
-        UpdatePasswordComplexity();
+        _ = InvokeAsync(async () => await UpdatePasswordComplexityAsync());
     }
 
     private void TogglePasswordVisibility()
@@ -124,7 +124,7 @@ public partial class WebSecretForm : ComponentBase, IDisposable
         {
             EditableSecret.Password = password;
             // For generated passwords, update immediately since user didn't type it
-            UpdatePasswordComplexity();
+            _ = InvokeAsync(async () => await UpdatePasswordComplexityAsync());
         }
         showPasswordGenerator = false;
         StateHasChanged();
@@ -136,7 +136,7 @@ public partial class WebSecretForm : ComponentBase, IDisposable
         StateHasChanged();
     }
 
-    private void UpdatePasswordComplexity()
+    private async Task UpdatePasswordComplexityAsync()
     {
         Console.WriteLine($"UpdatePasswordComplexity called for password: '{EditableSecret?.Password}'");
         
@@ -154,7 +154,7 @@ public partial class WebSecretForm : ComponentBase, IDisposable
         {
             try
             {
-                passwordComplexityResults = PasswordComplexityEstimator.Estimate(currentPassword);
+                passwordComplexityResults = await PasswordComplexityEstimator.EstimateAsync(currentPassword, CancellationToken.None);
                 lastAnalyzedPassword = currentPassword;
                 Console.WriteLine($"Password complexity updated: {passwordComplexityResults.ComplexityEstimation}");
                 StateHasChanged();
@@ -182,9 +182,9 @@ public partial class WebSecretForm : ComponentBase, IDisposable
             passwordUpdateTimer.Elapsed += (sender, e) =>
             {
                 Console.WriteLine("Timer elapsed, calling UpdatePasswordComplexity");
-                InvokeAsync(() =>
+                InvokeAsync(async () =>
                 {
-                    UpdatePasswordComplexity();
+                    await UpdatePasswordComplexityAsync();
                 });
             };
         }

@@ -1,4 +1,7 @@
-﻿using clypse.core.Enums;
+﻿using clypse.core.Compression;
+using clypse.core.Enums;
+using System.Linq;
+using System.Reflection;
 
 namespace clypse.core.Password;
 
@@ -7,6 +10,8 @@ namespace clypse.core.Password;
 /// </summary>
 public class StandardWesternPasswordComplexityEstimatorService : IPasswordComplexityEstimatorService
 {
+    private static HashSet<string>? weakKnownPasswords;
+
     /// <summary>
     /// Estimates the entropy of the given password.
     /// </summary>
@@ -65,12 +70,25 @@ public class StandardWesternPasswordComplexityEstimatorService : IPasswordComple
     /// <summary>
     /// Estimates the complexity of the given password.
     /// </summary>
-    /// <param name="password">The password to estimate.</param>
+    /// <param name="password">The password to estimate.</param
+    /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
     /// <returns>A <see cref="PasswordComplexityEstimatorResults"/> value representing the estimated complexity and any additional information.</returns>    /// <exception cref="ArgumentNullException">Thrown if the password is null.</exception>
-    public PasswordComplexityEstimatorResults Estimate(string password)
+    public async Task<PasswordComplexityEstimatorResults> EstimateAsync(
+        string password,
+        CancellationToken cancellationToken)
     {
         var entropy = (int)Math.Round(this.EstimateEntropy(password), 0);
         var complexity = PasswordComplexityEstimation.Unknown;
+
+        if (await IsWeakKnownPasswordAsync(password, cancellationToken))
+        {
+            return new PasswordComplexityEstimatorResults
+            {
+                EstimatedEntropy = entropy,
+                ComplexityEstimation = PasswordComplexityEstimation.VeryWeak,
+                AdditionalInfo = "This password is found in a list of weak known passwords.",
+            };
+        }
 
         if (entropy < 0)
         {
@@ -107,5 +125,32 @@ public class StandardWesternPasswordComplexityEstimatorService : IPasswordComple
             ComplexityEstimation = complexity,
             AdditionalInfo = string.Empty,
         };
+    }
+
+    private static async Task<bool> IsWeakKnownPasswordAsync(
+        string password,
+        CancellationToken cancellationToken)
+    {
+        if (weakKnownPasswords == null)
+        {
+            weakKnownPasswords = await LoadWeakKnownPasswordsDictionaryAsync(cancellationToken);
+        }
+
+        return weakKnownPasswords.Contains(password);
+    }
+
+    private static async Task<HashSet<string>> LoadWeakKnownPasswordsDictionaryAsync(CancellationToken cancellationToken)
+    {
+        var dictionaryKey = $"clypse.core.Data.Dictionaries.weakknownpasswords.txt.gz";
+        var assembly = Assembly.GetExecutingAssembly();
+        using Stream? compressedStream = assembly.GetManifestResourceStream(dictionaryKey) ?? throw new InvalidOperationException($"Resource '{dictionaryKey}' not found.");
+        var compressionService = new GZipCompressionService();
+        var decompressedStream = new MemoryStream();
+        await compressionService.DecompressAsync(compressedStream, decompressedStream, cancellationToken);
+        decompressedStream.Seek(0, SeekOrigin.Begin);
+        using var reader = new StreamReader(decompressedStream);
+        string content = await reader.ReadToEndAsync(cancellationToken);
+        var lines = content.Split("\r\n");
+        return [.. lines];
     }
 }
