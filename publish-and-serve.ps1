@@ -1,9 +1,17 @@
 # PowerShell script to publish clypse.portal for browser-wasm and serve it locally
 # This script builds the project for WebAssembly and serves it on HTTPS
+#
+# Usage examples:
+#   .\publish-and-serve.ps1                              # Default: Release build on port 7153
+#   .\publish-and-serve.ps1 -Clean                       # Clean obj/bin folders first
+#   .\publish-and-serve.ps1 -Configuration Debug         # Use Debug configuration
+#   .\publish-and-serve.ps1 -Port 8080                   # Use different port
+#   .\publish-and-serve.ps1 -Clean -Configuration Debug -Port 8080  # All options combined
 
 param(
     [string]$Configuration = "Release",
-    [int]$Port = 7153
+    [int]$Port = 7153,
+    [switch]$Clean
 )
 
 $ErrorActionPreference = "Stop"
@@ -15,6 +23,26 @@ $projectRoot = $PSScriptRoot
 Set-Location $projectRoot
 
 try {
+    # Clean obj and bin folders if requested
+    if ($Clean) {
+        Write-Host "Cleaning obj and bin folders..." -ForegroundColor Yellow
+        
+        # Find all obj and bin folders recursively
+        $foldersToDelete = Get-ChildItem -Path $projectRoot -Recurse -Directory | Where-Object { $_.Name -eq "obj" -or $_.Name -eq "bin" }
+        
+        if ($foldersToDelete.Count -eq 0) {
+            Write-Host "  No obj or bin folders found to clean." -ForegroundColor Cyan
+        } else {
+            foreach ($folder in $foldersToDelete) {
+                Write-Host "  Deleting: $($folder.FullName)" -ForegroundColor Cyan
+                Remove-Item -Path $folder.FullName -Recurse -Force
+            }
+            Write-Host "  Deleted $($foldersToDelete.Count) folders." -ForegroundColor Green
+        }
+        
+        Write-Host "Clean completed!" -ForegroundColor Green
+    }
+
     # Clean previous publish output
     $publishPath = ".\clypse.portal\bin\$Configuration\net8.0\publish"
     if (Test-Path $publishPath) {
