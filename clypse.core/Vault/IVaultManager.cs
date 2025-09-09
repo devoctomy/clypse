@@ -11,11 +11,11 @@ public interface IVaultManager : IDisposable
     /// <summary>
     /// Derives a cryptographic key from the provided passphrase for the specified vault.
     /// </summary>
-    /// <param name="vault">The vault to derive they key for.</param>
+    /// <param name="vaultId">The unique identifier of the vault.</param>
     /// <param name="passphrase">The passphrase to derive the key from.</param>
     /// <returns>A byte array containing the derived cryptographic key.</returns>
     public Task<byte[]> DeriveKeyFromPassphraseAsync(
-        IVault vault,
+        string vaultId,
         string passphrase);
 
     /// <summary>

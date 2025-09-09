@@ -222,7 +222,7 @@ public partial class Test : ComponentBase
 
         var passphrase = "password123";
         var keyBytes = await vaultManager.DeriveKeyFromPassphraseAsync(
-            vault,
+            vault.Info.Id,
             passphrase);
         var base64Key = Convert.ToBase64String(keyBytes);
         await vaultManager.SaveAsync(
