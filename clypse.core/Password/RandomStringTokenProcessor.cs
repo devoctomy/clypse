@@ -34,7 +34,7 @@ public class RandomStringTokenProcessor : IPasswordGeneratorTokenProcessor
         var lastCommaIndex = randstrArgs.LastIndexOf(',');
         var chars = randstrArgs[..lastCommaIndex];
         chars = ReplaceCharactersFromCharGroup(chars);
-        var lengthStr = randstrArgs.Substring(lastCommaIndex + 1, randstrArgs.Length - (lastCommaIndex + 1));
+        var lengthStr = randstrArgs[(lastCommaIndex + 1) ..];
         var length = int.Parse(lengthStr);
         var result = passwordGeneratorService.RandomGeneratorService.GetRandomStringContainingCharacters(length, chars);
         return Task.FromResult(result);

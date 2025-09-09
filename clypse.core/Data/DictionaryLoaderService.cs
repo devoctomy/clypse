@@ -62,7 +62,7 @@ public class DictionaryLoaderService : IDictionaryLoaderService
         using var reader = new StreamReader(stream);
         var lines = new List<string>();
         string? line;
-        while ((line = await reader.ReadLineAsync()) != null)
+        while ((line = await reader.ReadLineAsync(cancellationToken)) != null)
         {
             lines.Add(line);
         }

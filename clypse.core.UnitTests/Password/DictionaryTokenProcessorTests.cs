@@ -81,27 +81,13 @@ public class DictionaryTokenProcessorTests
     }
 
     [Fact]
-    public async Task GivenToken_AndInvalidDictionary_WhenProcess_ThenDictionaryLoaded_AndRandomWordReturned()
+    public async Task GivenToken_AndInvalidDictionary_WhenProcess_ThenEmptyStringReturned()
     {
         // Arrange
         var token = "dict(foo)";
         var mockDictionaryLoaderService = new Mock<IDictionaryLoaderService>();
-        var mockRandomGeneratorService = new Mock<IRandomGeneratorService>();
         var mockPasswordGeneratorService = new Mock<IPasswordGeneratorService>();
         var sut = new DictionaryTokenProcessor(mockDictionaryLoaderService.Object);
-
-        var words = new List<string>
-        {
-            "word1",
-            "word2",
-            "word3",
-        };
-        var expectedWord = words[1];
-
-        ////mockPasswordGeneratorService.Setup(
-        ////    x => x.GetOrLoadDictionary(
-        ////    It.IsAny<Enums.DictionaryType>()))
-        ////    .Returns(words);
 
         // Act
         var result = await sut.ProcessAsync(
