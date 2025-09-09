@@ -1,4 +1,5 @@
 ﻿using System.Reflection;
+using System.Runtime.CompilerServices;
 using clypse.core.Compression;
 using clypse.core.Enums;
 
@@ -76,6 +77,16 @@ public class StandardWesternPasswordComplexityEstimatorService : IPasswordComple
         string password,
         CancellationToken cancellationToken)
     {
+        if (string.IsNullOrEmpty(password))
+        {
+            return new PasswordComplexityEstimatorResults
+            {
+                EstimatedEntropy = 0,
+                ComplexityEstimation = PasswordComplexityEstimation.None,
+                AdditionalInfo = "No password was provided.",
+            };
+        }
+
         var entropy = (int)Math.Round(this.EstimateEntropy(password), 0);
         var complexity = PasswordComplexityEstimation.Unknown;
 
@@ -92,10 +103,6 @@ public class StandardWesternPasswordComplexityEstimatorService : IPasswordComple
         if (entropy < 0)
         {
             complexity = PasswordComplexityEstimation.Unknown;
-        }
-        else if (entropy == 0)
-        {
-            complexity = PasswordComplexityEstimation.None;
         }
         else if (entropy <= 75)
         {
@@ -130,10 +137,7 @@ public class StandardWesternPasswordComplexityEstimatorService : IPasswordComple
         string password,
         CancellationToken cancellationToken)
     {
-        if (weakKnownPasswords == null)
-        {
-            weakKnownPasswords = await LoadWeakKnownPasswordsDictionaryAsync(cancellationToken);
-        }
+        weakKnownPasswords ??= await LoadWeakKnownPasswordsDictionaryAsync(cancellationToken);
 
         return weakKnownPasswords.Contains(password);
     }

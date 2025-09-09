@@ -16,10 +16,10 @@ public class StandardWesternPasswordComplexityEstimatorServiceTests
         int estimatedScore)
     {
         // Arrange
-        var service = new StandardWesternPasswordComplexityEstimatorService();
+        var sut = new StandardWesternPasswordComplexityEstimatorService();
 
         // Act
-        var score = service.EstimateEntropy(password);
+        var score = sut.EstimateEntropy(password);
 
         // Assert
         Assert.Equal(estimatedScore, Math.Round(score, 0));
@@ -38,10 +38,10 @@ public class StandardWesternPasswordComplexityEstimatorServiceTests
         PasswordComplexityEstimation expectedEstimation)
     {
         // Arrange
-        var service = new StandardWesternPasswordComplexityEstimatorService();
+        var sut = new StandardWesternPasswordComplexityEstimatorService();
 
         // Act
-        var estimation = await service.EstimateAsync(password, CancellationToken.None);
+        var estimation = await sut.EstimateAsync(password, CancellationToken.None);
 
         // Assert
         Assert.Equal(expectedEstimation, estimation.ComplexityEstimation);
