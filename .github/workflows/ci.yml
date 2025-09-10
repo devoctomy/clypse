@@ -2,9 +2,14 @@ name: CI
 
 on:
   push:
-    branches: [ main, develop ]
   pull_request:
-    branches: [ main, develop ]
+  workflow_dispatch:
+    inputs:
+      deploy:
+        description: 'Deploy to production after CI passes'
+        required: false
+        default: false
+        type: boolean
 
 jobs:
   build-and-test:
@@ -34,3 +39,49 @@ jobs:
         CLYPSE_AWS_ACCESSKEY: ${{ secrets.CLYPSE_AWS_ACCESSKEY }}
         CLYPSE_AWS_SECRETACCESSKEY: ${{ secrets.CLYPSE_AWS_SECRETACCESSKEY }}    
       run: dotnet test --no-build --configuration Release --verbosity normal
+
+  deploy:
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    if: github.event.inputs.deploy == 'true'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '8.0.x'
+        
+    - name: Install .NET workloads
+      run: dotnet workload install wasm-tools
+        
+    - name: Restore dependencies
+      run: dotnet restore
+      
+    - name: Publish Blazor WebAssembly
+      run: dotnet publish ./clypse.portal/clypse.portal.csproj -c Release -r browser-wasm --self-contained
+      
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.CLYPSENETPORTAL_AWS_ACCESSKEY }}
+        aws-secret-access-key: ${{ secrets.CLYPSENETPORTAL_AWS_SECRETACCESSKEY }}
+        aws-region: ${{ secrets.CLYPSENETPORTAL_AWS_BUCKETREGION }}
+        
+    - name: Upload to S3
+      run: aws s3 sync ./clypse.portal/bin/Release/net8.0/publish/wwwroot/ s3://${{ secrets.CLYPSENETPORTAL_AWS_BUCKETNAME }}/ --delete --acl public-read
+      
+    - name: Invalidate CloudFront distribution
+      run: |
+        aws cloudfront create-invalidation \
+          --distribution-id ${{ secrets.CLYPSENETPORTAL_AWS_CLOUDFRONTDISTRIBUTIONID }} \
+          --paths "/*"
+          
+    - name: Deployment summary
+      run: |
+        echo "🚀 Deployment completed successfully!"
+        echo "📦 Published Blazor WebAssembly app to S3 bucket: ${{ secrets.CLYPSENETPORTAL_AWS_BUCKETNAME }}"
+        echo "🌐 CloudFront distribution invalidated: ${{ secrets.CLYPSENETPORTAL_AWS_CLOUDFRONTDISTRIBUTIONID }}"
+        echo "✅ Site should be available shortly at your CloudFront domain"
