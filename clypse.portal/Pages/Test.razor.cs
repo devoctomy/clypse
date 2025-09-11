@@ -1,6 +1,5 @@
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
-using System.Security;
 using clypse.core.Cloud;
 using clypse.core.Cloud.Aws.S3;
 using clypse.core.Compression;
@@ -16,6 +15,7 @@ public partial class Test : ComponentBase
     [Inject] public IJSRuntime JSRuntime { get; set; } = default!;
     [Inject] public AwsCognitoConfig CognitoConfig { get; set; } = default!;
     [Inject] public AwsS3Config AwsS3Config { get; set; } = default!;
+    [Inject] public NavigationManager Navigation { get; set; } = default!;
 
     private LoginModel loginModel = new();
     private bool isLoading = false;
@@ -48,6 +48,11 @@ public partial class Test : ComponentBase
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
+#if !DEBUG
+        // Redirect to home page if not in DEBUG build
+        Navigation.NavigateTo("/");
+        return;
+#endif
         if (firstRender)
         {
             // Initialize Cognito with configuration

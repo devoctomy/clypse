@@ -18,6 +18,12 @@ public partial class Login : ComponentBase
     private string currentTheme = "light";
     private string themeIcon = "bi-moon";
 
+#if DEBUG
+    private bool IsDebugBuild => true;
+#else
+    private bool IsDebugBuild => false;
+#endif
+
     private class LoginModel
     {
         public string Username { get; set; } = string.Empty;

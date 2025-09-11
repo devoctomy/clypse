@@ -56,10 +56,12 @@
                             </div>
                         }
                     </EditForm>
-                    
-                    <div class="text-center mt-3">
-                        <a href="/test" class="btn btn-link">Go to Test Page</a>
-                    </div>
+                    @if (IsDebugBuild)
+                    {
+                        <div class="text-center mt-3">
+                            <a href="/test" class="btn btn-link">Go to Test Page</a>
+                        </div>
+                    }
                 </div>
             </div>
         </div>
