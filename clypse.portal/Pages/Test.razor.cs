@@ -46,13 +46,15 @@ public partial class Test : ComponentBase
         public string IdentityId { get; set; } = string.Empty;
     }
 
+#pragma warning disable CS0162 // Unreachable code detected
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-#if !DEBUG
-        // Redirect to home page if not in DEBUG build
-        Navigation.NavigateTo("/");
-        return;
-#endif
+        if (!Globals.IsDebugBuild)
+        {
+            Navigation.NavigateTo("/");
+            return;
+        }
+
         if (firstRender)
         {
             // Initialize Cognito with configuration
@@ -68,6 +70,7 @@ public partial class Test : ComponentBase
             await JSRuntime.InvokeAsync<string>("CognitoAuth.initialize", CognitoConfig);
         }
     }
+#pragma warning restore CS0162 // Unreachable code detected
 
     private async Task HandleLogin()
     {
