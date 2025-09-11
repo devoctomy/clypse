@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="297mm"
+   height="210mm"
+   viewBox="0 0 297 210"
+   version="1.1"
+   id="svg1"
+   inkscape:version="1.4.2 (f4327f4, 2025-05-13)"
+   sodipodi:docname="logo.svg"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview1"
+     pagecolor="#ffffff"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:document-units="mm"
+     inkscape:zoom="1.0396254"
+     inkscape:cx="823.85444"
+     inkscape:cy="362.63062"
+     inkscape:window-width="1776"
+     inkscape:window-height="1200"
+     inkscape:window-x="111"
+     inkscape:window-y="105"
+     inkscape:window-maximized="0"
+     inkscape:current-layer="g1" />
+  <defs
+     id="defs1" />
+  <text
+     xml:space="preserve"
+     style="font-size:50.8px;text-align:start;writing-mode:lr-tb;direction:ltr;text-anchor:start;fill:#000000;stroke-width:0.264583"
+     x="45.452175"
+     y="153.46272"
+     id="text1"
+     inkscape:label="text"><tspan
+       sodipodi:role="line"
+       id="tspan1"
+       style="font-style:normal;font-variant:normal;font-weight:900;font-stretch:normal;font-size:50.8px;font-family:Montserrat;-inkscape-font-specification:'Montserrat Heavy';stroke-width:0.264583"
+       x="45.452175"
+       y="153.46272">CLYPSE</tspan></text>
+  <g
+     id="g1">
+    <rect
+       style="fill:#1a1a1a;stroke-width:0.264583"
+       id="rect1"
+       width="79.149101"
+       height="79.149101"
+       x="108.92545"
+       y="29.521851"
+       ry="4.326478" />
+    <text
+       xml:space="preserve"
+       style="font-size:80.3525px;text-align:start;writing-mode:lr-tb;direction:ltr;text-anchor:start;fill:#ffffff;stroke-width:0.418502"
+       x="116.82732"
+       y="97.984451"
+       id="text1-8"><tspan
+         sodipodi:role="line"
+         id="tspan1-2"
+         style="font-style:normal;font-variant:normal;font-weight:900;font-stretch:normal;font-size:80.3525px;font-family:Montserrat;-inkscape-font-specification:'Montserrat Heavy';fill:#ffffff;stroke-width:0.418502"
+         x="116.82732"
+         y="97.984451">C</tspan></text>
+  </g>
+</svg>
