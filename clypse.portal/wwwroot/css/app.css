@@ -3,9 +3,9 @@
 /* Default Light Theme */
 :root, [data-theme="light"] {
     /* Primary Brand Colors */
-    --clypse-primary: #0d6efd;
-    --clypse-primary-dark: #0a58ca;
-    --clypse-primary-light: #6ea8fe;
+    --clypse-primary: #aa4400;
+    --clypse-primary-dark: #883300;
+    --clypse-primary-light: #ff9955;
     
     /* Secondary Colors */
     --clypse-secondary: #6c757d;
@@ -64,9 +64,9 @@
 /* Dark Theme */
 [data-theme="dark"] {
     /* Primary Brand Colors */
-    --clypse-primary: #0d6efd;
-    --clypse-primary-dark: #0a58ca;
-    --clypse-primary-light: #6ea8fe;
+    --clypse-primary: #aa4400;
+    --clypse-primary-dark: #883300;
+    --clypse-primary-light: #ff9955;
     
     /* Secondary Colors */
     --clypse-secondary: #adb5bd;
@@ -228,8 +228,8 @@ body {
 
 /* Buttons */
 .btn-primary {
-    background-color: var(--clypse-primary) !important;
-    border-color: var(--clypse-primary) !important;
+    background-color: #0d6efd !important;
+    border-color: #0d6efd !important;
     color: white !important;
 }
 
@@ -237,8 +237,8 @@ body {
 .btn-primary:focus,
 .btn-primary:active,
 .btn-primary.active {
-    background-color: var(--clypse-primary-light) !important;
-    border-color: var(--clypse-primary-light) !important;
+    background-color: #0b5ed7 !important;
+    border-color: #0a58ca !important;
     color: white !important;
     box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25) !important;
 }
