@@ -180,15 +180,25 @@ body {
 
 /* Form controls */
 .form-control {
-    background-color: var(--clypse-surface-primary);
+    background-color: var(--clypse-surface-primary) !important;
     border-color: var(--clypse-border-medium);
-    color: var(--clypse-text-primary);
+    color: var(--clypse-text-primary) !important;
 }
 
 .form-control:focus {
-    background-color: var(--clypse-surface-primary);
+    background-color: var(--clypse-surface-primary) !important;
     border-color: var(--clypse-primary);
-    color: var(--clypse-text-primary);
+    color: var(--clypse-text-primary) !important;
+}
+
+/* Override browser autocomplete styling */
+.form-control:-webkit-autofill,
+.form-control:-webkit-autofill:hover,
+.form-control:-webkit-autofill:focus,
+.form-control:-webkit-autofill:active {
+    -webkit-box-shadow: 0 0 0 30px var(--clypse-surface-primary) inset !important;
+    -webkit-text-fill-color: var(--clypse-text-primary) !important;
+    background-color: var(--clypse-surface-primary) !important;
 }
 
 /* Password field reveal button styling for dark mode */
