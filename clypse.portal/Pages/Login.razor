@@ -6,7 +6,14 @@
 <!-- Title Bar (similar to HomeLayout) -->
 <div class="text-white p-3 d-flex justify-content-between align-items-center" style="background-color: var(--clypse-primary);">
     <div class="d-flex align-items-center">
-        <h4 class="mb-0">@AppSettings.ApplicationTitle</h4>
+        @if (AppSettings.ShowLogoInTitleBar)
+        {
+            <img src="/titlebar-logo.png" alt="@AppSettings.ApplicationTitle" class="me-2" style="height: 32px;" />
+        }
+        else
+        {
+            <h4 class="mb-0">@AppSettings.ApplicationTitle</h4>
+        }
     </div>
     <button class="theme-switcher" @onclick="ToggleTheme" title="Toggle theme">
         <i class="bi @themeIcon"></i>

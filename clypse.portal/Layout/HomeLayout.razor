@@ -16,7 +16,14 @@
                         title="Toggle navigation menu">
                     <i class="bi bi-list" style="font-size: 1.5rem;"></i>
                 </button>
-                <h4 class="mb-0">@AppSettings.ApplicationTitle</h4>
+                @if (AppSettings.ShowLogoInTitleBar)
+                {
+                    <img src="/titlebar-logo.png" alt="@AppSettings.ApplicationTitle" class="me-2" style="height: 32px;" />
+                }
+                else
+                {
+                    <h4 class="mb-0">@AppSettings.ApplicationTitle</h4>
+                }
             </div>
             <button class="theme-switcher" @onclick="ToggleTheme" title="Toggle theme">
                 <i class="bi @themeIcon"></i>
