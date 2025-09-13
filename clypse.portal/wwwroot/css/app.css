@@ -819,15 +819,27 @@ Example for a dark theme:
 
 /* Title bar responsive */
 .title-bar-responsive {
-    height: auto;
-    min-height: 60px;
-    padding: 0.75rem 1rem;
+    height: var(--clypse-title-bar-height);
+    min-height: var(--clypse-title-bar-height);
+    max-height: var(--clypse-title-bar-height);
+    padding: 0 1rem;
     background-color: var(--clypse-primary);
     color: var(--clypse-text-on-dark);
     display: flex;
     justify-content: space-between;
     align-items: center;
-    flex-wrap: wrap;
+    flex-shrink: 0;
+    box-sizing: border-box;
+}
+
+/* Override any Bootstrap classes on title bar */
+.title-bar {
+    height: var(--clypse-title-bar-height) !important;
+    min-height: var(--clypse-title-bar-height) !important;
+    max-height: var(--clypse-title-bar-height) !important;
+    padding: 0 1rem !important;
+    box-sizing: border-box !important;
+    flex-shrink: 0 !important;
 }
 
 .burger-btn-responsive {
@@ -850,9 +862,9 @@ Example for a dark theme:
 @media (max-width: 768px) {
     .sidebar-responsive.expanded {
         position: fixed;
-        top: 60px; /* Match title bar height */
+        top: var(--clypse-title-bar-height);
         left: 0;
-        height: calc(100vh - 60px);
+        height: calc(100vh - var(--clypse-title-bar-height));
         z-index: 1050;
         box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
         width: 280px;
@@ -862,33 +874,37 @@ Example for a dark theme:
     .sidebar-responsive.collapsed {
         transform: translateX(-100%);
         position: fixed;
-        top: 60px;
+        top: var(--clypse-title-bar-height);
         left: 0;
-        height: calc(100vh - 60px);
+        height: calc(100vh - var(--clypse-title-bar-height));
         z-index: 1050;
     }
     
     /* Fix existing sidebar for mobile */
     .sidebar.expanded {
         position: fixed !important;
-        top: 60px !important;
+        top: var(--clypse-title-bar-height) !important;
         left: 0 !important;
-        height: calc(100vh - 60px) !important;
+        height: calc(100vh - var(--clypse-title-bar-height)) !important;
         z-index: 1050 !important;
         box-shadow: 0 0 20px rgba(0, 0, 0, 0.5) !important;
         width: 280px !important;
         min-width: 280px !important;
         overflow: hidden !important;
+        margin: 0 !important;
+        border: none !important;
     }
     
     .sidebar.collapsed {
         transform: translateX(-100%) !important;
         position: fixed !important;
-        top: 60px !important;
+        top: var(--clypse-title-bar-height) !important;
         left: 0 !important;
-        height: calc(100vh - 60px) !important;
+        height: calc(100vh - var(--clypse-title-bar-height)) !important;
         z-index: 1050 !important;
         width: 80px !important;
+        margin: 0 !important;
+        border: none !important;
     }
     
     /* Fix sidebar content scrolling */
@@ -897,7 +913,7 @@ Example for a dark theme:
         overflow-x: hidden !important;
         -webkit-overflow-scrolling: touch !important;
         flex: 1 1 auto !important;
-        max-height: calc(100vh - 160px) !important; /* Account for title and logout area */
+        max-height: calc(100vh - var(--clypse-title-bar-height) - 100px) !important; /* Account for title and logout area */
         scrollbar-width: thin !important;
         scrollbar-color: var(--clypse-border-medium) transparent !important;
     }
@@ -1148,6 +1164,11 @@ Example for a dark theme:
    MOBILE SCROLL CONTAINMENT
    ================================ */
 
+/* Define precise title bar height */
+:root {
+    --clypse-title-bar-height: 60px;
+}
+
 /* Prevent mobile page dragging and overscroll */
 html {
     overflow: hidden;
@@ -1194,9 +1215,13 @@ body {
 /* Mobile main content improvements */
 @media (max-width: 768px) {
     .main-content-area {
-        height: calc(100vh - 60px) !important; /* Full height minus title bar */
-        max-height: calc(100vh - 60px) !important;
-        padding: 0.75rem !important;
+        height: calc(100vh - var(--clypse-title-bar-height)) !important;
+        max-height: calc(100vh - var(--clypse-title-bar-height)) !important;
+        padding: 0 !important; /* Remove padding to eliminate gaps */
+        margin: 0 !important; /* Remove any margin */
+        border: none !important; /* Remove any border */
+        position: relative !important;
+        top: 0 !important;
     }
 }
 
@@ -1234,18 +1259,30 @@ body {
         overflow-x: hidden !important;
         -webkit-overflow-scrolling: touch !important;
         overscroll-behavior: contain !important;
-        padding: 0.75rem !important;
+        padding: 0 !important; /* Remove all padding to eliminate gap */
+        margin: 0 !important; /* Remove all margin to eliminate gap */
         box-sizing: border-box !important;
+        border: none !important; /* Remove any border */
+        position: relative !important;
+        top: 0 !important;
     }
     
     .vaults-page h2 {
-        margin-bottom: 1rem !important;
+        margin: 0 !important;
         flex-shrink: 0 !important;
         position: sticky !important;
-        top: 0 !important;
+        top: 0 !important; /* Stick to the very top of the scrollable container */
         background-color: var(--clypse-surface-secondary) !important;
-        padding: 0.5rem 0 !important;
+        padding: 1rem 0.75rem 1rem 0.75rem !important;
         z-index: 10 !important;
+        border-bottom: 1px solid var(--clypse-border-light) !important;
+        margin-top: 0 !important;
+        margin-bottom: 0 !important;
+    }
+    
+    /* Add padding to the grid container instead of the page */
+    .vaults-grid-responsive {
+        padding: 0 0.75rem 0.75rem 0.75rem !important;
     }
     
     /* Prevent vault cards from causing horizontal scroll */
