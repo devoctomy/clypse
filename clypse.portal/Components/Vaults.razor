@@ -23,15 +23,15 @@
     }
     else
     {
-        <div class="vaults-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 1rem; margin-top: 1rem;">
+        <div class="vaults-grid-responsive">
             @foreach (var vault in vaults)
             {
-                <div class="vault-card" style="background: #ffffff; border: 1px solid #dee2e6; border-radius: 8px; padding: 1.5rem; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); position: relative; margin-bottom: 1rem; cursor: pointer;" @onclick="async () => await ShowPassphrasePanel(vault)">
-                    <div class="vault-lock-icon" style="position: absolute; top: 12px; left: 12px; color: #6c757d; font-size: 1rem;">
+                <div class="vault-card-responsive" @onclick="async () => await ShowPassphrasePanel(vault)">
+                    <div class="vault-lock-icon-responsive">
                         <i class="bi bi-lock-fill"></i>
                     </div>
-                    <div class="vault-details-icon" style="position: absolute; top: 12px; right: 12px;">
-                        <button class="btn btn-outline-secondary btn-sm" style="border: none; background: none; color: #6c757d; font-size: 1rem; padding: 0.25rem;" 
+                    <div class="vault-details-icon-responsive">
+                        <button class="btn btn-outline-secondary btn-sm" 
                                 title="Show vault details" 
                                 @onclick="() => ShowVaultDetailsPanel(vault)" 
                                 @onclick:stopPropagation="true">
