@@ -25,9 +25,14 @@
                     <h4 class="mb-0">@AppSettings.ApplicationTitle</h4>
                 }
             </div>
-            <button class="theme-switcher" @onclick="ToggleTheme" title="Toggle theme">
-                <i class="bi @themeIcon"></i>
-            </button>
+            <div class="d-flex align-items-center">
+                <button class="theme-switcher me-3" @onclick="ToggleTheme" title="Toggle theme">
+                    <i class="bi @themeIcon"></i>
+                </button>
+                <button class="theme-switcher" @onclick="HandleLogout" title="Logout">
+                    <i class="bi bi-box-arrow-right"></i>
+                </button>
+            </div>
         </div>
 
         <div class="flex-grow-1 d-flex">
@@ -62,22 +67,7 @@
                         </div>
                     }
                 </div>
-                <!-- Persistent footer (session + logout) -->
-                <div class="sidebar-footer border-top px-3 py-3">
-                    @if (!string.IsNullOrEmpty(sessionTimeRemaining))
-                    {
-                        <div class="session-info text-muted small d-flex align-items-center mb-2">
-                            <i class="bi bi-clock me-1"></i>
-                            <span class="session-text">Session expires in @sessionTimeRemaining</span>
-                        </div>
-                    }
-                    <button class="btn btn-danger btn-sm w-100 sidebar-btn-responsive" 
-                            title="Logout"
-                            @onclick="HandleLogout">
-                        <i class="bi bi-box-arrow-right sidebar-icon-responsive"></i>
-                        <span class="sidebar-text-responsive">Logout</span>
-                    </button>
-                </div>
+                <!-- Footer removed as per design change -->
             </nav>
 
             <!-- Main Content Area -->

@@ -742,7 +742,7 @@ Example for a dark theme:
     transition: width 0.3s ease, transform 0.3s ease;
     display: flex;
     flex-direction: column;
-    height: 100%; /* Ensure full height */
+    height: 100%; /* Use container height */
 }
 
 .sidebar-responsive.expanded {
@@ -877,6 +877,9 @@ Example for a dark theme:
         box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
         width: 250px; /* Match desktop width */
         min-width: 250px; /* Match desktop width */
+        display:flex;
+        flex-direction:column;
+        overflow:visible; /* allow footer to sit fully */
     }
     
     .sidebar-responsive.collapsed {
@@ -887,6 +890,11 @@ Example for a dark theme:
         height: calc(100vh - var(--clypse-title-bar-height));
         z-index: 1050;
     }
+
+    /* Mobile overlay internal regions */
+    .sidebar-responsive.expanded .sidebar-scroll { flex:1 1 auto; min-height:0; overflow-y:auto; }
+    .sidebar-responsive.expanded .sidebar-footer { flex:0 0 auto; position:relative; padding-bottom: calc(0.75rem + env(safe-area-inset-bottom, 0)); }
+    .sidebar-responsive.expanded .sidebar-footer button { width:100%; }
     
     /* Fix existing sidebar for mobile */
     .sidebar.expanded {
@@ -1435,12 +1443,17 @@ span:not(.sidebar-text) {
      (Focus: persistent logout + reliable scrollbars)
      ================================ */
 .app-shell { height:100vh; max-height:100vh; overflow:hidden; }
-.app-shell > .flex-grow-1.d-flex { height:calc(100vh - var(--title-bar-height)); min-height:0; display:flex; }
+.app-shell > .flex-grow-1.d-flex { flex:1 1 auto; min-height:0; display:flex; height:auto; }
 .app-shell > .flex-grow-1.d-flex > nav.sidebar-responsive { height:100%; }
 .app-shell > .flex-grow-1.d-flex > .main-content-area { min-height:0; }
 
 /* Sidebar: two-region column: scrollable nav + sticky footer */
-.app-shell nav.sidebar-responsive { height:100%; display:flex; flex-direction:column; }
+.app-shell nav.sidebar-responsive { 
+    height:100%; 
+    display:flex; 
+    flex-direction:column; 
+    padding-bottom: 10px; /* Add padding to ensure footer stays in view */
+}
 
 /* Scroll area (navigation buttons) */
 .app-shell nav.sidebar-responsive > .flex-grow-1 {
@@ -1477,12 +1490,49 @@ body { position:static !important; height:auto !important; }
 .d-flex.flex-column.vh-100 { position:static; overflow:visible; height:100%; }
 
 /* New structured sidebar regions */
-.sidebar-responsive { height:100%; }
-.sidebar-responsive .sidebar-scroll { flex:1 1 auto; min-height:0; overflow-y:auto; overflow-x:hidden; }
-.sidebar-responsive .sidebar-footer { flex:0 0 auto; }
+.sidebar-responsive { height:100vh; max-height:100vh; display:flex; flex-direction:column; }
+.sidebar-responsive .sidebar-scroll { 
+    flex:1 1 auto; 
+    min-height:0; 
+    overflow-y:auto; 
+    overflow-x:hidden;
+    max-height: calc(100vh - 150px); /* Increased reserve space for footer */
+}
+/* Removed sidebar footer styles as it's no longer used */
+.sidebar-responsive .sidebar-footer button { margin-top:0.25rem; }
+
+/* Removed media query for sidebar footer padding */
 .sidebar-responsive .sidebar-footer .session-info { line-height:1.2; }
 
 /* Collapsed state: hide text but keep icons */
 .sidebar-responsive.collapsed .session-info .session-text,
 .sidebar-responsive.collapsed .sidebar-text-responsive { display:none; }
 .sidebar-responsive.collapsed .session-info { justify-content:center; }
+
+/* Removed small height screen adjustments as they are no longer needed */
+
+/* FINAL FIX: Ensure logout button is always visible by prioritizing it in all views */
+.app-shell nav.sidebar-responsive {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.app-shell nav.sidebar-responsive > .sidebar-scroll {
+    flex: 1 1 auto;
+    overflow-y: auto;
+    min-height: 0;
+}
+
+.app-shell nav.sidebar-responsive > .sidebar-footer {
+    flex: 0 0 auto;
+    margin-top: auto;
+}
+
+/* Ensure full view height is used properly */
+.app-shell > .flex-grow-1.d-flex {
+    height: calc(100vh - var(--clypse-title-bar-height));
+    min-height: calc(100vh - var(--clypse-title-bar-height));
+}
+
+/* Removed logout button positioning fix as the design changed */
