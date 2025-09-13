@@ -292,6 +292,32 @@ footer.bg-light {
     border-top-color: var(--clypse-border-light);
 }
 
+/* Vault Details modal specific styles */
+.modal-fullscreen.m-2 {
+    width: calc(100% - 16px);
+    max-width: calc(100% - 16px);
+    margin: 8px;
+    padding: 0;
+}
+
+.vault-details-modal .modal-content {
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+}
+
+.vault-details-modal .modal-header {
+    background-color: var(--clypse-surface-tertiary);
+}
+
+/* Make close button white in dark mode */
+[data-theme="dark"] .btn-close.vault-details-close {
+    filter: invert(1) grayscale(100%) brightness(200%);
+    opacity: 0.8;
+}
+
+[data-theme="dark"] .btn-close.vault-details-close:hover {
+    opacity: 1;
+}
+
 /* Form controls */
 .form-control {
     background-color: var(--clypse-surface-primary) !important;
