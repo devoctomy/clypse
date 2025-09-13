@@ -5,7 +5,7 @@
 <CascadingValue Value="this">
     <div class="d-flex flex-column vh-100">
         <!-- Title Bar -->
-        <div class="text-white p-3 d-flex justify-content-between align-items-center" style="background-color: var(--clypse-primary);">
+        <div class="title-bar text-white p-3 d-flex justify-content-between align-items-center" style="background-color: var(--clypse-primary);">
             <div class="d-flex align-items-center">
                 <!-- Burger Menu Button -->
                 <button class="btn btn-link text-white p-0 me-3 burger-btn" 
@@ -92,6 +92,15 @@
 </CascadingValue>
 
 <style>
+    /* Define title bar height as a CSS custom property */
+    :root {
+        --title-bar-height: calc(1rem + 1rem + 32px); /* p-3 top + p-3 bottom + logo height */
+    }
+    
+    .title-bar {
+        height: var(--title-bar-height);
+    }
+
     .sidebar {
         width: 80px;
         min-width: 80px;
@@ -189,9 +198,9 @@
     @@media (max-width: 768px) {
         .sidebar.expanded {
             position: fixed;
-            top: 60px; /* Start below the title bar */
+            top: var(--title-bar-height); /* Use exact title bar height */
             left: 0;
-            height: calc(100vh - 60px); /* Full height minus title bar */
+            height: calc(100vh - var(--title-bar-height)); /* Full height minus exact title bar height */
             z-index: 1050;
             box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
         }
