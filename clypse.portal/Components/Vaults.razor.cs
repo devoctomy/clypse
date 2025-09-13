@@ -88,6 +88,17 @@ public partial class Vaults : ComponentBase
                 };
             }).ToList();
 
+            // For testing purposes, create some dummy vaults so we can test scrolling
+            for (var i = 0; i < 10; i++)
+            {
+                vaults.Add(new VaultMetadata
+                {
+                    Id = Guid.NewGuid().ToString(),
+                    Name = $"Test Vault {i + 1}",
+                    Description = $"This is a description for Test Vault {i + 1}."
+                });
+            }
+
             isLoading = false;
             StateHasChanged();
         }

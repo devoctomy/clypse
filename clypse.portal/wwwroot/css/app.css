@@ -228,6 +228,12 @@
 body {
     background-color: var(--clypse-surface-secondary);
     color: var(--clypse-text-primary);
+    /* Prevent mobile overscroll and page dragging */
+    overscroll-behavior: none;
+    overflow-x: hidden;
+    position: fixed;
+    width: 100%;
+    height: 100%;
 }
 
 /* Theme Switcher Button */
@@ -862,6 +868,68 @@ Example for a dark theme:
         z-index: 1050;
     }
     
+    /* Fix existing sidebar for mobile */
+    .sidebar.expanded {
+        position: fixed !important;
+        top: 60px !important;
+        left: 0 !important;
+        height: calc(100vh - 60px) !important;
+        z-index: 1050 !important;
+        box-shadow: 0 0 20px rgba(0, 0, 0, 0.5) !important;
+        width: 280px !important;
+        min-width: 280px !important;
+        overflow: hidden !important;
+    }
+    
+    .sidebar.collapsed {
+        transform: translateX(-100%) !important;
+        position: fixed !important;
+        top: 60px !important;
+        left: 0 !important;
+        height: calc(100vh - 60px) !important;
+        z-index: 1050 !important;
+        width: 80px !important;
+    }
+    
+    /* Fix sidebar content scrolling */
+    .sidebar .flex-grow-1 {
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+        -webkit-overflow-scrolling: touch !important;
+        flex: 1 1 auto !important;
+        max-height: calc(100vh - 160px) !important; /* Account for title and logout area */
+        scrollbar-width: thin !important;
+        scrollbar-color: var(--clypse-border-medium) transparent !important;
+    }
+    
+    /* Custom scrollbar for webkit browsers */
+    .sidebar .flex-grow-1::-webkit-scrollbar {
+        width: 4px !important;
+    }
+    
+    .sidebar .flex-grow-1::-webkit-scrollbar-track {
+        background: transparent !important;
+    }
+    
+    .sidebar .flex-grow-1::-webkit-scrollbar-thumb {
+        background: var(--clypse-border-medium) !important;
+        border-radius: 2px !important;
+    }
+    
+    .sidebar .flex-grow-1::-webkit-scrollbar-thumb:hover {
+        background: var(--clypse-border-dark) !important;
+    }
+    
+    /* Ensure logout area stays at bottom */
+    .sidebar .mt-auto {
+        flex-shrink: 0 !important;
+        position: sticky !important;
+        bottom: 0 !important;
+        background-color: var(--clypse-surface-tertiary) !important;
+        border-top: 1px solid var(--clypse-border-light) !important;
+        margin-top: 0 !important;
+    }
+    
     /* Ensure main content is not affected by fixed sidebar on mobile */
     .main-content-responsive {
         margin-left: 0 !important;
@@ -1074,4 +1142,200 @@ Example for a dark theme:
 
 .table-responsive-custom table {
     min-width: 600px;
+}
+
+/* ================================
+   MOBILE SCROLL CONTAINMENT
+   ================================ */
+
+/* Prevent mobile page dragging and overscroll */
+html {
+    overflow: hidden;
+    height: 100%;
+    position: fixed;
+    width: 100%;
+}
+
+body {
+    overscroll-behavior: none;
+    -webkit-overflow-scrolling: touch;
+    touch-action: manipulation;
+}
+
+/* Main app container should fill viewport exactly */
+#app {
+    height: 100vh;
+    width: 100vw;
+    overflow: hidden;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Layout containers must be properly contained */
+.d-flex.flex-column.vh-100,
+.d-flex.flex-column.min-vh-100 {
+    height: 100vh !important;
+    overflow: hidden;
+    position: relative;
+}
+
+/* Main content areas should handle their own scrolling */
+.main-content-area {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+    position: relative;
+    height: 100%;
+}
+
+/* Mobile main content improvements */
+@media (max-width: 768px) {
+    .main-content-area {
+        height: calc(100vh - 60px) !important; /* Full height minus title bar */
+        max-height: calc(100vh - 60px) !important;
+        padding: 0.75rem !important;
+    }
+}
+
+/* Specific mobile layout fixes */
+@media (max-width: 768px) {
+    /* Ensure no horizontal scrolling on mobile */
+    * {
+        max-width: 100vw;
+        box-sizing: border-box;
+    }
+    
+    /* Title bar should be fixed on mobile */
+    .title-bar,
+    .title-bar-responsive {
+        position: sticky;
+        top: 0;
+        z-index: 1030;
+        width: 100%;
+        flex-shrink: 0;
+    }
+    
+    /* Content wrapper for mobile */
+    .mobile-content-wrapper {
+        flex: 1;
+        display: flex;
+        overflow: hidden;
+        position: relative;
+    }
+    
+    /* Vaults page specific mobile fixes */
+    .vaults-page {
+        height: 100% !important;
+        max-height: 100% !important;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+        -webkit-overflow-scrolling: touch !important;
+        overscroll-behavior: contain !important;
+        padding: 0.75rem !important;
+        box-sizing: border-box !important;
+    }
+    
+    .vaults-page h2 {
+        margin-bottom: 1rem !important;
+        flex-shrink: 0 !important;
+        position: sticky !important;
+        top: 0 !important;
+        background-color: var(--clypse-surface-secondary) !important;
+        padding: 0.5rem 0 !important;
+        z-index: 10 !important;
+    }
+    
+    /* Prevent vault cards from causing horizontal scroll */
+    .vaults-grid-responsive {
+        width: 100%;
+        max-width: 100%;
+        grid-template-columns: 1fr !important;
+        gap: 0.75rem;
+        margin-top: 0.5rem;
+    }
+    
+    .vault-card-responsive {
+        width: 100%;
+        max-width: 100%;
+        margin-bottom: 0.75rem;
+        box-sizing: border-box;
+    }
+}
+
+/* ================================
+   MOBILE TOUCH ENHANCEMENTS
+   ================================ */
+
+/* Disable text selection on mobile for UI elements */
+.title-bar,
+.sidebar,
+.vault-card-responsive,
+.btn {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+}
+
+/* Enable text selection for content areas */
+.vault-field,
+p, 
+span:not(.sidebar-text) {
+    -webkit-user-select: text;
+    -moz-user-select: text;
+    -ms-user-select: text;
+    user-select: text;
+}
+
+/* Improve touch targets */
+@media (max-width: 768px) {
+    .btn,
+    button,
+    .vault-card-responsive {
+        min-height: 44px;
+        min-width: 44px;
+    }
+    
+    /* Sidebar backdrop for mobile */
+    .sidebar-backdrop {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 1040;
+        display: none;
+        pointer-events: none;
+    }
+    
+    .sidebar-backdrop.show {
+        display: block;
+        pointer-events: auto;
+    }
+    
+    /* Ensure sidebar appears above backdrop */
+    .sidebar.expanded {
+        z-index: 1050;
+    }
+    
+    /* Prevent any elastic scroll on the main container */
+    .d-flex.flex-column.vh-100 {
+        overscroll-behavior: none;
+        overflow: hidden;
+        position: fixed;
+        width: 100%;
+        height: 100%;
+    }
+    
+    /* Better mobile scrolling for content */
+    .main-content-area {
+        scroll-behavior: smooth;
+        overscroll-behavior-y: contain;
+        overscroll-behavior-x: none;
+    }
 }

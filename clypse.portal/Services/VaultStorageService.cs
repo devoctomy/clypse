@@ -1,6 +1,7 @@
 using Microsoft.JSInterop;
 using System.Text.Json;
 using clypse.portal.Models;
+using Org.BouncyCastle.Asn1.Cmp;
 
 namespace clypse.portal.Services;
 
@@ -35,6 +36,7 @@ public class VaultStorageService : IVaultStorageService
             }
 
             var vaultStorage = JsonSerializer.Deserialize<VaultStorage>(vaultsJson);
+
             return vaultStorage?.Vaults ?? new List<VaultMetadata>();
         }
         catch (Exception ex)
