@@ -736,12 +736,13 @@ Example for a dark theme:
 .sidebar-responsive {
     width: 80px;
     min-width: 80px;
-    overflow: hidden;
+    overflow: visible; /* Allow content to be visible */
     background-color: var(--clypse-surface-tertiary);
     border-right: 1px solid var(--clypse-border-light);
     transition: width 0.3s ease, transform 0.3s ease;
     display: flex;
     flex-direction: column;
+    height: 100%; /* Ensure full height */
 }
 
 .sidebar-responsive.expanded {
@@ -762,6 +763,13 @@ Example for a dark theme:
     transition: background-color 0.2s ease, color 0.2s ease;
     border-radius: 0.25rem;
     margin: 0.125rem 0;
+    min-height: 40px; /* Consistent button height */
+    max-height: 40px;
+    height: 40px;
+    width: 100%;
+    box-sizing: border-box;
+    font-size: 0.875rem; /* Consistent font size */
+    overflow: hidden;
 }
 
 .sidebar-btn-responsive:hover {
@@ -867,8 +875,8 @@ Example for a dark theme:
         height: calc(100vh - var(--clypse-title-bar-height));
         z-index: 1050;
         box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
-        width: 280px;
-        min-width: 280px;
+        width: 250px; /* Match desktop width */
+        min-width: 250px; /* Match desktop width */
     }
     
     .sidebar-responsive.collapsed {
@@ -888,8 +896,8 @@ Example for a dark theme:
         height: calc(100vh - var(--clypse-title-bar-height)) !important;
         z-index: 1050 !important;
         box-shadow: 0 0 20px rgba(0, 0, 0, 0.5) !important;
-        width: 280px !important;
-        min-width: 280px !important;
+        width: 250px !important; /* Match responsive width */
+        min-width: 250px !important; /* Match responsive width */
         overflow: hidden !important;
         margin: 0 !important;
         border: none !important;
@@ -905,45 +913,6 @@ Example for a dark theme:
         width: 80px !important;
         margin: 0 !important;
         border: none !important;
-    }
-    
-    /* Fix sidebar content scrolling */
-    .sidebar .flex-grow-1 {
-        overflow-y: auto !important;
-        overflow-x: hidden !important;
-        -webkit-overflow-scrolling: touch !important;
-        flex: 1 1 auto !important;
-        max-height: calc(100vh - var(--clypse-title-bar-height) - 100px) !important; /* Account for title and logout area */
-        scrollbar-width: thin !important;
-        scrollbar-color: var(--clypse-border-medium) transparent !important;
-    }
-    
-    /* Custom scrollbar for webkit browsers */
-    .sidebar .flex-grow-1::-webkit-scrollbar {
-        width: 4px !important;
-    }
-    
-    .sidebar .flex-grow-1::-webkit-scrollbar-track {
-        background: transparent !important;
-    }
-    
-    .sidebar .flex-grow-1::-webkit-scrollbar-thumb {
-        background: var(--clypse-border-medium) !important;
-        border-radius: 2px !important;
-    }
-    
-    .sidebar .flex-grow-1::-webkit-scrollbar-thumb:hover {
-        background: var(--clypse-border-dark) !important;
-    }
-    
-    /* Ensure logout area stays at bottom */
-    .sidebar .mt-auto {
-        flex-shrink: 0 !important;
-        position: sticky !important;
-        bottom: 0 !important;
-        background-color: var(--clypse-surface-tertiary) !important;
-        border-top: 1px solid var(--clypse-border-light) !important;
-        margin-top: 0 !important;
     }
     
     /* Ensure main content is not affected by fixed sidebar on mobile */
@@ -972,21 +941,90 @@ Example for a dark theme:
 /* Tablet responsive behavior */
 @media (min-width: 769px) and (max-width: 1024px) {
     .sidebar-responsive {
-        width: 70px;
-        min-width: 70px;
+        width: 80px; /* Keep consistent with base width */
+        min-width: 80px;
     }
     
     .sidebar-responsive.expanded {
-        width: 220px;
-        min-width: 220px;
+        width: 250px; /* Keep consistent with base expanded width */
+        min-width: 250px;
     }
 }
 
 /* Large screen behavior */
 @media (min-width: 1200px) {
     .sidebar-responsive.expanded {
-        width: 280px;
-        min-width: 280px;
+        width: 250px; /* Keep consistent with base expanded width */
+        min-width: 250px;
+    }
+}
+
+/* ================================
+   SIDEBAR SCROLLING (ALL SCREEN SIZES)
+   ================================ */
+
+/* Fix sidebar content scrolling for all screen sizes */
+.sidebar .flex-grow-1 {
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    -webkit-overflow-scrolling: touch !important;
+    flex: 1 1 auto !important;
+    scrollbar-width: thin !important;
+    scrollbar-color: var(--clypse-border-medium) transparent !important;
+}
+
+/* Adjust max-height based on screen size - SIMPLE VERSION */
+.sidebar .flex-grow-1,
+.sidebar-responsive .flex-grow-1 {
+    max-height: calc(100vh - var(--clypse-title-bar-height) - 100px) !important; /* 100px for fixed logout area */
+    overflow-y: auto !important; /* ALWAYS allow scrolling */
+    flex-shrink: 1 !important; /* Allow this to shrink */
+}
+
+/* Custom scrollbar for webkit browsers */
+.sidebar .flex-grow-1::-webkit-scrollbar,
+.sidebar-responsive .flex-grow-1::-webkit-scrollbar {
+    width: 4px !important;
+}
+
+.sidebar .flex-grow-1::-webkit-scrollbar-track,
+.sidebar-responsive .flex-grow-1::-webkit-scrollbar-track {
+    background: transparent !important;
+}
+
+.sidebar .flex-grow-1::-webkit-scrollbar-thumb,
+.sidebar-responsive .flex-grow-1::-webkit-scrollbar-thumb {
+    background: var(--clypse-border-medium) !important;
+    border-radius: 2px !important;
+}
+
+.sidebar .flex-grow-1::-webkit-scrollbar-thumb:hover,
+.sidebar-responsive .flex-grow-1::-webkit-scrollbar-thumb:hover {
+    background: var(--clypse-border-dark) !important;
+}
+
+/* (Removed old fixed-height logout block; replaced by stabilization overrides at file end) */
+
+/* ================================
+   VAULTS PAGE SCROLLING (ALL SCREEN SIZES)
+   ================================ */
+
+/* Vaults page scrolling for all screen sizes */
+.vaults-page {
+    height: 100%;
+    max-height: 100%;
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+    box-sizing: border-box;
+    position: relative;
+}
+
+/* Desktop/tablet vaults page */
+@media (min-width: 769px) {
+    .vaults-page {
+        padding: 1rem;
     }
 }
 
@@ -1201,15 +1239,38 @@ body {
     position: relative;
 }
 
-/* Main content areas should handle their own scrolling */
+/* Ensure main content area works properly at all viewport widths */
 .main-content-area {
     flex: 1;
-    overflow-y: auto;
+    overflow-y: auto !important; /* ALWAYS show scrollbar when needed */
     overflow-x: hidden;
     -webkit-overflow-scrolling: touch;
     overscroll-behavior: contain;
     position: relative;
     height: 100%;
+    min-height: 0; /* Allow flex shrinking */
+    
+    /* Firefox scrollbar styling */
+    scrollbar-width: auto !important; /* ALWAYS show scrollbar */
+    scrollbar-color: var(--bs-border-color) transparent;
+}
+
+/* Webkit scrollbar styling - ALWAYS VISIBLE */
+.main-content-area::-webkit-scrollbar {
+    width: 12px !important; /* Make it bigger so it's always visible */
+}
+
+.main-content-area::-webkit-scrollbar-track {
+    background: var(--bs-border-color) !important; /* Make track visible */
+}
+
+.main-content-area::-webkit-scrollbar-thumb {
+    background: var(--bs-secondary) !important;
+    border-radius: 4px;
+}
+
+.main-content-area::-webkit-scrollbar-thumb:hover {
+    background: var(--bs-primary) !important;
 }
 
 /* Mobile main content improvements */
@@ -1253,17 +1314,9 @@ body {
     
     /* Vaults page specific mobile fixes */
     .vaults-page {
-        height: 100% !important;
-        max-height: 100% !important;
-        overflow-y: auto !important;
-        overflow-x: hidden !important;
-        -webkit-overflow-scrolling: touch !important;
-        overscroll-behavior: contain !important;
         padding: 0 !important; /* Remove all padding to eliminate gap */
         margin: 0 !important; /* Remove all margin to eliminate gap */
-        box-sizing: border-box !important;
         border: none !important; /* Remove any border */
-        position: relative !important;
         top: 0 !important;
     }
     
@@ -1376,3 +1429,60 @@ span:not(.sidebar-text) {
         overscroll-behavior-x: none;
     }
 }
+
+/* ================================
+     LAYOUT STABILIZATION OVERRIDES
+     (Focus: persistent logout + reliable scrollbars)
+     ================================ */
+.app-shell { height:100vh; max-height:100vh; overflow:hidden; }
+.app-shell > .flex-grow-1.d-flex { height:calc(100vh - var(--title-bar-height)); min-height:0; display:flex; }
+.app-shell > .flex-grow-1.d-flex > nav.sidebar-responsive { height:100%; }
+.app-shell > .flex-grow-1.d-flex > .main-content-area { min-height:0; }
+
+/* Sidebar: two-region column: scrollable nav + sticky footer */
+.app-shell nav.sidebar-responsive { height:100%; display:flex; flex-direction:column; }
+
+/* Scroll area (navigation buttons) */
+.app-shell nav.sidebar-responsive > .flex-grow-1 {
+    overflow-y:auto !important;
+    overflow-x:hidden;
+    min-height:0; /* allow flexbox to calculate properly */
+}
+
+/* Always show a scrollbar when overflow (webkit + firefox) */
+.app-shell nav.sidebar-responsive > .flex-grow-1 { scrollbar-width:auto; }
+.app-shell nav.sidebar-responsive > .flex-grow-1::-webkit-scrollbar { width:10px; }
+.app-shell nav.sidebar-responsive > .flex-grow-1::-webkit-scrollbar-track { background:transparent; }
+.app-shell nav.sidebar-responsive > .flex-grow-1::-webkit-scrollbar-thumb { background:var(--clypse-border-medium); border-radius:4px; }
+.app-shell nav.sidebar-responsive > .flex-grow-1::-webkit-scrollbar-thumb:hover { background:var(--clypse-border-dark); }
+
+/* Logout section: no fixed height; just stick to bottom reliably */
+.app-shell nav.sidebar-responsive .mt-auto { flex-shrink:0; padding-bottom:0.75rem !important; }
+
+/* Remove previous fixed heights if still present */
+.app-shell nav.sidebar-responsive .mt-auto[style*="height"],
+.app-shell nav.sidebar-responsive .mt-auto[style*="min-height"],
+.app-shell nav.sidebar-responsive .mt-auto[style*="max-height"] { height:auto !important; min-height:auto !important; max-height:none !important; }
+
+/* Main content scroll independent of sidebar */
+.app-shell .main-content-area { height:100%; overflow-y:auto !important; overflow-x:hidden; min-height:0; }
+.app-shell .main-content-area { scrollbar-width:auto; }
+.app-shell .main-content-area::-webkit-scrollbar { width:12px; }
+.app-shell .main-content-area::-webkit-scrollbar-track { background:transparent; }
+.app-shell .main-content-area::-webkit-scrollbar-thumb { background:var(--clypse-border-medium); border-radius:4px; }
+.app-shell .main-content-area::-webkit-scrollbar-thumb:hover { background:var(--clypse-border-dark); }
+
+/* Ensure body/global container not double-fixed (previous hacks) */
+body { position:static !important; height:auto !important; }
+.d-flex.flex-column.vh-100 { position:static; overflow:visible; height:100%; }
+
+/* New structured sidebar regions */
+.sidebar-responsive { height:100%; }
+.sidebar-responsive .sidebar-scroll { flex:1 1 auto; min-height:0; overflow-y:auto; overflow-x:hidden; }
+.sidebar-responsive .sidebar-footer { flex:0 0 auto; }
+.sidebar-responsive .sidebar-footer .session-info { line-height:1.2; }
+
+/* Collapsed state: hide text but keep icons */
+.sidebar-responsive.collapsed .session-info .session-text,
+.sidebar-responsive.collapsed .sidebar-text-responsive { display:none; }
+.sidebar-responsive.collapsed .session-info { justify-content:center; }

@@ -89,7 +89,7 @@ public partial class Vaults : ComponentBase
             }).ToList();
 
             // For testing purposes, create some dummy vaults so we can test scrolling
-            for (var i = 0; i < 10; i++)
+            for (var i = 0; i < 20; i++)
             {
                 vaults.Add(new VaultMetadata
                 {
