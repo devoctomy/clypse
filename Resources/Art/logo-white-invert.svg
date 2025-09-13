@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="972"
+   height="193"
+   viewBox="0 0 257.17499 51.064584"
+   version="1.1"
+   id="svg1"
+   inkscape:version="1.4.2 (f4327f4, 2025-05-13)"
+   sodipodi:docname="logo-white-invert.svg"
+   inkscape:export-filename="logo-white-invert363-72.png"
+   inkscape:export-xdpi="35.813473"
+   inkscape:export-ydpi="35.813473"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview1"
+     pagecolor="#ffffff"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="true"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:document-units="mm"
+     inkscape:zoom="1.0396254"
+     inkscape:cx="474.20927"
+     inkscape:cy="125.04504"
+     inkscape:window-width="2315"
+     inkscape:window-height="1010"
+     inkscape:window-x="188"
+     inkscape:window-y="42"
+     inkscape:window-maximized="0"
+     inkscape:current-layer="g1"
+     showgrid="false" />
+  <defs
+     id="defs1" />
+  <text
+     xml:space="preserve"
+     style="font-size:50.8px;text-align:start;writing-mode:lr-tb;direction:ltr;text-anchor:start;fill:#ffffff;stroke-width:0.264583"
+     x="50.368328"
+     y="43.305119"
+     id="text1"
+     inkscape:label="text"><tspan
+       sodipodi:role="line"
+       id="tspan1"
+       style="font-style:normal;font-variant:normal;font-weight:900;font-stretch:normal;font-size:50.8px;font-family:Montserrat;-inkscape-font-specification:'Montserrat Heavy';stroke-width:0.264583;fill:#ffffff"
+       x="50.368328"
+       y="43.305119">CLYPSE</tspan></text>
+  <g
+     id="g1"
+     transform="matrix(0.59163987,0,0,0.59163987,-62.327973,-15.349636)"
+     style="fill:#ffffff">
+    <path
+       id="rect1"
+       style="display:inline;fill:#ffffff;stroke-width:0.264583"
+       d="M 113.25162 29.521849 C 110.85475 29.521849 108.92545 31.451148 108.92545 33.848017 L 108.92545 104.34456 C 108.92545 106.74143 110.85475 108.67073 113.25162 108.67073 L 183.74816 108.67073 C 186.14503 108.67073 188.07433 106.74143 188.07433 104.34456 L 188.07433 33.848017 C 188.07433 31.451148 186.14503 29.521849 183.74816 29.521849 L 113.25162 29.521849 z M 150.49527 40.452127 C 156.01281 40.452127 160.88745 41.416514 165.11935 43.344974 C 169.40481 45.273434 172.94002 48.058567 175.72558 51.701213 L 163.75328 62.388675 C 162.09266 60.29951 160.24425 58.692199 158.20866 57.567264 C 156.22663 56.38876 153.97727 55.799413 151.45956 55.799413 C 149.47753 55.799413 147.6827 56.120875 146.07565 56.763695 C 144.4686 57.406515 143.07559 58.344113 141.89709 59.576185 C 140.77216 60.808257 139.88813 62.30754 139.24531 64.075295 C 138.60249 65.789482 138.28103 67.718255 138.28103 69.860989 C 138.28103 72.003722 138.60249 73.959284 139.24531 75.727039 C 139.88813 77.441225 140.77216 78.91372 141.89709 80.145792 C 143.07559 81.377864 144.4686 82.315462 146.07565 82.958282 C 147.6827 83.601102 149.47753 83.922564 151.45956 83.922564 C 153.97727 83.922564 156.22663 83.360005 158.20866 82.23507 C 160.24425 81.056567 162.09266 79.423341 163.75328 77.334176 L 175.72558 88.020764 C 172.94002 91.609842 169.40481 94.394975 165.11935 96.377003 C 160.88745 98.305463 156.01281 99.26985 150.49527 99.26985 C 145.99553 99.26985 141.81652 98.573348 137.9596 97.180571 C 134.15625 95.734226 130.83535 93.699172 127.99623 91.074324 C 125.21067 88.449476 123.04168 85.342008 121.4882 81.752929 C 119.93472 78.163851 119.15785 74.200024 119.15785 69.860989 C 119.15785 65.521953 119.93472 61.558126 121.4882 57.969048 C 123.04168 54.379969 125.21067 51.272501 127.99623 48.647653 C 130.83535 46.022805 134.15625 44.014539 137.9596 42.621762 C 141.81652 41.175417 145.99553 40.452127 150.49527 40.452127 z " />
+  </g>
+</svg>

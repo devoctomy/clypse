@@ -3,9 +3,9 @@
 /* Default Light Theme */
 :root, [data-theme="light"] {
     /* Primary Brand Colors */
-    --clypse-primary: #0d6efd;
-    --clypse-primary-dark: #0a58ca;
-    --clypse-primary-light: #6ea8fe;
+    --clypse-primary: #ff6600ff;
+    --clypse-primary-dark:  #aa4400;
+    --clypse-primary-light: #ff9955;
     
     /* Secondary Colors */
     --clypse-secondary: #6c757d;
@@ -64,9 +64,9 @@
 /* Dark Theme */
 [data-theme="dark"] {
     /* Primary Brand Colors */
-    --clypse-primary: #0d6efd;
-    --clypse-primary-dark: #0a58ca;
-    --clypse-primary-light: #6ea8fe;
+    --clypse-primary: #ff6600ff;
+    --clypse-primary-dark:  #aa4400;
+    --clypse-primary-light: #ff9955;
     
     /* Secondary Colors */
     --clypse-secondary: #adb5bd;
@@ -153,6 +153,16 @@ body {
     color: var(--clypse-text-muted) !important;
 }
 
+/* Footer styling */
+.bg-light {
+    background-color: var(--clypse-surface-tertiary) !important;
+}
+
+footer.bg-light {
+    background-color: var(--clypse-surface-tertiary) !important;
+    border-top: 1px solid var(--clypse-border-light);
+}
+
 /* Card and component styles */
 .card {
     background-color: var(--clypse-surface-primary);
@@ -180,15 +190,42 @@ body {
 
 /* Form controls */
 .form-control {
-    background-color: var(--clypse-surface-primary);
+    background-color: var(--clypse-surface-primary) !important;
     border-color: var(--clypse-border-medium);
-    color: var(--clypse-text-primary);
+    color: var(--clypse-text-primary) !important;
 }
 
 .form-control:focus {
-    background-color: var(--clypse-surface-primary);
+    background-color: var(--clypse-surface-primary) !important;
     border-color: var(--clypse-primary);
-    color: var(--clypse-text-primary);
+    color: var(--clypse-text-primary) !important;
+}
+
+/* Placeholder text styling for dark mode */
+.form-control::placeholder {
+    color: var(--clypse-text-muted) !important;
+}
+
+.form-control::-webkit-input-placeholder {
+    color: var(--clypse-text-muted) !important;
+}
+
+.form-control::-moz-placeholder {
+    color: var(--clypse-text-muted) !important;
+}
+
+.form-control:-ms-input-placeholder {
+    color: var(--clypse-text-muted) !important;
+}
+
+/* Override browser autocomplete styling */
+.form-control:-webkit-autofill,
+.form-control:-webkit-autofill:hover,
+.form-control:-webkit-autofill:focus,
+.form-control:-webkit-autofill:active {
+    -webkit-box-shadow: 0 0 0 30px var(--clypse-surface-primary) inset !important;
+    -webkit-text-fill-color: var(--clypse-text-primary) !important;
+    background-color: var(--clypse-surface-primary) !important;
 }
 
 /* Password field reveal button styling for dark mode */
@@ -228,8 +265,8 @@ body {
 
 /* Buttons */
 .btn-primary {
-    background-color: var(--clypse-primary) !important;
-    border-color: var(--clypse-primary) !important;
+    background-color: #0d6efd !important;
+    border-color: #0d6efd !important;
     color: white !important;
 }
 
@@ -237,8 +274,8 @@ body {
 .btn-primary:focus,
 .btn-primary:active,
 .btn-primary.active {
-    background-color: var(--clypse-primary-light) !important;
-    border-color: var(--clypse-primary-light) !important;
+    background-color: #0b5ed7 !important;
+    border-color: #0a58ca !important;
     color: white !important;
     box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25) !important;
 }

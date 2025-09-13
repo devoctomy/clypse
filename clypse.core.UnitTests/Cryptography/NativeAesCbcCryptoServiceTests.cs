@@ -54,10 +54,11 @@ public class NativeAesCbcCryptoServiceTests : IDisposable
         // Assert
         await this.sut.EncryptAsync(inputStream, encryptedStream, this.testKey);
         encryptedStream.Position = 0;
-        await Assert.ThrowsAnyAsync<CryptographicException>(async () =>
+        var exception = await Assert.ThrowsAnyAsync<CryptographicException>(async () =>
         {
             await this.sut.DecryptAsync(encryptedStream, decryptedStream, Convert.ToBase64String(wrongKeyBytes));
         });
+        Assert.Equal("Padding is invalid and cannot be removed.", exception.Message);
     }
 
     [Fact]
