@@ -238,19 +238,30 @@ public partial class Home : ComponentBase
         {
             Console.WriteLine($"Creating vault: {request.Name} - {request.Description}");
 
-            // Create vault manager if not already instantiated
-            if (vaultManager == null)
+            // For vault creation, we need to create a temporary vault manager instance
+            // using the VaultManagerFactory, not the bootstrapper (which is for existing vaults)
+            var credentials = await AuthService.GetStoredCredentials();
+            if (credentials?.AwsCredentials == null)
             {
-                vaultManager = await CreateVaultManager();
-                if (vaultManager == null)
-                {
-                    Console.WriteLine("Failed to create vault manager");
-                    return;
-                }
+                Console.WriteLine("No valid credentials found - cannot create vault");
+                return;
             }
 
+            // Create JavaScript S3 invoker
+            var jsInvoker = new JavaScriptS3Invoker(JSRuntime);
+
+            // Create temporary vault manager for vault creation
+            var tempVaultManager = VaultManagerFactory.CreateForBlazor(
+                jsInvoker,
+                credentials.AwsCredentials.AccessKeyId,
+                credentials.AwsCredentials.SecretAccessKey,
+                credentials.AwsCredentials.SessionToken,
+                AwsS3Config.Region,
+                AwsS3Config.BucketName,  
+                credentials.AwsCredentials.IdentityId);
+
             // Create the vault
-            var vault = vaultManager.Create(request.Name, request.Description);
+            var vault = tempVaultManager.Create(request.Name, request.Description);
             Console.WriteLine($"Vault created with ID: {vault.Info.Id}");
 
             // Derive encryption key from passphrase
@@ -261,13 +272,17 @@ public partial class Home : ComponentBase
 
             // Save the vault
             Console.WriteLine("Saving vault...");
-            var saveResults = await vaultManager.SaveAsync(
+            var saveResults = await tempVaultManager.SaveAsync(
                 vault,
                 base64Key,
                 null,
                 CancellationToken.None);
 
             Console.WriteLine($"Vault saved successfully. Results: {saveResults}");
+            
+            // Dispose of the temporary vault manager as it's no longer needed
+            // A new one will be created when the vault is unlocked
+            tempVaultManager.Dispose();
             
             // Persist vault metadata immediately since we know the name and description
             var existingVaults = await VaultStorage.GetVaultsAsync();

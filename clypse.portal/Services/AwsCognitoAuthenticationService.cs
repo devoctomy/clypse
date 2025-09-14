@@ -62,7 +62,16 @@ public class AwsCognitoAuthenticationService : IAuthenticationService
             {
                 try
                 {
-                    await _jsRuntime.InvokeAsync<object>("CognitoAuth.getAwsCredentials", credentials.IdToken);
+                    var freshAwsCredentials = await _jsRuntime.InvokeAsync<AwsCredentials>("CognitoAuth.getAwsCredentials", credentials.IdToken);
+                    
+                    // Update stored credentials with fresh AWS credentials
+                    if (freshAwsCredentials != null)
+                    {
+                        credentials.AwsCredentials = freshAwsCredentials;
+                        var credentialsJson = JsonSerializer.Serialize(credentials);
+                        await _jsRuntime.InvokeVoidAsync("localStorage.setItem", "clypse_credentials", credentialsJson);
+                    }
+                    
                     return true;
                 }
                 catch
