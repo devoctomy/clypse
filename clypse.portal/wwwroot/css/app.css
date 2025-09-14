@@ -198,6 +198,74 @@
 
 /* Responsive spacing utilities */
 .spacing-sm { gap: 0.5rem; }
+
+/* ================================
+   MOBILE VIEWPORT FIXES
+   ================================ */
+
+/* CSS Variables for mobile-safe viewport handling */
+:root {
+    /* Mobile viewport fixes - Custom properties for JavaScript integration */
+    --vh: 1vh; /* Fallback, will be updated by JavaScript for mobile */
+    --mobile-vh: 1vh; /* Mobile-specific viewport height */
+    
+    /* Mobile-safe viewport height calculations */
+    --mobile-safe-height: 100vh; /* Fallback for non-mobile */
+    --mobile-safe-height-with-titlebar: calc(100vh - var(--clypse-title-bar-height));
+}
+
+/* Modern browser support for dynamic viewport units */
+@supports (height: 100dvh) {
+    :root {
+        --mobile-safe-height: 100dvh;
+        --mobile-safe-height-with-titlebar: calc(100dvh - var(--clypse-title-bar-height));
+    }
+}
+
+/* Mobile-specific viewport handling with safe area insets */
+@supports (padding: env(safe-area-inset-bottom)) {
+    :root {
+        --safe-area-inset-bottom: env(safe-area-inset-bottom);
+    }
+    
+    /* Apply safe area inset for mobile devices */
+    @media screen and (max-width: 768px) {
+        .mobile-safe-footer {
+            padding-bottom: calc(1rem + env(safe-area-inset-bottom));
+        }
+        
+        .mobile-safe-content {
+            height: calc(100vh - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+            height: calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+        }
+    }
+}
+
+/* Mobile-safe layout classes */
+.mobile-safe-layout {
+    min-height: 100vh; /* Fallback for older browsers */
+    min-height: 100dvh; /* Modern browsers with dynamic viewport */
+}
+
+/* Mobile-safe footer with safe area handling */
+.mobile-safe-footer {
+    /* Inherit all base footer styles from parent */
+    position: relative;
+}
+
+/* Mobile-specific adjustments */
+@media screen and (max-width: 768px) {
+    .mobile-safe-layout {
+        /* Use dynamic viewport on mobile to account for browser UI */
+        min-height: 100vh;
+        min-height: calc(var(--vh, 1vh) * 100); /* JavaScript-based fallback */
+    }
+    
+    .mobile-safe-footer {
+        /* Ensure footer is always above mobile browser UI */
+        padding-bottom: calc(1rem + var(--safe-area-inset-bottom, 0px));
+    }
+}
 .spacing-md { gap: 1rem; }
 .spacing-lg { gap: 1.5rem; }
 .spacing-xl { gap: 2rem; }
