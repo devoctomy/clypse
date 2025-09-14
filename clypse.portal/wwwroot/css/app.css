@@ -43,6 +43,9 @@
     --clypse-shadow-medium: rgba(0, 0, 0, 0.15);
     --clypse-shadow-dark: rgba(0, 0, 0, 0.2);
     
+    /* Backdrop Colors */
+    --clypse-backdrop-overlay: rgba(0, 0, 0, 0.5);
+    
     /* Vault-specific Colors */
     --clypse-vault-background: var(--clypse-surface-primary);
     --clypse-vault-border: var(--clypse-border-light);
@@ -122,6 +125,104 @@
     --clypse-invert-filter: 1;
 }
 
+/* ================================
+   RESPONSIVE BREAKPOINT SYSTEM
+   ================================ */
+
+/* Breakpoint Variables */
+:root {
+    /* Breakpoint values */
+    --bp-xs: 0;          /* Extra small devices (portrait phones) */
+    --bp-sm: 576px;      /* Small devices (landscape phones) */
+    --bp-md: 768px;      /* Medium devices (tablets) */
+    --bp-lg: 992px;      /* Large devices (desktops) */
+    --bp-xl: 1200px;     /* Extra large devices (large desktops) */
+    --bp-xxl: 1400px;    /* Extra extra large devices */
+    
+    /* Container max-widths */
+    --container-sm: 540px;
+    --container-md: 720px;
+    --container-lg: 960px;
+    --container-xl: 1140px;
+    --container-xxl: 1320px;
+}
+
+/* Base responsive container */
+.responsive-container {
+    width: 100%;
+    padding-right: 0.75rem;
+    padding-left: 0.75rem;
+    margin-right: auto;
+    margin-left: auto;
+}
+
+/* Responsive grid utilities */
+.responsive-grid {
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: 1fr;
+}
+
+/* Media Queries for responsive grid */
+@media (min-width: 576px) {
+    .responsive-grid.grid-sm-2 { grid-template-columns: repeat(2, 1fr); }
+    .responsive-container { max-width: var(--container-sm); padding: 0 1rem; }
+}
+
+@media (min-width: 768px) {
+    .responsive-grid.grid-md-2 { grid-template-columns: repeat(2, 1fr); }
+    .responsive-grid.grid-md-3 { grid-template-columns: repeat(3, 1fr); }
+    .responsive-container { max-width: var(--container-md); }
+}
+
+@media (min-width: 992px) {
+    .responsive-grid.grid-lg-2 { grid-template-columns: repeat(2, 1fr); }
+    .responsive-grid.grid-lg-3 { grid-template-columns: repeat(3, 1fr); }
+    .responsive-grid.grid-lg-4 { grid-template-columns: repeat(4, 1fr); }
+    .responsive-container { max-width: var(--container-lg); }
+}
+
+@media (min-width: 1200px) {
+    .responsive-grid.grid-xl-3 { grid-template-columns: repeat(3, 1fr); }
+    .responsive-grid.grid-xl-4 { grid-template-columns: repeat(4, 1fr); }
+    .responsive-grid.grid-xl-5 { grid-template-columns: repeat(5, 1fr); }
+    .responsive-container { max-width: var(--container-xl); }
+}
+
+@media (min-width: 1400px) {
+    .responsive-grid.grid-xxl-4 { grid-template-columns: repeat(4, 1fr); }
+    .responsive-grid.grid-xxl-5 { grid-template-columns: repeat(5, 1fr); }
+    .responsive-grid.grid-xxl-6 { grid-template-columns: repeat(6, 1fr); }
+    .responsive-container { max-width: var(--container-xxl); }
+}
+
+/* Responsive spacing utilities */
+.spacing-sm { gap: 0.5rem; }
+.spacing-md { gap: 1rem; }
+.spacing-lg { gap: 1.5rem; }
+.spacing-xl { gap: 2rem; }
+
+/* Hide/show utilities for different screen sizes */
+.d-none-xs { display: none; }
+.d-none-sm { display: initial; }
+.d-none-md { display: initial; }
+.d-none-lg { display: initial; }
+
+@media (min-width: 576px) {
+    .d-none-xs { display: initial; }
+    .d-none-sm { display: none; }
+}
+
+@media (min-width: 768px) {
+    .d-none-sm { display: initial; }
+    .d-none-md { display: none; }
+}
+
+@media (min-width: 992px) {
+    .d-none-md { display: initial; }
+    .d-none-lg { display: none; }
+}
+
 /* Theme Transitions & Body Styles */
 * {
     transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
@@ -130,6 +231,12 @@
 body {
     background-color: var(--clypse-surface-secondary);
     color: var(--clypse-text-primary);
+    /* Prevent mobile overscroll and page dragging */
+    overscroll-behavior: none;
+    overflow-x: hidden;
+    position: fixed;
+    width: 100%;
+    height: 100%;
 }
 
 /* Theme Switcher Button */
@@ -186,6 +293,32 @@ footer.bg-light {
 
 .modal-footer {
     border-top-color: var(--clypse-border-light);
+}
+
+/* Vault Details modal specific styles */
+.modal-fullscreen.m-2 {
+    width: calc(100% - 16px);
+    max-width: calc(100% - 16px);
+    margin: 8px;
+    padding: 0;
+}
+
+.vault-details-modal .modal-content {
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+}
+
+.vault-details-modal .modal-header {
+    background-color: var(--clypse-surface-tertiary);
+}
+
+/* Make close button white in dark mode */
+[data-theme="dark"] .btn-close.vault-details-close {
+    filter: invert(1) grayscale(100%) brightness(200%);
+    opacity: 0.8;
+}
+
+[data-theme="dark"] .btn-close.vault-details-close:hover {
+    opacity: 1;
 }
 
 /* Form controls */
@@ -503,6 +636,29 @@ code {
     color: var(--clypse-text-primary) !important;
 }
 
+.credentials-page h2 {
+    margin-bottom: 0 !important;
+    margin-top: 0 !important;
+    color: var(--clypse-text-primary) !important;
+    position: sticky !important;
+    top: 0 !important;
+    background-color: var(--clypse-surface-secondary) !important;
+    padding: 1rem !important;
+    z-index: 10 !important;
+    border-bottom: 1px solid var(--clypse-border-light) !important;
+}
+
+/* Credentials search bar styling */
+.credentials-search-bar {
+    position: sticky !important;
+    top: calc(1rem + 2rem + 1rem) !important; /* Position below the h2 title */
+    background-color: var(--clypse-surface-secondary) !important;
+    padding: 0.75rem 1rem !important;
+    z-index: 9 !important;
+    border-bottom: 1px solid var(--clypse-border-light) !important;
+    margin: 0 !important;
+}
+
 /* 
 Theme Customization Guide:
 To create custom color themes, override the CSS custom properties in :root
@@ -518,3 +674,1075 @@ Example for a dark theme:
     --clypse-vault-border: #495057;
 }
 */
+
+/* ================================
+   RESPONSIVE VAULT GRID SYSTEM
+   ================================ */
+
+/* Base vaults grid - mobile first */
+.vaults-grid-responsive {
+    display: grid;
+    gap: 1rem;
+    margin-top: 1rem;
+    grid-template-columns: 1fr;
+}
+
+/* Responsive breakpoints for vault grid */
+@media (min-width: 576px) {
+    .vaults-grid-responsive {
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    }
+}
+
+@media (min-width: 768px) {
+    .vaults-grid-responsive {
+        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    }
+}
+
+@media (min-width: 992px) {
+    .vaults-grid-responsive {
+        grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    }
+}
+
+@media (min-width: 1200px) {
+    .vaults-grid-responsive {
+        grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+    }
+}
+
+/* Enhanced vault card styling with theme support */
+.vault-card-responsive {
+    background-color: var(--clypse-vault-background);
+    border: 1px solid var(--clypse-vault-border);
+    border-radius: 8px;
+    padding: 1.5rem;
+    box-shadow: var(--clypse-vault-shadow);
+    position: relative;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    margin-bottom: 1rem;
+}
+
+.vault-card-responsive:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--clypse-vault-shadow-hover);
+}
+
+/* Vault card icons with theme support */
+.vault-lock-icon-responsive {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    color: var(--clypse-vault-lock-icon);
+    font-size: 1rem;
+}
+
+.vault-details-icon-responsive {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+}
+
+.vault-details-icon-responsive .btn {
+    border: none !important;
+    background: none !important;
+    color: var(--clypse-vault-lock-icon) !important;
+    font-size: 1rem !important;
+    padding: 0.25rem !important;
+    transition: color 0.2s ease !important;
+}
+
+.vault-details-icon-responsive .btn:hover {
+    color: var(--clypse-primary) !important;
+    background: none !important;
+}
+
+/* Responsive vault card adjustments */
+@media (max-width: 575px) {
+    .vault-card-responsive {
+        padding: 1rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .vault-lock-icon-responsive,
+    .vault-details-icon-responsive {
+        top: 8px;
+    }
+    
+    .vault-lock-icon-responsive {
+        left: 8px;
+    }
+    
+    .vault-details-icon-responsive {
+        right: 8px;
+    }
+}
+
+/* ================================
+   CREDENTIAL CARD STYLES
+   ================================ */
+
+/* Credential grid layout */
+.credentials-grid-responsive {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+@media (max-width: 768px) {
+    .credentials-grid-responsive {
+        grid-template-columns: 1fr;
+        gap: 0.75rem;
+    }
+}
+
+@media (min-width: 1200px) {
+    .credentials-grid-responsive {
+        grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+    }
+}
+
+/* Enhanced credential card styling with theme support */
+.credential-card-responsive {
+    background-color: var(--clypse-vault-background);
+    border: 1px solid var(--clypse-vault-border);
+    border-radius: 8px;
+    padding: 1.5rem;
+    box-shadow: var(--clypse-vault-shadow);
+    position: relative;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    margin-bottom: 1rem;
+}
+
+.credential-card-responsive:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--clypse-vault-shadow-hover);
+}
+
+/* Credential card actions positioned top-right */
+.credential-actions-responsive {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    display: flex;
+    gap: 0.25rem;
+}
+
+.credential-actions-responsive .btn {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+    border-radius: 4px;
+}
+
+/* Credential content styling */
+.credential-content {
+    padding-right: 100px; /* Make room for action buttons */
+}
+
+.credential-field-name {
+    font-size: 1.1rem;
+    margin-bottom: 0.5rem;
+    color: var(--clypse-text-primary);
+}
+
+.credential-field-description {
+    font-size: 0.9rem;
+    color: var(--clypse-text-secondary);
+    margin-bottom: 0.75rem;
+    line-height: 1.4;
+}
+
+.credential-field-tags {
+    margin-top: 0.75rem;
+}
+
+.credential-field-tags .badge {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+}
+
+/* Responsive credential card adjustments */
+@media (max-width: 575px) {
+    .credential-card-responsive {
+        padding: 1rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .credential-actions-responsive {
+        top: 8px;
+        right: 8px;
+    }
+    
+    .credential-content {
+        padding-right: 80px;
+    }
+    
+    .credential-actions-responsive .btn {
+        padding: 0.2rem 0.4rem;
+        font-size: 0.8rem;
+    }
+}
+
+/* ================================
+   RESPONSIVE SIDEBAR SYSTEM
+   ================================ */
+
+/* Enhanced sidebar responsive behavior */
+.sidebar-responsive {
+    width: 80px;
+    min-width: 80px;
+    overflow: visible; /* Allow content to be visible */
+    background-color: var(--clypse-surface-tertiary);
+    border-right: 1px solid var(--clypse-border-light);
+    transition: width 0.3s ease, transform 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    height: 100%; /* Use container height */
+}
+
+.sidebar-responsive.expanded {
+    width: 250px;
+    min-width: 250px;
+}
+
+/* Sidebar button styling */
+.sidebar-btn-responsive {
+    display: flex;
+    align-items: center;
+    text-align: left;
+    white-space: nowrap;
+    padding: 0.5rem;
+    border: none;
+    background: transparent;
+    color: var(--clypse-text-primary);
+    transition: background-color 0.2s ease, color 0.2s ease;
+    border-radius: 0.25rem;
+    margin: 0.125rem 0;
+    min-height: 40px; /* Consistent button height */
+    max-height: 40px;
+    height: 40px;
+    width: 100%;
+    box-sizing: border-box;
+    font-size: 0.875rem; /* Consistent font size */
+    overflow: hidden;
+}
+
+.sidebar-btn-responsive:hover {
+    background-color: var(--clypse-primary);
+    color: var(--clypse-text-on-dark);
+}
+
+.sidebar-icon-responsive {
+    min-width: 1.25rem;
+    text-align: center;
+    margin-right: 0.75rem;
+    transition: margin-right 0.3s ease;
+}
+
+.sidebar-text-responsive {
+    opacity: 1;
+    width: auto;
+    margin-left: 0;
+    transition: opacity 0.3s ease, width 0.3s ease;
+}
+
+/* Collapsed sidebar styles */
+.sidebar-responsive.collapsed .sidebar-text-responsive {
+    opacity: 0;
+    width: 0;
+    overflow: hidden;
+}
+
+.sidebar-responsive.collapsed .sidebar-icon-responsive {
+    margin-right: 0;
+}
+
+.sidebar-responsive.collapsed .sidebar-btn-responsive {
+    justify-content: center;
+    padding: 0.5rem;
+}
+
+/* Tooltip for collapsed sidebar */
+.sidebar-responsive.collapsed .sidebar-btn-responsive:hover::after {
+    content: attr(title);
+    position: absolute;
+    left: 100%;
+    top: 50%;
+    transform: translateY(-50%);
+    background: var(--clypse-surface-dark);
+    color: var(--clypse-text-on-dark);
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+    white-space: nowrap;
+    z-index: 1000;
+    margin-left: 0.5rem;
+    font-size: 0.875rem;
+    box-shadow: var(--clypse-shadow-medium);
+}
+
+/* Title bar responsive */
+.title-bar-responsive {
+    height: var(--clypse-title-bar-height);
+    min-height: var(--clypse-title-bar-height);
+    max-height: var(--clypse-title-bar-height);
+    padding: 0 1rem;
+    background-color: var(--clypse-primary);
+    color: var(--clypse-text-on-dark);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-shrink: 0;
+    box-sizing: border-box;
+}
+
+/* Override any Bootstrap classes on title bar */
+.title-bar {
+    height: var(--clypse-title-bar-height) !important;
+    min-height: var(--clypse-title-bar-height) !important;
+    max-height: var(--clypse-title-bar-height) !important;
+    padding: 0 1rem !important;
+    box-sizing: border-box !important;
+    flex-shrink: 0 !important;
+}
+
+.burger-btn-responsive {
+    background: none;
+    border: none;
+    color: var(--clypse-text-on-dark);
+    font-size: 1.5rem;
+    padding: 0.25rem;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: background-color 0.2s ease;
+    z-index: 1060;
+}
+
+.burger-btn-responsive:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Mobile-specific responsive behavior */
+@media (max-width: 768px) {
+    .sidebar-responsive.expanded {
+        position: fixed;
+        top: var(--clypse-title-bar-height);
+        left: 0;
+        height: calc(100vh - var(--clypse-title-bar-height));
+        z-index: 1050;
+        box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+        width: 250px; /* Match desktop width */
+        min-width: 250px; /* Match desktop width */
+        display:flex;
+        flex-direction:column;
+        overflow:visible; /* allow footer to sit fully */
+    }
+    
+    .sidebar-responsive.collapsed {
+        transform: translateX(-100%);
+        position: fixed;
+        top: var(--clypse-title-bar-height);
+        left: 0;
+        height: calc(100vh - var(--clypse-title-bar-height));
+        z-index: 1050;
+    }
+
+    /* Mobile overlay internal regions */
+    .sidebar-responsive.expanded .sidebar-scroll { flex:1 1 auto; min-height:0; overflow-y:auto; }
+    .sidebar-responsive.expanded .sidebar-footer { flex:0 0 auto; position:relative; padding-bottom: calc(0.75rem + env(safe-area-inset-bottom, 0)); }
+    .sidebar-responsive.expanded .sidebar-footer button { width:100%; }
+    
+    /* Fix existing sidebar for mobile */
+    .sidebar.expanded {
+        position: fixed !important;
+        top: var(--clypse-title-bar-height) !important;
+        left: 0 !important;
+        height: calc(100vh - var(--clypse-title-bar-height)) !important;
+        z-index: 1050 !important;
+        box-shadow: 0 0 20px rgba(0, 0, 0, 0.5) !important;
+        width: 250px !important; /* Match responsive width */
+        min-width: 250px !important; /* Match responsive width */
+        overflow: hidden !important;
+        margin: 0 !important;
+        border: none !important;
+    }
+    
+    .sidebar.collapsed {
+        transform: translateX(-100%) !important;
+        position: fixed !important;
+        top: var(--clypse-title-bar-height) !important;
+        left: 0 !important;
+        height: calc(100vh - var(--clypse-title-bar-height)) !important;
+        z-index: 1050 !important;
+        width: 80px !important;
+        margin: 0 !important;
+        border: none !important;
+    }
+    
+    /* Ensure main content is not affected by fixed sidebar on mobile */
+    .main-content-responsive {
+        margin-left: 0 !important;
+        width: 100% !important;
+    }
+    
+    /* Add backdrop for mobile sidebar */
+    .sidebar-backdrop {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: var(--clypse-backdrop);
+        z-index: 1040;
+        display: none;
+    }
+    
+    .sidebar-backdrop.show {
+        display: block;
+    }
+}
+
+/* Tablet responsive behavior */
+@media (min-width: 769px) and (max-width: 1024px) {
+    .sidebar-responsive {
+        width: 80px; /* Keep consistent with base width */
+        min-width: 80px;
+    }
+    
+    .sidebar-responsive.expanded {
+        width: 250px; /* Keep consistent with base expanded width */
+        min-width: 250px;
+    }
+}
+
+/* Large screen behavior */
+@media (min-width: 1200px) {
+    .sidebar-responsive.expanded {
+        width: 250px; /* Keep consistent with base expanded width */
+        min-width: 250px;
+    }
+}
+
+/* ================================
+   SIDEBAR SCROLLING (ALL SCREEN SIZES)
+   ================================ */
+
+/* Fix sidebar content scrolling for all screen sizes */
+.sidebar .flex-grow-1 {
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    -webkit-overflow-scrolling: touch !important;
+    flex: 1 1 auto !important;
+    scrollbar-width: thin !important;
+    scrollbar-color: var(--clypse-border-medium) transparent !important;
+}
+
+/* Adjust max-height based on screen size - SIMPLE VERSION */
+.sidebar .flex-grow-1,
+.sidebar-responsive .flex-grow-1 {
+    max-height: calc(100vh - var(--clypse-title-bar-height) - 100px) !important; /* 100px for fixed logout area */
+    overflow-y: auto !important; /* ALWAYS allow scrolling */
+    flex-shrink: 1 !important; /* Allow this to shrink */
+}
+
+/* Custom scrollbar for webkit browsers */
+.sidebar .flex-grow-1::-webkit-scrollbar,
+.sidebar-responsive .flex-grow-1::-webkit-scrollbar {
+    width: 4px !important;
+}
+
+.sidebar .flex-grow-1::-webkit-scrollbar-track,
+.sidebar-responsive .flex-grow-1::-webkit-scrollbar-track {
+    background: transparent !important;
+}
+
+.sidebar .flex-grow-1::-webkit-scrollbar-thumb,
+.sidebar-responsive .flex-grow-1::-webkit-scrollbar-thumb {
+    background: var(--clypse-border-medium) !important;
+    border-radius: 2px !important;
+}
+
+.sidebar .flex-grow-1::-webkit-scrollbar-thumb:hover,
+.sidebar-responsive .flex-grow-1::-webkit-scrollbar-thumb:hover {
+    background: var(--clypse-border-dark) !important;
+}
+
+/* (Removed old fixed-height logout block; replaced by stabilization overrides at file end) */
+
+/* ================================
+   VAULTS PAGE SCROLLING (ALL SCREEN SIZES)
+   ================================ */
+
+/* Vaults page scrolling for all screen sizes */
+.vaults-page {
+    height: 100%;
+    max-height: 100%;
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+    box-sizing: border-box;
+    position: relative;
+}
+
+/* Credentials page scrolling for all screen sizes */
+.credentials-page {
+    height: 100%;
+    max-height: 100%;
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+    box-sizing: border-box;
+    position: relative;
+    padding-top: 0 !important;
+    margin-top: 0 !important;
+}
+
+/* Desktop/tablet vaults page */
+@media (min-width: 769px) {
+    .vaults-page {
+        padding: 1rem;
+    }
+}
+
+/* Desktop/tablet credentials page */
+@media (min-width: 769px) {
+    .credentials-page {
+        padding: 0 1rem 1rem 1rem !important; /* Remove top padding, keep others */
+    }
+}
+
+/* ================================
+   RESPONSIVE UTILITY CLASSES
+   ================================ */
+
+/* Flexible typography */
+.text-responsive {
+    font-size: clamp(0.875rem, 2.5vw, 1rem);
+}
+
+.text-responsive-sm {
+    font-size: clamp(0.75rem, 2vw, 0.875rem);
+}
+
+.text-responsive-lg {
+    font-size: clamp(1rem, 3vw, 1.25rem);
+}
+
+.text-responsive-xl {
+    font-size: clamp(1.25rem, 4vw, 2rem);
+}
+
+/* Responsive spacing utilities */
+.p-responsive {
+    padding: clamp(0.5rem, 3vw, 1.5rem);
+}
+
+.p-responsive-sm {
+    padding: clamp(0.25rem, 2vw, 1rem);
+}
+
+.p-responsive-lg {
+    padding: clamp(1rem, 4vw, 2rem);
+}
+
+.m-responsive {
+    margin: clamp(0.5rem, 3vw, 1.5rem);
+}
+
+.m-responsive-sm {
+    margin: clamp(0.25rem, 2vw, 1rem);
+}
+
+.m-responsive-lg {
+    margin: clamp(1rem, 4vw, 2rem);
+}
+
+/* Responsive containers */
+.container-responsive {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 clamp(1rem, 3vw, 2rem);
+}
+
+.container-responsive-sm {
+    max-width: 768px;
+}
+
+.container-responsive-lg {
+    max-width: 1400px;
+}
+
+/* Responsive flex utilities */
+.flex-responsive {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+@media (min-width: 768px) {
+    .flex-responsive {
+        flex-direction: row;
+        align-items: center;
+    }
+}
+
+/* Touch-friendly interactive elements */
+.btn-touch {
+    min-height: 44px;
+    min-width: 44px;
+    padding: 0.75rem 1rem;
+}
+
+.btn-touch-sm {
+    min-height: 36px;
+    min-width: 36px;
+    padding: 0.5rem 0.75rem;
+}
+
+/* Responsive visibility utilities */
+.show-mobile-only {
+    display: block;
+}
+
+.show-tablet-up {
+    display: none;
+}
+
+.show-desktop-up {
+    display: none;
+}
+
+@media (min-width: 768px) {
+    .show-mobile-only {
+        display: none;
+    }
+    
+    .show-tablet-up {
+        display: block;
+    }
+}
+
+@media (min-width: 992px) {
+    .show-tablet-up {
+        display: block;
+    }
+    
+    .show-desktop-up {
+        display: block;
+    }
+}
+
+/* Responsive image utilities */
+.img-responsive {
+    max-width: 100%;
+    height: auto;
+    display: block;
+}
+
+.img-responsive-rounded {
+    max-width: 100%;
+    height: auto;
+    border-radius: 8px;
+}
+
+/* Card responsive utilities */
+.card-responsive {
+    background: var(--clypse-surface-primary);
+    border: 1px solid var(--clypse-border-light);
+    border-radius: 8px;
+    padding: clamp(1rem, 3vw, 1.5rem);
+    box-shadow: var(--clypse-shadow-light);
+    margin-bottom: 1rem;
+}
+
+.card-responsive:hover {
+    box-shadow: var(--clypse-shadow-medium);
+}
+
+/* Form responsive utilities */
+.form-responsive .form-control {
+    min-height: 44px;
+    font-size: 16px; /* Prevent zoom on iOS */
+}
+
+.form-responsive .btn {
+    min-height: 44px;
+    padding: 0.75rem 1.5rem;
+}
+
+/* Responsive table wrapper */
+.table-responsive-custom {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.table-responsive-custom table {
+    min-width: 600px;
+}
+
+/* ================================
+   MOBILE SCROLL CONTAINMENT
+   ================================ */
+
+/* Define precise title bar height */
+:root {
+    --clypse-title-bar-height: 60px;
+}
+
+/* Prevent mobile page dragging and overscroll */
+html {
+    overflow: hidden;
+    height: 100%;
+    position: fixed;
+    width: 100%;
+}
+
+body {
+    overscroll-behavior: none;
+    -webkit-overflow-scrolling: touch;
+    touch-action: manipulation;
+}
+
+/* Main app container should fill viewport exactly */
+#app {
+    height: 100vh;
+    width: 100vw;
+    overflow: hidden;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Layout containers must be properly contained */
+.d-flex.flex-column.vh-100,
+.d-flex.flex-column.min-vh-100 {
+    height: 100vh !important;
+    overflow: hidden;
+    position: relative;
+}
+
+/* Ensure main content area works properly at all viewport widths */
+.main-content-area {
+    flex: 1;
+    overflow-y: auto !important; /* ALWAYS show scrollbar when needed */
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+    position: relative;
+    height: 100%;
+    min-height: 0; /* Allow flex shrinking */
+    
+    /* Firefox scrollbar styling */
+    scrollbar-width: auto !important; /* ALWAYS show scrollbar */
+    scrollbar-color: var(--bs-border-color) transparent;
+}
+
+/* Webkit scrollbar styling - ALWAYS VISIBLE */
+.main-content-area::-webkit-scrollbar {
+    width: 12px !important; /* Make it bigger so it's always visible */
+}
+
+.main-content-area::-webkit-scrollbar-track {
+    background: var(--bs-border-color) !important; /* Make track visible */
+}
+
+.main-content-area::-webkit-scrollbar-thumb {
+    background: var(--bs-secondary) !important;
+    border-radius: 4px;
+}
+
+.main-content-area::-webkit-scrollbar-thumb:hover {
+    background: var(--bs-primary) !important;
+}
+
+/* Mobile main content improvements */
+@media (max-width: 768px) {
+    .main-content-area {
+        height: calc(100vh - var(--clypse-title-bar-height)) !important;
+        max-height: calc(100vh - var(--clypse-title-bar-height)) !important;
+        padding: 1rem !important; /* Consistent padding on all sides for mobile */
+        margin: 0 !important; /* Remove any margin */
+        border: none !important; /* Remove any border */
+        position: relative !important;
+        top: 0 !important;
+    }
+}
+
+/* Specific mobile layout fixes */
+@media (max-width: 768px) {
+    /* Ensure no horizontal scrolling on mobile */
+    * {
+        max-width: 100vw;
+        box-sizing: border-box;
+    }
+    
+    /* Title bar should be fixed on mobile */
+    .title-bar,
+    .title-bar-responsive {
+        position: sticky;
+        top: 0;
+        z-index: 1030;
+        width: 100%;
+        flex-shrink: 0;
+    }
+    
+    /* Content wrapper for mobile */
+    .mobile-content-wrapper {
+        flex: 1;
+        display: flex;
+        overflow: hidden;
+        position: relative;
+    }
+    
+    /* Vaults page specific mobile fixes */
+    .vaults-page {
+        padding: 0 !important; /* Remove all padding to eliminate gap */
+        margin: 0 !important; /* Remove all margin to eliminate gap */
+        border: none !important; /* Remove any border */
+        top: 0 !important;
+    }
+    
+    .vaults-page h2 {
+        margin: 0 !important;
+        flex-shrink: 0 !important;
+        position: sticky !important;
+        top: 0 !important; /* Stick to the very top of the scrollable container */
+        background-color: var(--clypse-surface-secondary) !important;
+        padding: 1rem 0.75rem 1rem 0.75rem !important;
+        z-index: 10 !important;
+        border-bottom: 1px solid var(--clypse-border-light) !important;
+        margin-top: 0 !important;
+        margin-bottom: 0 !important;
+    }
+    
+    /* Add padding to the grid container instead of the page */
+    .vaults-grid-responsive {
+        padding: 0 0.75rem 0.75rem 0.75rem !important;
+    }
+    
+    /* Prevent vault cards from causing horizontal scroll */
+    .vaults-grid-responsive {
+        width: 100%;
+        max-width: 100%;
+        grid-template-columns: 1fr !important;
+        gap: 0.75rem;
+        margin-top: 0.5rem;
+    }
+    
+    .vault-card-responsive {
+        width: 100%;
+        max-width: 100%;
+        margin-bottom: 0.75rem;
+        box-sizing: border-box;
+    }
+    
+    /* Credentials page specific mobile fixes */
+    .credentials-page {
+        padding: 0 !important; /* Remove all padding to eliminate gap */
+        margin: 0 !important; /* Remove all margin to eliminate gap */
+        border: none !important; /* Remove any border */
+        top: 0 !important;
+    }
+    
+    .credentials-page h2 {
+        padding: 1rem 0.75rem !important; /* Adjust padding for mobile */
+    }
+    
+    /* Sticky search bar for credentials - mobile adjustments */
+    .credentials-search-bar {
+        padding: 0.75rem !important; /* Adjust padding for mobile */
+    }
+    
+    /* Add padding to the content container instead of the page */
+    .credentials-page .row {
+        padding: 0 0.75rem 0.75rem 0.75rem !important;
+        margin: 0 !important;
+    }
+    
+    .credentials-page .card {
+        width: 100%;
+        max-width: 100%;
+        margin-bottom: 0.75rem;
+        box-sizing: border-box;
+    }
+}
+
+/* ================================
+   MOBILE TOUCH ENHANCEMENTS
+   ================================ */
+
+/* Disable text selection on mobile for UI elements */
+.title-bar,
+.sidebar,
+.vault-card-responsive,
+.btn {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+}
+
+/* Enable text selection for content areas */
+.vault-field,
+p, 
+span:not(.sidebar-text) {
+    -webkit-user-select: text;
+    -moz-user-select: text;
+    -ms-user-select: text;
+    user-select: text;
+}
+
+/* Improve touch targets */
+@media (max-width: 768px) {
+    .btn,
+    button,
+    .vault-card-responsive {
+        min-height: 44px;
+        min-width: 44px;
+    }
+    
+    /* Sidebar backdrop for mobile */
+    .sidebar-backdrop {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 1040;
+        display: none;
+        pointer-events: none;
+    }
+    
+    .sidebar-backdrop.show {
+        display: block;
+        pointer-events: auto;
+    }
+    
+    /* Ensure sidebar appears above backdrop */
+    .sidebar.expanded {
+        z-index: 1050;
+    }
+    
+    /* Prevent any elastic scroll on the main container */
+    .d-flex.flex-column.vh-100 {
+        overscroll-behavior: none;
+        overflow: hidden;
+        position: fixed;
+        width: 100%;
+        height: 100%;
+    }
+    
+    /* Better mobile scrolling for content */
+    .main-content-area {
+        scroll-behavior: smooth;
+        overscroll-behavior-y: contain;
+        overscroll-behavior-x: none;
+    }
+}
+
+/* ================================
+     LAYOUT STABILIZATION OVERRIDES
+     (Focus: persistent logout + reliable scrollbars)
+     ================================ */
+.app-shell { height:100vh; max-height:100vh; overflow:hidden; }
+.app-shell > .flex-grow-1.d-flex { flex:1 1 auto; min-height:0; display:flex; height:auto; }
+.app-shell > .flex-grow-1.d-flex > nav.sidebar-responsive { height:100%; }
+.app-shell > .flex-grow-1.d-flex > .main-content-area { min-height:0; }
+
+/* Sidebar: two-region column: scrollable nav + sticky footer */
+.app-shell nav.sidebar-responsive { 
+    height:100%; 
+    display:flex; 
+    flex-direction:column; 
+    padding-bottom: 10px; /* Add padding to ensure footer stays in view */
+}
+
+/* Scroll area (navigation buttons) */
+.app-shell nav.sidebar-responsive > .flex-grow-1 {
+    overflow-y:auto !important;
+    overflow-x:hidden;
+    min-height:0; /* allow flexbox to calculate properly */
+}
+
+/* Always show a scrollbar when overflow (webkit + firefox) */
+.app-shell nav.sidebar-responsive > .flex-grow-1 { scrollbar-width:auto; }
+.app-shell nav.sidebar-responsive > .flex-grow-1::-webkit-scrollbar { width:10px; }
+.app-shell nav.sidebar-responsive > .flex-grow-1::-webkit-scrollbar-track { background:transparent; }
+.app-shell nav.sidebar-responsive > .flex-grow-1::-webkit-scrollbar-thumb { background:var(--clypse-border-medium); border-radius:4px; }
+.app-shell nav.sidebar-responsive > .flex-grow-1::-webkit-scrollbar-thumb:hover { background:var(--clypse-border-dark); }
+
+/* Logout section: no fixed height; just stick to bottom reliably */
+.app-shell nav.sidebar-responsive .mt-auto { flex-shrink:0; padding-bottom:0.75rem !important; }
+
+/* Remove previous fixed heights if still present */
+.app-shell nav.sidebar-responsive .mt-auto[style*="height"],
+.app-shell nav.sidebar-responsive .mt-auto[style*="min-height"],
+.app-shell nav.sidebar-responsive .mt-auto[style*="max-height"] { height:auto !important; min-height:auto !important; max-height:none !important; }
+
+/* Main content scroll independent of sidebar */
+.app-shell .main-content-area { height:100%; overflow-y:auto !important; overflow-x:hidden; min-height:0; }
+.app-shell .main-content-area { scrollbar-width:auto; }
+.app-shell .main-content-area::-webkit-scrollbar { width:12px; }
+.app-shell .main-content-area::-webkit-scrollbar-track { background:transparent; }
+.app-shell .main-content-area::-webkit-scrollbar-thumb { background:var(--clypse-border-medium); border-radius:4px; }
+.app-shell .main-content-area::-webkit-scrollbar-thumb:hover { background:var(--clypse-border-dark); }
+
+/* Ensure body/global container not double-fixed (previous hacks) */
+body { position:static !important; height:auto !important; }
+.d-flex.flex-column.vh-100 { position:static; overflow:visible; height:100%; }
+
+/* New structured sidebar regions */
+.sidebar-responsive { height:100vh; max-height:100vh; display:flex; flex-direction:column; }
+.sidebar-responsive .sidebar-scroll { 
+    flex:1 1 auto; 
+    min-height:0; 
+    overflow-y:auto; 
+    overflow-x:hidden;
+    max-height: calc(100vh - 150px); /* Increased reserve space for footer */
+}
+/* Removed sidebar footer styles as it's no longer used */
+.sidebar-responsive .sidebar-footer button { margin-top:0.25rem; }
+
+/* Removed media query for sidebar footer padding */
+.sidebar-responsive .sidebar-footer .session-info { line-height:1.2; }
+
+/* Collapsed state: hide text but keep icons */
+.sidebar-responsive.collapsed .session-info .session-text,
+.sidebar-responsive.collapsed .sidebar-text-responsive { display:none; }
+.sidebar-responsive.collapsed .session-info { justify-content:center; }
+
+/* Removed small height screen adjustments as they are no longer needed */
+
+/* FINAL FIX: Ensure logout button is always visible by prioritizing it in all views */
+.app-shell nav.sidebar-responsive {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.app-shell nav.sidebar-responsive > .sidebar-scroll {
+    flex: 1 1 auto;
+    overflow-y: auto;
+    min-height: 0;
+}
+
+.app-shell nav.sidebar-responsive > .sidebar-footer {
+    flex: 0 0 auto;
+    margin-top: auto;
+}
+
+/* Ensure full view height is used properly */
+.app-shell > .flex-grow-1.d-flex {
+    height: calc(100vh - var(--clypse-title-bar-height));
+    min-height: calc(100vh - var(--clypse-title-bar-height));
+}
+
+/* Removed logout button positioning fix as the design changed */

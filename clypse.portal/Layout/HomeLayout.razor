@@ -3,7 +3,7 @@
 @implements IDisposable
 
 <CascadingValue Value="this">
-    <div class="d-flex flex-column vh-100">
+    <div class="app-shell d-flex flex-column vh-100">
         <!-- Title Bar -->
         <div class="title-bar text-white p-3 d-flex justify-content-between align-items-center" style="background-color: var(--clypse-primary);">
             <div class="d-flex align-items-center">
@@ -25,67 +25,60 @@
                     <h4 class="mb-0">@AppSettings.ApplicationTitle</h4>
                 }
             </div>
-            <button class="theme-switcher" @onclick="ToggleTheme" title="Toggle theme">
-                <i class="bi @themeIcon"></i>
-            </button>
+            <div class="d-flex align-items-center">
+                <button class="theme-switcher me-3" @onclick="ToggleTheme" title="Toggle theme">
+                    <i class="bi @themeIcon"></i>
+                </button>
+                <button class="theme-switcher" @onclick="HandleLogout" title="Logout">
+                    <i class="bi bi-box-arrow-right"></i>
+                </button>
+            </div>
         </div>
 
         <div class="flex-grow-1 d-flex">
             <!-- Navigation Sidebar -->
             <nav id="sidebar-navigation" 
-                 class="sidebar @(isExpanded ? "expanded" : "collapsed") d-flex flex-column" 
-                 style="background-color: var(--clypse-surface-tertiary); border-right: 1px solid var(--clypse-border-light); transition: width 0.3s ease;">
-                
-                <div class="flex-grow-1 p-3">
+                 class="sidebar-responsive @(isExpanded ? "expanded" : "collapsed")" 
+                 style="background-color: var(--clypse-surface-tertiary); border-right: 1px solid var(--clypse-border-light); transition: width 0.3s ease; display:flex; flex-direction:column;">
+                <!-- Scrollable navigation region -->
+                <div class="sidebar-scroll p-3">
                     @if (navigationItems != null && navigationItems.Any())
                     {
                         @foreach (var item in navigationItems.Where(i => i.Action != "delete-vault"))
                         {
-                            <button class="btn @item.ButtonClass btn-sm w-100 mb-2 sidebar-btn" 
+                            <button class="btn @item.ButtonClass btn-sm w-100 mb-2 sidebar-btn-responsive" 
                                     title="@item.Text"
                                     @onclick="() => HandleNavigationAction(item.Action)">
-                                <i class="@item.Icon sidebar-icon"></i>
-                                <span class="sidebar-text">@item.Text</span>
+                                <i class="@item.Icon sidebar-icon-responsive"></i>
+                                <span class="sidebar-text-responsive">@item.Text</span>
                             </button>
                         }
                     }
-                </div>
-                
-                <!-- Delete Vault Section -->
-                @if (navigationItems != null && navigationItems.Any(i => i.Action == "delete-vault"))
-                {
-                    var deleteItem = navigationItems.First(i => i.Action == "delete-vault");
-                    <div class="mb-3 px-3">
-                        <button class="btn @deleteItem.ButtonClass btn-sm w-100 mb-2 sidebar-btn" 
-                                title="@deleteItem.Text"
-                                @onclick="() => HandleNavigationAction(deleteItem.Action)">
-                            <i class="@deleteItem.Icon sidebar-icon"></i>
-                            <span class="sidebar-text">@deleteItem.Text</span>
-                        </button>
-                    </div>
-                }
-                
-                <!-- Logout at bottom -->
-                <div class="mt-auto p-3 border-top">
-                    @if (!string.IsNullOrEmpty(sessionTimeRemaining) && isExpanded)
+                    @if (navigationItems != null && navigationItems.Any(i => i.Action == "delete-vault"))
                     {
-                        <div class="text-center mb-3 text-muted small">
-                            <i class="bi bi-clock me-1"></i>
-                            Session expires in @sessionTimeRemaining
+                        var deleteItem = navigationItems.First(i => i.Action == "delete-vault");
+                        <div class="mb-3">
+                            <button class="btn @deleteItem.ButtonClass btn-sm w-100 mb-2 sidebar-btn-responsive" 
+                                    title="@deleteItem.Text"
+                                    @onclick="() => HandleNavigationAction(deleteItem.Action)">
+                                <i class="@deleteItem.Icon sidebar-icon-responsive"></i>
+                                <span class="sidebar-text-responsive">@deleteItem.Text</span>
+                            </button>
                         </div>
                     }
-                    <button class="btn btn-danger btn-sm w-100 sidebar-btn" 
-                            title="Logout"
-                            @onclick="HandleLogout">
-                        <i class="bi bi-box-arrow-right sidebar-icon"></i>
-                        <span class="sidebar-text">Logout</span>
-                    </button>
                 </div>
+                <!-- Footer removed as per design change -->
             </nav>
 
             <!-- Main Content Area -->
-            <main class="flex-grow-1 p-4">
+            <main class="flex-grow-1 main-content-area p-4">
                 @Body
+                
+                <!-- Simple backdrop - show when sidebar expanded -->
+                @if (isExpanded)
+                {
+                    <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: var(--clypse-backdrop-overlay); z-index: 1000; cursor: pointer;" @onclick="ToggleSidebar"></div>
+                }
             </main>
         </div>
     </div>

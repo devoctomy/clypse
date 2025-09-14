@@ -193,6 +193,26 @@ public partial class Credentials : ComponentBase
 
     protected override void OnParametersSet()
     {
+#if DEBUG
+        if (CurrentVault?.IndexEntries != null)
+        {
+            for (var i = 0; i < 50; i++)
+            {
+                var testSecretName = $"Test Secret {i + 1}";
+                if (CurrentVault.IndexEntries.Any(e => e.Name == testSecretName))
+                {
+                    continue;
+                }
+                
+                CurrentVault.IndexEntries.Add(new VaultIndexEntry(
+                    Guid.NewGuid().ToString(),
+                    testSecretName,
+                    "This secret cannot be opened.",
+                    "foo,bar"));
+            }
+        }
+#endif
+
         // Initialize filtered entries with sorted list
         if (CurrentVault?.IndexEntries != null)
         {
@@ -216,10 +236,10 @@ public partial class Credentials : ComponentBase
 
         if (string.IsNullOrWhiteSpace(searchTerm))
         {
-            // Reset to full sorted list
             filteredEntries = CurrentVault.IndexEntries
                 .OrderBy(e => e.Name)
                 .ToList();
+
             return;
         }
 

@@ -174,6 +174,20 @@ public partial class HomeLayout : LayoutComponentBase, IDisposable
 
     private async Task HandleNavigationAction(string action)
     {
+        // Close sidebar when any navigation action is clicked
+        isExpanded = false;
+        
+        try
+        {
+            await JSRuntime.InvokeVoidAsync("localStorage.setItem", "clypse_sidebar_expanded", isExpanded.ToString());
+        }
+        catch
+        {
+            // Ignore localStorage errors
+        }
+        
+        StateHasChanged();
+        
         if (homePageRef != null)
         {
             await homePageRef.HandleNavigationAction(action);
