@@ -37,12 +37,15 @@ window.CognitoAuth = {
             
             this.cognitoUser.authenticateUser(authenticationDetails, {
                 onSuccess: async (result) => {
+                    console.log('CognitoAuth.login: Authentication successful');
                     var accessToken = result.getAccessToken().getJwtToken();
                     var idToken = result.getIdToken().getJwtToken();
                     
                     try {
                         // Get AWS credentials
+                        console.log('CognitoAuth.login: Attempting to get AWS credentials');
                         var credentials = await this.getAwsCredentials(idToken);
+                        console.log('CognitoAuth.login: AWS credentials received:', credentials);
                         
                         resolve({
                             success: true,
@@ -51,6 +54,7 @@ window.CognitoAuth = {
                             awsCredentials: credentials
                         });
                     } catch (error) {
+                        console.error('CognitoAuth.login: Failed to get AWS credentials:', error);
                         resolve({
                             success: true,
                             accessToken: accessToken,
@@ -107,7 +111,7 @@ window.CognitoAuth = {
     },
     
     getAwsCredentials: function(idToken) {
-        return new Promise((resolve, reject) => {
+        return new Promise((resolve, reject) => {      
             var loginKey = `cognito-idp.${AWS.config.region}.amazonaws.com/${this.userPool.getUserPoolId()}`;
             var loginData = {};
             loginData[loginKey] = idToken;
@@ -119,13 +123,20 @@ window.CognitoAuth = {
             
             AWS.config.credentials.refresh((error) => {
                 if (error) {
+                    console.error('CognitoAuth.getAwsCredentials: Error during refresh:', error);
                     reject(error);
                 } else {
+                    console.log('CognitoAuth.getAwsCredentials: Credentials refreshed successfully');
+                    console.log('CognitoAuth.getAwsCredentials: AccessKeyId:', AWS.config.credentials.accessKeyId);
+                    console.log('CognitoAuth.getAwsCredentials: IdentityId:', AWS.config.credentials.identityId);
+                    console.log('CognitoAuth.getAwsCredentials: ExpireTime:', AWS.config.credentials.expireTime);
+                    
                     resolve({
                         accessKeyId: AWS.config.credentials.accessKeyId,
                         secretAccessKey: AWS.config.credentials.secretAccessKey,
                         sessionToken: AWS.config.credentials.sessionToken,
-                        expiration: AWS.config.credentials.expireTime
+                        expiration: AWS.config.credentials.expireTime,
+                        identityId: AWS.config.credentials.identityId || ''
                     });
                 }
             });
