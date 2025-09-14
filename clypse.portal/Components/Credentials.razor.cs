@@ -198,9 +198,15 @@ public partial class Credentials : ComponentBase
         {
             for (var i = 0; i < 50; i++)
             {
+                var testSecretName = $"Test Secret {i + 1}";
+                if (CurrentVault.IndexEntries.Any(e => e.Name == testSecretName))
+                {
+                    continue;
+                }
+                
                 CurrentVault.IndexEntries.Add(new VaultIndexEntry(
                     Guid.NewGuid().ToString(),
-                    $"Test Secret {i + 1}",
+                    testSecretName,
                     "This secret cannot be opened.",
                     "foo,bar"));
             }

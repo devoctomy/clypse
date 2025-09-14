@@ -1466,7 +1466,7 @@ body {
     .main-content-area {
         height: calc(100vh - var(--clypse-title-bar-height)) !important;
         max-height: calc(100vh - var(--clypse-title-bar-height)) !important;
-        padding: 0 !important; /* Remove padding to eliminate gaps */
+        padding: 1rem !important; /* Consistent padding on all sides for mobile */
         margin: 0 !important; /* Remove any margin */
         border: none !important; /* Remove any border */
         position: relative !important;
