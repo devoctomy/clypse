@@ -8,6 +8,11 @@
 	  <RuntimeFrameworkVersion>8.0.7</RuntimeFrameworkVersion>
   </PropertyGroup>
   
+  <PropertyGroup>
+    <AssemblyVersion>1.0.0.*</AssemblyVersion>
+    <Deterministic>false</Deterministic>
+  </PropertyGroup>
+
   <PropertyGroup Condition="'$(RuntimeIdentifier)' == 'browser-wasm'">
     <RunAOTCompilation>true</RunAOTCompilation>
     <WasmEnableSIMD>true</WasmEnableSIMD>
