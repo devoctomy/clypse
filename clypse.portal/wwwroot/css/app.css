@@ -781,6 +781,113 @@ Example for a dark theme:
 }
 
 /* ================================
+   CREDENTIAL CARD STYLES
+   ================================ */
+
+/* Credential grid layout */
+.credentials-grid-responsive {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+@media (max-width: 768px) {
+    .credentials-grid-responsive {
+        grid-template-columns: 1fr;
+        gap: 0.75rem;
+    }
+}
+
+@media (min-width: 1200px) {
+    .credentials-grid-responsive {
+        grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+    }
+}
+
+/* Enhanced credential card styling with theme support */
+.credential-card-responsive {
+    background-color: var(--clypse-vault-background);
+    border: 1px solid var(--clypse-vault-border);
+    border-radius: 8px;
+    padding: 1.5rem;
+    box-shadow: var(--clypse-vault-shadow);
+    position: relative;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    margin-bottom: 1rem;
+}
+
+.credential-card-responsive:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--clypse-vault-shadow-hover);
+}
+
+/* Credential card actions positioned top-right */
+.credential-actions-responsive {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    display: flex;
+    gap: 0.25rem;
+}
+
+.credential-actions-responsive .btn {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+    border-radius: 4px;
+}
+
+/* Credential content styling */
+.credential-content {
+    padding-right: 100px; /* Make room for action buttons */
+}
+
+.credential-field-name {
+    font-size: 1.1rem;
+    margin-bottom: 0.5rem;
+    color: var(--clypse-text-primary);
+}
+
+.credential-field-description {
+    font-size: 0.9rem;
+    color: var(--clypse-text-secondary);
+    margin-bottom: 0.75rem;
+    line-height: 1.4;
+}
+
+.credential-field-tags {
+    margin-top: 0.75rem;
+}
+
+.credential-field-tags .badge {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+}
+
+/* Responsive credential card adjustments */
+@media (max-width: 575px) {
+    .credential-card-responsive {
+        padding: 1rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .credential-actions-responsive {
+        top: 8px;
+        right: 8px;
+    }
+    
+    .credential-content {
+        padding-right: 80px;
+    }
+    
+    .credential-actions-responsive .btn {
+        padding: 0.2rem 0.4rem;
+        font-size: 0.8rem;
+    }
+}
+
+/* ================================
    RESPONSIVE SIDEBAR SYSTEM
    ================================ */
 
