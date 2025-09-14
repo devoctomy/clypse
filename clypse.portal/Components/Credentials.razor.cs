@@ -193,23 +193,26 @@ public partial class Credentials : ComponentBase
 
     protected override void OnParametersSet()
     {
+#if DEBUG
+        if (CurrentVault?.IndexEntries != null)
+        {
+            for (var i = 0; i < 50; i++)
+            {
+                CurrentVault.IndexEntries.Add(new VaultIndexEntry(
+                    Guid.NewGuid().ToString(),
+                    $"Test Secret {i + 1}",
+                    "This secret cannot be opened.",
+                    "foo,bar"));
+            }
+        }
+#endif
+
         // Initialize filtered entries with sorted list
         if (CurrentVault?.IndexEntries != null)
         {
             filteredEntries = CurrentVault.IndexEntries
                 .OrderBy(e => e.Name)
                 .ToList();
-
-#if DEBUG
-            for (var i = 0; i < 50; i++)
-            {
-                filteredEntries.Add(new VaultIndexEntry(
-                    Guid.NewGuid().ToString(),
-                    $"Test Secret {i + 1}",
-                    "This secret cannot be opened.",
-                    "foo,bar"));
-            }
-#endif
         }
         else
         {
@@ -227,21 +230,9 @@ public partial class Credentials : ComponentBase
 
         if (string.IsNullOrWhiteSpace(searchTerm))
         {
-            // Reset to full sorted list
             filteredEntries = CurrentVault.IndexEntries
                 .OrderBy(e => e.Name)
                 .ToList();
-
-#if DEBUG
-            for (var i = 0; i < 50; i++)
-            {
-                filteredEntries.Add(new VaultIndexEntry(
-                    Guid.NewGuid().ToString(),
-                    $"Test Secret {i + 1}",
-                    "This secret cannot be opened.",
-                    "foo,bar"));
-            }
-#endif
 
             return;
         }
@@ -254,17 +245,6 @@ public partial class Credentials : ComponentBase
                 (entry.Tags?.ToLower().Contains(term) ?? false))
             .OrderBy(e => e.Name)
             .ToList();
-
-#if DEBUG
-        for (var i = 0; i < 50; i++)
-        {
-            filteredEntries.Add(new VaultIndexEntry(
-                Guid.NewGuid().ToString(),
-                $"Test Secret {i + 1}",
-                "This secret cannot be opened.",
-                "foo,bar"));
-        }
-#endif
     }
 
     private void ClearSearch()

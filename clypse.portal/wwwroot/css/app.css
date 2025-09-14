@@ -635,6 +635,7 @@ code {
 
 .credentials-page h2 {
     margin-bottom: 0 !important;
+    margin-top: 0 !important;
     color: var(--clypse-text-primary) !important;
     position: sticky !important;
     top: 0 !important;
@@ -1087,6 +1088,8 @@ Example for a dark theme:
     overscroll-behavior: contain;
     box-sizing: border-box;
     position: relative;
+    padding-top: 0 !important;
+    margin-top: 0 !important;
 }
 
 /* Desktop/tablet vaults page */
@@ -1099,7 +1102,7 @@ Example for a dark theme:
 /* Desktop/tablet credentials page */
 @media (min-width: 769px) {
     .credentials-page {
-        padding: 1rem;
+        padding: 0 1rem 1rem 1rem !important; /* Remove top padding, keep others */
     }
 }
 
