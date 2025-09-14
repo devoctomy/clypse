@@ -128,68 +128,10 @@ public partial class Home : ComponentBase
         {
             Console.WriteLine("Refreshing vaults...");
 
-            // Create vault manager if not already instantiated
-            if (vaultManager == null)
+            // Refresh the vaults component if we're on the vaults page
+            if (currentPage == "vaults" && vaultsComponent != null)
             {
-                vaultManager = await CreateVaultManager();
-                if (vaultManager == null)
-                {
-                    Console.WriteLine("Failed to create vault manager");
-                    return;
-                }
-            }
-
-            // Get list of vault IDs
-            Console.WriteLine("About to call ListVaultIdsAsync...");
-            var vaultIds = await vaultManager.ListVaultIdsAsync(CancellationToken.None);
-            Console.WriteLine("ListVaultIdsAsync completed successfully");
-
-            if (vaultIds == null || vaultIds.Count == 0)
-            {
-                Console.WriteLine("No vaults found");
-                await VaultStorage.SaveVaultsAsync(new List<VaultMetadata>());
-
-                // Refresh the vaults component if we're on the vaults page
-                if (currentPage == "vaults" && vaultsComponent != null)
-                {
-                    await vaultsComponent.RefreshVaults();
-                }
-            }
-            else
-            {
-                Console.WriteLine($"Found {vaultIds.Count} vault(s):");
-
-                // Get existing vaults to preserve any unlocked metadata
-                var existingVaults = await VaultStorage.GetVaultsAsync();
-                var vaultMetadataList = new List<VaultMetadata>();
-
-                foreach (var vaultId in vaultIds)
-                {
-                    Console.WriteLine($"  - {vaultId}");
-
-                    // Check if this vault already exists in storage
-                    var existingVault = existingVaults.FirstOrDefault(v => v.Id == vaultId);
-                    if (existingVault != null)
-                    {
-                        // Keep existing metadata (name/description if unlocked)
-                        vaultMetadataList.Add(existingVault);
-                    }
-                    else
-                    {
-                        // Create new vault entry with just the ID
-                        vaultMetadataList.Add(new VaultMetadata { Id = vaultId });
-                    }
-                }
-
-                // Save the updated vault list
-                await VaultStorage.SaveVaultsAsync(vaultMetadataList);
-                Console.WriteLine("Vault metadata saved to localStorage");
-
-                // Refresh the vaults component if we're on the vaults page
-                if (currentPage == "vaults" && vaultsComponent != null)
-                {
-                    await vaultsComponent.RefreshVaults();
-                }
+                await vaultsComponent.RefreshVaults();
             }
         }
         catch (Exception ex)

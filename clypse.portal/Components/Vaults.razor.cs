@@ -189,17 +189,13 @@ public partial class Vaults : ComponentBase
             errorMessage = null;
             StateHasChanged();
 
-            // Create bootstrapper service if not already created
+            // Bootstrapper should already exist from LoadVaults()
             if (bootstrapperService == null)
             {
-                bootstrapperService = await CreateBootstrapperService();
-                if (bootstrapperService == null)
-                {
-                    errorMessage = "Failed to create bootstrapper service";
-                    isUnlocking = false;
-                    StateHasChanged();
-                    return;
-                }
+                errorMessage = "Bootstrapper service not available";
+                isUnlocking = false;
+                StateHasChanged();
+                return;
             }
 
             // Use bootstrapper to create a vault-specific manager for this vault
@@ -253,6 +249,9 @@ public partial class Vaults : ComponentBase
     {
         try
         {
+            Console.WriteLine("Creating bootstrapper service...");
+
+
             // Get stored credentials from localStorage
             var credentialsJson = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "clypse_credentials");
             
@@ -265,12 +264,20 @@ public partial class Vaults : ComponentBase
             var credentials = System.Text.Json.JsonSerializer.Deserialize<StoredCredentials>(credentialsJson);
             if (credentials?.AwsCredentials == null)
             {
-                Console.WriteLine("Invalid stored credentials");
+                Console.WriteLine("Invalid stored credentials - AwsCredentials is null");
+                return null;
+            }
+            
+            if (string.IsNullOrEmpty(credentials.AwsCredentials.IdentityId))
+            {
+                Console.WriteLine("Identity ID is null or empty - cannot create bootstrapper");
                 return null;
             }
 
             // Create JavaScript S3 invoker
             var jsInvoker = new JavaScriptS3Invoker(JSRuntime);
+
+            Console.WriteLine($"About to create bootstrapper with Identity ID: '{credentials.AwsCredentials.IdentityId}'");
 
             // Create bootstrapper service using the factory
             var bootstrapper = VaultManagerBootstrapperFactory.CreateForBlazor(

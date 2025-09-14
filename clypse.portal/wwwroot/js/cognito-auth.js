@@ -125,8 +125,7 @@ window.CognitoAuth = {
                         accessKeyId: AWS.config.credentials.accessKeyId,
                         secretAccessKey: AWS.config.credentials.secretAccessKey,
                         sessionToken: AWS.config.credentials.sessionToken,
-                        expiration: AWS.config.credentials.expireTime,
-                        identityId: AWS.config.credentials.identityId
+                        expiration: AWS.config.credentials.expireTime
                     });
                 }
             });
@@ -138,6 +137,10 @@ window.CognitoAuth = {
             this.cognitoUser.signOut();
         }
         AWS.config.credentials = null;
+        
+        // Clear ALL localStorage data
+        localStorage.clear();
+        
         return "Logged out";
     },
     

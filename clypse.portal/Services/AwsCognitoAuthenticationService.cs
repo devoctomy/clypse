@@ -63,10 +63,9 @@ public class AwsCognitoAuthenticationService : IAuthenticationService
                 try
                 {
                     var freshAwsCredentials = await _jsRuntime.InvokeAsync<AwsCredentials>("CognitoAuth.getAwsCredentials", credentials.IdToken);
-                    
-                    // Update stored credentials with fresh AWS credentials
                     if (freshAwsCredentials != null)
                     {
+                        freshAwsCredentials.IdentityId = credentials.AwsCredentials?.IdentityId;                        
                         credentials.AwsCredentials = freshAwsCredentials;
                         var credentialsJson = JsonSerializer.Serialize(credentials);
                         await _jsRuntime.InvokeVoidAsync("localStorage.setItem", "clypse_credentials", credentialsJson);
@@ -154,6 +153,7 @@ public class AwsCognitoAuthenticationService : IAuthenticationService
 
     private async Task ClearStoredCredentials()
     {
-        await _jsRuntime.InvokeVoidAsync("localStorage.removeItem", "clypse_credentials");
+        // Clear ALL localStorage data
+        await _jsRuntime.InvokeVoidAsync("localStorage.clear");
     }
 }

@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 using clypse.portal.Models;
+using clypse.portal.Services;
 
 namespace clypse.portal.Layout;
 
@@ -9,6 +10,7 @@ public partial class HomeLayout : LayoutComponentBase, IDisposable
     [Inject] public IJSRuntime JSRuntime { get; set; } = default!;
     [Inject] public NavigationManager Navigation { get; set; } = default!;
     [Inject] public AppSettings AppSettings { get; set; } = default!;
+    [Inject] public IAuthenticationService AuthService { get; set; } = default!;
 
     private List<NavigationItem>? navigationItems;
     private Pages.Home? homePageRef;
@@ -196,8 +198,8 @@ public partial class HomeLayout : LayoutComponentBase, IDisposable
 
     private async Task HandleLogout()
     {
-        // Clear credentials from local storage
-        await JSRuntime.InvokeVoidAsync("localStorage.removeItem", "clypse_credentials");
+        // Use the proper authentication service logout
+        await AuthService.Logout();
         
         // Redirect to login page
         Navigation.NavigateTo("/login");
