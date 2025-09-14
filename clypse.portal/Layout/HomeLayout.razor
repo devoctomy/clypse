@@ -73,6 +73,12 @@
             <!-- Main Content Area -->
             <main class="flex-grow-1 main-content-area p-4">
                 @Body
+                
+                <!-- Simple backdrop - show when sidebar expanded -->
+                @if (isExpanded)
+                {
+                    <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: var(--clypse-backdrop-overlay); z-index: 1000; cursor: pointer;" @onclick="ToggleSidebar"></div>
+                }
             </main>
         </div>
     </div>

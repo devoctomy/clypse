@@ -43,6 +43,9 @@
     --clypse-shadow-medium: rgba(0, 0, 0, 0.15);
     --clypse-shadow-dark: rgba(0, 0, 0, 0.2);
     
+    /* Backdrop Colors */
+    --clypse-backdrop-overlay: rgba(0, 0, 0, 0.5);
+    
     /* Vault-specific Colors */
     --clypse-vault-background: var(--clypse-surface-primary);
     --clypse-vault-border: var(--clypse-border-light);
@@ -985,7 +988,7 @@ Example for a dark theme:
         left: 0;
         width: 100vw;
         height: 100vh;
-        background: rgba(0, 0, 0, 0.5);
+        background: var(--clypse-backdrop);
         z-index: 1040;
         display: none;
     }
