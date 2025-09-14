@@ -634,8 +634,25 @@ code {
 }
 
 .credentials-page h2 {
-    margin-bottom: 1rem !important;
+    margin-bottom: 0 !important;
     color: var(--clypse-text-primary) !important;
+    position: sticky !important;
+    top: 0 !important;
+    background-color: var(--clypse-surface-secondary) !important;
+    padding: 1rem !important;
+    z-index: 10 !important;
+    border-bottom: 1px solid var(--clypse-border-light) !important;
+}
+
+/* Credentials search bar styling */
+.credentials-search-bar {
+    position: sticky !important;
+    top: calc(1rem + 2rem + 1rem) !important; /* Position below the h2 title */
+    background-color: var(--clypse-surface-secondary) !important;
+    padding: 0.75rem 1rem !important;
+    z-index: 9 !important;
+    border-bottom: 1px solid var(--clypse-border-light) !important;
+    margin: 0 !important;
 }
 
 /* 
@@ -1406,6 +1423,36 @@ body {
     }
     
     .vault-card-responsive {
+        width: 100%;
+        max-width: 100%;
+        margin-bottom: 0.75rem;
+        box-sizing: border-box;
+    }
+    
+    /* Credentials page specific mobile fixes */
+    .credentials-page {
+        padding: 0 !important; /* Remove all padding to eliminate gap */
+        margin: 0 !important; /* Remove all margin to eliminate gap */
+        border: none !important; /* Remove any border */
+        top: 0 !important;
+    }
+    
+    .credentials-page h2 {
+        padding: 1rem 0.75rem !important; /* Adjust padding for mobile */
+    }
+    
+    /* Sticky search bar for credentials - mobile adjustments */
+    .credentials-search-bar {
+        padding: 0.75rem !important; /* Adjust padding for mobile */
+    }
+    
+    /* Add padding to the content container instead of the page */
+    .credentials-page .row {
+        padding: 0 0.75rem 0.75rem 0.75rem !important;
+        margin: 0 !important;
+    }
+    
+    .credentials-page .card {
         width: 100%;
         max-width: 100%;
         margin-bottom: 0.75rem;

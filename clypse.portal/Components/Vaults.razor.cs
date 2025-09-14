@@ -96,7 +96,7 @@ public partial class Vaults : ComponentBase
                 {
                     Id = Guid.NewGuid().ToString(),
                     Name = $"Test Vault {i + 1}",
-                    Description = $"This is a description for Test Vault {i + 1}."
+                    Description = $"This vault cannot be opened."
                 });
             }
 #endif

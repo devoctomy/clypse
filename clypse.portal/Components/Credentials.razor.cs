@@ -199,6 +199,17 @@ public partial class Credentials : ComponentBase
             filteredEntries = CurrentVault.IndexEntries
                 .OrderBy(e => e.Name)
                 .ToList();
+
+#if DEBUG
+            for (var i = 0; i < 50; i++)
+            {
+                filteredEntries.Add(new VaultIndexEntry(
+                    Guid.NewGuid().ToString(),
+                    $"Test Secret {i + 1}",
+                    "This secret cannot be opened.",
+                    "foo,bar"));
+            }
+#endif
         }
         else
         {
@@ -220,6 +231,18 @@ public partial class Credentials : ComponentBase
             filteredEntries = CurrentVault.IndexEntries
                 .OrderBy(e => e.Name)
                 .ToList();
+
+#if DEBUG
+            for (var i = 0; i < 50; i++)
+            {
+                filteredEntries.Add(new VaultIndexEntry(
+                    Guid.NewGuid().ToString(),
+                    $"Test Secret {i + 1}",
+                    "This secret cannot be opened.",
+                    "foo,bar"));
+            }
+#endif
+
             return;
         }
 
@@ -231,6 +254,17 @@ public partial class Credentials : ComponentBase
                 (entry.Tags?.ToLower().Contains(term) ?? false))
             .OrderBy(e => e.Name)
             .ToList();
+
+#if DEBUG
+        for (var i = 0; i < 50; i++)
+        {
+            filteredEntries.Add(new VaultIndexEntry(
+                Guid.NewGuid().ToString(),
+                $"Test Secret {i + 1}",
+                "This secret cannot be opened.",
+                "foo,bar"));
+        }
+#endif
     }
 
     private void ClearSearch()
