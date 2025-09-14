@@ -633,6 +633,11 @@ code {
     color: var(--clypse-text-primary) !important;
 }
 
+.credentials-page h2 {
+    margin-bottom: 1rem !important;
+    color: var(--clypse-text-primary) !important;
+}
+
 /* 
 Theme Customization Guide:
 To create custom color themes, override the CSS custom properties in :root
@@ -1055,9 +1060,28 @@ Example for a dark theme:
     position: relative;
 }
 
+/* Credentials page scrolling for all screen sizes */
+.credentials-page {
+    height: 100%;
+    max-height: 100%;
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+    box-sizing: border-box;
+    position: relative;
+}
+
 /* Desktop/tablet vaults page */
 @media (min-width: 769px) {
     .vaults-page {
+        padding: 1rem;
+    }
+}
+
+/* Desktop/tablet credentials page */
+@media (min-width: 769px) {
+    .credentials-page {
         padding: 1rem;
     }
 }

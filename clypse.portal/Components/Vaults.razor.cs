@@ -88,6 +88,7 @@ public partial class Vaults : ComponentBase
                 };
             }).ToList();
 
+#if DEBUG
             // For testing purposes, create some dummy vaults so we can test scrolling
             for (var i = 0; i < 20; i++)
             {
@@ -98,6 +99,7 @@ public partial class Vaults : ComponentBase
                     Description = $"This is a description for Test Vault {i + 1}."
                 });
             }
+#endif
 
             isLoading = false;
             StateHasChanged();
