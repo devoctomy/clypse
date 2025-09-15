@@ -18,7 +18,7 @@ public partial class HomeLayout : LayoutComponentBase, IDisposable
     private Timer? sessionTimer;
     private string currentTheme = "light";
     private string themeIcon = "bi-moon";
-    private bool isExpanded = true; // Start expanded by default
+    private bool isExpanded = false; // Start collapsed by default
 
     public void SetNavigationItems(List<NavigationItem> items)
     {
