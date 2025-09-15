@@ -1,4 +1,5 @@
-﻿using clypse.core.Secrets.Import.Exceptions;
+﻿using clypse.core.Enums;
+using clypse.core.Secrets.Import.Exceptions;
 using Microsoft.VisualBasic.FileIO;
 
 namespace clypse.core.Secrets.Import;
@@ -64,5 +65,40 @@ public class CsvSecretsImporterService : ISecretsImporterService
         }
 
         return this.importedSecrets.Count;
+    }
+
+    /// <summary>
+    /// Maps the imported secrets to the specified data format.
+    /// </summary>
+    /// <param name="dataFormat">The data format to map the imported secrets to.</param>
+    /// <returns>List of mapped secrets data as a list of dictionaries.</returns>
+    public List<Dictionary<string, string>> MapImportedSecrets(CsvImportDataFormat dataFormat)
+    {
+        if (dataFormat == CsvImportDataFormat.None)
+        {
+            throw new CsvImportDataFormatNotSpecifiedException();
+        }
+
+        var mappedSecrets = new List<Dictionary<string, string>>();
+        var fieldMappings = FieldMappings.GetMappingsForCsvImportDataFormat(dataFormat);
+
+        foreach (var curSecret in this.ImportedSecrets)
+        {
+            var mapped = new Dictionary<string, string>();
+
+            foreach (var curMapping in fieldMappings)
+            {
+                var sourceField = curMapping.Key;
+                var targetField = curMapping.Value;
+                if (curSecret.TryGetValue(sourceField, out string? value))
+                {
+                    mapped[targetField] = value;
+                }
+            }
+
+            mappedSecrets.Add(mapped);
+        }
+
+        return mappedSecrets;
     }
 }

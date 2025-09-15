@@ -76,6 +76,16 @@ public class Secret : ClypseObject
     }
 
     /// <summary>
+    /// Gets or sets Comments for this secret.
+    /// </summary>
+    [JsonIgnore]
+    public string? Comments
+    {
+        get { return this.GetData(nameof(this.Comments)); }
+        set { this.SetData(nameof(this.Comments), value); }
+    }
+
+    /// <summary>
     /// Add a tag to this secret.
     /// </summary>
     /// <param name="tag">Tag to add.</param>

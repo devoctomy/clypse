@@ -70,4 +70,35 @@ public class CsvSecretsImporterServiceTests
             }
         }
     }
+
+    [Fact]
+    private void GivenValidCsvData_AndImportedSuccessfully_AndCachy1xCsvImportDataFormat_WhenMapImportedSecretsIsCalled_ThenMappedSecretsAreReturned()
+    {
+        // Arrange
+        var csvData = "Name,Description,Username,Password,Website,Notes,Unmapped\n" +
+                      "Hoskins Password,\"Description of secret\",bob@hoskins.com,password123,https://www.hoskins.com,\"Hello World!\",foo\n" +
+                      "Boskins Password,\"Description of secret\",hob@boskins.com,password321,https://www.boskins.com,\"Foobar!\",bar\n";
+        var importer = new CsvSecretsImporterService();
+        importer.ReadData(csvData);
+        var csvImportDataFormat = Enums.CsvImportDataFormat.Cachy1_x;
+        var fieldMappings = FieldMappings.GetMappingsForCsvImportDataFormat(csvImportDataFormat);
+
+        // Act
+        var mappedSecrets = importer.MapImportedSecrets(csvImportDataFormat);
+
+        // Assert
+        Assert.Equal(2, mappedSecrets.Count);
+        for (var i = 0; i < mappedSecrets.Count; i++)
+        {
+            var curMappedSecret = mappedSecrets[i];
+            var curImportedSecret = importer.ImportedSecrets[i];
+            foreach (var curMapping in fieldMappings)
+            {
+                var sourceField = curMapping.Key;
+                var targetField = curMapping.Value;
+                Assert.True(curMappedSecret.ContainsKey(targetField));
+                Assert.Equal(curImportedSecret[sourceField], curMappedSecret[targetField]);
+            }
+        }
+    }
 }

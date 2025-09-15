@@ -1,4 +1,6 @@
-﻿namespace clypse.core.Secrets.Import;
+﻿using clypse.core.Enums;
+
+namespace clypse.core.Secrets.Import;
 
 /// <summary>
 /// Service for importing secrets from various formats.
@@ -21,4 +23,11 @@ public interface ISecretsImporterService
     /// <param name="data">The data string containing secrets to import.</param>
     /// <returns>The number of secrets successfully imported.</returns>
     public int ReadData(string data);
+
+    /// <summary>
+    /// Maps the imported secrets to the specified data format.
+    /// </summary>
+    /// <param name="dataFormat">The data format to map the imported secrets to.</param>
+    /// <returns>List of mapped secrets data as a list of dictionaries.</returns>
+    public List<Dictionary<string, string>> MapImportedSecrets(CsvImportDataFormat dataFormat);
 }
