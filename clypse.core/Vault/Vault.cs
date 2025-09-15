@@ -1,4 +1,5 @@
-﻿using clypse.core.Secrets;
+﻿using clypse.core.Enums;
+using clypse.core.Secrets;
 
 namespace clypse.core.Vault;
 
@@ -81,8 +82,11 @@ public class Vault : IVault
     /// Adds multiple raw secrets to the vault.
     /// </summary>
     /// <param name="rawSecrets">A list of dictionaries representing raw secrets to add.</param>
+    /// <param name="defaultSecretType">The default secret type to assign if not specified in the raw data.</param>
     /// <returns>True if all secrets were successfully added; false if any failed.</returns>
-    public bool AddRawSecrets(IList<Dictionary<string, string>> rawSecrets)
+    public bool AddRawSecrets(
+        IList<Dictionary<string, string>> rawSecrets,
+        SecretType defaultSecretType)
     {
         var addedSecrets = new List<Secret>();
         var allAdded = true;
@@ -93,7 +97,10 @@ public class Vault : IVault
             try
             {
                 var secret = Secret.FromDictionary(rawSecret);
-                secret.SecretType = Enums.SecretType.Web; // Default to Web type, can be changed later
+                if (secret.SecretType == SecretType.None)
+                {
+                    secret.SecretType = defaultSecretType;
+                }
 
                 var added = this.AddSecret(secret);
                 if (!added)
