@@ -2,6 +2,7 @@
 using System.Text.Json.Serialization;
 using clypse.core.Base;
 using clypse.core.Base.Exceptions;
+using clypse.core.Enums;
 using clypse.core.Json;
 using clypse.core.Secrets;
 
@@ -55,6 +56,7 @@ public class SecretTests
         {
             Name = "Foobar",
             Description = "Hello World!",
+            Comments = "These are some comments.",
         };
 
         // Act
@@ -64,13 +66,14 @@ public class SecretTests
         // Assert
         var dataKeys = doc.RootElement.GetProperty("Data");
         var allProperties = dataKeys.EnumerateObject().ToList();
-        Assert.Equal(6, allProperties.Count);
+        Assert.Equal(7, allProperties.Count);
         Assert.Contains(allProperties, x => x.Name == "Id");
         Assert.Contains(allProperties, x => x.Name == "CreatedAt");
         Assert.Contains(allProperties, x => x.Name == "LastUpdatedAt");
         Assert.Contains(allProperties, x => x.Name == "SecretType");
         Assert.Contains(allProperties, x => x.Name == "Name");
         Assert.Contains(allProperties, x => x.Name == "Description");
+        Assert.Contains(allProperties, x => x.Name == "Comments");
 
         var validator = new ClypseObjectValidator(sut);
         validator.Validate();
@@ -84,6 +87,7 @@ public class SecretTests
         {
             Name = "Foobar",
             Description = "Hello World!",
+            Comments = "These are some comments.",
         };
         var tag = "apple";
 
@@ -104,6 +108,7 @@ public class SecretTests
         {
             Name = "Foobar",
             Description = "Hello World!",
+            Comments = "These are some comments.",
         };
         var tag = "apple";
         sut.AddTag(tag);
@@ -124,6 +129,7 @@ public class SecretTests
         {
             Name = "Foobar",
             Description = "Hello World!",
+            Comments = "These are some comments.",
         };
         var tag = "apple";
         sut.AddTag(tag);
@@ -145,6 +151,7 @@ public class SecretTests
         {
             Name = "Foobar",
             Description = "Hello World!",
+            Comments = "These are some comments.",
         };
         var tag = "apple";
         sut.AddTag(tag);
@@ -166,6 +173,7 @@ public class SecretTests
         {
             Name = "Foobar",
             Description = "Hello World!",
+            Comments = "These are some comments.",
         };
         var tag = "apple";
         sut.AddTag(tag);
@@ -188,6 +196,7 @@ public class SecretTests
         {
             Name = "Foobar",
             Description = "Hello World!",
+            Comments = "These are some comments.",
         };
         var tag = "apple";
         sut.AddTag(tag);
@@ -197,5 +206,32 @@ public class SecretTests
 
         // Assert
         Assert.Empty(sut.Tags);
+    }
+
+    [Fact]
+    public void GivenDataDictionary_WhenFromDictionary_ThenSecretCreatedWithDataSet()
+    {
+        // Arrange
+        var data = new Dictionary<string, string>
+        {
+            { "SecretType", "Web" },
+            { "Name", "Foobar" },
+            { "Description", "Hello World!" },
+            { "Comments", "These are some comments." },
+            { "Tags", "apple,orange,pear" },
+        };
+
+        // Act
+        var sut = Secret.FromDictionary(data);
+
+        // Assert
+        Assert.Equal("Foobar", sut.Name);
+        Assert.Equal("Hello World!", sut.Description);
+        Assert.Equal("These are some comments.", sut.Comments);
+        Assert.Equal(SecretType.Web, sut.SecretType);
+        Assert.Equal(3, sut.Tags.Count);
+        Assert.Contains(sut.Tags, x => x == "apple");
+        Assert.Contains(sut.Tags, x => x == "orange");
+        Assert.Contains(sut.Tags, x => x == "pear");
     }
 }

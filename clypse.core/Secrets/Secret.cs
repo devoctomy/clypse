@@ -86,6 +86,22 @@ public class Secret : ClypseObject
     }
 
     /// <summary>
+    /// Creates a Secret instance from a dictionary of key-value pairs.
+    /// </summary>
+    /// <param name="data">The dictionary containing secret data.</param>
+    /// <returns>A Secret instance populated with the provided data.</returns>
+    public static Secret FromDictionary(Dictionary<string, string> data)
+    {
+        var secret = new Secret();
+        foreach (var kvp in data)
+        {
+            secret.SetData(kvp.Key, kvp.Value);
+        }
+
+        return secret;
+    }
+
+    /// <summary>
     /// Add a tag to this secret.
     /// </summary>
     /// <param name="tag">Tag to add.</param>

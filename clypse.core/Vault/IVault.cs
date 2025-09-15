@@ -45,6 +45,13 @@ public interface IVault
     public bool AddSecret(Secret secret);
 
     /// <summary>
+    /// Adds multiple raw secrets to the vault.
+    /// </summary>
+    /// <param name="rawSecrets">A list of dictionaries representing raw secrets to add.</param>
+    /// <returns>True if all secrets were successfully added; false if any failed.</returns>
+    public bool AddRawSecrets(IList<Dictionary<string, string>> rawSecrets);
+
+    /// <summary>
     /// Marks a secret for deletion from the vault.
     /// </summary>
     /// <param name="secretId">The unique identifier of the secret to delete.</param>

@@ -78,6 +78,52 @@ public class Vault : IVault
     }
 
     /// <summary>
+    /// Adds multiple raw secrets to the vault.
+    /// </summary>
+    /// <param name="rawSecrets">A list of dictionaries representing raw secrets to add.</param>
+    /// <returns>True if all secrets were successfully added; false if any failed.</returns>
+    public bool AddRawSecrets(IList<Dictionary<string, string>> rawSecrets)
+    {
+        var addedSecrets = new List<Secret>();
+        var allAdded = true;
+        var isDirty = this.isDirty;
+
+        foreach (var rawSecret in rawSecrets)
+        {
+            try
+            {
+                var secret = Secret.FromDictionary(rawSecret);
+                secret.SecretType = Enums.SecretType.Web; // Default to Web type, can be changed later
+
+                var added = this.AddSecret(secret);
+                if (!added)
+                {
+                    allAdded = false;
+                    break;
+                }
+
+                addedSecrets.Add(secret);
+            }
+            catch
+            {
+                allAdded = false;
+            }
+        }
+
+        if (!allAdded)
+        {
+            foreach (var secret in addedSecrets)
+            {
+                this.pendingSecrets.Remove(secret);
+            }
+
+            this.isDirty = isDirty;
+        }
+
+        return allAdded;
+    }
+
+    /// <summary>
     /// Marks a secret for deletion from the vault.
     /// </summary>
     /// <param name="secretId">The ID of the secret to delete.</param>
