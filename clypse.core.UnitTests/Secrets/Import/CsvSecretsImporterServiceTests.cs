@@ -72,7 +72,7 @@ public class CsvSecretsImporterServiceTests
     }
 
     [Fact]
-    private void GivenValidCsvData_AndImportedSuccessfully_AndCachy1xCsvImportDataFormat_WhenMapImportedSecretsIsCalled_ThenMappedSecretsAreReturned()
+    public void GivenValidCsvData_AndImportedSuccessfully_AndCachy1xCsvImportDataFormat_WhenMapImportedSecretsIsCalled_ThenMappedSecretsAreReturned()
     {
         // Arrange
         var csvData = "Name,Description,Username,Password,Website,Notes,Unmapped\n" +
