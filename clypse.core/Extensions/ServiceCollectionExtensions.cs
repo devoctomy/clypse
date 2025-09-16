@@ -2,6 +2,7 @@
 using clypse.core.Cryptogtaphy.Interfaces;
 using clypse.core.Data;
 using clypse.core.Password;
+using clypse.core.Secrets.Import;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace clypse.core.Extensions;
@@ -23,6 +24,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IPasswordGeneratorService, StandardWesternPasswordGeneratorService>();
         services.AddScoped<IKeyDerivationService, KeyDerivationService>();
         services.AddScoped<IPasswordComplexityEstimatorService, StandardWesternPasswordComplexityEstimatorService>();
+        services.AddScoped<ISecretsImporterService, CsvSecretsImporterService>();
 
         AddAllOfType<IPasswordGeneratorTokenProcessor>(services);
 

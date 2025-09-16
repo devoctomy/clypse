@@ -76,6 +76,9 @@ public partial class Home : ComponentBase
             case "create-credential":
                 credentialsComponent?.ShowCreateDialog();
                 return; // Don't call StateHasChanged or UpdateNavigation as this is just showing a dialog
+            case "import":
+                credentialsComponent?.ShowImportDialog();
+                return; // Don't call StateHasChanged or UpdateNavigation as this is just showing a dialog
             case "lock-vault":
                 await HandleLockVault();
                 return; // HandleLockVault already calls StateHasChanged and UpdateNavigation
@@ -110,9 +113,10 @@ public partial class Home : ComponentBase
             "credentials" => new List<NavigationItem>
             {
                 new() { Text = "Create Credential", Action = "create-credential", Icon = "bi bi-plus-circle" },
-                new() { Text = "Delete Vault", Action = "delete-vault", Icon = "bi bi-trash3", ButtonClass = "btn-danger" },
+                new() { Text = "Import", Action = "import", Icon = "bi bi-upload" },
                 new() { Text = "Verify Vault", Action = "verify", Icon = "bi bi-shield-check", ButtonClass = "btn-success" },
-                new() { Text = "Lock Vault", Action = "lock-vault", Icon = "bi bi-lock", ButtonClass = "btn-primary" }
+                new() { Text = "Lock Vault", Action = "lock-vault", Icon = "bi bi-lock", ButtonClass = "btn-primary" },
+                new() { Text = "Delete Vault", Action = "delete-vault", Icon = "bi bi-trash3", ButtonClass = "btn-danger" }
             },
             "create-vault" => new List<NavigationItem>
             {

@@ -2,6 +2,8 @@ using Microsoft.AspNetCore.Components;
 using clypse.portal.Models;
 using clypse.core.Secrets;
 using clypse.core.Vault;
+using clypse.core.Secrets.Import;
+using clypse.core.Enums;
 
 namespace clypse.portal.Components;
 
@@ -19,6 +21,7 @@ public partial class Credentials : ComponentBase
     private bool showViewDialog = false;
     private bool showEditDialog = false;
     private bool showCreateDialog = false;
+    private bool showImportDialog = false;
     private bool isLoadingSecret = false;
     private bool isSavingSecret = false;
     private bool showDeleteConfirmation = false;
@@ -119,6 +122,49 @@ public partial class Credentials : ComponentBase
     {
         showCreateDialog = false;
         StateHasChanged();
+    }
+
+    public void ShowImportDialog()
+    {
+        showImportDialog = true;
+        StateHasChanged();
+    }
+    
+    private void CloseImportDialog()
+    {
+        showImportDialog = false;
+        StateHasChanged();
+    }
+
+    private async Task HandleImportSecrets(ImportSecretsDialog.ImportResult result)
+    {
+        if (VaultManager == null || LoadedVault == null || string.IsNullOrEmpty(CurrentVaultKey))
+        {
+            return;
+        }
+
+        try
+        {
+            // Add the mapped secrets to the vault
+            var addResult = LoadedVault.AddRawSecrets(result.MappedSecrets, SecretType.Web);
+            
+            if (addResult)
+            {
+                // Save the vault with the changes
+                var results = await VaultManager.SaveAsync(LoadedVault, CurrentVaultKey, null, CancellationToken.None);
+                
+                // Notify parent that vault was updated so it can refresh the index
+                await OnVaultUpdated.InvokeAsync();
+            }
+            
+            // Close the import dialog
+            CloseImportDialog();
+        }
+        catch (Exception ex)
+        {
+            // Error handling - could show a toast notification here
+            Console.WriteLine($"Error importing secrets: {ex.Message}");
+        }
     }
     
     private async Task HandleSaveSecret(WebSecret editedSecret)

@@ -29,6 +29,8 @@ public class CsvSecretsImporterService : ISecretsImporterService
     /// <returns>The number of secrets successfully read into memory.</returns>
     public int ReadData(string data)
     {
+        this.importedSecrets.Clear();
+
         using var reader = new StringReader(data);
         using var parser = new TextFieldParser(reader);
         parser.TextFieldType = FieldType.Delimited;
