@@ -251,6 +251,70 @@ await this.FeatureBackgroundAsync();
             await this.ScenarioCleanupAsync();
         }
         
+        [Xunit.SkippableFactAttribute(DisplayName="Create and secrets imported, then save vault to S3, check secrets can be retrieve" +
+            "d, then delete the vault")]
+        [Xunit.TraitAttribute("FeatureTitle", "Vault sync with AmazonS3")]
+        [Xunit.TraitAttribute("Description", "Create and secrets imported, then save vault to S3, check secrets can be retrieve" +
+            "d, then delete the vault")]
+        public async System.Threading.Tasks.Task CreateAndSecretsImportedThenSaveVaultToS3CheckSecretsCanBeRetrievedThenDeleteTheVault()
+        {
+            string[] tagsOfScenario = ((string[])(null));
+            System.Collections.Specialized.OrderedDictionary argumentsOfScenario = new System.Collections.Specialized.OrderedDictionary();
+            global::Reqnroll.ScenarioInfo scenarioInfo = new global::Reqnroll.ScenarioInfo("Create and secrets imported, then save vault to S3, check secrets can be retrieve" +
+                    "d, then delete the vault", null, tagsOfScenario, argumentsOfScenario, featureTags);
+#line 47
+this.ScenarioInitialize(scenarioInfo);
+#line hidden
+            if ((global::Reqnroll.TagHelper.ContainsIgnoreTag(scenarioInfo.CombinedTags) || global::Reqnroll.TagHelper.ContainsIgnoreTag(featureTags)))
+            {
+                testRunner.SkipScenario();
+            }
+            else
+            {
+                await this.ScenarioStartAsync();
+#line 5
+await this.FeatureBackgroundAsync();
+#line hidden
+#line 48
+ await testRunner.GivenAsync("create a new vault", ((string)(null)), ((global::Reqnroll.Table)(null)), "Given ");
+#line hidden
+#line 49
+ await testRunner.AndAsync("key derived from password foobar123", ((string)(null)), ((global::Reqnroll.Table)(null)), "And ");
+#line hidden
+                global::Reqnroll.Table table2 = new global::Reqnroll.Table(new string[] {
+                            "Path",
+                            "SecretsCount"});
+                table2.AddRow(new string[] {
+                            "Data/secrets.csv",
+                            "2"});
+#line 50
+ await testRunner.AndAsync("secrets data read from csv file", ((string)(null)), table2, "And ");
+#line hidden
+#line 53
+ await testRunner.AndAsync("imported secrets successfully mapped", ((string)(null)), ((global::Reqnroll.Table)(null)), "And ");
+#line hidden
+#line 54
+ await testRunner.WhenAsync("mapped secrets added to vault", ((string)(null)), ((global::Reqnroll.Table)(null)), "When ");
+#line hidden
+#line 55
+ await testRunner.ThenAsync("vault is saved", ((string)(null)), ((global::Reqnroll.Table)(null)), "Then ");
+#line hidden
+#line 56
+ await testRunner.AndAsync("save results successful", ((string)(null)), ((global::Reqnroll.Table)(null)), "And ");
+#line hidden
+#line 57
+ await testRunner.AndAsync("save results report 2 secrets created", ((string)(null)), ((global::Reqnroll.Table)(null)), "And ");
+#line hidden
+#line 58
+ await testRunner.AndAsync("secrets match mapped secrets", ((string)(null)), ((global::Reqnroll.Table)(null)), "And ");
+#line hidden
+#line 59
+ await testRunner.AndAsync("vault deleted", ((string)(null)), ((global::Reqnroll.Table)(null)), "And ");
+#line hidden
+            }
+            await this.ScenarioCleanupAsync();
+        }
+        
         [System.CodeDom.Compiler.GeneratedCodeAttribute("Reqnroll", "2.0.0.0")]
         [System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
         public class FixtureData : object, Xunit.IAsyncLifetime

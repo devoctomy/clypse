@@ -43,3 +43,17 @@ Scenario: Create and save vault to S3, perform basic CRUD operations on secrets,
 	And vault listed
 	And bootstrapper lists vault
 	And vault deleted
+
+Scenario: Create and secrets imported, then save vault to S3, check secrets can be retrieved, then delete the vault
+	Given create a new vault
+	And key derived from password foobar123
+	And secrets data read from csv file
+		| Path             | SecretsCount |
+		| Data/secrets.csv | 2            |
+	And imported secrets successfully mapped
+	When mapped secrets added to vault
+	Then vault is saved
+	And save results successful
+	And save results report 2 secrets created
+	And secrets match mapped secrets
+	And vault deleted
