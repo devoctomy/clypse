@@ -29,7 +29,7 @@ public partial class Credentials : ComponentBase
     private string secretIdToDelete = string.Empty;
     private string deleteConfirmationMessage = string.Empty;
     private string searchTerm = string.Empty;
-    private List<VaultIndexEntry> filteredEntries = new();
+    private List<VaultIndexEntry> filteredEntries = [];
 
     private async Task HandleLockVault()
     {
@@ -262,13 +262,11 @@ public partial class Credentials : ComponentBase
         // Initialize filtered entries with sorted list
         if (CurrentVault?.IndexEntries != null)
         {
-            filteredEntries = CurrentVault.IndexEntries
-                .OrderBy(e => e.Name)
-                .ToList();
+            filteredEntries = [.. CurrentVault.IndexEntries.OrderBy(e => e.Name)];
         }
         else
         {
-            filteredEntries = new List<VaultIndexEntry>();
+            filteredEntries = [];
         }
     }
 
@@ -276,27 +274,24 @@ public partial class Credentials : ComponentBase
     {
         if (CurrentVault?.IndexEntries == null)
         {
-            filteredEntries = new List<VaultIndexEntry>();
+            filteredEntries = [];
             return;
         }
 
         if (string.IsNullOrWhiteSpace(searchTerm))
         {
-            filteredEntries = CurrentVault.IndexEntries
-                .OrderBy(e => e.Name)
-                .ToList();
+            filteredEntries = [.. CurrentVault.IndexEntries.OrderBy(e => e.Name)];
 
             return;
         }
 
         var term = searchTerm.Trim().ToLower();
-        filteredEntries = CurrentVault.IndexEntries
+        filteredEntries = [.. CurrentVault.IndexEntries
             .Where(entry => 
-                (entry.Name?.ToLower().Contains(term) ?? false) ||
-                (entry.Description?.ToLower().Contains(term) ?? false) ||
-                (entry.Tags?.ToLower().Contains(term) ?? false))
-            .OrderBy(e => e.Name)
-            .ToList();
+                (entry.Name?.Contains(term, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                (entry.Description?.Contains(term, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                (entry.Tags?.Contains(term, StringComparison.OrdinalIgnoreCase) ?? false))
+            .OrderBy(e => e.Name)];
     }
 
     private void ClearSearch()

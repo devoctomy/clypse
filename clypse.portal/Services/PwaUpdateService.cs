@@ -13,7 +13,9 @@ public class PwaUpdateService : IPwaUpdateService, IAsyncDisposable
     private Func<Task>? _onUpdateInstalled;
     private Func<string, Task>? _onUpdateError;
 
-    public PwaUpdateService(IJSRuntime jsRuntime, ILogger<PwaUpdateService> logger)
+    public PwaUpdateService(
+        IJSRuntime jsRuntime,
+        ILogger<PwaUpdateService> logger)
     {
         _jsRuntime = jsRuntime;
         _logger = logger;
@@ -103,7 +105,7 @@ public class PwaUpdateService : IPwaUpdateService, IAsyncDisposable
     public ValueTask DisposeAsync()
     {
         // Nothing to dispose
-        
+        GC.SuppressFinalize(this);
         return ValueTask.CompletedTask;
     }
 }
