@@ -11,7 +11,22 @@
                 <div class="col-md-12 text-center">
                     <small class="text-muted">@AppSettings.CopyrightMessage</small>
                     <br />
-                    <small class="text-muted">Version @AppSettings.Version</small>
+                    <small class="text-muted">
+                        Version 
+                        <span class="version-number @(updateAvailable ? "update-available" : "")" 
+                              @onclick="HandleVersionClick" 
+                              title="@(updateAvailable ? "Update available - Click to update" : "Click to check for updates")">
+                            @AppSettings.Version
+                            @if (updateAvailable)
+                            {
+                                <i class="bi bi-exclamation-circle text-warning ms-1"></i>
+                            }
+                        </span>
+                        @if (isUpdating)
+                        {
+                            <span class="spinner-border spinner-border-sm ms-2" role="status" aria-hidden="true"></span>
+                        }
+                    </small>
                 </div>
             </div>
         </div>

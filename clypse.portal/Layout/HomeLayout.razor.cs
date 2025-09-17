@@ -41,44 +41,28 @@ public partial class HomeLayout : LayoutComponentBase, IDisposable
         }
     }
 
-    private async Task InitializeSidebar()
+    private Task InitializeSidebar()
     {
         try
         {
-            var savedState = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "clypse_sidebar_expanded");
-            if (!string.IsNullOrEmpty(savedState) && bool.TryParse(savedState, out bool expanded))
-            {
-                isExpanded = expanded;
-            }
-            else
-            {
-                // Default to collapsed on mobile, expanded on desktop
-                var isMobile = await JSRuntime.InvokeAsync<bool>("eval", "window.matchMedia('(max-width: 768px)').matches");
-                isExpanded = !isMobile;
-            }
+            // Always default to collapsed (false)
+            isExpanded = false;
             StateHasChanged();
         }
         catch
         {
-            // Default to expanded if we can't determine
-            isExpanded = true;
+            // Default to collapsed if any error occurs
+            isExpanded = false;
         }
+        
+        return Task.CompletedTask;
     }
 
-    private async Task ToggleSidebar()
+    private Task ToggleSidebar()
     {
         isExpanded = !isExpanded;
-        
-        try
-        {
-            await JSRuntime.InvokeVoidAsync("localStorage.setItem", "clypse_sidebar_expanded", isExpanded.ToString());
-        }
-        catch
-        {
-            // Ignore localStorage errors
-        }
-        
         StateHasChanged();
+        return Task.CompletedTask;
     }
 
     private async Task InitializeTheme()
@@ -178,16 +162,6 @@ public partial class HomeLayout : LayoutComponentBase, IDisposable
     {
         // Close sidebar when any navigation action is clicked
         isExpanded = false;
-        
-        try
-        {
-            await JSRuntime.InvokeVoidAsync("localStorage.setItem", "clypse_sidebar_expanded", isExpanded.ToString());
-        }
-        catch
-        {
-            // Ignore localStorage errors
-        }
-        
         StateHasChanged();
         
         if (homePageRef != null)

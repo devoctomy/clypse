@@ -5,6 +5,13 @@ self.importScripts('./service-worker-assets.js');
 self.addEventListener('install', event => event.waitUntil(onInstall(event)));
 self.addEventListener('activate', event => event.waitUntil(onActivate(event)));
 self.addEventListener('fetch', event => event.respondWith(onFetch(event)));
+self.addEventListener('message', event => {
+    // Handle skip waiting message for PWA updates
+    if (event.data && event.data.type === 'SKIP_WAITING') {
+        console.info('Service worker: Received SKIP_WAITING message, activating immediately');
+        self.skipWaiting();
+    }
+});
 
 const cacheNamePrefix = 'offline-cache-';
 const cacheName = `${cacheNamePrefix}${self.assetsManifest.version}`;
