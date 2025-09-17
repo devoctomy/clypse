@@ -9,7 +9,6 @@ public class PwaUpdateService : IPwaUpdateService, IAsyncDisposable
 {
     private readonly IJSRuntime _jsRuntime;
     private readonly ILogger<PwaUpdateService> _logger;
-    private DotNetObjectReference<PwaUpdateService>? _objectReference;
     private Func<Task>? _onUpdateAvailable;
     private Func<Task>? _onUpdateInstalled;
     private Func<string, Task>? _onUpdateError;
@@ -103,14 +102,7 @@ public class PwaUpdateService : IPwaUpdateService, IAsyncDisposable
     /// <inheritdoc />
     public ValueTask DisposeAsync()
     {
-        try
-        {
-            _objectReference?.Dispose();
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error disposing PWA update service");
-        }
+        // Nothing to dispose
         
         return ValueTask.CompletedTask;
     }
