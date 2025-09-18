@@ -31,4 +31,31 @@ public static class SecretExtensions
             .ToDictionary(kv => kv.Key, kv => kv.Value);
         return orderedFields;
     }
+
+    /// <summary>
+    /// Casts a Secret instance to its correct derived type based on the SecretType property.
+    /// </summary>
+    /// <param name="secret">The secret instance to cast.</param>
+    /// <returns>The secret instance cast to its correct derived type.</returns>
+    public static Secret CastSecretToCorrectType(this Secret secret)
+    {
+        var castSecret = secret;
+
+        switch (secret.SecretType)
+        {
+            case Enums.SecretType.None:
+                {
+                    // Do nothing;
+                    break;
+                }
+
+            case Enums.SecretType.Web:
+                {
+                    castSecret = WebSecret.FromSecret(secret);
+                    break;
+                }
+        }
+
+        return castSecret;
+    }
 }
