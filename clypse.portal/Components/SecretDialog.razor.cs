@@ -48,13 +48,12 @@ public partial class SecretDialog : ComponentBase
 
     private Secret CreateWorkingCopy(Secret original)
     {
-        // Create a new instance of the same type as the original
+        // Create a working copy and cast it to the correct type based on its SecretType
         var workingCopy = (Secret)Activator.CreateInstance(original.GetType())!;
-        
-        // Copy all data from the original
         workingCopy.SetAllData(original.Data);
         
-        return workingCopy;
+        // Cast to the correct type based on the SecretType property
+        return workingCopy.CastSecretToCorrectType();
     }
 
     private async Task HandleSave()
@@ -105,6 +104,28 @@ public partial class SecretDialog : ComponentBase
             SecretDialogMode.View => "View Secret",
             _ => "Secret"
         };
+    }
+
+    private void OnSecretTypeChanged(ChangeEventArgs e)
+    {
+        if (EditableSecret == null || e.Value == null)
+            return;
+
+        // Parse the new secret type
+        if (Enum.TryParse<SecretType>(e.Value.ToString(), out var newSecretType))
+        {
+            // Update the secret type
+            EditableSecret.SecretType = newSecretType;
+            
+            // Cast to the correct type using the extension method
+            EditableSecret = EditableSecret.CastSecretToCorrectType();
+            
+            // Rebuild the fields for the new secret type
+            secretFields = EditableSecret?.GetOrderedSecretFields();
+            
+            // Trigger re-render
+            StateHasChanged();
+        }
     }
 
     private RenderFragment RenderField(PropertyInfo property, SecretFieldAttribute attribute)

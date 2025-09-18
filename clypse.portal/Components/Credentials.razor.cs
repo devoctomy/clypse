@@ -83,9 +83,9 @@ public partial class Credentials : ComponentBase
             
             var secret = await VaultManager.GetSecretAsync(LoadedVault, secretId, CurrentVaultKey, CancellationToken.None);
             
-            if (secret is WebSecret webSecret)
+            if (secret != null)
             {
-                currentSecret = webSecret;
+                currentSecret = secret;
                 secretDialogMode = SecretDialog.SecretDialogMode.Edit;
                 showSecretDialog = true;
             }
@@ -159,7 +159,7 @@ public partial class Credentials : ComponentBase
         }
     }
     
-    private async Task HandleSaveSecret(WebSecret editedSecret)
+    private async Task HandleSaveSecret(Secret editedSecret)
     {
         if (VaultManager == null || LoadedVault == null || string.IsNullOrEmpty(CurrentVaultKey))
         {
@@ -194,7 +194,7 @@ public partial class Credentials : ComponentBase
         }
     }
     
-    private async Task HandleCreateSecret(WebSecret newSecret)
+    private async Task HandleCreateSecret(Secret newSecret)
     {
         if (VaultManager == null || LoadedVault == null || string.IsNullOrEmpty(CurrentVaultKey))
         {
@@ -352,10 +352,10 @@ public partial class Credentials : ComponentBase
         switch (secretDialogMode)
         {
             case SecretDialog.SecretDialogMode.Create:
-                await HandleCreateSecret((WebSecret)secret);
+                await HandleCreateSecret(secret);
                 break;
             case SecretDialog.SecretDialogMode.Edit:
-                await HandleSaveSecret((WebSecret)secret);
+                await HandleSaveSecret(secret);
                 break;
             case SecretDialog.SecretDialogMode.View:
                 // View mode doesn't save
