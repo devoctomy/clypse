@@ -92,13 +92,8 @@ public partial class SecretDialog : ComponentBase
 
     private string GetModeIcon()
     {
-        return Mode switch
-        {
-            SecretDialogMode.Create => "plus-circle",
-            SecretDialogMode.Edit => "pencil",
-            SecretDialogMode.View => "eye",
-            _ => "question-circle"
-        };
+        // Use consistent secret/credential icon for all modes
+        return "person-badge";
     }
 
     private string GetModeTitle()

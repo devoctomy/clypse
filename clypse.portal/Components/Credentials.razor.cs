@@ -17,10 +17,6 @@ public partial class Credentials : ComponentBase
     [Parameter] public EventCallback OnCreateCredential { get; set; }
     [Parameter] public IVaultManager? VaultManager { get; set; }
     
-    private WebSecret? currentSecret;
-    private bool showViewDialog = false;
-    private bool showEditDialog = false;
-    private bool showCreateDialog = false;
     private bool showImportDialog = false;
     private bool isLoadingSecret = false;
     private bool isSavingSecret = false;
@@ -29,9 +25,9 @@ public partial class Credentials : ComponentBase
     private string secretIdToDelete = string.Empty;
     private string deleteConfirmationMessage = string.Empty;
 
-    // SecretDialog test properties
+    // SecretDialog properties
     private bool showSecretDialog = false;
-    private Secret? testSecret = null;
+    private Secret? currentSecret = null;
     private SecretDialog.SecretDialogMode secretDialogMode = SecretDialog.SecretDialogMode.Create;
     private string searchTerm = string.Empty;
     private List<VaultIndexEntry> filteredEntries = [];
@@ -55,10 +51,11 @@ public partial class Credentials : ComponentBase
             
             var secret = await VaultManager.GetSecretAsync(LoadedVault, secretId, CurrentVaultKey, CancellationToken.None);
             
-            if (secret is WebSecret webSecret)
+            if (secret != null)
             {
-                currentSecret = webSecret;
-                showViewDialog = true;
+                currentSecret = secret; // Reuse the currentSecret for viewing
+                secretDialogMode = SecretDialog.SecretDialogMode.View;
+                showSecretDialog = true;
             }
         }
         catch
@@ -70,13 +67,6 @@ public partial class Credentials : ComponentBase
             isLoadingSecret = false;
             StateHasChanged();
         }
-    }
-    
-    private void CloseViewDialog()
-    {
-        showViewDialog = false;
-        currentSecret = null;
-        StateHasChanged();
     }
     
     private async Task EditSecret(string secretId)
@@ -96,7 +86,8 @@ public partial class Credentials : ComponentBase
             if (secret is WebSecret webSecret)
             {
                 currentSecret = webSecret;
-                showEditDialog = true;
+                secretDialogMode = SecretDialog.SecretDialogMode.Edit;
+                showSecretDialog = true;
             }
         }
         catch
@@ -110,22 +101,18 @@ public partial class Credentials : ComponentBase
         }
     }
     
-    private void CloseEditDialog()
-    {
-        showEditDialog = false;
-        currentSecret = null;
-        StateHasChanged();
-    }
-    
     public void ShowCreateDialog()
     {
-        showCreateDialog = true;
+        currentSecret = new WebSecret();
+        secretDialogMode = SecretDialog.SecretDialogMode.Create;
+        showSecretDialog = true;
         StateHasChanged();
     }
     
     private void CloseCreateDialog()
     {
-        showCreateDialog = false;
+        showSecretDialog = false;
+        currentSecret = null;
         StateHasChanged();
     }
 
@@ -191,7 +178,7 @@ public partial class Credentials : ComponentBase
             await VaultManager.SaveAsync(LoadedVault, CurrentVaultKey, null, CancellationToken.None);
             
             // Close the dialog
-            CloseEditDialog();
+            CloseSecretDialog();
             
             // Notify parent that vault was updated so it can refresh the index
             await OnVaultUpdated.InvokeAsync();
@@ -360,72 +347,27 @@ public partial class Credentials : ComponentBase
         }
     }
 
-    // SecretDialog Test Methods
-    public void TestCreateDialog()
+    private async Task HandleSecretDialogSave(Secret secret)
     {
-        testSecret = new WebSecret();
-        secretDialogMode = SecretDialog.SecretDialogMode.Create;
-        showSecretDialog = true;
-        StateHasChanged();
-    }
-
-    public void TestEditDialog()
-    {
-        testSecret = new WebSecret
+        switch (secretDialogMode)
         {
-            Name = "Test Edit Secret",
-            Description = "This is a test secret for editing",
-            UserName = "testuser",
-            EmailAddress = "test@example.com",
-            WebsiteUrl = "https://example.com",
-            LoginUrl = "https://example.com/login",
-            Password = "TestPassword123!"
-        };
-        testSecret.AddTag("test");
-        testSecret.AddTag("example");
-        testSecret.Comments = "These are some test comments for the edit dialog.";
-        
-        secretDialogMode = SecretDialog.SecretDialogMode.Edit;
-        showSecretDialog = true;
-        StateHasChanged();
-    }
-
-    public void TestViewDialog()
-    {
-        testSecret = new WebSecret
-        {
-            Name = "Test View Secret",
-            Description = "This is a test secret for viewing only",
-            UserName = "viewuser",
-            EmailAddress = "view@example.com",
-            WebsiteUrl = "https://view-example.com",
-            LoginUrl = "https://view-example.com/signin",
-            Password = "ViewPassword456@"
-        };
-        testSecret.AddTag("readonly");
-        testSecret.AddTag("sample");
-        testSecret.AddTag("demo");
-        testSecret.Comments = "This is a read-only view of a secret with multiple lines of comments.\n\nYou can see how multi-line text is displayed in view mode.";
-        
-        secretDialogMode = SecretDialog.SecretDialogMode.View;
-        showSecretDialog = true;
-        StateHasChanged();
-    }
-
-    private async Task HandleTestSecretSave(Secret secret)
-    {
-        // For testing purposes, we'll just close the dialog
-        // In a real implementation, this would save the secret
-        Console.WriteLine($"Test secret saved: {secret.Name}");
-        showSecretDialog = false;
-        StateHasChanged();
-        await Task.CompletedTask;
+            case SecretDialog.SecretDialogMode.Create:
+                await HandleCreateSecret((WebSecret)secret);
+                break;
+            case SecretDialog.SecretDialogMode.Edit:
+                await HandleSaveSecret((WebSecret)secret);
+                break;
+            case SecretDialog.SecretDialogMode.View:
+                // View mode doesn't save
+                CloseSecretDialog();
+                break;
+        }
     }
 
     private void CloseSecretDialog()
     {
         showSecretDialog = false;
-        testSecret = null;
+        currentSecret = null;
         StateHasChanged();
     }
 }
