@@ -88,6 +88,15 @@ public partial class Home : ComponentBase
             case "verify":
                 await HandleVerify();
                 break;
+            case "test-create":
+                credentialsComponent?.TestCreateDialog();
+                return; // Don't call StateHasChanged or UpdateNavigation as this is just showing a dialog
+            case "test-edit":
+                credentialsComponent?.TestEditDialog();
+                return; // Don't call StateHasChanged or UpdateNavigation as this is just showing a dialog
+            case "test-view":
+                credentialsComponent?.TestViewDialog();
+                return; // Don't call StateHasChanged or UpdateNavigation as this is just showing a dialog
         }
 
         StateHasChanged();

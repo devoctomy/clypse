@@ -1,13 +1,14 @@
 ﻿using System.Text.Json.Serialization;
 using clypse.core.Base;
 using clypse.core.Enums;
+using clypse.core.Secrets.Interfaces;
 
 namespace clypse.core.Secrets;
 
 /// <summary>
 /// Generic secret which other secrets may be derived from.
 /// </summary>
-public class Secret : ClypseObject
+public class Secret : ClypseObject, ITaggedObject
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="Secret"/> class.

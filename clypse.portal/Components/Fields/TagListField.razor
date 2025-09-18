@@ -1,0 +1,40 @@
+@using clypse.core.Secrets
+@using Microsoft.AspNetCore.Components.Web
+
+<div class="mb-3">
+    <label class="form-label">@Label</label>
+    <div class="row">
+        <div class="col-8">
+            <input type="text" 
+                   class="form-control" 
+                   @bind="newTag" 
+                   @onkeypress="HandleTagKeyPress" 
+                   placeholder="@Placeholder"
+                   disabled="@IsReadOnly" />
+        </div>
+        <div class="col-4">
+            <button type="button" 
+                    class="btn btn-outline-primary w-100" 
+                    @onclick="AddTag"
+                    disabled="@IsReadOnly">
+                Add Tag
+            </button>
+        </div>
+    </div>
+    
+    @if (Tags?.Any() == true)
+    {
+        <div class="mt-2">
+            @foreach (var tag in Tags.ToList())
+            {
+                <span class="badge bg-secondary me-1 mb-1">
+                    @tag
+                    @if (!IsReadOnly)
+                    {
+                        <button type="button" class="btn-close btn-close-white ms-1" style="font-size: 0.7em;" @onclick="() => RemoveTag(tag)"></button>
+                    }
+                </span>
+            }
+        </div>
+    }
+</div>

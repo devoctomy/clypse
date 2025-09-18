@@ -64,6 +64,29 @@
                                 <i class="@deleteItem.Icon sidebar-icon-responsive"></i>
                                 <span class="sidebar-text-responsive">@deleteItem.Text</span>
                             </button>
+                            
+                            @* SecretDialog Test Buttons *@
+                            <div class="mt-2 pt-2 border-top">
+                                <small class="text-muted d-block mb-2">Test SecretDialog:</small>
+                                <button class="btn btn-outline-primary btn-sm w-100 mb-1 sidebar-btn-responsive" 
+                                        title="Test Create Dialog"
+                                        @onclick='() => HandleNavigationAction("test-create")'>
+                                    <i class="bi bi-plus-circle sidebar-icon-responsive"></i>
+                                    <span class="sidebar-text-responsive">Test Create</span>
+                                </button>
+                                <button class="btn btn-outline-success btn-sm w-100 mb-1 sidebar-btn-responsive" 
+                                        title="Test Edit Dialog"
+                                        @onclick='() => HandleNavigationAction("test-edit")'>
+                                    <i class="bi bi-pencil sidebar-icon-responsive"></i>
+                                    <span class="sidebar-text-responsive">Test Edit</span>
+                                </button>
+                                <button class="btn btn-outline-info btn-sm w-100 mb-1 sidebar-btn-responsive" 
+                                        title="Test View Dialog"
+                                        @onclick='() => HandleNavigationAction("test-view")'>
+                                    <i class="bi bi-eye sidebar-icon-responsive"></i>
+                                    <span class="sidebar-text-responsive">Test View</span>
+                                </button>
+                            </div>
                         </div>
                     }
                 </div>

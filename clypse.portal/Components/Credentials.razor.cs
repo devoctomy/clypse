@@ -28,6 +28,11 @@ public partial class Credentials : ComponentBase
     private bool isDeletingSecret = false;
     private string secretIdToDelete = string.Empty;
     private string deleteConfirmationMessage = string.Empty;
+
+    // SecretDialog test properties
+    private bool showSecretDialog = false;
+    private Secret? testSecret = null;
+    private SecretDialog.SecretDialogMode secretDialogMode = SecretDialog.SecretDialogMode.Create;
     private string searchTerm = string.Empty;
     private List<VaultIndexEntry> filteredEntries = [];
 
@@ -353,5 +358,74 @@ public partial class Credentials : ComponentBase
             isDeletingSecret = false;
             StateHasChanged();
         }
+    }
+
+    // SecretDialog Test Methods
+    public void TestCreateDialog()
+    {
+        testSecret = new WebSecret();
+        secretDialogMode = SecretDialog.SecretDialogMode.Create;
+        showSecretDialog = true;
+        StateHasChanged();
+    }
+
+    public void TestEditDialog()
+    {
+        testSecret = new WebSecret
+        {
+            Name = "Test Edit Secret",
+            Description = "This is a test secret for editing",
+            UserName = "testuser",
+            EmailAddress = "test@example.com",
+            WebsiteUrl = "https://example.com",
+            LoginUrl = "https://example.com/login",
+            Password = "TestPassword123!"
+        };
+        testSecret.AddTag("test");
+        testSecret.AddTag("example");
+        testSecret.Comments = "These are some test comments for the edit dialog.";
+        
+        secretDialogMode = SecretDialog.SecretDialogMode.Edit;
+        showSecretDialog = true;
+        StateHasChanged();
+    }
+
+    public void TestViewDialog()
+    {
+        testSecret = new WebSecret
+        {
+            Name = "Test View Secret",
+            Description = "This is a test secret for viewing only",
+            UserName = "viewuser",
+            EmailAddress = "view@example.com",
+            WebsiteUrl = "https://view-example.com",
+            LoginUrl = "https://view-example.com/signin",
+            Password = "ViewPassword456@"
+        };
+        testSecret.AddTag("readonly");
+        testSecret.AddTag("sample");
+        testSecret.AddTag("demo");
+        testSecret.Comments = "This is a read-only view of a secret with multiple lines of comments.\n\nYou can see how multi-line text is displayed in view mode.";
+        
+        secretDialogMode = SecretDialog.SecretDialogMode.View;
+        showSecretDialog = true;
+        StateHasChanged();
+    }
+
+    private async Task HandleTestSecretSave(Secret secret)
+    {
+        // For testing purposes, we'll just close the dialog
+        // In a real implementation, this would save the secret
+        Console.WriteLine($"Test secret saved: {secret.Name}");
+        showSecretDialog = false;
+        StateHasChanged();
+        await Task.CompletedTask;
+    }
+
+    private void CloseSecretDialog()
+    {
+        showSecretDialog = false;
+        testSecret = null;
+        StateHasChanged();
     }
 }
