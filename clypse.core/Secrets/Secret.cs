@@ -40,6 +40,7 @@ public class Secret : ClypseObject
     /// Gets or sets Name for this secret.
     /// </summary>
     [RequiredData]
+    [SecretField(DisplayOrder = 10, FieldType = SecretFieldType.SingleLineText)]
     [JsonIgnore]
     public string? Name
     {
@@ -50,6 +51,7 @@ public class Secret : ClypseObject
     /// <summary>
     /// Gets or sets Description of this secret.
     /// </summary>
+    [SecretField(DisplayOrder = 20, FieldType = SecretFieldType.SingleLineText)]
     [JsonIgnore]
     public string? Description
     {
@@ -60,6 +62,7 @@ public class Secret : ClypseObject
     /// <summary>
     /// Gets list of Tags for this secret.
     /// </summary>
+    [SecretField(DisplayOrder = 100, FieldType = SecretFieldType.TagList)]
     [JsonIgnore]
     public List<string> Tags
     {
@@ -78,6 +81,7 @@ public class Secret : ClypseObject
     /// <summary>
     /// Gets or sets Comments for this secret.
     /// </summary>
+    [SecretField(DisplayOrder = 110, FieldType = SecretFieldType.MultiLineText)]
     [JsonIgnore]
     public string? Comments
     {

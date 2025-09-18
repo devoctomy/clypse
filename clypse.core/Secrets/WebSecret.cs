@@ -1,4 +1,5 @@
 ﻿using System.Text.Json.Serialization;
+using clypse.core.Enums;
 
 namespace clypse.core.Secrets;
 
@@ -18,6 +19,7 @@ public class WebSecret : Secret
     /// <summary>
     /// Gets or sets UserName for this secret.
     /// </summary>
+    [SecretField(DisplayOrder = 30, FieldType = SecretFieldType.SingleLineText)]
     [JsonIgnore]
     public string? UserName
     {
@@ -28,6 +30,7 @@ public class WebSecret : Secret
     /// <summary>
     /// Gets or sets EmailAddress for this secret.
     /// </summary>
+    [SecretField(DisplayOrder = 40, FieldType = SecretFieldType.SingleLineText)]
     [JsonIgnore]
     public string? EmailAddress
     {
@@ -38,6 +41,7 @@ public class WebSecret : Secret
     /// <summary>
     /// Gets or sets WebsiteUrl for this secret.
     /// </summary>
+    [SecretField(DisplayOrder = 50, FieldType = SecretFieldType.SingleLineText)]
     [JsonIgnore]
     public string? WebsiteUrl
     {
@@ -48,6 +52,7 @@ public class WebSecret : Secret
     /// <summary>
     /// Gets or sets LoginUrl for this secret.
     /// </summary>
+    [SecretField(DisplayOrder = 60, FieldType = SecretFieldType.SingleLineText)]
     [JsonIgnore]
     public string? LoginUrl
     {
@@ -58,6 +63,7 @@ public class WebSecret : Secret
     /// <summary>
     /// Gets or sets password for this secret.
     /// </summary>
+    [SecretField(DisplayOrder = 70, FieldType = SecretFieldType.Password)]
     [JsonIgnore]
     public string? Password
     {
