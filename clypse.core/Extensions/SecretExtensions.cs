@@ -54,6 +54,12 @@ public static class SecretExtensions
                     castSecret = WebSecret.FromSecret(secret);
                     break;
                 }
+
+            case Enums.SecretType.Aws:
+                {
+                    castSecret = AwsCredentials.FromSecret(secret);
+                    break;
+                }
         }
 
         return castSecret;

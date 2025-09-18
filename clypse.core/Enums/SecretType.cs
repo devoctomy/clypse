@@ -14,4 +14,9 @@ public enum SecretType
     /// Web-based secret for website login credentials.
     /// </summary>
     Web = 1,
+
+    /// <summary>
+    /// AWS secret for Amazon Web Services credentials.
+    /// </summary>
+    Aws = 2,
 }
