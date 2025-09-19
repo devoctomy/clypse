@@ -14,6 +14,8 @@ on:
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
+    container:
+      image: mcr.microsoft.com/playwright/dotnet:v1.54.0-noble
     
     steps:
     - name: Checkout code
@@ -51,11 +53,12 @@ jobs:
         dotnet test clypse.core.IntTests --no-build --configuration Release --verbosity normal --logger trx --results-directory ./TestResults/IntegrationTests
         echo "✅ Integration Tests completed"
       
-    - name: Install Playwright browsers and dependencies
-      run: |
-        echo "🎭 Installing Playwright browsers..."
-        pwsh clypse.portal.UITests/bin/Release/net8.0/playwright.ps1 install --with-deps
-        echo "✅ Playwright browsers installed"
+    # Playwright browsers are pre-installed in the Docker image
+    # - name: Install Playwright browsers and dependencies
+    #   run: |
+    #     echo "🎭 Installing Playwright browsers..."
+    #     pwsh clypse.portal.UITests/bin/Release/net8.0/playwright.ps1 install --with-deps
+    #     echo "✅ Playwright browsers installed"
       
     - name: Run UI Tests
       id: ui-tests
