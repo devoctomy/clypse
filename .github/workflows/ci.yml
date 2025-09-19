@@ -33,12 +33,44 @@ jobs:
     - name: Build
       run: dotnet build --no-restore --configuration Release
       
-    - name: Run tests
+    - name: Run Unit Tests
+      id: unit-tests
+      run: |
+        echo "🧪 Running Unit Tests..."
+        dotnet test clypse.core.UnitTests --no-build --configuration Release --verbosity normal --logger trx --results-directory ./TestResults/UnitTests
+        echo "✅ Unit Tests completed"
+      
+    - name: Run Integration Tests
+      id: integration-tests
       env:
         CLYPSE_AWS_BUCKETNAME: ${{ secrets.CLYPSE_AWS_BUCKETNAME }}
         CLYPSE_AWS_ACCESSKEY: ${{ secrets.CLYPSE_AWS_ACCESSKEY }}
         CLYPSE_AWS_SECRETACCESSKEY: ${{ secrets.CLYPSE_AWS_SECRETACCESSKEY }}    
-      run: dotnet test --no-build --configuration Release --verbosity normal
+      run: |
+        echo "🔗 Running Integration Tests..."
+        dotnet test clypse.core.IntTests --no-build --configuration Release --verbosity normal --logger trx --results-directory ./TestResults/IntegrationTests
+        echo "✅ Integration Tests completed"
+      
+    - name: Install Playwright browsers
+      run: |
+        echo "🎭 Installing Playwright browsers..."
+        cd clypse.portal.UITests/bin/Release/net8.0
+        pwsh playwright.ps1 install --with-deps
+        echo "✅ Playwright browsers installed"
+      
+    - name: Run UI Tests
+      id: ui-tests
+      run: |
+        echo "🖥️ Running UI Tests..."
+        dotnet test clypse.portal.UITests --no-build --configuration Release --verbosity normal --logger trx --results-directory ./TestResults/UITests
+        echo "✅ UI Tests completed"
+      
+    - name: Upload test results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: test-results
+        path: ./TestResults/
 
   deploy:
     needs: build-and-test
