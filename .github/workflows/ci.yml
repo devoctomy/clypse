@@ -32,6 +32,11 @@ jobs:
       with:
         dotnet-version: '8.0.x'
         
+    - name: Setup HTTPS development certificates
+      run: |
+        dotnet dev-certs https --clean
+        dotnet dev-certs https --trust
+        
     - name: Install .NET workloads
       run: dotnet workload install wasm-tools
         
