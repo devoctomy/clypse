@@ -28,10 +28,8 @@ public partial class Vaults : ComponentBase
     private bool isUnlocking = false;
     private VaultMetadata? selectedVault = null;
     private VaultListing? selectedVaultListing = null; // Store selected vault listing for details
-    private string passphrase = string.Empty;
     private string? errorMessage = null;
     private IVaultManagerBootstrapperService? bootstrapperService = null;
-    private ElementReference passphraseInput;
 
     [Parameter] public EventCallback<(VaultMetadata vault, string key, IVaultManager manager)> OnVaultUnlocked { get; set; }
 
@@ -119,24 +117,18 @@ public partial class Vaults : ComponentBase
         await LoadVaults();
     }
 
-    private async Task ShowPassphrasePanel(VaultMetadata vault)
+    private void ShowPassphrasePanel(VaultMetadata vault)
     {
         selectedVault = vault;
-        passphrase = string.Empty;
         errorMessage = null;
         showPassphrasePanel = true;
         StateHasChanged();
-        
-        // Focus the password input after a small delay to ensure the modal is rendered
-        await Task.Delay(100);
-        await passphraseInput.FocusAsync();
     }
 
     private void HidePassphrasePanel()
     {
         showPassphrasePanel = false;
         selectedVault = null;
-        passphrase = string.Empty;
         errorMessage = null;
         StateHasChanged();
     }
@@ -157,24 +149,7 @@ public partial class Vaults : ComponentBase
         StateHasChanged();
     }
 
-    private async Task OnPassphraseKeyDown(KeyboardEventArgs e)
-    {
-        if (e.Key == "Enter" && !isUnlocking)
-        {
-            try
-            {
-                await UnlockVault();
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error during Enter key unlock: {ex.Message}");
-                errorMessage = $"Failed to unlock vault: {ex.Message}";
-                StateHasChanged();
-            }
-        }
-    }
-
-    private async Task UnlockVault()
+    private async Task HandleUnlockVault(string passphrase)
     {
         if (selectedVault == null || string.IsNullOrEmpty(passphrase))
         {

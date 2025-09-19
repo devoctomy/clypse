@@ -1,0 +1,57 @@
+@using clypse.portal.Models
+
+@if (IsVisible && Vault != null)
+{
+    <div class="modal" style="display: block; background-color: rgba(0,0,0,0.5);" @onclick="OnBackdropClick">
+        <div class="modal-dialog modal-dialog-centered" @onclick:stopPropagation="true">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="bi bi-unlock me-2"></i>
+                        Unlock Vault
+                    </h5>
+                    <button type="button" class="btn-close" @onclick="OnCancelClick"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="mb-3">
+                        <strong>Vault ID:</strong> @Vault.Id
+                    </p>
+                    @if (!string.IsNullOrEmpty(ErrorMessage))
+                    {
+                        <div class="alert alert-danger" role="alert">
+                            @ErrorMessage
+                        </div>
+                    }
+                    <div class="mb-3">
+                        <label for="passphrase" class="form-label">Passphrase</label>
+                        <input type="password" 
+                               class="form-control" 
+                               id="passphrase" 
+                               @ref="passphraseInput"
+                               @bind="passphrase" 
+                               @bind:event="oninput"
+                               @onkeydown="OnPassphraseKeyDown"
+                               placeholder="Enter vault passphrase"
+                               disabled="@IsUnlocking" />
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @onclick="OnCancelClick" disabled="@IsUnlocking">
+                        Cancel
+                    </button>
+                    <button type="button" class="btn btn-primary" @onclick="OnUnlockClick" disabled="@IsUnlocking">
+                        @if (IsUnlocking)
+                        {
+                            <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                            <span>Unlocking...</span>
+                        }
+                        else
+                        {
+                            <span>Unlock</span>
+                        }
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
