@@ -64,16 +64,17 @@ jobs:
         dotnet test clypse.core.IntTests --no-build --configuration Release --verbosity normal --logger trx --results-directory ./TestResults/IntegrationTests
         echo "✅ Integration Tests completed"
       
-    - name: Install Playwright browsers and dependencies
-      run: |
-        echo "🎭 Installing Playwright browsers..."
-        pwsh clypse.portal.UITests/bin/Release/net8.0/playwright.ps1 install
-        echo "✅ Playwright browsers installed"
+    # Browsers are pre-installed in the Docker image
+    # - name: Install Playwright browsers and dependencies
+    #   run: |
+    #     echo "🎭 Installing Playwright browsers..."
+    #     pwsh clypse.portal.UITests/bin/Release/net8.0/playwright.ps1 install
+    #     echo "✅ Playwright browsers installed"
       
     - name: Run UI Tests
       id: ui-tests
       env:
-        PLAYWRIGHT_BROWSERS_PATH: 0
+        PLAYWRIGHT_BROWSERS_PATH: /ms-playwright
       run: |
         echo "🖥️ Running UI Tests..."
         dotnet test clypse.portal.UITests --no-build --configuration Release --verbosity normal --logger trx --results-directory ./TestResults/UITests
