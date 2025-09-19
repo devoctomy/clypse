@@ -24,6 +24,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "clypse.core.IntTests", "cly
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "clypse.portal", "clypse.portal\clypse.portal.csproj", "{CC531A7E-0297-4060-A923-B1DEFF9B1063}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "UI Tests", "UI Tests", "{18DDBCE1-AF0A-4625-B8CA-BA848F6DB43A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "clypse.portal.UITests", "clypse.portal.UITests\clypse.portal.UITests.csproj", "{E991BCD7-5623-467A-A6F2-BBD3A222E9AD}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -46,6 +50,10 @@ Global
 		{CC531A7E-0297-4060-A923-B1DEFF9B1063}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{CC531A7E-0297-4060-A923-B1DEFF9B1063}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{CC531A7E-0297-4060-A923-B1DEFF9B1063}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E991BCD7-5623-467A-A6F2-BBD3A222E9AD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E991BCD7-5623-467A-A6F2-BBD3A222E9AD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E991BCD7-5623-467A-A6F2-BBD3A222E9AD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E991BCD7-5623-467A-A6F2-BBD3A222E9AD}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -53,6 +61,7 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{73782589-C78B-40D8-95A2-4C0C3D67240E} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 		{6A33D703-4495-4C63-8C41-0DC8273A751B} = {41200558-8DBA-4864-AF03-31DA8BED5936}
+		{E991BCD7-5623-467A-A6F2-BBD3A222E9AD} = {18DDBCE1-AF0A-4625-B8CA-BA848F6DB43A}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {234CE61D-11A8-4ABB-BE55-10C28007EE2A}
