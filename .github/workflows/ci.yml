@@ -51,15 +51,31 @@ jobs:
         dotnet test clypse.core.IntTests --no-build --configuration Release --verbosity normal --logger trx --results-directory ./TestResults/IntegrationTests
         echo "✅ Integration Tests completed"
       
-    - name: Install Playwright browsers
+    - name: Install Playwright browsers and dependencies
       run: |
         echo "🎭 Installing Playwright browsers..."
+        # Install required system dependencies for Ubuntu 24.04
+        sudo apt-get update
+        sudo apt-get install -y \
+          libnss3-dev \
+          libatk-bridge2.0-dev \
+          libdrm-dev \
+          libxkbcommon-dev \
+          libgbm-dev \
+          libasound2t64 \
+          libxrandr2 \
+          libxss1 \
+          libgtk-3-0
+        
+        # Install Playwright browsers via the built binary
         cd clypse.portal.UITests/bin/Release/net8.0
-        pwsh playwright.ps1 install --with-deps
+        pwsh playwright.ps1 install chromium
         echo "✅ Playwright browsers installed"
       
     - name: Run UI Tests
       id: ui-tests
+      env:
+        PLAYWRIGHT_BROWSERS_PATH: 0
       run: |
         echo "🖥️ Running UI Tests..."
         dotnet test clypse.portal.UITests --no-build --configuration Release --verbosity normal --logger trx --results-directory ./TestResults/UITests
