@@ -12,6 +12,15 @@ public class TestBase : PageTest
     private static Process? _serverProcess;
     protected static readonly string ServerUrl = "https://localhost:7153";
 
+    // Override browser context options to ignore SSL certificate errors
+    public override BrowserNewContextOptions ContextOptions()
+    {
+        return new BrowserNewContextOptions()
+        {
+            IgnoreHTTPSErrors = true
+        };
+    }
+
     private static string GetProjectPath()
     {
         // Get the directory where the test assembly is located
