@@ -59,12 +59,4 @@ public partial class UnlockVaultDialog : ComponentBase
         passphrase = string.Empty;
         await OnCancel.InvokeAsync();
     }
-
-    private async Task OnBackdropClick()
-    {
-        if (!IsUnlocking)
-        {
-            await OnCancelClick();
-        }
-    }
 }
