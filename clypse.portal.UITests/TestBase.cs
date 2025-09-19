@@ -6,17 +6,18 @@ using System.Reflection;
 
 namespace clypse.portal.UITests;
 
+[TestClass]
 public class TestBase : PageTest
 {
     private static Process? _serverProcess;
     protected static readonly string ServerUrl = "https://localhost:7153";
-    
+
     private static string GetProjectPath()
     {
         // Get the directory where the test assembly is located
         var assemblyLocation = Assembly.GetExecutingAssembly().Location;
         var testProjectDir = Path.GetDirectoryName(assemblyLocation);
-        
+
         // Navigate up to the solution root and then to the portal project
         // From: clypse.portal.UITests/bin/Debug/net8.0/
         // To: clypse.portal/
@@ -25,14 +26,14 @@ public class TestBase : PageTest
         {
             throw new DirectoryNotFoundException("Could not locate solution root directory");
         }
-        
+
         var projectPath = Path.Combine(solutionRoot, "clypse.portal", "clypse.portal.csproj");
-        
+
         if (!File.Exists(projectPath))
         {
             throw new FileNotFoundException($"Could not find project file at: {projectPath}");
         }
-        
+
         return projectPath;
     }
 
@@ -40,10 +41,10 @@ public class TestBase : PageTest
     public static async Task AssemblyInitialize(TestContext context)
     {
         Console.WriteLine("Starting test server setup...");
-        
+
         var projectPath = GetProjectPath();
         Console.WriteLine($"Using project path: {projectPath}");
-        
+
         // Start the Blazor server using dotnet run
         _serverProcess = new Process
         {
@@ -63,17 +64,17 @@ public class TestBase : PageTest
         };
 
         Console.WriteLine($"Starting server with command: dotnet {_serverProcess.StartInfo.Arguments}");
-        
+
         _serverProcess.Start();
 
         Console.WriteLine("Server process started, waiting for it to be ready...");
-        
+
         // Wait for the server to be ready
         await WaitForServerAsync();
     }
 
     [AssemblyCleanup]
-    public static void AssemblyCleanup()
+    public static void AssemblyCleanup(TestContext context)
     {
         try
         {
@@ -97,10 +98,10 @@ public class TestBase : PageTest
         {
             ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => true
         };
-        
+
         using var client = new HttpClient(handler);
         client.DefaultRequestHeaders.Add("User-Agent", "Playwright-Test");
-        
+
         var retries = 60; // 60 seconds timeout for Blazor WASM compilation
         var delay = 1000; // 1 second between retries
 
