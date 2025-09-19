@@ -80,15 +80,6 @@ public partial class SecretDialog : ComponentBase
         await OnCancel.InvokeAsync();
     }
 
-    private async Task HandleBackdropClick()
-    {
-        // Only close if not currently saving
-        if (!isSaving)
-        {
-            await HandleCancel();
-        }
-    }
-
     private string GetModeIcon()
     {
         // Use consistent secret/credential icon for all modes
