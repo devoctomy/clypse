@@ -2,6 +2,7 @@ using Microsoft.Playwright;
 using Microsoft.Playwright.MSTest;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Diagnostics;
+using System.Reflection;
 
 namespace clypse.portal.UITests;
 
@@ -9,12 +10,39 @@ public class TestBase : PageTest
 {
     private static Process? _serverProcess;
     protected static readonly string ServerUrl = "https://localhost:7153";
-    private static readonly string ProjectPath = @"E:\Source\GitHub\clypse\clypse.portal\clypse.portal.csproj";
+    
+    private static string GetProjectPath()
+    {
+        // Get the directory where the test assembly is located
+        var assemblyLocation = Assembly.GetExecutingAssembly().Location;
+        var testProjectDir = Path.GetDirectoryName(assemblyLocation);
+        
+        // Navigate up to the solution root and then to the portal project
+        // From: clypse.portal.UITests/bin/Debug/net8.0/
+        // To: clypse.portal/
+        var solutionRoot = Directory.GetParent(testProjectDir!)?.Parent?.Parent?.Parent?.FullName;
+        if (solutionRoot == null)
+        {
+            throw new DirectoryNotFoundException("Could not locate solution root directory");
+        }
+        
+        var projectPath = Path.Combine(solutionRoot, "clypse.portal", "clypse.portal.csproj");
+        
+        if (!File.Exists(projectPath))
+        {
+            throw new FileNotFoundException($"Could not find project file at: {projectPath}");
+        }
+        
+        return projectPath;
+    }
 
     [AssemblyInitialize]
     public static async Task AssemblyInitialize(TestContext context)
     {
         Console.WriteLine("Starting test server setup...");
+        
+        var projectPath = GetProjectPath();
+        Console.WriteLine($"Using project path: {projectPath}");
         
         // Start the Blazor server using dotnet run
         _serverProcess = new Process
@@ -22,7 +50,7 @@ public class TestBase : PageTest
             StartInfo = new ProcessStartInfo
             {
                 FileName = "dotnet",
-                Arguments = $"run --project \"{ProjectPath}\" --urls=\"{ServerUrl}\"",
+                Arguments = $"run --project \"{projectPath}\" --urls=\"{ServerUrl}\"",
                 UseShellExecute = false,
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
