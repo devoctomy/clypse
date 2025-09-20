@@ -35,6 +35,9 @@ public partial class Home : ComponentBase
     private VaultMetadata? vaultToDelete = null;
     private bool isDeletingVault = false;
     private string? deleteVaultErrorMessage = null;
+    private bool showCreateVaultDialog = false;
+    private bool isCreatingVault = false;
+    private string? createVaultErrorMessage = null;
 
     [CascadingParameter] public Layout.HomeLayout? Layout { get; set; }
 
@@ -62,8 +65,8 @@ public partial class Home : ComponentBase
         switch (action)
         {
             case "create-vault":
-                currentPage = "create-vault";
-                break;
+                ShowCreateVaultDialog();
+                return; // Don't call StateHasChanged or UpdateNavigation as this is just showing a dialog
             case "show-vaults":
                 currentPage = "vaults";
                 break;
@@ -117,10 +120,6 @@ public partial class Home : ComponentBase
                 new() { Text = "Verify Vault", Action = "verify", Icon = "bi bi-shield-check", ButtonClass = "btn-success" },
                 new() { Text = "Lock Vault", Action = "lock-vault", Icon = "bi bi-lock", ButtonClass = "btn-primary" },
                 new() { Text = "Delete Vault", Action = "delete-vault", Icon = "bi bi-trash3", ButtonClass = "btn-danger" }
-            },
-            "create-vault" => new List<NavigationItem>
-            {
-                new() { Text = "Back to Vaults", Action = "show-vaults", Icon = "bi bi-arrow-left" }
             },
             _ => new List<NavigationItem>()
         };
@@ -273,13 +272,6 @@ public partial class Home : ComponentBase
         }
     }
 
-    private async Task HandleCancelCreateVault()
-    {
-        currentPage = "vaults";
-        StateHasChanged();
-        await UpdateNavigation();
-    }
-
     private async Task HandleVaultUnlocked((VaultMetadata vault, string key, IVaultManager manager) vaultData)
     {
         currentVault = vaultData.vault;
@@ -419,6 +411,46 @@ public partial class Home : ComponentBase
         finally
         {
             isDeletingVault = false;
+            StateHasChanged();
+        }
+    }
+
+    private void ShowCreateVaultDialog()
+    {
+        createVaultErrorMessage = null;
+        showCreateVaultDialog = true;
+        StateHasChanged();
+    }
+    
+    private void CancelCreateVault()
+    {
+        showCreateVaultDialog = false;
+        createVaultErrorMessage = null;
+        isCreatingVault = false;
+        StateHasChanged();
+    }
+    
+    private async Task HandleCreateVaultFromDialog(VaultCreationRequest request)
+    {
+        try
+        {
+            isCreatingVault = true;
+            createVaultErrorMessage = null;
+            StateHasChanged();
+            
+            await HandleCreateVault(request);
+            
+            // Close dialog on success
+            CancelCreateVault();
+        }
+        catch (Exception ex)
+        {
+            createVaultErrorMessage = $"Failed to create vault: {ex.Message}";
+            Console.WriteLine($"Error creating vault: {ex.Message}");
+        }
+        finally
+        {
+            isCreatingVault = false;
             StateHasChanged();
         }
     }
