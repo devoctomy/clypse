@@ -139,7 +139,14 @@ public class StandardWesternPasswordComplexityEstimatorService : IPasswordComple
         string password,
         CancellationToken cancellationToken)
     {
+#if DEBUG
+        weakKnownPasswords =
+        [
+            "password123",
+        ];
+#else
         weakKnownPasswords ??= await LoadWeakKnownPasswordsDictionaryAsync(cancellationToken);
+#endif
 
         return weakKnownPasswords.Contains(password);
     }
