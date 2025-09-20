@@ -12,7 +12,6 @@ public class TestBase : PageTest
     private static Process? _serverProcess;
     protected static readonly string ServerUrl = "https://localhost:7153";
 
-    // Override browser context options to ignore SSL certificate errors
     public override BrowserNewContextOptions ContextOptions()
     {
         return new BrowserNewContextOptions()
@@ -23,19 +22,9 @@ public class TestBase : PageTest
 
     private static string GetProjectPath()
     {
-        // Get the directory where the test assembly is located
         var assemblyLocation = Assembly.GetExecutingAssembly().Location;
         var testProjectDir = Path.GetDirectoryName(assemblyLocation);
-
-        // Navigate up to the solution root and then to the portal project
-        // From: clypse.portal.UITests/bin/Debug/net8.0/
-        // To: clypse.portal/
-        var solutionRoot = Directory.GetParent(testProjectDir!)?.Parent?.Parent?.Parent?.FullName;
-        if (solutionRoot == null)
-        {
-            throw new DirectoryNotFoundException("Could not locate solution root directory");
-        }
-
+        var solutionRoot = (Directory.GetParent(testProjectDir!)?.Parent?.Parent?.Parent?.FullName) ?? throw new DirectoryNotFoundException("Could not locate solution root directory");
         var projectPath = Path.Combine(solutionRoot, "clypse.portal", "clypse.portal.csproj");
 
         if (!File.Exists(projectPath))
@@ -54,7 +43,6 @@ public class TestBase : PageTest
         var projectPath = GetProjectPath();
         Console.WriteLine($"Using project path: {projectPath}");
 
-        // Start the Blazor server using dotnet run
         _serverProcess = new Process
         {
             StartInfo = new ProcessStartInfo
@@ -78,7 +66,6 @@ public class TestBase : PageTest
 
         Console.WriteLine("Server process started, waiting for it to be ready...");
 
-        // Wait for the server to be ready
         await WaitForServerAsync();
     }
 
@@ -102,7 +89,6 @@ public class TestBase : PageTest
 
     private static async Task WaitForServerAsync()
     {
-        // Create HttpClient with custom handler to skip SSL validation for local dev
         var handler = new HttpClientHandler()
         {
             ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => true
@@ -111,8 +97,8 @@ public class TestBase : PageTest
         using var client = new HttpClient(handler);
         client.DefaultRequestHeaders.Add("User-Agent", "Playwright-Test");
 
-        var retries = 60; // 60 seconds timeout for Blazor WASM compilation
-        var delay = 1000; // 1 second between retries
+        var retries = 60;
+        var delay = 1000;
 
         while (retries-- > 0)
         {

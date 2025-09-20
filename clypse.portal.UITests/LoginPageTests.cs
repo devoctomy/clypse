@@ -74,4 +74,38 @@ public class LoginPageTests : TestBase
         // Verify icon changed
         Assert.AreNotEqual(initialIcon, newIcon, "Theme icon should change when theme switcher is clicked");
     }
+
+    [TestMethod]
+    public async Task ShouldLoginWithValidCredentialsAndNavigateToVaults()
+    {
+        // Get credentials from environment variables
+        var username = Environment.GetEnvironmentVariable("CLYPSE_UITESTS_USERNAME");
+        var password = Environment.GetEnvironmentVariable("CLYPSE_UITESTS_PASSWORD");
+
+        // Skip test if environment variables are not set
+        if (string.IsNullOrEmpty(username) || string.IsNullOrEmpty(password))
+        {
+            Assert.Inconclusive("Test skipped: CLYPSE_UITESTS_USERNAME and CLYPSE_UITESTS_PASSWORD environment variables must be set");
+        }
+
+        // Navigate to the login page
+        await Page.GotoAsync(ServerUrl);
+
+        // Fill in the login form
+        await Page.Locator("input[placeholder='Enter your username']").FillAsync(username);
+        await Page.Locator("input[type='password'][placeholder='Enter your password']").FillAsync(password);
+
+        // Submit the form
+        await Page.Locator("button[type='submit']").Filter(new() { HasText = "Login" }).ClickAsync();
+
+        // Wait for successful login and navigation away from login page
+        await Task.Delay(2000); // Give time for authentication and navigation
+        
+        // Verify we're on the vaults page by checking for the page label/heading
+        // Look for a heading or label that indicates we're on the vaults page
+        await Expect(Page.Locator("h1, h2, h3").Filter(new() { HasText = "Vaults" })).ToBeVisibleAsync(new() { Timeout = 10000 });
+        
+        // Additional verification: ensure we're no longer on the login page
+        await Expect(Page.Locator("input[placeholder='Enter your username']")).Not.ToBeVisibleAsync();
+    }
 }
