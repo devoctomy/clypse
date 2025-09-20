@@ -19,11 +19,12 @@ public partial class VaultCreateDialog : ComponentBase
     private string vaultPassphrase = string.Empty;
     private string vaultPassphraseConfirm = string.Empty;
     private ElementReference nameInput;
+    private bool previousShowState = false;
 
     protected override async Task OnParametersSetAsync()
     {
-        // Clear form when dialog is shown
-        if (Show)
+        // Only clear form and focus when dialog is being opened (transitioning from hidden to shown)
+        if (Show && !previousShowState)
         {
             ClearForm();
             await Task.Delay(100); // Small delay to ensure modal is rendered
@@ -37,6 +38,9 @@ public partial class VaultCreateDialog : ComponentBase
                 Console.WriteLine($"Failed to focus name input: {ex.Message}");
             }
         }
+        
+        // Update previous state for next comparison
+        previousShowState = Show;
     }
 
     private void ClearForm()
