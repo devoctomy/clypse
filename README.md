@@ -5,7 +5,28 @@ Clypse secrets management.
 
 ## Requirements
 
+1. Aws Cognito confgurations
+    - Identity Pool
+    - User Pool
+2. Some Aws credentials which have access to a test S3 bucket
+3. A test S3 bucket
 
+Once you have setup all of the above, you will need to configure the 'appsettings.json' configuration file within the clypse.portal wwwroot folder,
+
+```
+  "AwsS3": {
+    "BucketName": "...",
+    "Region": "..."
+  },
+  "AwsCognito": {
+    "UserPoolId": "...",
+    "UserPoolClientId": "...",
+    "Region": "...",
+    "IdentityPoolId": "..."
+  },
+```
+
+One way to test the setup is to use the Test Page which you can access from the Login page when in Debug configuration. Enter your Cognito user credentials and then click the button to 'Test Clypse Core', this will create a vault for you with a test credential, the password will be 'password123.
 
 ## Testing
 
@@ -29,6 +50,17 @@ Integration testing requires the following environment variables
 The integration tests test the underlying core framework without any UI. The tests will create a vault, with a number of secrets and then clean up after itself.
 
 > The integration tests do not test any part of Aws Cognito integration. This is done with the UI tests.
+
+### UI Tests
+
+UI Tests are done by Playwright which should be installed prior to running.
+
+https://playwright.dev/dotnet/docs/intro
+
+Basically the PlayWright package adds a PowerShell script to the bin output folder, this is what you use in Windows to install Playwright and the necessary browsers. You will also require the following environment variables,
+
+* CLYPSE_UITESTS_USERNAME - Aws Cognito username for the test user
+* CLYPSE_UITESTS_PASSWORD - Aws Cognito password for the test user
 
 ### Manual Testing
 
