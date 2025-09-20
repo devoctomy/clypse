@@ -140,6 +140,7 @@ public class StandardWesternPasswordComplexityEstimatorService : IPasswordComple
         CancellationToken cancellationToken)
     {
 #if DEBUG
+        await Task.Yield();
         weakKnownPasswords =
         [
             "password123",
