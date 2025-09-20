@@ -43,6 +43,12 @@ public sealed class VaultStepDefinitions(TestContext testContext)
         this.testContext.BucketName = Environment.GetEnvironmentVariable("CLYPSE_AWS_BUCKETNAME") !;
     }
 
+    [Given("aws region loaded from environment variable")]
+    public void AwsRegionLoadedFromEnvironmentVariable()
+    {
+        this.testContext.Region = Environment.GetEnvironmentVariable("CLYPSE_AWS_REGION") !;
+    }
+
     [Given("key derivation service is initialised")]
     public void GivenKeyDerivationServiceIsInitialised()
     {
@@ -64,7 +70,7 @@ public sealed class VaultStepDefinitions(TestContext testContext)
             new AmazonS3ClientWrapper(
                 this.testContext.AwsAccessKey!,
                 this.testContext.SecretAccessKey!,
-                Amazon.RegionEndpoint.EUWest2),
+                Amazon.RegionEndpoint.GetBySystemName(this.testContext.Region)),
             this.cryptoService!);
     }
 
@@ -90,7 +96,7 @@ public sealed class VaultStepDefinitions(TestContext testContext)
             new AmazonS3ClientWrapper(
                 this.testContext.AwsAccessKey!,
                 this.testContext.SecretAccessKey!,
-                Amazon.RegionEndpoint.EUWest2),
+                Amazon.RegionEndpoint.GetBySystemName(this.testContext.Region)),
             this.cryptoService!));
 
         this.vaultManager = new VaultManager(
@@ -230,7 +236,7 @@ public sealed class VaultStepDefinitions(TestContext testContext)
                 new AmazonS3ClientWrapper(
                     this.testContext.AwsAccessKey!,
                     this.testContext.SecretAccessKey!,
-                    Amazon.RegionEndpoint.EUWest2)));
+                    Amazon.RegionEndpoint.GetBySystemName(this.testContext.Region))));
 
         var vaultManager = await vaultManagerBootstrapperService.CreateVaultManagerForVaultAsync(
             this.testContext.Vault!.Info.Id,

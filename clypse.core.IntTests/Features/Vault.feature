@@ -6,6 +6,7 @@ Background:
 	Given aws access key loaded from environment variable
 	And aws secret access key loaded from environment variable
 	And aws bucket name loaded from environment variable
+	And aws region loaded from environment variable
 	And key derivation service is initialised
 	And crypto service is initialised
 	And aws cloud service provider is initialised

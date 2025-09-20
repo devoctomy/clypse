@@ -21,11 +21,14 @@ dotnet test clypse.core.UnitTests --no-build --configuration Release --verbosity
 
 Integration testing requires the following environment variables
 
+* CLYPSE_AWS_REGION - Region of the test bucket
 * CLYPSE_AWS_BUCKETNAME - Test bucket name
 * CLYPSE_AWS_ACCESSKEY - IAM credentials for accessing the s3 bucket
 * CLYPSE_AWS_SECRETACCESSKEY - IAM credentials for accessing the s3 bucket
 
 The integration tests test the underlying core framework without any UI. The tests will create a vault, with a number of secrets and then clean up after itself.
+
+> The integration tests do not test any part of Aws Cognito integration. This is done with the UI tests.
 
 ### Manual Testing
 
@@ -48,4 +51,4 @@ dotnet publish ./clypse.portal/clypse.portal.csproj -c Release -r browser-wasm -
 dotnet serve -d ./clypse.portal/bin/Release/net8.0/publish/wwwroot -p 7153 --tls
 ```
 
-> Please note that you must have CORS configured for the S3 bucket for 'https://localhost:7153' otherwise all requests to S3 will fail.
+> You must have CORS configured for the S3 bucket for 'https://localhost:7153' otherwise all requests to S3 will fail.

@@ -117,21 +117,24 @@ namespace clypse.core.IntTests.Features
  await testRunner.AndAsync("aws bucket name loaded from environment variable", ((string)(null)), ((global::Reqnroll.Table)(null)), "And ");
 #line hidden
 #line 9
- await testRunner.AndAsync("key derivation service is initialised", ((string)(null)), ((global::Reqnroll.Table)(null)), "And ");
+ await testRunner.AndAsync("aws region loaded from environment variable", ((string)(null)), ((global::Reqnroll.Table)(null)), "And ");
 #line hidden
 #line 10
- await testRunner.AndAsync("crypto service is initialised", ((string)(null)), ((global::Reqnroll.Table)(null)), "And ");
+ await testRunner.AndAsync("key derivation service is initialised", ((string)(null)), ((global::Reqnroll.Table)(null)), "And ");
 #line hidden
 #line 11
- await testRunner.AndAsync("aws cloud service provider is initialised", ((string)(null)), ((global::Reqnroll.Table)(null)), "And ");
+ await testRunner.AndAsync("crypto service is initialised", ((string)(null)), ((global::Reqnroll.Table)(null)), "And ");
 #line hidden
 #line 12
- await testRunner.AndAsync("compression service is initialised", ((string)(null)), ((global::Reqnroll.Table)(null)), "And ");
+ await testRunner.AndAsync("aws cloud service provider is initialised", ((string)(null)), ((global::Reqnroll.Table)(null)), "And ");
 #line hidden
 #line 13
- await testRunner.AndAsync("user IdentityId is set", ((string)(null)), ((global::Reqnroll.Table)(null)), "And ");
+ await testRunner.AndAsync("compression service is initialised", ((string)(null)), ((global::Reqnroll.Table)(null)), "And ");
 #line hidden
 #line 14
+ await testRunner.AndAsync("user IdentityId is set", ((string)(null)), ((global::Reqnroll.Table)(null)), "And ");
+#line hidden
+#line 15
  await testRunner.AndAsync("vault manager is initialised", ((string)(null)), ((global::Reqnroll.Table)(null)), "And ");
 #line hidden
         }
@@ -188,7 +191,7 @@ namespace clypse.core.IntTests.Features
                     "e the vault", null, tagsOfScenario, argumentsOfScenario, featureTags, pickleIndex);
             string[] tagsOfRule = ((string[])(null));
             global::Reqnroll.RuleInfo ruleInfo = null;
-#line 17
+#line 18
 this.ScenarioInitialize(scenarioInfo, ruleInfo);
 #line hidden
             if ((global::Reqnroll.TagHelper.ContainsIgnoreTag(scenarioInfo.CombinedTags) || global::Reqnroll.TagHelper.ContainsIgnoreTag(featureTags)))
@@ -201,10 +204,10 @@ this.ScenarioInitialize(scenarioInfo, ruleInfo);
 #line 5
 await this.FeatureBackgroundAsync();
 #line hidden
-#line 18
+#line 19
  await testRunner.GivenAsync("create a new vault", ((string)(null)), ((global::Reqnroll.Table)(null)), "Given ");
 #line hidden
-#line 19
+#line 20
  await testRunner.AndAsync("key derived from password foobar123", ((string)(null)), ((global::Reqnroll.Table)(null)), "And ");
 #line hidden
                 global::Reqnroll.Table table1 = new global::Reqnroll.Table(new string[] {
@@ -222,73 +225,73 @@ await this.FeatureBackgroundAsync();
                             "Another secret thing.",
                             "bob.hoskins@foobar.com",
                             "123foobar"});
-#line 20
+#line 21
  await testRunner.AndAsync("web secrets are added", ((string)(null)), table1, "And ");
 #line hidden
-#line 24
- await testRunner.AndAsync("vault is saved", ((string)(null)), ((global::Reqnroll.Table)(null)), "And ");
-#line hidden
 #line 25
- await testRunner.AndAsync("save results successful", ((string)(null)), ((global::Reqnroll.Table)(null)), "And ");
+ await testRunner.AndAsync("vault is saved", ((string)(null)), ((global::Reqnroll.Table)(null)), "And ");
 #line hidden
 #line 26
- await testRunner.AndAsync("save results report 2 secrets created", ((string)(null)), ((global::Reqnroll.Table)(null)), "And ");
-#line hidden
-#line 27
- await testRunner.AndAsync("vaultmanager is recreated successfully via bootstrapping", ((string)(null)), ((global::Reqnroll.Table)(null)), "And ");
-#line hidden
-#line 28
- await testRunner.WhenAsync("vault is loaded", ((string)(null)), ((global::Reqnroll.Table)(null)), "When ");
-#line hidden
-#line 29
- await testRunner.AndAsync("secret Secret1 is loaded and matches added", ((string)(null)), ((global::Reqnroll.Table)(null)), "And ");
-#line hidden
-#line 30
- await testRunner.AndAsync("secret Secret2 is loaded and matches added", ((string)(null)), ((global::Reqnroll.Table)(null)), "And ");
-#line hidden
-#line 31
- await testRunner.ThenAsync("secret Secret1 is marked for deletion", ((string)(null)), ((global::Reqnroll.Table)(null)), "Then ");
-#line hidden
-#line 32
- await testRunner.AndAsync("web secret Secret2 password is updated to password123", ((string)(null)), ((global::Reqnroll.Table)(null)), "And ");
-#line hidden
-#line 33
- await testRunner.AndAsync("vault is saved", ((string)(null)), ((global::Reqnroll.Table)(null)), "And ");
-#line hidden
-#line 34
  await testRunner.AndAsync("save results successful", ((string)(null)), ((global::Reqnroll.Table)(null)), "And ");
 #line hidden
+#line 27
+ await testRunner.AndAsync("save results report 2 secrets created", ((string)(null)), ((global::Reqnroll.Table)(null)), "And ");
+#line hidden
+#line 28
+ await testRunner.AndAsync("vaultmanager is recreated successfully via bootstrapping", ((string)(null)), ((global::Reqnroll.Table)(null)), "And ");
+#line hidden
+#line 29
+ await testRunner.WhenAsync("vault is loaded", ((string)(null)), ((global::Reqnroll.Table)(null)), "When ");
+#line hidden
+#line 30
+ await testRunner.AndAsync("secret Secret1 is loaded and matches added", ((string)(null)), ((global::Reqnroll.Table)(null)), "And ");
+#line hidden
+#line 31
+ await testRunner.AndAsync("secret Secret2 is loaded and matches added", ((string)(null)), ((global::Reqnroll.Table)(null)), "And ");
+#line hidden
+#line 32
+ await testRunner.ThenAsync("secret Secret1 is marked for deletion", ((string)(null)), ((global::Reqnroll.Table)(null)), "Then ");
+#line hidden
+#line 33
+ await testRunner.AndAsync("web secret Secret2 password is updated to password123", ((string)(null)), ((global::Reqnroll.Table)(null)), "And ");
+#line hidden
+#line 34
+ await testRunner.AndAsync("vault is saved", ((string)(null)), ((global::Reqnroll.Table)(null)), "And ");
+#line hidden
 #line 35
- await testRunner.AndAsync("save results report 1 secrets deleted", ((string)(null)), ((global::Reqnroll.Table)(null)), "And ");
+ await testRunner.AndAsync("save results successful", ((string)(null)), ((global::Reqnroll.Table)(null)), "And ");
 #line hidden
 #line 36
- await testRunner.AndAsync("save results report 1 secrets updated", ((string)(null)), ((global::Reqnroll.Table)(null)), "And ");
+ await testRunner.AndAsync("save results report 1 secrets deleted", ((string)(null)), ((global::Reqnroll.Table)(null)), "And ");
 #line hidden
 #line 37
- await testRunner.AndAsync("vault is loaded", ((string)(null)), ((global::Reqnroll.Table)(null)), "And ");
+ await testRunner.AndAsync("save results report 1 secrets updated", ((string)(null)), ((global::Reqnroll.Table)(null)), "And ");
 #line hidden
 #line 38
- await testRunner.AndAsync("secret Secret1 does not exist", ((string)(null)), ((global::Reqnroll.Table)(null)), "And ");
+ await testRunner.AndAsync("vault is loaded", ((string)(null)), ((global::Reqnroll.Table)(null)), "And ");
 #line hidden
 #line 39
- await testRunner.AndAsync("secret Secret2 is loaded and matches added but with password password123", ((string)(null)), ((global::Reqnroll.Table)(null)), "And ");
+ await testRunner.AndAsync("secret Secret1 does not exist", ((string)(null)), ((global::Reqnroll.Table)(null)), "And ");
 #line hidden
 #line 40
- await testRunner.AndAsync("vault is verified", ((string)(null)), ((global::Reqnroll.Table)(null)), "And ");
+ await testRunner.AndAsync("secret Secret2 is loaded and matches added but with password password123", ((string)(null)), ((global::Reqnroll.Table)(null)), "And ");
 #line hidden
 #line 41
- await testRunner.AndAsync("verify results successful", ((string)(null)), ((global::Reqnroll.Table)(null)), "And ");
+ await testRunner.AndAsync("vault is verified", ((string)(null)), ((global::Reqnroll.Table)(null)), "And ");
 #line hidden
 #line 42
- await testRunner.AndAsync("verify results valid", ((string)(null)), ((global::Reqnroll.Table)(null)), "And ");
+ await testRunner.AndAsync("verify results successful", ((string)(null)), ((global::Reqnroll.Table)(null)), "And ");
 #line hidden
 #line 43
- await testRunner.AndAsync("vault listed", ((string)(null)), ((global::Reqnroll.Table)(null)), "And ");
+ await testRunner.AndAsync("verify results valid", ((string)(null)), ((global::Reqnroll.Table)(null)), "And ");
 #line hidden
 #line 44
- await testRunner.AndAsync("bootstrapper lists vault", ((string)(null)), ((global::Reqnroll.Table)(null)), "And ");
+ await testRunner.AndAsync("vault listed", ((string)(null)), ((global::Reqnroll.Table)(null)), "And ");
 #line hidden
 #line 45
+ await testRunner.AndAsync("bootstrapper lists vault", ((string)(null)), ((global::Reqnroll.Table)(null)), "And ");
+#line hidden
+#line 46
  await testRunner.AndAsync("vault deleted", ((string)(null)), ((global::Reqnroll.Table)(null)), "And ");
 #line hidden
             }
@@ -309,7 +312,7 @@ await this.FeatureBackgroundAsync();
                     "d, then delete the vault", null, tagsOfScenario, argumentsOfScenario, featureTags, pickleIndex);
             string[] tagsOfRule = ((string[])(null));
             global::Reqnroll.RuleInfo ruleInfo = null;
-#line 47
+#line 48
 this.ScenarioInitialize(scenarioInfo, ruleInfo);
 #line hidden
             if ((global::Reqnroll.TagHelper.ContainsIgnoreTag(scenarioInfo.CombinedTags) || global::Reqnroll.TagHelper.ContainsIgnoreTag(featureTags)))
@@ -322,10 +325,10 @@ this.ScenarioInitialize(scenarioInfo, ruleInfo);
 #line 5
 await this.FeatureBackgroundAsync();
 #line hidden
-#line 48
+#line 49
  await testRunner.GivenAsync("create a new vault", ((string)(null)), ((global::Reqnroll.Table)(null)), "Given ");
 #line hidden
-#line 49
+#line 50
  await testRunner.AndAsync("key derived from password foobar123", ((string)(null)), ((global::Reqnroll.Table)(null)), "And ");
 #line hidden
                 global::Reqnroll.Table table2 = new global::Reqnroll.Table(new string[] {
@@ -334,28 +337,28 @@ await this.FeatureBackgroundAsync();
                 table2.AddRow(new string[] {
                             "Data/secrets.csv",
                             "2"});
-#line 50
+#line 51
  await testRunner.AndAsync("secrets data read from csv file", ((string)(null)), table2, "And ");
 #line hidden
-#line 53
+#line 54
  await testRunner.AndAsync("imported secrets successfully mapped", ((string)(null)), ((global::Reqnroll.Table)(null)), "And ");
 #line hidden
-#line 54
+#line 55
  await testRunner.WhenAsync("mapped secrets added to vault", ((string)(null)), ((global::Reqnroll.Table)(null)), "When ");
 #line hidden
-#line 55
+#line 56
  await testRunner.ThenAsync("vault is saved", ((string)(null)), ((global::Reqnroll.Table)(null)), "Then ");
 #line hidden
-#line 56
+#line 57
  await testRunner.AndAsync("save results successful", ((string)(null)), ((global::Reqnroll.Table)(null)), "And ");
 #line hidden
-#line 57
+#line 58
  await testRunner.AndAsync("save results report 2 secrets created", ((string)(null)), ((global::Reqnroll.Table)(null)), "And ");
 #line hidden
-#line 58
+#line 59
  await testRunner.AndAsync("secrets match mapped secrets", ((string)(null)), ((global::Reqnroll.Table)(null)), "And ");
 #line hidden
-#line 59
+#line 60
  await testRunner.AndAsync("vault deleted", ((string)(null)), ((global::Reqnroll.Table)(null)), "And ");
 #line hidden
             }
