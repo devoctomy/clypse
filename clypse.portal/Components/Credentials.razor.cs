@@ -1,9 +1,10 @@
-using Microsoft.AspNetCore.Components;
-using clypse.portal.Models;
-using clypse.core.Secrets;
-using clypse.core.Vault;
-using clypse.core.Secrets.Import;
 using clypse.core.Enums;
+using clypse.core.Secrets;
+using clypse.core.Secrets.Import;
+using clypse.core.Vault;
+using clypse.portal.Models;
+using Microsoft.AspNetCore.Components;
+using System.Linq;
 
 namespace clypse.portal.Components;
 
@@ -254,7 +255,9 @@ public partial class Credentials : ComponentBase
         // Initialize filtered entries with sorted list
         if (CurrentVault?.IndexEntries != null)
         {
-            filteredEntries = [.. CurrentVault.IndexEntries.OrderBy(e => e.Name)];
+            filteredEntries = CurrentVault.IndexEntries
+                .OrderBy(e => e.Name, StringComparer.OrdinalIgnoreCase)
+                .ToList();
         }
         else
         {
@@ -272,18 +275,21 @@ public partial class Credentials : ComponentBase
 
         if (string.IsNullOrWhiteSpace(searchTerm))
         {
-            filteredEntries = [.. CurrentVault.IndexEntries.OrderBy(e => e.Name)];
+            filteredEntries = CurrentVault.IndexEntries
+                .OrderBy(x => x.Name, StringComparer.OrdinalIgnoreCase)
+                .ToList();
 
-            return;
+          return;
         }
 
         var term = searchTerm.Trim().ToLower();
-        filteredEntries = [.. CurrentVault.IndexEntries
+        filteredEntries = CurrentVault.IndexEntries
             .Where(entry => 
                 (entry.Name?.Contains(term, StringComparison.OrdinalIgnoreCase) ?? false) ||
                 (entry.Description?.Contains(term, StringComparison.OrdinalIgnoreCase) ?? false) ||
                 (entry.Tags?.Contains(term, StringComparison.OrdinalIgnoreCase) ?? false))
-            .OrderBy(e => e.Name)];
+            .OrderBy(e => e.Name, StringComparer.OrdinalIgnoreCase)
+            .ToList();
     }
 
     private void ClearSearch()
