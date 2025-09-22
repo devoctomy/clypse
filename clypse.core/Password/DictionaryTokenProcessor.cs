@@ -8,15 +8,15 @@ namespace clypse.core.Password;
 /// </summary>
 public class DictionaryTokenProcessor : IPasswordGeneratorTokenProcessor
 {
-    private readonly IDictionaryLoaderService dictionaryLoaderService;
+    private readonly IEmbeddedResorceLoaderService embeddedResorceLoaderService;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="DictionaryTokenProcessor"/> class.
     /// </summary>
-    /// <param name="dictionaryLoaderService">The dictionary loader service to use.</param>
-    public DictionaryTokenProcessor(IDictionaryLoaderService dictionaryLoaderService)
+    /// <param name="embeddedResorceLoaderService">The service used to load embedded resources.</param>
+    public DictionaryTokenProcessor(IEmbeddedResorceLoaderService embeddedResorceLoaderService)
     {
-        this.dictionaryLoaderService = dictionaryLoaderService;
+        this.embeddedResorceLoaderService = embeddedResorceLoaderService;
     }
 
     /// <summary>
@@ -50,8 +50,10 @@ public class DictionaryTokenProcessor : IPasswordGeneratorTokenProcessor
 
         if (Enum.TryParse<DictionaryType>(dictionary, true, out var dictType))
         {
-            var words = await this.dictionaryLoaderService.LoadDictionaryAsync(
-                $"{dictType.ToString().ToLower()}.txt",
+            var resourceKey = $"clypse.core.Data.Dictionaries.{dictType.ToString().ToLower()}.txt";
+            var words = await this.embeddedResorceLoaderService.LoadHashSetAsync(
+                resourceKey,
+                typeof(DictionaryTokenProcessor).Assembly,
                 cancellationToken);
             if (words == null || words.Count == 0)
             {

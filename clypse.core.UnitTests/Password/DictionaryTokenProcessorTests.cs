@@ -3,6 +3,7 @@ using clypse.core.Data;
 using clypse.core.Enums;
 using clypse.core.Password;
 using Moq;
+using System.Reflection;
 
 namespace clypse.core.UnitTests.Password;
 
@@ -19,8 +20,8 @@ public class DictionaryTokenProcessorTests
         bool expectedResult)
     {
         // Arrange
-        var mockDictionaryLoaderService = new Mock<IDictionaryLoaderService>();
-        var sut = new DictionaryTokenProcessor(mockDictionaryLoaderService.Object);
+        var mockEmbeddedResorceLoaderService = new Mock<IEmbeddedResorceLoaderService>();
+        var sut = new DictionaryTokenProcessor(mockEmbeddedResorceLoaderService.Object);
 
         // Act
         var result = sut.IsApplicable(token);
@@ -34,10 +35,10 @@ public class DictionaryTokenProcessorTests
     {
         // Arrange
         var token = "dict(verb)";
-        var mockDictionaryLoaderService = new Mock<IDictionaryLoaderService>();
+        var mockEmbeddedResorceLoaderService = new Mock<IEmbeddedResorceLoaderService>();
         var mockRandomGeneratorService = new Mock<IRandomGeneratorService>();
         var mockPasswordGeneratorService = new Mock<IPasswordGeneratorService>();
-        var sut = new DictionaryTokenProcessor(mockDictionaryLoaderService.Object);
+        var sut = new DictionaryTokenProcessor(mockEmbeddedResorceLoaderService.Object);
 
         var words = new List<string>
         {
@@ -47,9 +48,10 @@ public class DictionaryTokenProcessorTests
         };
         var expectedWord = words[1];
 
-        mockDictionaryLoaderService.Setup(
-            x => x.LoadDictionaryAsync(
-            It.Is<string>(y => y == "verb.txt"),
+        mockEmbeddedResorceLoaderService.Setup(
+            x => x.LoadHashSetAsync(
+            It.Is<string>(y => y == "clypse.core.Data.Dictionaries.verb.txt"),
+            It.IsAny<Assembly?>(),
             It.IsAny<CancellationToken>()))
             .ReturnsAsync([.. words]);
 
@@ -71,9 +73,10 @@ public class DictionaryTokenProcessorTests
         // Assert
         Assert.Equal(expectedWord, result);
 
-        mockDictionaryLoaderService.Verify(
-            x => x.LoadDictionaryAsync(
-            It.Is<string>(y => y == "verb.txt"),
+        mockEmbeddedResorceLoaderService.Verify(
+            x => x.LoadHashSetAsync(
+            It.Is<string>(y => y == "clypse.core.Data.Dictionaries.verb.txt"),
+            It.IsAny<Assembly?>(),
             It.IsAny<CancellationToken>()), Times.Once);
         mockRandomGeneratorService.Verify(
             x => x.GetRandomArrayEntry<string>(
@@ -85,9 +88,9 @@ public class DictionaryTokenProcessorTests
     {
         // Arrange
         var token = "dict(foo)";
-        var mockDictionaryLoaderService = new Mock<IDictionaryLoaderService>();
+        var mockEmbeddedResorceLoaderService = new Mock<IEmbeddedResorceLoaderService>();
         var mockPasswordGeneratorService = new Mock<IPasswordGeneratorService>();
-        var sut = new DictionaryTokenProcessor(mockDictionaryLoaderService.Object);
+        var sut = new DictionaryTokenProcessor(mockEmbeddedResorceLoaderService.Object);
 
         // Act
         var result = await sut.ProcessAsync(
@@ -105,10 +108,10 @@ public class DictionaryTokenProcessorTests
         // Arrange
         var token = $"dict({DictionaryType.Verb.ToString().ToLower()}|{DictionaryType.Adjective.ToString().ToLower()}|{DictionaryType.Noun.ToString().ToLower()})";
         using var randomGeneratorService = new RandomGeneratorService();
-        var mockDictionaryLoaderService = new Mock<IDictionaryLoaderService>();
+        var mockEmbeddedResorceLoaderService = new Mock<IEmbeddedResorceLoaderService>();
         var mockRandomGeneratorService = new Mock<IRandomGeneratorService>();
         var mockPasswordGeneratorService = new Mock<IPasswordGeneratorService>();
-        var sut = new DictionaryTokenProcessor(mockDictionaryLoaderService.Object);
+        var sut = new DictionaryTokenProcessor(mockEmbeddedResorceLoaderService.Object);
 
         var words = new List<string>
         {
@@ -118,21 +121,24 @@ public class DictionaryTokenProcessorTests
         };
         var expectedWord = words[1];
 
-        mockDictionaryLoaderService.Setup(
-            x => x.LoadDictionaryAsync(
-                It.Is<string>(y => y == $"{DictionaryType.Verb.ToString().ToLower()}.txt"),
+        mockEmbeddedResorceLoaderService.Setup(
+            x => x.LoadHashSetAsync(
+                It.Is<string>(y => y == $"clypse.core.Data.Dictionaries.{DictionaryType.Verb.ToString().ToLower()}.txt"),
+                It.IsAny<Assembly?>(),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(["verb"]);
 
-        mockDictionaryLoaderService.Setup(
-            x => x.LoadDictionaryAsync(
-                It.Is<string>(y => y == $"{DictionaryType.Adjective.ToString().ToLower()}.txt"),
+        mockEmbeddedResorceLoaderService.Setup(
+            x => x.LoadHashSetAsync(
+                It.Is<string>(y => y == $"clypse.core.Data.Dictionaries.{DictionaryType.Adjective.ToString().ToLower()}.txt"),
+                It.IsAny<Assembly?>(),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(["adjective"]);
 
-        mockDictionaryLoaderService.Setup(
-            x => x.LoadDictionaryAsync(
-                It.Is<string>(y => y == $"{DictionaryType.Noun.ToString().ToLower()}.txt"),
+        mockEmbeddedResorceLoaderService.Setup(
+            x => x.LoadHashSetAsync(
+                It.Is<string>(y => y == $"clypse.core.Data.Dictionaries.{DictionaryType.Noun.ToString().ToLower()}.txt"),
+                It.IsAny<Assembly?>(),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(["noun"]);
 

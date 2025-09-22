@@ -1,6 +1,5 @@
 ﻿using System.Reflection;
-using System.Runtime.CompilerServices;
-using clypse.core.Compression;
+using clypse.core.Data;
 using clypse.core.Enums;
 
 namespace clypse.core.Password;
@@ -8,10 +7,12 @@ namespace clypse.core.Password;
 /// <summary>
 /// Service for estimating the complexity of passwords.
 /// </summary>
-public class StandardWesternPasswordComplexityEstimatorService : IPasswordComplexityEstimatorService
+#pragma warning disable CS9113 // Parameter is unrea. It is used but is excluded in DEBUG configuration.
+public class StandardWesternPasswordComplexityEstimatorService(
+    IEmbeddedResorceLoaderService embeddedResorceLoaderService)
+    : IPasswordComplexityEstimatorService
+#pragma warning restore CS9113 // Parameter is unread.
 {
-    private static HashSet<string>? weakKnownPasswords;
-
     /// <summary>
     /// Estimates the entropy of the given password.
     /// </summary>
@@ -92,7 +93,7 @@ public class StandardWesternPasswordComplexityEstimatorService : IPasswordComple
         var entropy = (int)Math.Round(this.EstimateEntropy(password), 0);
         var complexity = PasswordComplexityEstimation.Unknown;
 
-        if (checkForPwnedPasswords && await IsWeakKnownPasswordAsync(password, cancellationToken))
+        if (checkForPwnedPasswords && await this.IsWeakKnownPasswordAsync(password, cancellationToken))
         {
             return new PasswordComplexityEstimatorResults
             {
@@ -135,10 +136,12 @@ public class StandardWesternPasswordComplexityEstimatorService : IPasswordComple
         };
     }
 
-    private static async Task<bool> IsWeakKnownPasswordAsync(
+    private async Task<bool> IsWeakKnownPasswordAsync(
         string password,
         CancellationToken cancellationToken)
     {
+        HashSet<string>? weakKnownPasswords = default;
+
 #if DEBUG
         await Task.Yield();
         weakKnownPasswords =
@@ -146,24 +149,12 @@ public class StandardWesternPasswordComplexityEstimatorService : IPasswordComple
             "password123",
         ];
 #else
-        weakKnownPasswords ??= await LoadWeakKnownPasswordsDictionaryAsync(cancellationToken);
+        weakKnownPasswords ??= await embeddedResorceLoaderService.LoadCompressedHashSetAsync(
+            $"clypse.core.Data.Dictionaries.weakknownpasswords.txt.gz",
+            Assembly.GetExecutingAssembly(),
+            cancellationToken);
 #endif
 
         return weakKnownPasswords.Contains(password);
-    }
-
-    private static async Task<HashSet<string>> LoadWeakKnownPasswordsDictionaryAsync(CancellationToken cancellationToken)
-    {
-        var dictionaryKey = $"clypse.core.Data.Dictionaries.weakknownpasswords.txt.gz";
-        var assembly = Assembly.GetExecutingAssembly();
-        using Stream? compressedStream = assembly.GetManifestResourceStream(dictionaryKey) ?? throw new InvalidOperationException($"Resource '{dictionaryKey}' not found.");
-        var compressionService = new GZipCompressionService();
-        var decompressedStream = new MemoryStream();
-        await compressionService.DecompressAsync(compressedStream, decompressedStream, cancellationToken);
-        decompressedStream.Seek(0, SeekOrigin.Begin);
-        using var reader = new StreamReader(decompressedStream);
-        string content = await reader.ReadToEndAsync(cancellationToken);
-        var lines = content.Split("\r\n");
-        return [.. lines];
     }
 }

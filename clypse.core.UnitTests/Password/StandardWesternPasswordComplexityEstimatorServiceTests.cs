@@ -1,4 +1,5 @@
-﻿using clypse.core.Enums;
+﻿using clypse.core.Data;
+using clypse.core.Enums;
 using clypse.core.Password;
 
 namespace clypse.core.UnitTests.Password;
@@ -16,7 +17,8 @@ public class StandardWesternPasswordComplexityEstimatorServiceTests
         int estimatedScore)
     {
         // Arrange
-        var sut = new StandardWesternPasswordComplexityEstimatorService();
+        var mockEmbeddedResourceLoaderService = new Moq.Mock<IEmbeddedResorceLoaderService>();
+        var sut = new StandardWesternPasswordComplexityEstimatorService(mockEmbeddedResourceLoaderService.Object);
 
         // Act
         var score = sut.EstimateEntropy(password);
@@ -38,7 +40,8 @@ public class StandardWesternPasswordComplexityEstimatorServiceTests
         PasswordComplexityEstimation expectedEstimation)
     {
         // Arrange
-        var sut = new StandardWesternPasswordComplexityEstimatorService();
+        var mockEmbeddedResourceLoaderService = new Moq.Mock<IEmbeddedResorceLoaderService>();
+        var sut = new StandardWesternPasswordComplexityEstimatorService(mockEmbeddedResourceLoaderService.Object);
 
         // Act
         var estimation = await sut.EstimateAsync(password, false, CancellationToken.None);
