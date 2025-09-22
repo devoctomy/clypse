@@ -7,14 +7,13 @@
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
   <ItemGroup>
-    <None Remove="Data\Dictionaries\weakknownpasswords.txt.gz" />
     <None Remove="Data\Lists\SsoProviders.txt" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Data\Dictionaries\adjective.txt" />
-    <EmbeddedResource Include="Data\Dictionaries\noun.txt" />
-    <EmbeddedResource Include="Data\Dictionaries\verb.txt" />
-    <EmbeddedResource Include="Data\Dictionaries\weakknownpasswords.txt.gz" />
+    <EmbeddedResource Include="Data\Lists\adjective.txt" />
+    <EmbeddedResource Include="Data\Lists\noun.txt" />
+    <EmbeddedResource Include="Data\Lists\verb.txt" />
+    <EmbeddedResource Include="Data\Lists\weakknownpasswords.txt.gz" />
     <EmbeddedResource Include="Data\Lists\ssoproviders.txt" />
   </ItemGroup>
   <ItemGroup>

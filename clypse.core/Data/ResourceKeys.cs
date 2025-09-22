@@ -13,20 +13,20 @@ public static class ResourceKeys
     /// <summary>
     /// GZip Compressed weak known passwords.
     /// </summary>
-    public const string CompressedWeakKnownPasswordsResourceKey = "clypse.core.Data.Dictionaries.weakknownpasswords.txt.gz";
+    public const string CompressedWeakKnownPasswordsResourceKey = "clypse.core.Data.Lists.weakknownpasswords.txt.gz";
 
     /// <summary>
     /// Adjectives.
     /// </summary>
-    public const string AdjectivesResourceKey = "clypse.core.Data.Dictionaries.adjective.txt";
+    public const string AdjectivesResourceKey = "clypse.core.Data.Lists.adjective.txt";
 
     /// <summary>
     /// Nouns.
     /// </summary>
-    public const string NounResourceKey = "clypse.core.Data.Dictionaries.noun.txt";
+    public const string NounResourceKey = "clypse.core.Data.Lists.noun.txt";
 
     /// <summary>
     /// Verb.
     /// </summary>
-    public const string VerbResourceKey = "clypse.core.Data.Dictionaries.verb.txt";
+    public const string VerbResourceKey = "clypse.core.Data.Lists.verb.txt";
 }

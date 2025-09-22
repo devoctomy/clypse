@@ -50,7 +50,7 @@ public class DictionaryTokenProcessorTests
 
         mockEmbeddedResorceLoaderService.Setup(
             x => x.LoadHashSetAsync(
-            It.Is<string>(y => y == "clypse.core.Data.Dictionaries.verb.txt"),
+            It.Is<string>(y => y == "clypse.core.Data.Lists.verb.txt"),
             It.IsAny<Assembly?>(),
             It.IsAny<CancellationToken>()))
             .ReturnsAsync([.. words]);
@@ -75,7 +75,7 @@ public class DictionaryTokenProcessorTests
 
         mockEmbeddedResorceLoaderService.Verify(
             x => x.LoadHashSetAsync(
-            It.Is<string>(y => y == "clypse.core.Data.Dictionaries.verb.txt"),
+            It.Is<string>(y => y == "clypse.core.Data.Lists.verb.txt"),
             It.IsAny<Assembly?>(),
             It.IsAny<CancellationToken>()), Times.Once);
         mockRandomGeneratorService.Verify(
@@ -123,21 +123,21 @@ public class DictionaryTokenProcessorTests
 
         mockEmbeddedResorceLoaderService.Setup(
             x => x.LoadHashSetAsync(
-                It.Is<string>(y => y == $"clypse.core.Data.Dictionaries.{DictionaryType.Verb.ToString().ToLower()}.txt"),
+                It.Is<string>(y => y == $"clypse.core.Data.Lists.{DictionaryType.Verb.ToString().ToLower()}.txt"),
                 It.IsAny<Assembly?>(),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(["verb"]);
 
         mockEmbeddedResorceLoaderService.Setup(
             x => x.LoadHashSetAsync(
-                It.Is<string>(y => y == $"clypse.core.Data.Dictionaries.{DictionaryType.Adjective.ToString().ToLower()}.txt"),
+                It.Is<string>(y => y == $"clypse.core.Data.Lists.{DictionaryType.Adjective.ToString().ToLower()}.txt"),
                 It.IsAny<Assembly?>(),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(["adjective"]);
 
         mockEmbeddedResorceLoaderService.Setup(
             x => x.LoadHashSetAsync(
-                It.Is<string>(y => y == $"clypse.core.Data.Dictionaries.{DictionaryType.Noun.ToString().ToLower()}.txt"),
+                It.Is<string>(y => y == $"clypse.core.Data.Lists.{DictionaryType.Noun.ToString().ToLower()}.txt"),
                 It.IsAny<Assembly?>(),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(["noun"]);

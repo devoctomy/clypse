@@ -9,9 +9,9 @@ namespace clypse.core.Data;
 public class EmbeddedResorceLoaderService : IEmbeddedResorceLoaderService
 {
     /// <summary>
-    /// A cache of loaded dictionaries to avoid redundant loading.
+    /// A cache of loaded hashsets to avoid redundant loading.
     /// </summary>
-    public static readonly Dictionary<string, HashSet<string>> CachedDictionaries = [];
+    public static readonly Dictionary<string, HashSet<string>> CachedHashSets = [];
 
     /// <summary>
     /// Loads a gzip compressed hash set from an embedded resource.
@@ -26,7 +26,7 @@ public class EmbeddedResorceLoaderService : IEmbeddedResorceLoaderService
         Assembly? resourceAssembly,
         CancellationToken cancellationToken)
     {
-        if (CachedDictionaries.TryGetValue(resourceKey, out var cachedHashSet))
+        if (CachedHashSets.TryGetValue(resourceKey, out var cachedHashSet))
         {
             return cachedHashSet;
         }
@@ -41,9 +41,9 @@ public class EmbeddedResorceLoaderService : IEmbeddedResorceLoaderService
         string content = await reader.ReadToEndAsync(cancellationToken);
         var lines = content.Split("\r\n");
 
-        CachedDictionaries[resourceKey] = new HashSet<string>([.. lines]);
+        CachedHashSets[resourceKey] = new HashSet<string>([.. lines]);
 
-        return CachedDictionaries[resourceKey];
+        return CachedHashSets[resourceKey];
     }
 
     /// <summary>
@@ -59,7 +59,7 @@ public class EmbeddedResorceLoaderService : IEmbeddedResorceLoaderService
         Assembly? resourceAssembly,
         CancellationToken cancellationToken)
     {
-        if (CachedDictionaries.TryGetValue(resourceKey, out var cachedHashSet))
+        if (CachedHashSets.TryGetValue(resourceKey, out var cachedHashSet))
         {
             return cachedHashSet;
         }
@@ -74,8 +74,8 @@ public class EmbeddedResorceLoaderService : IEmbeddedResorceLoaderService
             lines.Add(line);
         }
 
-        CachedDictionaries[resourceKey] = new HashSet<string>([.. lines]);
+        CachedHashSets[resourceKey] = new HashSet<string>([.. lines]);
 
-        return CachedDictionaries[resourceKey];
+        return CachedHashSets[resourceKey];
     }
 }

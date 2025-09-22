@@ -43,7 +43,7 @@ public class EmbeddedResorceLoaderServiceTests
         Assert.Equal(32, hashSet1.Count);
         Assert.Contains("starfruit", hashSet1);
         Assert.Equal(hashSet1, hashSet2);
-        Assert.Equal(EmbeddedResorceLoaderService.CachedDictionaries[key], hashSet1);
+        Assert.Equal(EmbeddedResorceLoaderService.CachedHashSets[key], hashSet1);
     }
 
     [Fact]
@@ -85,7 +85,7 @@ public class EmbeddedResorceLoaderServiceTests
         Assert.Equal(32, hashSet1.Count);
         Assert.Contains("starfruit", hashSet1);
         Assert.Equal(hashSet1, hashSet2);
-        Assert.Equal(EmbeddedResorceLoaderService.CachedDictionaries[key], hashSet1);
+        Assert.Equal(EmbeddedResorceLoaderService.CachedHashSets[key], hashSet1);
     }
 
     [Fact]
