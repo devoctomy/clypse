@@ -150,7 +150,7 @@ public class StandardWesternPasswordComplexityEstimatorService(
         ];
 #else
         weakKnownPasswords ??= await embeddedResorceLoaderService.LoadCompressedHashSetAsync(
-            $"clypse.core.Data.Dictionaries.weakknownpasswords.txt.gz",
+            ResourceKeys.CompressedWeakKnownPasswordsResourceKey,
             Assembly.GetExecutingAssembly(),
             cancellationToken);
 #endif

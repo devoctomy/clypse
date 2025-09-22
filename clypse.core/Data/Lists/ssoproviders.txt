@@ -1,3 +1,11 @@
-﻿Facebook
+﻿Amazon
+Apple
+Facebook
+GitHub
 Google
+LinkedIn
 Microsoft
+Okta
+OneLogin
+Ping
+Twitter (X)

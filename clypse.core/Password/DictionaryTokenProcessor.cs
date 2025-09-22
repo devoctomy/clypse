@@ -50,9 +50,8 @@ public class DictionaryTokenProcessor : IPasswordGeneratorTokenProcessor
 
         if (Enum.TryParse<DictionaryType>(dictionary, true, out var dictType))
         {
-            var resourceKey = $"clypse.core.Data.Dictionaries.{dictType.ToString().ToLower()}.txt";
             var words = await this.embeddedResorceLoaderService.LoadHashSetAsync(
-                resourceKey,
+                GetResourceKey(dictType),
                 typeof(DictionaryTokenProcessor).Assembly,
                 cancellationToken);
             if (words == null || words.Count == 0)
@@ -65,5 +64,16 @@ public class DictionaryTokenProcessor : IPasswordGeneratorTokenProcessor
         }
 
         return string.Empty;
+    }
+
+    private static string GetResourceKey(DictionaryType dictionaryType)
+    {
+        return dictionaryType switch
+        {
+            DictionaryType.Adjective => ResourceKeys.AdjectivesResourceKey,
+            DictionaryType.Verb => ResourceKeys.VerbResourceKey,
+            DictionaryType.Noun => ResourceKeys.NounResourceKey,
+            _ => throw new NotImplementedException($"Dictionary type {dictionaryType} is not supported."),
+        };
     }
 }
