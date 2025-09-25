@@ -47,6 +47,7 @@
                         @foreach (var item in navigationItems.Where(i => i.Action != "delete-vault"))
                         {
                             <button class="btn @item.ButtonClass btn-sm w-100 mb-2 sidebar-btn-responsive" 
+                                    id="@($"nav-{item.Action}-button")"
                                     title="@item.Text"
                                     @onclick="() => HandleNavigationAction(item.Action)">
                                 <i class="@item.Icon sidebar-icon-responsive"></i>
@@ -59,6 +60,7 @@
                         var deleteItem = navigationItems.First(i => i.Action == "delete-vault");
                         <div class="mb-3">
                             <button class="btn @deleteItem.ButtonClass btn-sm w-100 mb-2 sidebar-btn-responsive" 
+                                    id="@($"nav-{deleteItem.Action}-button")"
                                     title="@deleteItem.Text"
                                     @onclick="() => HandleNavigationAction(deleteItem.Action)">
                                 <i class="@deleteItem.Icon sidebar-icon-responsive"></i>

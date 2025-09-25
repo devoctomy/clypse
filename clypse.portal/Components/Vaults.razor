@@ -16,17 +16,17 @@
     }
     else if (vaults == null || vaults.Count == 0)
     {
-        <div class="alert alert-info" role="alert">
+        <div class="alert alert-info" role="alert" id="no-vaults-found">
             <h5 class="alert-heading">No Vaults Found</h5>
             <p>No vaults are available. Click the "Refresh" button to search for vaults.</p>
         </div>
     }
     else
     {
-        <div class="vaults-grid-responsive">
+        <div class="vaults-grid-responsive" id="vaults-list">
             @foreach (var vault in vaults)
             {
-                <div class="vault-card-responsive" @onclick="() => ShowPassphrasePanel(vault)">
+                <div class="vault-card-responsive" data-vault-id="@vault.Id" @onclick="() => ShowPassphrasePanel(vault)">
                     <div class="vault-lock-icon-responsive">
                         <i class="bi bi-lock-fill"></i>
                     </div>

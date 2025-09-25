@@ -39,7 +39,7 @@
                     <button type="button" class="btn btn-secondary" @onclick="OnCancelClick" disabled="@IsUnlocking">
                         Cancel
                     </button>
-                    <button type="button" class="btn btn-primary" @onclick="OnUnlockClick" disabled="@IsUnlocking">
+                    <button type="button" class="btn btn-primary" id="unlock-vault-button" @onclick="OnUnlockClick" disabled="@IsUnlocking">
                         @if (IsUnlocking)
                         {
                             <span class="spinner-border spinner-border-sm me-2" role="status"></span>

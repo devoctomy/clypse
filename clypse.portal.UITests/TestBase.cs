@@ -48,15 +48,11 @@ public class TestBase : PageTest
             StartInfo = new ProcessStartInfo
             {
                 FileName = "dotnet",
-                Arguments = $"run --project \"{projectPath}\" --urls=\"{ServerUrl}\"",
+                Arguments = $"run --project \"{projectPath}\" --configuration Release --urls=\"{ServerUrl}\"",
                 UseShellExecute = false,
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
-                CreateNoWindow = true,
-                EnvironmentVariables =
-                {
-                    ["ASPNETCORE_ENVIRONMENT"] = "Development"
-                }
+                CreateNoWindow = true
             }
         };
 
