@@ -53,11 +53,12 @@ public partial class Test : ComponentBase
 #pragma warning disable CS0162 // Unreachable code detected
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (!Globals.IsDebugBuild)
-        {
-            Navigation.NavigateTo("/");
-            return;
-        }
+        // Allow this for now
+        ////if (!Globals.IsDebugBuild)
+        ////{
+        ////    Navigation.NavigateTo("/");
+        ////    return;
+        ////}
 
         if (firstRender)
         {
