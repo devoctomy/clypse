@@ -250,6 +250,102 @@ public partial class Test : ComponentBase
             CancellationToken.None);
     }
 
+    private async Task HandleWebAuthnEncrypt()
+    {
+        try
+        {
+            Console.WriteLine("Starting WebAuthn encryption...");
+            
+            // Use WebAuthn to authenticate and encrypt text
+            var result = await JSRuntime.InvokeAsync<WebAuthnResult>("WebAuthnPrf.encrypt", "hello world");
+            
+            Console.WriteLine($"WebAuthn result received - Success: {result?.Success}, Error: {result?.Error}");
+            
+            if (result?.Success == true)
+            {
+                // Store the encrypted data in localStorage
+                await JSRuntime.InvokeVoidAsync("localStorage.setItem", "webauthn_encrypted_data", result.EncryptedDataBase64);
+                
+                // Log the base64 encoded cipher text
+                Console.WriteLine($"WebAuthn Encrypted Data (Base64): {result.EncryptedDataBase64}");
+                Console.WriteLine($"Key Derivation Method: {result.KeyDerivationMethod ?? "Unknown"}");
+                
+                // Set success message
+                var method = result.KeyDerivationMethod == "PRF" ? "PRF (biometric)" : "Credential ID (PIN)";
+                clypseTestResult = $"WebAuthn encryption successful using {method}! Encrypted data stored in localStorage. Base64: {result.EncryptedDataBase64}";
+                clypseTestError = null;
+            }
+            else
+            {
+                clypseTestError = $"WebAuthn encryption failed: {result?.Error ?? "Unknown error"}";
+                clypseTestResult = null;
+            }
+        }
+        catch (Exception ex)
+        {
+            clypseTestError = $"WebAuthn encryption error: {ex.Message}";
+            clypseTestResult = null;
+        }
+        
+        StateHasChanged();
+    }
+
+    private async Task HandleWebAuthnDecrypt()
+    {
+        try
+        {
+            // Check if encrypted data exists first
+            var encryptedData = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "webauthn_encrypted_data");
+            
+            if (string.IsNullOrEmpty(encryptedData))
+            {
+                // No encrypted data found - do nothing (no error message)
+                Console.WriteLine("No encrypted data found in localStorage - skipping decrypt test");
+                return;
+            }
+            
+            Console.WriteLine("Starting WebAuthn decryption test...");
+            
+            // Use WebAuthn to authenticate and decrypt stored data
+            var result = await JSRuntime.InvokeAsync<WebAuthnDecryptResult>("WebAuthnPrf.decrypt", "");
+            
+            Console.WriteLine($"WebAuthn decrypt result received - Success: {result?.Success}, Error: {result?.Error}");
+            
+            if (result?.Success == true)
+            {
+                Console.WriteLine($"Decrypted plaintext: '{result.Plaintext}'");
+                Console.WriteLine($"Key Derivation Method: {result.KeyDerivationMethod ?? "Unknown"}");
+                
+                // Check if decrypted text matches expected value
+                if (result.Plaintext == "hello world")
+                {
+                    var method = result.KeyDerivationMethod == "PRF" ? "PRF (biometric)" : "Credential ID (PIN)";
+                    clypseTestResult = $"WebAuthn decrypt test SUCCESSFUL using {method}! Decrypted text matches expected 'hello world'";
+                    clypseTestError = null;
+                    Console.WriteLine("WebAuthn decrypt test PASSED - plaintext matches expected value");
+                }
+                else
+                {
+                    clypseTestError = $"WebAuthn decrypt test FAILED - expected 'hello world' but got '{result.Plaintext}'";
+                    clypseTestResult = null;
+                    Console.WriteLine($"WebAuthn decrypt test FAILED - plaintext mismatch");
+                }
+            }
+            else
+            {
+                clypseTestError = $"WebAuthn decryption failed: {result?.Error ?? "Unknown error"}";
+                clypseTestResult = null;
+            }
+        }
+        catch (Exception ex)
+        {
+            clypseTestError = $"WebAuthn decryption error: {ex.Message}";
+            clypseTestResult = null;
+        }
+        
+        StateHasChanged();
+    }
+
     private class LoginResult
     {
         public bool Success { get; set; }
@@ -266,5 +362,21 @@ public partial class Test : ComponentBase
         public string SessionToken { get; set; } = string.Empty;
         public string Expiration { get; set; } = string.Empty;
         public string IdentityId { get; set; } = string.Empty;
+    }
+
+    private class WebAuthnResult
+    {
+        public bool Success { get; set; }
+        public string? Error { get; set; }
+        public string? EncryptedDataBase64 { get; set; }
+        public string? KeyDerivationMethod { get; set; }
+    }
+
+    private class WebAuthnDecryptResult
+    {
+        public bool Success { get; set; }
+        public string? Error { get; set; }
+        public string? Plaintext { get; set; }
+        public string? KeyDerivationMethod { get; set; }
     }
 }

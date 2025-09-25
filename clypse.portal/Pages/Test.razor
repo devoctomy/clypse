@@ -184,7 +184,7 @@
                     <h3 class="text-center">Cryptography Tests</h3>
                 </div>
                 <div class="card-body">
-                    <div class="d-grid">
+                    <div class="d-grid gap-2">
                         <button class="btn btn-primary" @onclick="HandleTestKeyDerivation" disabled="@isTestingKeyDerivation">
                             @if (isTestingKeyDerivation)
                             {
@@ -195,6 +195,14 @@
                             {
                                 <span>Test Key Derivation Algorithms</span>
                             }
+                        </button>
+                        
+                        <button class="btn btn-info" @onclick="HandleWebAuthnEncrypt">
+                            <span>WebAuthn Encrypt</span>
+                        </button>
+                        
+                        <button class="btn btn-warning" @onclick="HandleWebAuthnDecrypt">
+                            <span>WebAuthn Decrypt</span>
                         </button>
                     </div>
                 </div>
