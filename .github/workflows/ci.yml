@@ -16,6 +16,9 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: mcr.microsoft.com/playwright/dotnet:v1.55.0-noble
+    concurrency:
+      group: ui-tests-sequential
+      cancel-in-progress: false
     
     steps:
     - name: Checkout code
