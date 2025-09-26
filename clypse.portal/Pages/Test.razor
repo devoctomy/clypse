@@ -190,7 +190,7 @@
                     @if (!string.IsNullOrEmpty(webAuthnTestMessage))
                     {
                         <div class="alert @(webAuthnTestSuccess ? "alert-success" : "alert-danger") mb-3" role="alert">
-                            <strong>@(webAuthnTestSuccess ? "SUCCESS" : "ERROR"):</strong> @webAuthnTestMessage
+                            <strong>@(webAuthnTestSuccess ? "SUCCESS" : "ERROR"):</strong> @((MarkupString)webAuthnTestMessage)
                         </div>
                     }
                     

@@ -289,9 +289,19 @@ public partial class Test : ComponentBase
                 Console.WriteLine($"WebAuthn Encrypted Data (Base64): {result.EncryptedDataBase64}");
                 Console.WriteLine($"Key Derivation Method: {result.KeyDerivationMethod ?? "Unknown"}");
                 
-                // Set success message for UI display
+                // Build detailed diagnostic message for mobile viewing
                 var method = result.KeyDerivationMethod == "PRF" ? "PRF (biometric)" : "Credential ID (PIN)";
-                var message = $"Encryption successful using {method} method. Data stored in localStorage.";
+                var diagnostics = result.Diagnostics;
+                
+                var message = $"<strong>✅ Encryption successful using {method} method!</strong><br><br>" +
+                             $"🔧 <strong>Platform:</strong> {diagnostics?.Platform}<br>" +
+                             $"🔑 <strong>Method:</strong> {result.KeyDerivationMethod}<br>" +
+                             $"🛡️ <strong>Authenticator:</strong> {diagnostics?.AuthenticatorType}<br>" +
+                             $"📊 <strong>PRF Supported:</strong> {(diagnostics?.PrfSupported == true ? "Yes" : "No")}<br>" +
+                             $"📋 <strong>PRF Results:</strong> {(diagnostics?.PrfResultsAvailable == true ? "Available" : "Not Available")}<br>" +
+                             $"🆔 <strong>Credential ID:</strong> {diagnostics?.CredentialIdLength} bytes<br>" +
+                             $"💾 <strong>Data stored in localStorage</strong>";
+                             
                 SetWebAuthnMessage(message, true);
                 
                 // Clear old test results
@@ -347,13 +357,26 @@ public partial class Test : ComponentBase
                 if (result.Plaintext == "hello world")
                 {
                     var method = result.KeyDerivationMethod == "PRF" ? "PRF (biometric)" : "Credential ID (PIN)";
-                    var message = $"SUCCESSFUL TEST! Decryption successful using {method} method. Plaintext matches expected value.";
+                    var diagnostics = result.Diagnostics;
+                    
+                    var message = $"<strong>✅ SUCCESSFUL TEST! Decryption successful!</strong><br><br>" +
+                                 $"📝 <strong>Decrypted:</strong> '{result.Plaintext}'<br>" +
+                                 $"🔧 <strong>Platform:</strong> {diagnostics?.Platform}<br>" +
+                                 $"🔑 <strong>Method:</strong> {result.KeyDerivationMethod}<br>" +
+                                 $"🛡️ <strong>Authenticator:</strong> {diagnostics?.AuthenticatorType}<br>" +
+                                 $"📊 <strong>PRF Supported:</strong> {(diagnostics?.PrfSupported == true ? "Yes" : "No")}<br>" +
+                                 $"📋 <strong>PRF Results:</strong> {(diagnostics?.PrfResultsAvailable == true ? "Available" : "Not Available")}<br>" +
+                                 $"🆔 <strong>Credential ID:</strong> {diagnostics?.CredentialIdLength} bytes";
+                                 
                     SetWebAuthnMessage(message, true);
                     Console.WriteLine("WebAuthn decrypt test PASSED - plaintext matches expected value");
                 }
                 else
                 {
-                    var message = $"Decryption completed using {result.KeyDerivationMethod} method, but plaintext '{result.Plaintext}' doesn't match expected 'hello world'";
+                    var message = $"<strong>❌ Decryption completed but plaintext mismatch!</strong><br>" +
+                                 $"<strong>Expected:</strong> 'hello world'<br>" +
+                                 $"<strong>Got:</strong> '{result.Plaintext}'<br>" +
+                                 $"<strong>Method:</strong> {result.KeyDerivationMethod}";
                     SetWebAuthnMessage(message, false);
                     Console.WriteLine($"WebAuthn decrypt test FAILED - plaintext mismatch");
                 }
@@ -403,6 +426,17 @@ public partial class Test : ComponentBase
         public string? Error { get; set; }
         public string? EncryptedDataBase64 { get; set; }
         public string? KeyDerivationMethod { get; set; }
+        public WebAuthnDiagnostics? Diagnostics { get; set; }
+    }
+
+    private class WebAuthnDiagnostics
+    {
+        public string? UserAgent { get; set; }
+        public string? Platform { get; set; }
+        public bool PrfSupported { get; set; }
+        public bool PrfResultsAvailable { get; set; }
+        public int CredentialIdLength { get; set; }
+        public string? AuthenticatorType { get; set; }
     }
 
     private class WebAuthnDecryptResult
@@ -411,5 +445,6 @@ public partial class Test : ComponentBase
         public string? Error { get; set; }
         public string? Plaintext { get; set; }
         public string? KeyDerivationMethod { get; set; }
+        public WebAuthnDiagnostics? Diagnostics { get; set; }
     }
 }
