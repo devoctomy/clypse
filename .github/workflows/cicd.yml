@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       deploy:
-        description: 'Deploy to production after CI passes'
+        description: 'Deploy to production after CI/CD passes'
         required: false
         default: false
         type: boolean
