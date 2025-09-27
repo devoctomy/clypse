@@ -168,6 +168,7 @@ window.WebAuthnPrf = {
                 console.log("PRF Results Available:", !!prfResult?.results);
                 console.log("PRF First Result:", prfResult?.results?.first ? `${prfResult.results.first.byteLength} bytes` : "none");
                 
+                // For registration: check if PRF is enabled (per WebAuthn spec)
                 if (prfResult && prfResult.enabled) {
                     // Try to get PRF results from creation
                     if (prfResult.results && prfResult.results.first) {
@@ -302,7 +303,7 @@ window.WebAuthnPrf = {
                 diagnostics: {
                     userAgent: navigator.userAgent,
                     platform: navigator.platform,
-                    prfSupported: finalPrfResult?.enabled || false,
+                    prfSupported: finalPrfResult?.enabled || false, // 'enabled' is present during registration
                     prfResultsAvailable: !!(finalPrfResult?.results?.first),
                     credentialIdLength: credential.rawId.byteLength,
                     authenticatorType: keyDerivationMethod === "PRF" ? "PRF-capable biometric" : "Basic platform authenticator"
@@ -383,8 +384,14 @@ window.WebAuthnPrf = {
             // Try PRF first
             const prfResult = credential.getClientExtensionResults().prf;
             finalPrfResult = prfResult; // Store for diagnostics
-            if (prfResult && prfResult.enabled && prfResult.results && prfResult.results.first) {
-                console.log("PRF extension successful - using PRF key material");
+            console.log("=== PRF Extension Analysis (Authentication) ===");
+            console.log("PRF Result Object:", prfResult);
+            console.log("PRF Results Available:", !!prfResult?.results);
+            console.log("PRF First Result:", prfResult?.results?.first ? `${prfResult.results.first.byteLength} bytes` : "none");
+            
+            // For authentication: only check if PRF results are available (per WebAuthn spec - 'enabled' is NOT present)
+            if (prfResult && prfResult.results && prfResult.results.first) {
+                console.log("✅ PRF extension successful - using PRF key material");
                 keyMaterial = await crypto.subtle.importKey(
                     "raw",
                     prfResult.results.first,
@@ -394,7 +401,7 @@ window.WebAuthnPrf = {
                 );
                 keyDerivationMethod = "PRF";
             } else {
-                console.log("PRF not available - falling back to credential ID derivation");
+                console.log("❌ PRF not available - falling back to credential ID derivation");
                 keyMaterial = await crypto.subtle.importKey(
                     "raw",
                     credential.rawId,
@@ -447,7 +454,7 @@ window.WebAuthnPrf = {
                 diagnostics: {
                     userAgent: navigator.userAgent,
                     platform: navigator.platform,
-                    prfSupported: finalPrfResult?.enabled || false,
+                    prfSupported: keyDerivationMethod === "PRF", // Infer from successful PRF usage
                     prfResultsAvailable: !!(finalPrfResult?.results?.first),
                     credentialIdLength: credential.rawId.byteLength,
                     authenticatorType: keyDerivationMethod === "PRF" ? "PRF-capable biometric" : "Basic platform authenticator"
