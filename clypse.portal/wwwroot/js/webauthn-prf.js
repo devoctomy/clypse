@@ -40,6 +40,10 @@ window.WebAuthnPrf = {
                 };
             }
 
+            // Platform-specific configuration - detect once at the start
+            const isSamsung = navigator.userAgent.includes('Samsung') || navigator.userAgent.includes('SM-');
+            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+            
             // Check if we have an existing credential ID stored in localStorage
             let storedCredentialId = localStorage.getItem('clypse_webauthn_credential_id');
             let credential = null;
@@ -60,6 +64,7 @@ window.WebAuthnPrf = {
                             type: "public-key",
                             id: credentialIdBytes
                         }],
+                        timeout: isSamsung ? 300000 : 60000, // Samsung Pass needs longer timeout
                         userVerification: "required",
                         extensions: {
                             prf: {
@@ -84,7 +89,9 @@ window.WebAuthnPrf = {
                     console.log("PRF First Result:", prfResult?.results?.first ? `${prfResult.results.first.byteLength} bytes` : "none");
                     
                     finalPrfResult = prfResult; // Store for diagnostics
-                    if (prfResult && prfResult.enabled && prfResult.results && prfResult.results.first) {
+                    
+                    // Enhanced PRF detection for Samsung Pass and other platforms
+                    if (prfResult && prfResult.results && prfResult.results.first && prfResult.results.first.byteLength > 0) {
                         console.log("✅ PRF extension successful - using PRF key material");
                         console.log("PRF Output Length:", prfResult.results.first.byteLength, "bytes");
                         keyMaterial = await crypto.subtle.importKey(
@@ -95,6 +102,9 @@ window.WebAuthnPrf = {
                             ["deriveKey"]
                         );
                         keyDerivationMethod = "PRF";
+                    } else if (prfResult && prfResult.enabled && !prfResult.results && isSamsung) {
+                        console.log("⚠️ Samsung Pass PRF enabled but no results - this is expected behavior");
+                        console.log("❌ PRF not available - falling back to credential ID derivation");
                     } else {
                         console.log("❌ PRF not available - falling back to credential ID derivation");
                         keyMaterial = await crypto.subtle.importKey(
@@ -116,6 +126,8 @@ window.WebAuthnPrf = {
             if (!credential || !keyMaterial) {
                 console.log("Creating new WebAuthn credential...");
                 
+                console.log("Platform Detection - Samsung:", isSamsung, "iOS:", isIOS);
+                
                 // Create a new credential
                 const challenge = crypto.getRandomValues(new Uint8Array(32));
                 const userId = crypto.getRandomValues(new Uint8Array(32));
@@ -135,10 +147,12 @@ window.WebAuthnPrf = {
                         { alg: -7, type: "public-key" }, // ES256
                         { alg: -257, type: "public-key" } // RS256
                     ],
+                    timeout: isSamsung ? 300000 : 60000, // Samsung Pass needs longer timeout
                     authenticatorSelection: {
                         authenticatorAttachment: "platform",
                         userVerification: "required",
-                        requireResidentKey: true // Make it discoverable
+                        // Samsung Pass requires residentKey: "required" (not requireResidentKey)
+                        residentKey: isSamsung ? "required" : "preferred"
                     },
                     extensions: {
                         prf: {
@@ -306,7 +320,7 @@ window.WebAuthnPrf = {
                     prfSupported: finalPrfResult?.enabled || false, // 'enabled' is present during registration
                     prfResultsAvailable: !!(finalPrfResult?.results?.first),
                     credentialIdLength: credential.rawId.byteLength,
-                    authenticatorType: keyDerivationMethod === "PRF" ? "PRF-capable biometric" : "Basic platform authenticator"
+                    authenticatorType: this.getAuthenticatorType(keyDerivationMethod, navigator.userAgent, finalPrfResult)
                 }
             };
 
@@ -329,6 +343,9 @@ window.WebAuthnPrf = {
                     error: "WebAuthn is not supported on this device"
                 };
             }
+
+            // Platform-specific configuration
+            const isSamsung = navigator.userAgent.includes('Samsung') || navigator.userAgent.includes('SM-');
 
             // Check if we have stored encrypted data
             if (!encryptedDataBase64) {
@@ -362,6 +379,7 @@ window.WebAuthnPrf = {
                     type: "public-key",
                     id: credentialIdBytes
                 }],
+                timeout: isSamsung ? 300000 : 60000, // Samsung Pass needs longer timeout
                 userVerification: "required",
                 extensions: {
                     prf: {
@@ -457,7 +475,7 @@ window.WebAuthnPrf = {
                     prfSupported: keyDerivationMethod === "PRF", // Infer from successful PRF usage
                     prfResultsAvailable: !!(finalPrfResult?.results?.first),
                     credentialIdLength: credential.rawId.byteLength,
-                    authenticatorType: keyDerivationMethod === "PRF" ? "PRF-capable biometric" : "Basic platform authenticator"
+                    authenticatorType: this.getAuthenticatorType(keyDerivationMethod, navigator.userAgent, finalPrfResult)
                 }
             };
 
@@ -467,6 +485,29 @@ window.WebAuthnPrf = {
                 success: false,
                 error: error.message || "Unknown error occurred"
             };
+        }
+    },
+
+    // Helper function to determine authenticator type based on platform and PRF support
+    getAuthenticatorType: function(keyDerivationMethod, userAgent, prfResult) {
+        const isSamsung = userAgent.includes('Samsung') || userAgent.includes('SM-');
+        const isIOS = /iPad|iPhone|iPod/.test(userAgent);
+        const isWindows = userAgent.includes('Windows');
+        const isChrome = userAgent.includes('Chrome');
+        const isEdge = userAgent.includes('Edg');
+
+        if (keyDerivationMethod === "PRF") {
+            if (isSamsung) return "Samsung Pass (PRF-enabled)";
+            if (isIOS) return "Face ID/Touch ID (PRF-enabled)";
+            if (isWindows) return "Windows Hello (PRF-enabled)";
+            return "Platform Authenticator (PRF-enabled)";
+        } else {
+            // Even if PRF didn't work, some platforms might still support it
+            if (isSamsung && prfResult?.enabled) return "Samsung Pass (PRF detection issue)";
+            if (isSamsung) return "Samsung Pass (PIN fallback)";
+            if (isIOS) return "Face ID/Touch ID (fallback mode)";
+            if (isWindows) return "Windows Hello (fallback mode)";
+            return "Platform Authenticator (credential ID fallback)";
         }
     }
 };
