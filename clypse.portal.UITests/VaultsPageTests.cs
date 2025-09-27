@@ -95,7 +95,7 @@ public class VaultsPageTests : TestBase
         await Expect(Page.Locator("h1, h2, h3").Filter(new() { HasText = "Vaults" })).ToBeVisibleAsync(new() { Timeout = 15000 });
 
         // Manually click the refresh button to ensure the vault list is updated
-        await Page.Locator("#refresh-vaults-button").ClickAsync();
+        await Page.Locator("#nav-refresh-button").ClickAsync();
 
         // Wait a moment for the refresh to complete
         await Task.Delay(2000);
