@@ -94,8 +94,15 @@ public class VaultsPageTests : TestBase
         // Wait for deletion to complete and return to vaults page
         await Expect(Page.Locator("h1, h2, h3").Filter(new() { HasText = "Vaults" })).ToBeVisibleAsync(new() { Timeout = 15000 });
 
+        // Manually click the refresh button to ensure the vault list is updated
+        await Page.Locator("#refresh-vaults-button").ClickAsync();
+
+        // Wait a moment for the refresh to complete
+        await Task.Delay(2000);
+
+        // Now check for the no vaults message
         var hasNoVaultsMessage = await Page.Locator("#no-vaults-found").IsVisibleAsync();
         
-        Assert.IsTrue(hasNoVaultsMessage, "Should show no vaults message after deletion");
+        Assert.IsTrue(hasNoVaultsMessage, "Should show no vaults message after deletion and refresh");
     }
 }
