@@ -43,7 +43,7 @@ public static class MatchExtensions
         if (i1 < 0 || l1 < 0 || e1 > matchString.Length ||
             i2 < 0 || l2 < 0 || e2 > matchString.Length)
         {
-            throw new ArgumentOutOfRangeException("Match indices are out of range for matchString.");
+            throw new ArgumentOutOfRangeException(nameof(matchString), "Match indices are out of range for matchString.");
         }
 
         if (!string.Equals(matchString.AsSpan(i1, l1).ToString(), match.Value.ToString(), StringComparison.Ordinal) ||

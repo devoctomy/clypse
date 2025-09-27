@@ -127,9 +127,4 @@ public partial class PasswordGeneratorDialog : ComponentBase
     {
         await OnCancel.InvokeAsync();
     }
-
-    private async Task HandleBackdropClick()
-    {
-        await HandleCancel();
-    }
 }

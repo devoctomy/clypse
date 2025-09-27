@@ -1,13 +1,14 @@
 ﻿using System.Text.Json.Serialization;
 using clypse.core.Base;
 using clypse.core.Enums;
+using clypse.core.Secrets.Interfaces;
 
 namespace clypse.core.Secrets;
 
 /// <summary>
 /// Generic secret which other secrets may be derived from.
 /// </summary>
-public class Secret : ClypseObject
+public class Secret : ClypseObject, ITaggedObject
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="Secret"/> class.
@@ -40,6 +41,7 @@ public class Secret : ClypseObject
     /// Gets or sets Name for this secret.
     /// </summary>
     [RequiredData]
+    [SecretField(DisplayOrder = 10, FieldType = SecretFieldType.SingleLineText)]
     [JsonIgnore]
     public string? Name
     {
@@ -50,6 +52,7 @@ public class Secret : ClypseObject
     /// <summary>
     /// Gets or sets Description of this secret.
     /// </summary>
+    [SecretField(DisplayOrder = 20, FieldType = SecretFieldType.SingleLineText)]
     [JsonIgnore]
     public string? Description
     {
@@ -60,6 +63,7 @@ public class Secret : ClypseObject
     /// <summary>
     /// Gets list of Tags for this secret.
     /// </summary>
+    [SecretField(DisplayOrder = 100, FieldType = SecretFieldType.TagList)]
     [JsonIgnore]
     public List<string> Tags
     {
@@ -73,6 +77,33 @@ public class Secret : ClypseObject
 
             return [.. tags.Split(',')];
         }
+    }
+
+    /// <summary>
+    /// Gets or sets Comments for this secret.
+    /// </summary>
+    [SecretField(DisplayOrder = 110, FieldType = SecretFieldType.MultiLineText)]
+    [JsonIgnore]
+    public string? Comments
+    {
+        get { return this.GetData(nameof(this.Comments)); }
+        set { this.SetData(nameof(this.Comments), value); }
+    }
+
+    /// <summary>
+    /// Creates a Secret instance from a dictionary of key-value pairs.
+    /// </summary>
+    /// <param name="data">The dictionary containing secret data.</param>
+    /// <returns>A Secret instance populated with the provided data.</returns>
+    public static Secret FromDictionary(Dictionary<string, string> data)
+    {
+        var secret = new Secret();
+        foreach (var kvp in data)
+        {
+            secret.SetData(kvp.Key, kvp.Value);
+        }
+
+        return secret;
     }
 
     /// <summary>

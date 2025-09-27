@@ -8,6 +8,7 @@ using clypse.core.Compression.Interfaces;
 using clypse.core.Cryptogtaphy;
 using clypse.core.Cryptogtaphy.Interfaces;
 using clypse.core.Secrets;
+using clypse.core.Secrets.Import;
 using clypse.core.Vault;
 
 namespace clypse.core.IntTests.StepDefinitions;
@@ -42,6 +43,12 @@ public sealed class VaultStepDefinitions(TestContext testContext)
         this.testContext.BucketName = Environment.GetEnvironmentVariable("CLYPSE_AWS_BUCKETNAME") !;
     }
 
+    [Given("aws region loaded from environment variable")]
+    public void AwsRegionLoadedFromEnvironmentVariable()
+    {
+        this.testContext.Region = Environment.GetEnvironmentVariable("CLYPSE_AWS_REGION") !;
+    }
+
     [Given("key derivation service is initialised")]
     public void GivenKeyDerivationServiceIsInitialised()
     {
@@ -63,7 +70,7 @@ public sealed class VaultStepDefinitions(TestContext testContext)
             new AmazonS3ClientWrapper(
                 this.testContext.AwsAccessKey!,
                 this.testContext.SecretAccessKey!,
-                Amazon.RegionEndpoint.EUWest2),
+                Amazon.RegionEndpoint.GetBySystemName(this.testContext.Region)),
             this.cryptoService!);
     }
 
@@ -89,7 +96,7 @@ public sealed class VaultStepDefinitions(TestContext testContext)
             new AmazonS3ClientWrapper(
                 this.testContext.AwsAccessKey!,
                 this.testContext.SecretAccessKey!,
-                Amazon.RegionEndpoint.EUWest2),
+                Amazon.RegionEndpoint.GetBySystemName(this.testContext.Region)),
             this.cryptoService!));
 
         this.vaultManager = new VaultManager(
@@ -138,6 +145,56 @@ public sealed class VaultStepDefinitions(TestContext testContext)
         }
     }
 
+    [Given("secrets data read from csv file")]
+    public async Task GivenSecretsDataReadFromCsvFile(DataTable dataTable)
+    {
+        var path = dataTable.Rows[0]["Path"];
+        var secretsCount = int.Parse(dataTable.Rows[0]["SecretsCount"]);
+        var csvData = File.ReadAllTextAsync(path);
+        this.testContext.Importer = new CsvSecretsImporterService();
+        this.testContext.ImportedSecretCount = secretsCount;
+        var readCount = this.testContext.Importer.ReadData(await csvData);
+        Assert.Equal(secretsCount, readCount);
+    }
+
+    [Given("imported secrets successfully mapped")]
+    public void GivenImportedSecretsSuccessfullyMapped()
+    {
+        var mappedData = this.testContext.Importer!.MapImportedSecrets(Enums.CsvImportDataFormat.Cachy1_x);
+        this.testContext.MappedImportedSecrets = mappedData;
+        Assert.Equal(this.testContext.ImportedSecretCount, mappedData.Count);
+    }
+
+    [When("mapped secrets added to vault")]
+    public void GivenMappedSecretsAddedToVault()
+    {
+        var result = this.testContext.Vault!.AddRawSecrets(
+            this.testContext.MappedImportedSecrets!,
+            Enums.SecretType.Web);
+        Assert.True(result);
+    }
+
+    [Then("secrets match mapped secrets")]
+    public async Task ThenSecretsMatchMappedSecrets()
+    {
+        foreach (var indexEntry in this.testContext.Vault!.Index.Entries)
+        {
+            var secret = await this.vaultManager!.GetSecretAsync(
+                this.testContext.Vault,
+                indexEntry.Id,
+                this.testContext.Base64Key!,
+                CancellationToken.None);
+
+            var secretInMapped = this.testContext.MappedImportedSecrets!.Any(x =>
+                x["Name"] == secret!.Data["Name"] &&
+                x["Description"] == secret!.Data["Description"] &&
+                x["UserName"] == secret!.Data["UserName"] &&
+                x["Password"] == secret!.Data["Password"] &&
+                x["Comments"] == secret!.Data["Comments"]);
+            Assert.True(secretInMapped);
+        }
+    }
+
     [StepDefinition("vault is saved")]
     public async Task VaultIsSaved()
     {
@@ -179,7 +236,7 @@ public sealed class VaultStepDefinitions(TestContext testContext)
                 new AmazonS3ClientWrapper(
                     this.testContext.AwsAccessKey!,
                     this.testContext.SecretAccessKey!,
-                    Amazon.RegionEndpoint.EUWest2)));
+                    Amazon.RegionEndpoint.GetBySystemName(this.testContext.Region))));
 
         var vaultManager = await vaultManagerBootstrapperService.CreateVaultManagerForVaultAsync(
             this.testContext.Vault!.Info.Id,

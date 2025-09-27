@@ -3,23 +3,25 @@ using clypse.core.Data;
 using clypse.core.Extensions;
 using clypse.core.Password;
 using Moq;
+using System.Reflection;
 
 namespace clypse.core.UnitTests.Password;
 
 public class StandardWesternPasswordGeneratorServiceTests : IDisposable
 {
     private readonly RandomGeneratorService randomGeneratorService;
-    private readonly Mock<IDictionaryLoaderService> mockDictionaryLoaderService;
+    private readonly Mock<IEmbeddedResorceLoaderService> mockEmbeddedResourceLoaderService;
     private readonly List<IPasswordGeneratorTokenProcessor> tokenProcessors;
     private readonly StandardWesternPasswordGeneratorService sut;
 
     public StandardWesternPasswordGeneratorServiceTests()
     {
         this.randomGeneratorService = new RandomGeneratorService();
-        this.mockDictionaryLoaderService = new Mock<IDictionaryLoaderService>();
+        this.mockEmbeddedResourceLoaderService = new Mock<IEmbeddedResorceLoaderService>();
+
         this.tokenProcessors =
         [
-            new DictionaryTokenProcessor(this.mockDictionaryLoaderService.Object),
+            new DictionaryTokenProcessor(this.mockEmbeddedResourceLoaderService.Object),
             new RandomStringTokenProcessor(),
         ];
         this.sut = new StandardWesternPasswordGeneratorService(
@@ -47,12 +49,14 @@ public class StandardWesternPasswordGeneratorServiceTests : IDisposable
         // Arrange
         var template = "{dict(adjective):upper}-{dict(noun):lower}-{dict(verb):upper}";
 
-        this.mockDictionaryLoaderService.Setup(x => x.LoadDictionaryAsync(
+        this.mockEmbeddedResourceLoaderService.Setup(x => x.LoadHashSetAsync(
             It.IsAny<string>(),
+            It.IsAny<Assembly?>(),
             It.IsAny<CancellationToken>()))
-            .ReturnsAsync((string name, CancellationToken ct) =>
+            .ReturnsAsync((string name, Assembly asm, CancellationToken ct) =>
             {
-                return [name.Split('.')[0]];
+                var nameParts = name.Split('.');
+                return [nameParts[nameParts.Length - 2]];
             });
 
         // Act
@@ -79,10 +83,11 @@ public class StandardWesternPasswordGeneratorServiceTests : IDisposable
         string? notEqualTo)
     {
         // Arrange
-        this.mockDictionaryLoaderService.Setup(x => x.LoadDictionaryAsync(
+        this.mockEmbeddedResourceLoaderService.Setup(x => x.LoadHashSetAsync(
             It.IsAny<string>(),
+            It.IsAny<Assembly?>(),
             It.IsAny<CancellationToken>()))
-            .ReturnsAsync((string name, CancellationToken ct) =>
+            .ReturnsAsync((string name, Assembly asm, CancellationToken ct) =>
             {
                 return [name.Split('.')[0]];
             });

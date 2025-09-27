@@ -6,6 +6,7 @@ using clypse.core.Cloud.Interfaces;
 using clypse.core.Compression.Interfaces;
 using clypse.core.Cryptogtaphy;
 using clypse.core.Cryptogtaphy.Interfaces;
+using clypse.core.Extensions;
 using clypse.core.Json;
 using clypse.core.Secrets;
 using clypse.core.Vault.Exceptions;
@@ -308,22 +309,7 @@ public class VaultManager : IVaultManager
             return null;
         }
 
-        switch (secret.SecretType)
-        {
-            case Enums.SecretType.None:
-                {
-                    // Do nothing;
-                    break;
-                }
-
-            case Enums.SecretType.Web:
-                {
-                    secret = WebSecret.FromSecret(secret);
-                    break;
-                }
-        }
-
-        return secret;
+        return secret.CastSecretToCorrectType();
     }
 
     /// <summary>

@@ -28,10 +28,8 @@ public partial class Vaults : ComponentBase
     private bool isUnlocking = false;
     private VaultMetadata? selectedVault = null;
     private VaultListing? selectedVaultListing = null; // Store selected vault listing for details
-    private string passphrase = string.Empty;
     private string? errorMessage = null;
     private IVaultManagerBootstrapperService? bootstrapperService = null;
-    private ElementReference passphraseInput;
 
     [Parameter] public EventCallback<(VaultMetadata vault, string key, IVaultManager manager)> OnVaultUnlocked { get; set; }
 
@@ -119,24 +117,18 @@ public partial class Vaults : ComponentBase
         await LoadVaults();
     }
 
-    private async Task ShowPassphrasePanel(VaultMetadata vault)
+    private void ShowPassphrasePanel(VaultMetadata vault)
     {
         selectedVault = vault;
-        passphrase = string.Empty;
         errorMessage = null;
         showPassphrasePanel = true;
         StateHasChanged();
-        
-        // Focus the password input after a small delay to ensure the modal is rendered
-        await Task.Delay(100);
-        await passphraseInput.FocusAsync();
     }
 
     private void HidePassphrasePanel()
     {
         showPassphrasePanel = false;
         selectedVault = null;
-        passphrase = string.Empty;
         errorMessage = null;
         StateHasChanged();
     }
@@ -157,24 +149,7 @@ public partial class Vaults : ComponentBase
         StateHasChanged();
     }
 
-    private async Task OnPassphraseKeyDown(KeyboardEventArgs e)
-    {
-        if (e.Key == "Enter" && !isUnlocking)
-        {
-            try
-            {
-                await UnlockVault();
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error during Enter key unlock: {ex.Message}");
-                errorMessage = $"Failed to unlock vault: {ex.Message}";
-                StateHasChanged();
-            }
-        }
-    }
-
-    private async Task UnlockVault()
+    private async Task HandleUnlockVault(string passphrase)
     {
         if (selectedVault == null || string.IsNullOrEmpty(passphrase))
         {
@@ -189,17 +164,13 @@ public partial class Vaults : ComponentBase
             errorMessage = null;
             StateHasChanged();
 
-            // Create bootstrapper service if not already created
+            // Bootstrapper should already exist from LoadVaults()
             if (bootstrapperService == null)
             {
-                bootstrapperService = await CreateBootstrapperService();
-                if (bootstrapperService == null)
-                {
-                    errorMessage = "Failed to create bootstrapper service";
-                    isUnlocking = false;
-                    StateHasChanged();
-                    return;
-                }
+                errorMessage = "Bootstrapper service not available";
+                isUnlocking = false;
+                StateHasChanged();
+                return;
             }
 
             // Use bootstrapper to create a vault-specific manager for this vault
@@ -253,6 +224,9 @@ public partial class Vaults : ComponentBase
     {
         try
         {
+            Console.WriteLine("Creating bootstrapper service...");
+
+
             // Get stored credentials from localStorage
             var credentialsJson = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "clypse_credentials");
             
@@ -265,12 +239,20 @@ public partial class Vaults : ComponentBase
             var credentials = System.Text.Json.JsonSerializer.Deserialize<StoredCredentials>(credentialsJson);
             if (credentials?.AwsCredentials == null)
             {
-                Console.WriteLine("Invalid stored credentials");
+                Console.WriteLine("Invalid stored credentials - AwsCredentials is null");
+                return null;
+            }
+            
+            if (string.IsNullOrEmpty(credentials.AwsCredentials.IdentityId))
+            {
+                Console.WriteLine("Identity ID is null or empty - cannot create bootstrapper");
                 return null;
             }
 
             // Create JavaScript S3 invoker
             var jsInvoker = new JavaScriptS3Invoker(JSRuntime);
+
+            Console.WriteLine($"About to create bootstrapper with Identity ID: '{credentials.AwsCredentials.IdentityId}'");
 
             // Create bootstrapper service using the factory
             var bootstrapper = VaultManagerBootstrapperFactory.CreateForBlazor(

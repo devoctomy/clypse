@@ -1,6 +1,7 @@
 {
   "name": "Clypse",
   "short_name": "Clypse",
+  "description": "Clypse is a modern, serverless, fast, and secure portal for managing your secrets.",
   "id": "./",
   "start_url": "./",
   "display": "standalone",

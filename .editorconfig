@@ -215,11 +215,3 @@ dotnet_diagnostic.SA1010.severity = none
 
 # SA1011: Closing square brackets should be spaced correctly
 dotnet_diagnostic.SA1011.severity = none
-
-# Test Projects - Disable documentation requirements
-[*{Test,Tests,UnitTest,UnitTests,IntTest,IntTests}*/**/*.cs]
-# SA0001: XML comment analysis is disabled due to project configuration
-dotnet_diagnostic.SA0001.severity = none
-
-# SA1600: Elements should be documented
-dotnet_diagnostic.SA1600.severity = none

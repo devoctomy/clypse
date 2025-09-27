@@ -1,4 +1,5 @@
-﻿using clypse.core.Secrets;
+﻿using clypse.core.Enums;
+using clypse.core.Secrets;
 
 namespace clypse.core.Vault;
 
@@ -43,6 +44,16 @@ public interface IVault
     /// <param name="secret">The secret to add to the vault.</param>
     /// <returns>True if the secret was successfully added; false if it already exists.</returns>
     public bool AddSecret(Secret secret);
+
+    /// <summary>
+    /// Adds multiple raw secrets to the vault.
+    /// </summary>
+    /// <param name="rawSecrets">A list of dictionaries representing raw secrets to add.</param>
+    /// <param name="defaultSecretType">The default secret type to assign if not specified in the raw data.</param>
+    /// <returns>True if all secrets were successfully added; false if any failed.</returns>
+    public bool AddRawSecrets(
+        IList<Dictionary<string, string>> rawSecrets,
+        SecretType defaultSecretType);
 
     /// <summary>
     /// Marks a secret for deletion from the vault.

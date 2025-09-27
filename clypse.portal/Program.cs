@@ -21,6 +21,7 @@ builder.Services.AddScoped<IVaultManagerFactoryService, VaultManagerFactoryServi
 builder.Services.AddScoped<IVaultManagerBootstrapperFactoryService, VaultManagerBootstrapperFactoryService>();
 builder.Services.AddScoped<IVaultStorageService, VaultStorageService>();
 builder.Services.AddScoped<IAuthenticationService, AwsCognitoAuthenticationService>();
+builder.Services.AddScoped<IPwaUpdateService, PwaUpdateService>();
 
 // Add Clypse core services
 builder.Services.AddClypseCoreServices();

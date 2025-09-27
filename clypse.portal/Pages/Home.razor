@@ -12,10 +12,6 @@ else if (currentPage == "credentials")
 {
     <Credentials @ref="credentialsComponent" CurrentVault="@currentVault" CurrentVaultKey="@currentVaultKey" LoadedVault="@loadedVault" VaultManager="@vaultManager" OnLockVault="HandleLockVault" OnVaultUpdated="HandleVaultUpdated" />
 }
-else if (currentPage == "create-vault")
-{
-    <CreateVault OnCreateVault="HandleCreateVault" OnCancel="HandleCancelCreateVault" />
-}
 
 <VerifyDialog Show="showVerifyDialog" Results="verifyResults" OnClose="() => { showVerifyDialog = false; verifyResults = null; }" />
 <VaultDeleteConfirmDialog Show="showDeleteVaultDialog" 
@@ -24,4 +20,9 @@ else if (currentPage == "create-vault")
                           ErrorMessage="@deleteVaultErrorMessage"
                           OnConfirm="HandleDeleteVaultConfirm" 
                           OnCancel="CancelDeleteVault" />
+<VaultCreateDialog Show="showCreateVaultDialog"
+                   IsCreating="isCreatingVault"
+                   ErrorMessage="@createVaultErrorMessage"
+                   OnCreateVault="HandleCreateVaultFromDialog"
+                   OnCancel="CancelCreateVault" />
 

@@ -2,7 +2,9 @@
 
 <PageTitle>Clypse Portal - Test</PageTitle>
 
-<div class="container mt-4">
+
+
+<div class="container mt-4 test-page-container" style="min-height: calc(100vh + 200px); padding-bottom: 100px;">
     <div class="row justify-content-center">
         <div class="col-md-6">
             <div class="card">
@@ -184,7 +186,15 @@
                     <h3 class="text-center">Cryptography Tests</h3>
                 </div>
                 <div class="card-body">
-                    <div class="d-grid">
+                    <!-- WebAuthn Test Results Display -->
+                    @if (!string.IsNullOrEmpty(webAuthnTestMessage))
+                    {
+                        <div class="alert @(webAuthnTestSuccess ? "alert-success" : "alert-danger") mb-3" role="alert">
+                            <strong>@(webAuthnTestSuccess ? "SUCCESS" : "ERROR"):</strong> @((MarkupString)webAuthnTestMessage)
+                        </div>
+                    }
+                    
+                    <div class="d-grid gap-2">
                         <button class="btn btn-primary" @onclick="HandleTestKeyDerivation" disabled="@isTestingKeyDerivation">
                             @if (isTestingKeyDerivation)
                             {
@@ -195,6 +205,14 @@
                             {
                                 <span>Test Key Derivation Algorithms</span>
                             }
+                        </button>
+                        
+                        <button class="btn btn-info" @onclick="HandleWebAuthnEncrypt">
+                            <span>WebAuthn Encrypt</span>
+                        </button>
+                        
+                        <button class="btn btn-warning" @onclick="HandleWebAuthnDecrypt">
+                            <span>WebAuthn Decrypt</span>
                         </button>
                     </div>
                 </div>

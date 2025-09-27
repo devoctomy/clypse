@@ -1,0 +1,34 @@
+@startuml WebAuthn_PRF_Component_View
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+title WebAuthn PRF Encryption System - Component View
+
+Container(webapp, "Clypse Portal", "JavaScript SPA")
+
+Container_Boundary(webapp, "Clypse Portal Components") {
+    Component(ui_component, "Encryption UI", "Razor/JavaScript", "Provides encrypt/decrypt buttons and display")
+    Component(webauthn_manager, "WebAuthn Manager", "JavaScript", "Handles credential lifecycle and PRF operations")
+    Component(crypto_manager, "Crypto Manager", "JavaScript", "HKDF key derivation and AES-GCM operations")
+    Component(diagnostic_logger, "Diagnostic Logger", "JavaScript", "Logs WebAuthn operations for debugging")
+    Component(storage_manager, "Storage Manager", "JavaScript", "Manages credential ID persistence")
+    Component(error_handler, "Error Handler", "JavaScript", "Handles fallback and error scenarios")
+}
+
+System_Ext(webauthn_api, "WebAuthn API", "Browser native credential management")
+System_Ext(crypto_api, "Web Crypto API", "Browser native cryptography")
+System_Ext(platform_auth, "Platform Authenticator", "Hardware security modules")
+
+Rel(ui_component, webauthn_manager, "encrypt()/decrypt() calls", "User actions")
+Rel(webauthn_manager, crypto_manager, "PRF key material", "Raw bytes from authenticator")
+Rel(webauthn_manager, storage_manager, "Store/retrieve credential IDs", "Persistence")
+Rel(webauthn_manager, diagnostic_logger, "Log operations", "Debugging")
+Rel(webauthn_manager, error_handler, "Handle failures", "Fallback logic")
+
+Rel(crypto_manager, crypto_api, "HKDF + AES-GCM", "Key derivation and encryption")
+Rel(webauthn_manager, webauthn_api, "PRF extension calls", "credential.create/get with PRF")
+Rel(storage_manager, ui_component, "Update display", "Show stored credentials")
+
+Rel(webauthn_api, platform_auth, "Biometric + PRF", "Hardware operations")
+
+SHOW_LEGEND()
+@enduml

@@ -1,4 +1,5 @@
-﻿using clypse.core.Secrets;
+﻿using clypse.core.Enums;
+using clypse.core.Secrets;
 
 namespace clypse.core.Vault;
 
@@ -75,6 +76,58 @@ public class Vault : IVault
         }
 
         return false;
+    }
+
+    /// <summary>
+    /// Adds multiple raw secrets to the vault.
+    /// </summary>
+    /// <param name="rawSecrets">A list of dictionaries representing raw secrets to add.</param>
+    /// <param name="defaultSecretType">The default secret type to assign if not specified in the raw data.</param>
+    /// <returns>True if all secrets were successfully added; false if any failed.</returns>
+    public bool AddRawSecrets(
+        IList<Dictionary<string, string>> rawSecrets,
+        SecretType defaultSecretType)
+    {
+        var addedSecrets = new List<Secret>();
+        var allAdded = true;
+        var isDirty = this.isDirty;
+
+        foreach (var rawSecret in rawSecrets)
+        {
+            try
+            {
+                var secret = Secret.FromDictionary(rawSecret);
+                if (secret.SecretType == SecretType.None)
+                {
+                    secret.SecretType = defaultSecretType;
+                }
+
+                var added = this.AddSecret(secret);
+                if (!added)
+                {
+                    allAdded = false;
+                    break;
+                }
+
+                addedSecrets.Add(secret);
+            }
+            catch
+            {
+                allAdded = false;
+            }
+        }
+
+        if (!allAdded)
+        {
+            foreach (var secret in addedSecrets)
+            {
+                this.pendingSecrets.Remove(secret);
+            }
+
+            this.isDirty = isDirty;
+        }
+
+        return allAdded;
     }
 
     /// <summary>

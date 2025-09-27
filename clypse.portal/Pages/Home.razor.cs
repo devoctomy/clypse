@@ -35,6 +35,9 @@ public partial class Home : ComponentBase
     private VaultMetadata? vaultToDelete = null;
     private bool isDeletingVault = false;
     private string? deleteVaultErrorMessage = null;
+    private bool showCreateVaultDialog = false;
+    private bool isCreatingVault = false;
+    private string? createVaultErrorMessage = null;
 
     [CascadingParameter] public Layout.HomeLayout? Layout { get; set; }
 
@@ -62,8 +65,8 @@ public partial class Home : ComponentBase
         switch (action)
         {
             case "create-vault":
-                currentPage = "create-vault";
-                break;
+                ShowCreateVaultDialog();
+                return; // Don't call StateHasChanged or UpdateNavigation as this is just showing a dialog
             case "show-vaults":
                 currentPage = "vaults";
                 break;
@@ -75,6 +78,9 @@ public partial class Home : ComponentBase
                 return; // Don't call StateHasChanged or UpdateNavigation as this is just showing a dialog
             case "create-credential":
                 credentialsComponent?.ShowCreateDialog();
+                return; // Don't call StateHasChanged or UpdateNavigation as this is just showing a dialog
+            case "import":
+                credentialsComponent?.ShowImportDialog();
                 return; // Don't call StateHasChanged or UpdateNavigation as this is just showing a dialog
             case "lock-vault":
                 await HandleLockVault();
@@ -110,13 +116,10 @@ public partial class Home : ComponentBase
             "credentials" => new List<NavigationItem>
             {
                 new() { Text = "Create Credential", Action = "create-credential", Icon = "bi bi-plus-circle" },
-                new() { Text = "Delete Vault", Action = "delete-vault", Icon = "bi bi-trash3", ButtonClass = "btn-danger" },
+                new() { Text = "Import", Action = "import", Icon = "bi bi-upload" },
                 new() { Text = "Verify Vault", Action = "verify", Icon = "bi bi-shield-check", ButtonClass = "btn-success" },
-                new() { Text = "Lock Vault", Action = "lock-vault", Icon = "bi bi-lock", ButtonClass = "btn-primary" }
-            },
-            "create-vault" => new List<NavigationItem>
-            {
-                new() { Text = "Back to Vaults", Action = "show-vaults", Icon = "bi bi-arrow-left" }
+                new() { Text = "Lock Vault", Action = "lock-vault", Icon = "bi bi-lock", ButtonClass = "btn-primary" },
+                new() { Text = "Delete Vault", Action = "delete-vault", Icon = "bi bi-trash3", ButtonClass = "btn-danger" }
             },
             _ => new List<NavigationItem>()
         };
@@ -128,68 +131,10 @@ public partial class Home : ComponentBase
         {
             Console.WriteLine("Refreshing vaults...");
 
-            // Create vault manager if not already instantiated
-            if (vaultManager == null)
+            // Refresh the vaults component if we're on the vaults page
+            if (currentPage == "vaults" && vaultsComponent != null)
             {
-                vaultManager = await CreateVaultManager();
-                if (vaultManager == null)
-                {
-                    Console.WriteLine("Failed to create vault manager");
-                    return;
-                }
-            }
-
-            // Get list of vault IDs
-            Console.WriteLine("About to call ListVaultIdsAsync...");
-            var vaultIds = await vaultManager.ListVaultIdsAsync(CancellationToken.None);
-            Console.WriteLine("ListVaultIdsAsync completed successfully");
-
-            if (vaultIds == null || vaultIds.Count == 0)
-            {
-                Console.WriteLine("No vaults found");
-                await VaultStorage.SaveVaultsAsync(new List<VaultMetadata>());
-
-                // Refresh the vaults component if we're on the vaults page
-                if (currentPage == "vaults" && vaultsComponent != null)
-                {
-                    await vaultsComponent.RefreshVaults();
-                }
-            }
-            else
-            {
-                Console.WriteLine($"Found {vaultIds.Count} vault(s):");
-
-                // Get existing vaults to preserve any unlocked metadata
-                var existingVaults = await VaultStorage.GetVaultsAsync();
-                var vaultMetadataList = new List<VaultMetadata>();
-
-                foreach (var vaultId in vaultIds)
-                {
-                    Console.WriteLine($"  - {vaultId}");
-
-                    // Check if this vault already exists in storage
-                    var existingVault = existingVaults.FirstOrDefault(v => v.Id == vaultId);
-                    if (existingVault != null)
-                    {
-                        // Keep existing metadata (name/description if unlocked)
-                        vaultMetadataList.Add(existingVault);
-                    }
-                    else
-                    {
-                        // Create new vault entry with just the ID
-                        vaultMetadataList.Add(new VaultMetadata { Id = vaultId });
-                    }
-                }
-
-                // Save the updated vault list
-                await VaultStorage.SaveVaultsAsync(vaultMetadataList);
-                Console.WriteLine("Vault metadata saved to localStorage");
-
-                // Refresh the vaults component if we're on the vaults page
-                if (currentPage == "vaults" && vaultsComponent != null)
-                {
-                    await vaultsComponent.RefreshVaults();
-                }
+                await vaultsComponent.RefreshVaults();
             }
         }
         catch (Exception ex)
@@ -238,19 +183,30 @@ public partial class Home : ComponentBase
         {
             Console.WriteLine($"Creating vault: {request.Name} - {request.Description}");
 
-            // Create vault manager if not already instantiated
-            if (vaultManager == null)
+            // For vault creation, we need to create a temporary vault manager instance
+            // using the VaultManagerFactory, not the bootstrapper (which is for existing vaults)
+            var credentials = await AuthService.GetStoredCredentials();
+            if (credentials?.AwsCredentials == null)
             {
-                vaultManager = await CreateVaultManager();
-                if (vaultManager == null)
-                {
-                    Console.WriteLine("Failed to create vault manager");
-                    return;
-                }
+                Console.WriteLine("No valid credentials found - cannot create vault");
+                return;
             }
 
+            // Create JavaScript S3 invoker
+            var jsInvoker = new JavaScriptS3Invoker(JSRuntime);
+
+            // Create temporary vault manager for vault creation
+            var tempVaultManager = VaultManagerFactory.CreateForBlazor(
+                jsInvoker,
+                credentials.AwsCredentials.AccessKeyId,
+                credentials.AwsCredentials.SecretAccessKey,
+                credentials.AwsCredentials.SessionToken,
+                AwsS3Config.Region,
+                AwsS3Config.BucketName,  
+                credentials.AwsCredentials.IdentityId);
+
             // Create the vault
-            var vault = vaultManager.Create(request.Name, request.Description);
+            var vault = tempVaultManager.Create(request.Name, request.Description);
             Console.WriteLine($"Vault created with ID: {vault.Info.Id}");
 
             // Derive encryption key from passphrase
@@ -261,13 +217,17 @@ public partial class Home : ComponentBase
 
             // Save the vault
             Console.WriteLine("Saving vault...");
-            var saveResults = await vaultManager.SaveAsync(
+            var saveResults = await tempVaultManager.SaveAsync(
                 vault,
                 base64Key,
                 null,
                 CancellationToken.None);
 
             Console.WriteLine($"Vault saved successfully. Results: {saveResults}");
+            
+            // Dispose of the temporary vault manager as it's no longer needed
+            // A new one will be created when the vault is unlocked
+            tempVaultManager.Dispose();
             
             // Persist vault metadata immediately since we know the name and description
             var existingVaults = await VaultStorage.GetVaultsAsync();
@@ -310,13 +270,6 @@ public partial class Home : ComponentBase
             Console.WriteLine($"Error creating vault: {ex.Message}");
             // Don't navigate away on error so user can see the error and try again
         }
-    }
-
-    private async Task HandleCancelCreateVault()
-    {
-        currentPage = "vaults";
-        StateHasChanged();
-        await UpdateNavigation();
     }
 
     private async Task HandleVaultUnlocked((VaultMetadata vault, string key, IVaultManager manager) vaultData)
@@ -458,6 +411,46 @@ public partial class Home : ComponentBase
         finally
         {
             isDeletingVault = false;
+            StateHasChanged();
+        }
+    }
+
+    private void ShowCreateVaultDialog()
+    {
+        createVaultErrorMessage = null;
+        showCreateVaultDialog = true;
+        StateHasChanged();
+    }
+    
+    private void CancelCreateVault()
+    {
+        showCreateVaultDialog = false;
+        createVaultErrorMessage = null;
+        isCreatingVault = false;
+        StateHasChanged();
+    }
+    
+    private async Task HandleCreateVaultFromDialog(VaultCreationRequest request)
+    {
+        try
+        {
+            isCreatingVault = true;
+            createVaultErrorMessage = null;
+            StateHasChanged();
+            
+            await HandleCreateVault(request);
+            
+            // Close dialog on success
+            CancelCreateVault();
+        }
+        catch (Exception ex)
+        {
+            createVaultErrorMessage = $"Failed to create vault: {ex.Message}";
+            Console.WriteLine($"Error creating vault: {ex.Message}");
+        }
+        finally
+        {
+            isCreatingVault = false;
             StateHasChanged();
         }
     }

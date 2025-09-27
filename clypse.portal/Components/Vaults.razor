@@ -16,17 +16,17 @@
     }
     else if (vaults == null || vaults.Count == 0)
     {
-        <div class="alert alert-info" role="alert">
+        <div class="alert alert-info" role="alert" id="no-vaults-found">
             <h5 class="alert-heading">No Vaults Found</h5>
             <p>No vaults are available. Click the "Refresh" button to search for vaults.</p>
         </div>
     }
     else
     {
-        <div class="vaults-grid-responsive">
+        <div class="vaults-grid-responsive" id="vaults-list">
             @foreach (var vault in vaults)
             {
-                <div class="vault-card-responsive" @onclick="async () => await ShowPassphrasePanel(vault)">
+                <div class="vault-card-responsive" data-vault-id="@vault.Id" @onclick="() => ShowPassphrasePanel(vault)">
                     <div class="vault-lock-icon-responsive">
                         <i class="bi bi-lock-fill"></i>
                     </div>
@@ -70,62 +70,13 @@
         </div>
     }
     
-    @* Passphrase Panel *@
-    @if (showPassphrasePanel && selectedVault != null)
-    {
-        <div class="modal" style="display: block; background-color: rgba(0,0,0,0.5);" @onclick="HidePassphrasePanel">
-            <div class="modal-dialog modal-dialog-centered" @onclick:stopPropagation="true">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title">
-                            <i class="bi bi-unlock me-2"></i>
-                            Unlock Vault
-                        </h5>
-                        <button type="button" class="btn-close" @onclick="HidePassphrasePanel"></button>
-                    </div>
-                    <div class="modal-body">
-                        <p class="mb-3">
-                            <strong>Vault ID:</strong> @selectedVault.Id
-                        </p>
-                        @if (errorMessage != null)
-                        {
-                            <div class="alert alert-danger" role="alert">
-                                @errorMessage
-                            </div>
-                        }
-                        <div class="mb-3">
-                            <label for="passphrase" class="form-label">Passphrase</label>
-                            <input type="password" 
-                                   class="form-control" 
-                                   id="passphrase" 
-                                   @ref="passphraseInput"
-                                   @bind="passphrase" 
-                                   @bind:event="oninput"
-                                   @onkeydown="OnPassphraseKeyDown"
-                                   placeholder="Enter vault passphrase"
-                                   disabled="@isUnlocking" />
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" @onclick="HidePassphrasePanel" disabled="@isUnlocking">
-                            Cancel
-                        </button>
-                        <button type="button" class="btn btn-primary" @onclick="UnlockVault" disabled="@isUnlocking">
-                            @if (isUnlocking)
-                            {
-                                <span class="spinner-border spinner-border-sm me-2" role="status"></span>
-                                <span>Unlocking...</span>
-                            }
-                            else
-                            {
-                                <span>Unlock</span>
-                            }
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    }
+    @* Unlock Vault Dialog *@
+    <UnlockVaultDialog IsVisible="showPassphrasePanel"
+                      Vault="selectedVault"
+                      IsUnlocking="isUnlocking"
+                      ErrorMessage="@errorMessage"
+                      OnCancel="HidePassphrasePanel"
+                      OnUnlock="HandleUnlockVault" />
     
     @* Vault Details Panel *@
     @if (showVaultDetailsPanel && selectedVault != null && selectedVaultListing != null)

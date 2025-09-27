@@ -198,6 +198,74 @@
 
 /* Responsive spacing utilities */
 .spacing-sm { gap: 0.5rem; }
+
+/* ================================
+   MOBILE VIEWPORT FIXES
+   ================================ */
+
+/* CSS Variables for mobile-safe viewport handling */
+:root {
+    /* Mobile viewport fixes - Custom properties for JavaScript integration */
+    --vh: 1vh; /* Fallback, will be updated by JavaScript for mobile */
+    --mobile-vh: 1vh; /* Mobile-specific viewport height */
+    
+    /* Mobile-safe viewport height calculations */
+    --mobile-safe-height: 100vh; /* Fallback for non-mobile */
+    --mobile-safe-height-with-titlebar: calc(100vh - var(--clypse-title-bar-height));
+}
+
+/* Modern browser support for dynamic viewport units */
+@supports (height: 100dvh) {
+    :root {
+        --mobile-safe-height: 100dvh;
+        --mobile-safe-height-with-titlebar: calc(100dvh - var(--clypse-title-bar-height));
+    }
+}
+
+/* Mobile-specific viewport handling with safe area insets */
+@supports (padding: env(safe-area-inset-bottom)) {
+    :root {
+        --safe-area-inset-bottom: env(safe-area-inset-bottom);
+    }
+    
+    /* Apply safe area inset for mobile devices */
+    @media screen and (max-width: 768px) {
+        .mobile-safe-footer {
+            padding-bottom: calc(1rem + env(safe-area-inset-bottom));
+        }
+        
+        .mobile-safe-content {
+            height: calc(100vh - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+            height: calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+        }
+    }
+}
+
+/* Mobile-safe layout classes */
+.mobile-safe-layout {
+    min-height: 100vh; /* Fallback for older browsers */
+    min-height: 100dvh; /* Modern browsers with dynamic viewport */
+}
+
+/* Mobile-safe footer with safe area handling */
+.mobile-safe-footer {
+    /* Inherit all base footer styles from parent */
+    position: relative;
+}
+
+/* Mobile-specific adjustments */
+@media screen and (max-width: 768px) {
+    .mobile-safe-layout {
+        /* Use dynamic viewport on mobile to account for browser UI */
+        min-height: 100vh;
+        min-height: calc(var(--vh, 1vh) * 100); /* JavaScript-based fallback */
+    }
+    
+    .mobile-safe-footer {
+        /* Ensure footer is always above mobile browser UI */
+        padding-bottom: calc(1rem + var(--safe-area-inset-bottom, 0px));
+    }
+}
 .spacing-md { gap: 1rem; }
 .spacing-lg { gap: 1.5rem; }
 .spacing-xl { gap: 2rem; }
@@ -1746,3 +1814,123 @@ body { position:static !important; height:auto !important; }
 }
 
 /* Removed logout button positioning fix as the design changed */
+
+/* ================================
+   TEST PAGE MOBILE SCROLLING
+   ================================ */
+
+/* Test page scrolling fix - just make it work */
+@media (max-width: 768px) {
+    /* Break the layout constraints ONLY when Test page is loaded */
+    body:has(.test-page-container),
+    body:has(.test-page-container) .mobile-safe-layout,
+    body:has(.test-page-container) main {
+        overflow-y: auto !important;
+        height: auto !important;
+        position: static !important;
+        -webkit-overflow-scrolling: touch !important;
+    }
+    
+    .test-page-container {
+        height: auto !important;
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+        min-height: calc(100vh + 200px) !important;
+        padding-bottom: 100px !important;
+    }
+}
+
+/* ================================
+   PWA UPDATE STYLES
+   ================================ */
+
+/* Clickable version number styling */
+.version-number {
+    cursor: pointer;
+    padding: 2px 6px;
+    border-radius: 4px;
+    transition: background-color 0.2s ease, color 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    text-decoration: none;
+}
+
+.version-number:hover {
+    background-color: var(--bs-primary);
+    color: white !important;
+    text-decoration: none;
+}
+
+/* Update available indicator */
+.version-number.update-available {
+    background-color: #fff3cd;
+    border: 1px solid #ffeaa7;
+    color: #856404 !important;
+    animation: pulse-update 2s infinite;
+}
+
+.version-number.update-available:hover {
+    background-color: #ffc107;
+    color: #000 !important;
+}
+
+/* Subtle pulse animation for update indicator */
+@keyframes pulse-update {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.7;
+    }
+}
+
+/* Update spinner styling */
+.version-number + .spinner-border {
+    width: 0.8rem;
+    height: 0.8rem;
+    border-width: 1px;
+}
+
+/* Update notification styles (if needed for toast notifications) */
+.update-notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 1050;
+    max-width: 300px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.update-notification.update-available {
+    background-color: #d1ecf1;
+    border: 1px solid #bee5eb;
+    color: #0c5460;
+}
+
+.update-notification.update-error {
+    background-color: #f8d7da;
+    border: 1px solid #f5c6cb;
+    color: #721c24;
+}
+
+.update-notification.update-success {
+    background-color: #d4edda;
+    border: 1px solid #c3e6cb;
+    color: #155724;
+}
+
+/* Mobile-friendly adjustments */
+@media (max-width: 768px) {
+    .version-number {
+        padding: 3px 8px;
+        font-size: 0.9rem;
+    }
+    
+    .update-notification {
+        top: 10px;
+        right: 10px;
+        left: 10px;
+        max-width: none;
+    }
+}

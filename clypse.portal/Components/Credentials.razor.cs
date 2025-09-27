@@ -1,7 +1,10 @@
-using Microsoft.AspNetCore.Components;
-using clypse.portal.Models;
+using clypse.core.Enums;
 using clypse.core.Secrets;
+using clypse.core.Secrets.Import;
 using clypse.core.Vault;
+using clypse.portal.Models;
+using Microsoft.AspNetCore.Components;
+using System.Linq;
 
 namespace clypse.portal.Components;
 
@@ -15,18 +18,20 @@ public partial class Credentials : ComponentBase
     [Parameter] public EventCallback OnCreateCredential { get; set; }
     [Parameter] public IVaultManager? VaultManager { get; set; }
     
-    private WebSecret? currentSecret;
-    private bool showViewDialog = false;
-    private bool showEditDialog = false;
-    private bool showCreateDialog = false;
+    private bool showImportDialog = false;
     private bool isLoadingSecret = false;
     private bool isSavingSecret = false;
     private bool showDeleteConfirmation = false;
     private bool isDeletingSecret = false;
     private string secretIdToDelete = string.Empty;
     private string deleteConfirmationMessage = string.Empty;
+
+    // SecretDialog properties
+    private bool showSecretDialog = false;
+    private Secret? currentSecret = null;
+    private SecretDialog.SecretDialogMode secretDialogMode = SecretDialog.SecretDialogMode.Create;
     private string searchTerm = string.Empty;
-    private List<VaultIndexEntry> filteredEntries = new();
+    private List<VaultIndexEntry> filteredEntries = [];
 
     private async Task HandleLockVault()
     {
@@ -47,10 +52,11 @@ public partial class Credentials : ComponentBase
             
             var secret = await VaultManager.GetSecretAsync(LoadedVault, secretId, CurrentVaultKey, CancellationToken.None);
             
-            if (secret is WebSecret webSecret)
+            if (secret != null)
             {
-                currentSecret = webSecret;
-                showViewDialog = true;
+                currentSecret = secret; // Reuse the currentSecret for viewing
+                secretDialogMode = SecretDialog.SecretDialogMode.View;
+                showSecretDialog = true;
             }
         }
         catch
@@ -62,13 +68,6 @@ public partial class Credentials : ComponentBase
             isLoadingSecret = false;
             StateHasChanged();
         }
-    }
-    
-    private void CloseViewDialog()
-    {
-        showViewDialog = false;
-        currentSecret = null;
-        StateHasChanged();
     }
     
     private async Task EditSecret(string secretId)
@@ -85,10 +84,11 @@ public partial class Credentials : ComponentBase
             
             var secret = await VaultManager.GetSecretAsync(LoadedVault, secretId, CurrentVaultKey, CancellationToken.None);
             
-            if (secret is WebSecret webSecret)
+            if (secret != null)
             {
-                currentSecret = webSecret;
-                showEditDialog = true;
+                currentSecret = secret;
+                secretDialogMode = SecretDialog.SecretDialogMode.Edit;
+                showSecretDialog = true;
             }
         }
         catch
@@ -102,26 +102,65 @@ public partial class Credentials : ComponentBase
         }
     }
     
-    private void CloseEditDialog()
-    {
-        showEditDialog = false;
-        currentSecret = null;
-        StateHasChanged();
-    }
-    
     public void ShowCreateDialog()
     {
-        showCreateDialog = true;
+        currentSecret = new WebSecret();
+        secretDialogMode = SecretDialog.SecretDialogMode.Create;
+        showSecretDialog = true;
         StateHasChanged();
     }
     
     private void CloseCreateDialog()
     {
-        showCreateDialog = false;
+        showSecretDialog = false;
+        currentSecret = null;
+        StateHasChanged();
+    }
+
+    public void ShowImportDialog()
+    {
+        showImportDialog = true;
         StateHasChanged();
     }
     
-    private async Task HandleSaveSecret(WebSecret editedSecret)
+    private void CloseImportDialog()
+    {
+        showImportDialog = false;
+        StateHasChanged();
+    }
+
+    private async Task HandleImportSecrets(ImportSecretsDialog.ImportResult result)
+    {
+        if (VaultManager == null || LoadedVault == null || string.IsNullOrEmpty(CurrentVaultKey))
+        {
+            return;
+        }
+
+        try
+        {
+            // Add the mapped secrets to the vault
+            var addResult = LoadedVault.AddRawSecrets(result.MappedSecrets, SecretType.Web);
+            
+            if (addResult)
+            {
+                // Save the vault with the changes
+                var results = await VaultManager.SaveAsync(LoadedVault, CurrentVaultKey, null, CancellationToken.None);
+                
+                // Notify parent that vault was updated so it can refresh the index
+                await OnVaultUpdated.InvokeAsync();
+            }
+            
+            // Close the import dialog
+            CloseImportDialog();
+        }
+        catch (Exception ex)
+        {
+            // Error handling - could show a toast notification here
+            Console.WriteLine($"Error importing secrets: {ex.Message}");
+        }
+    }
+    
+    private async Task HandleSaveSecret(Secret editedSecret)
     {
         if (VaultManager == null || LoadedVault == null || string.IsNullOrEmpty(CurrentVaultKey))
         {
@@ -140,7 +179,7 @@ public partial class Credentials : ComponentBase
             await VaultManager.SaveAsync(LoadedVault, CurrentVaultKey, null, CancellationToken.None);
             
             // Close the dialog
-            CloseEditDialog();
+            CloseSecretDialog();
             
             // Notify parent that vault was updated so it can refresh the index
             await OnVaultUpdated.InvokeAsync();
@@ -156,7 +195,7 @@ public partial class Credentials : ComponentBase
         }
     }
     
-    private async Task HandleCreateSecret(WebSecret newSecret)
+    private async Task HandleCreateSecret(Secret newSecret)
     {
         if (VaultManager == null || LoadedVault == null || string.IsNullOrEmpty(CurrentVaultKey))
         {
@@ -217,12 +256,12 @@ public partial class Credentials : ComponentBase
         if (CurrentVault?.IndexEntries != null)
         {
             filteredEntries = CurrentVault.IndexEntries
-                .OrderBy(e => e.Name)
+                .OrderBy(e => e.Name, StringComparer.OrdinalIgnoreCase)
                 .ToList();
         }
         else
         {
-            filteredEntries = new List<VaultIndexEntry>();
+            filteredEntries = [];
         }
     }
 
@@ -230,26 +269,26 @@ public partial class Credentials : ComponentBase
     {
         if (CurrentVault?.IndexEntries == null)
         {
-            filteredEntries = new List<VaultIndexEntry>();
+            filteredEntries = [];
             return;
         }
 
         if (string.IsNullOrWhiteSpace(searchTerm))
         {
             filteredEntries = CurrentVault.IndexEntries
-                .OrderBy(e => e.Name)
+                .OrderBy(x => x.Name, StringComparer.OrdinalIgnoreCase)
                 .ToList();
 
-            return;
+          return;
         }
 
         var term = searchTerm.Trim().ToLower();
         filteredEntries = CurrentVault.IndexEntries
             .Where(entry => 
-                (entry.Name?.ToLower().Contains(term) ?? false) ||
-                (entry.Description?.ToLower().Contains(term) ?? false) ||
-                (entry.Tags?.ToLower().Contains(term) ?? false))
-            .OrderBy(e => e.Name)
+                (entry.Name?.Contains(term, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                (entry.Description?.Contains(term, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                (entry.Tags?.Contains(term, StringComparison.OrdinalIgnoreCase) ?? false))
+            .OrderBy(e => e.Name, StringComparer.OrdinalIgnoreCase)
             .ToList();
     }
 
@@ -312,5 +351,29 @@ public partial class Credentials : ComponentBase
             isDeletingSecret = false;
             StateHasChanged();
         }
+    }
+
+    private async Task HandleSecretDialogSave(Secret secret)
+    {
+        switch (secretDialogMode)
+        {
+            case SecretDialog.SecretDialogMode.Create:
+                await HandleCreateSecret(secret);
+                break;
+            case SecretDialog.SecretDialogMode.Edit:
+                await HandleSaveSecret(secret);
+                break;
+            case SecretDialog.SecretDialogMode.View:
+                // View mode doesn't save
+                CloseSecretDialog();
+                break;
+        }
+    }
+
+    private void CloseSecretDialog()
+    {
+        showSecretDialog = false;
+        currentSecret = null;
+        StateHasChanged();
     }
 }
