@@ -34,6 +34,11 @@ public partial class Test : ComponentBase
     // WebAuthn test result display properties
     private string? webAuthnTestMessage;
     private bool webAuthnTestSuccess;
+    
+    // SimpleWebAuthn test result display properties
+    private string? simpleWebAuthnTestMessage;
+    private bool simpleWebAuthnTestSuccess;
+    private string? storedCredentialId;
 
     private class LoginModel
     {
@@ -444,6 +449,179 @@ public partial class Test : ComponentBase
         public bool Success { get; set; }
         public string? Error { get; set; }
         public string? Plaintext { get; set; }
+        public string? KeyDerivationMethod { get; set; }
+        public WebAuthnDiagnostics? Diagnostics { get; set; }
+    }
+
+    private void ClearSimpleWebAuthnMessage()
+    {
+        simpleWebAuthnTestMessage = null;
+        simpleWebAuthnTestSuccess = false;
+    }
+
+    private void SetSimpleWebAuthnMessage(string message, bool success)
+    {
+        simpleWebAuthnTestMessage = message;
+        simpleWebAuthnTestSuccess = success;
+    }
+
+    private async Task HandleSimpleWebAuthnCreateCredential()
+    {
+        ClearSimpleWebAuthnMessage();
+        
+        try
+        {
+            Console.WriteLine("Starting SimpleWebAuthn createCredential...");
+            
+            // Create credential with the new library
+            var result = await JSRuntime.InvokeAsync<SimpleWebAuthnResult>("SimpleWebAuthn.createCredential", new {
+                rp = new { name = "Clypse Test", id = "localhost" },
+                user = new { 
+                    id = "dGVzdC11c2VyLWlkLTEyMzQ=", // base64 of "test-user-id-1234"
+                    name = "testuser@example.com",
+                    displayName = "Test User"
+                },
+                challenge = "Y2hhbGxlbmdlLTE2LWJ5dGVzLXRlc3Q=", // base64 of "challenge-16-bytes-test"
+                pubKeyCredParams = new[] { 
+                    new { alg = -7, type = "public-key" },
+                    new { alg = -257, type = "public-key" }
+                },
+                authenticatorSelection = new {
+                    authenticatorAttachment = "platform",
+                    userVerification = "required",
+                    residentKey = "preferred"
+                },
+                timeout = 60000,
+                attestation = "none",
+                encryptionSalt = "clypse-test-vault-salt-v1"  // Required salt parameter
+            });
+            
+            Console.WriteLine($"SimpleWebAuthn createCredential result - Success: {result?.Success}, Error: {result?.Error}");
+            
+            if (result?.Success == true && !string.IsNullOrEmpty(result.CredentialId))
+            {
+                // Store the credential ID for authentication test
+                storedCredentialId = result.CredentialId;
+                await JSRuntime.InvokeVoidAsync("localStorage.setItem", "simple_webauthn_credential_id", result.CredentialId);
+                
+                Console.WriteLine($"Credential created with ID: {result.CredentialId}");
+                Console.WriteLine($"Key Derivation Method: {result.KeyDerivationMethod ?? "Unknown"}");
+                
+                var method = result.KeyDerivationMethod == "PRF" ? "PRF (biometric)" : "Credential ID (PIN)";
+                var diagnostics = result.Diagnostics;
+                
+                var message = $"<strong>✅ Credential created successfully using {method} method!</strong><br><br>" +
+                             $"🆔 <strong>Credential ID:</strong> {result.CredentialId}<br>" +
+                             $"🔧 <strong>Platform:</strong> {diagnostics?.Platform}<br>" +
+                             $"🔑 <strong>Method:</strong> {result.KeyDerivationMethod}<br>" +
+                             $"🛡️ <strong>Authenticator:</strong> {diagnostics?.AuthenticatorType}<br>" +
+                             $"📊 <strong>PRF Supported:</strong> {(diagnostics?.PrfSupported == true ? "Yes" : "No")}<br>" +
+                             $"📋 <strong>PRF Results:</strong> {(diagnostics?.PrfResultsAvailable == true ? "Available" : "Not Available")}<br>" +
+                             $"💾 <strong>Ready for authentication test</strong>";
+                             
+                SetSimpleWebAuthnMessage(message, true);
+            }
+            else
+            {
+                SetSimpleWebAuthnMessage(result?.Error ?? "Unknown credential creation error", false);
+            }
+        }
+        catch (Exception ex)
+        {
+            SetSimpleWebAuthnMessage($"Exception during credential creation: {ex.Message}", false);
+        }
+        
+        StateHasChanged();
+    }
+
+    private async Task HandleSimpleWebAuthnAuthenticate()
+    {
+        ClearSimpleWebAuthnMessage();
+        
+        try
+        {
+            // Get the stored credential ID
+            var credentialId = storedCredentialId ?? await JSRuntime.InvokeAsync<string>("localStorage.getItem", "simple_webauthn_credential_id");
+            
+            if (string.IsNullOrEmpty(credentialId))
+            {
+                SetSimpleWebAuthnMessage("No credential found. Please create a credential first.", false);
+                StateHasChanged();
+                return;
+            }
+            
+            Console.WriteLine("Starting SimpleWebAuthn authenticate...");
+            
+            // Authenticate with the new library
+            var result = await JSRuntime.InvokeAsync<SimpleWebAuthnAuthResult>("SimpleWebAuthn.authenticate", new {
+                challenge = "YXV0aC1jaGFsbGVuZ2UtMTYtYnl0ZXM=", // base64 of "auth-challenge-16-bytes"
+                allowCredentials = new[] {
+                    new { 
+                        id = credentialId,
+                        type = "public-key",
+                        transports = new[] { "internal", "hybrid" }
+                    }
+                },
+                userVerification = "required",
+                timeout = 60000,
+                // Test data to encrypt/decrypt
+                userData = "hello world from SimpleWebAuthn!",
+                encryptionSalt = "clypse-test-vault-salt-v1"  // Required salt parameter - must match createCredential
+            });
+            
+            Console.WriteLine($"SimpleWebAuthn authenticate result - Success: {result?.Success}, Error: {result?.Error}");
+            
+            if (result?.Success == true)
+            {
+                Console.WriteLine($"Authentication successful with key: {result.DerivedKey?.Substring(0, 16)}...");
+                Console.WriteLine($"Encrypted data: {result.EncryptedUserData}");
+                Console.WriteLine($"Key Derivation Method: {result.KeyDerivationMethod ?? "Unknown"}");
+                
+                var method = result.KeyDerivationMethod == "PRF" ? "PRF (biometric)" : "Credential ID (PIN)";
+                var diagnostics = result.Diagnostics;
+                
+                var message = $"<strong>✅ AUTHENTICATION SUCCESSFUL!</strong><br><br>" +
+                             $"🔑 <strong>Method:</strong> {result.KeyDerivationMethod}<br>" +
+                             $"🗝️ <strong>Derived Key:</strong> {result.DerivedKey?.Substring(0, 32)}...<br>" +
+                             $"🔒 <strong>Encrypted Data:</strong> {result.EncryptedUserData}<br>" +
+                             $"🔧 <strong>Platform:</strong> {diagnostics?.Platform}<br>" +
+                             $"🛡️ <strong>Authenticator:</strong> {diagnostics?.AuthenticatorType}<br>" +
+                             $"📊 <strong>PRF Supported:</strong> {(diagnostics?.PrfSupported == true ? "Yes" : "No")}<br>" +
+                             $"📋 <strong>PRF Results:</strong> {(diagnostics?.PrfResultsAvailable == true ? "Available" : "Not Available")}<br>" +
+                             $"🆔 <strong>Credential ID:</strong> {result.CredentialId}";
+                             
+                SetSimpleWebAuthnMessage(message, true);
+            }
+            else
+            {
+                SetSimpleWebAuthnMessage(result?.Error ?? "Unknown authentication error", false);
+            }
+        }
+        catch (Exception ex)
+        {
+            SetSimpleWebAuthnMessage($"Exception during authentication: {ex.Message}", false);
+        }
+        
+        StateHasChanged();
+    }
+
+    // SimpleWebAuthn result classes
+    private class SimpleWebAuthnResult
+    {
+        public bool Success { get; set; }
+        public string? Error { get; set; }
+        public string? CredentialId { get; set; }
+        public string? KeyDerivationMethod { get; set; }
+        public WebAuthnDiagnostics? Diagnostics { get; set; }
+    }
+
+    private class SimpleWebAuthnAuthResult
+    {
+        public bool Success { get; set; }
+        public string? Error { get; set; }
+        public string? CredentialId { get; set; }
+        public string? DerivedKey { get; set; }
+        public string? EncryptedUserData { get; set; }
         public string? KeyDerivationMethod { get; set; }
         public WebAuthnDiagnostics? Diagnostics { get; set; }
     }

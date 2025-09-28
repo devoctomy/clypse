@@ -9,29 +9,57 @@ export class InputValidator {
    * Validate createCredential options
    */
   static validateCreateOptions(options: CreateCredentialOptions): {valid: boolean, error?: string} {
-    // Check required fields
-    if (!options.rpName || options.rpName.trim().length === 0) {
-      return { valid: false, error: "rpName is required and cannot be empty" };
+    // Check required rp object
+    if (!options.rp || typeof options.rp !== 'object') {
+      return { valid: false, error: "rp object is required" };
     }
     
-    if (!options.userName || options.userName.trim().length === 0) {
-      return { valid: false, error: "userName is required and cannot be empty" };
+    if (!options.rp.name || options.rp.name.trim().length === 0) {
+      return { valid: false, error: "rp.name is required and cannot be empty" };
     }
     
-    if (!options.userDisplayName || options.userDisplayName.trim().length === 0) {
-      return { valid: false, error: "userDisplayName is required and cannot be empty" };
+    // Check required user object
+    if (!options.user || typeof options.user !== 'object') {
+      return { valid: false, error: "user object is required" };
+    }
+    
+    if (!options.user.id || options.user.id.trim().length === 0) {
+      return { valid: false, error: "user.id is required and cannot be empty" };
+    }
+    
+    if (!options.user.name || options.user.name.trim().length === 0) {
+      return { valid: false, error: "user.name is required and cannot be empty" };
+    }
+    
+    if (!options.user.displayName || options.user.displayName.trim().length === 0) {
+      return { valid: false, error: "user.displayName is required and cannot be empty" };
+    }
+    
+    // Check required challenge
+    if (!options.challenge || options.challenge.trim().length === 0) {
+      return { valid: false, error: "challenge is required and cannot be empty" };
+    }
+    
+    // Check required pubKeyCredParams
+    if (!Array.isArray(options.pubKeyCredParams) || options.pubKeyCredParams.length === 0) {
+      return { valid: false, error: "pubKeyCredParams array is required and cannot be empty" };
+    }
+    
+    // Check required encryptionSalt
+    if (!options.encryptionSalt || options.encryptionSalt.trim().length === 0) {
+      return { valid: false, error: "encryptionSalt is required and cannot be empty" };
     }
     
     // Validate optional rpId if provided
-    if (options.rpId !== undefined) {
-      if (typeof options.rpId !== 'string' || options.rpId.trim().length === 0) {
-        return { valid: false, error: "rpId must be a non-empty string if provided" };
+    if (options.rp.id !== undefined) {
+      if (typeof options.rp.id !== 'string' || options.rp.id.trim().length === 0) {
+        return { valid: false, error: "rp.id must be a non-empty string if provided" };
       }
       
       // Basic validation - must be a valid hostname format
       const rpIdRegex = /^[a-zA-Z0-9.-]+$/;
-      if (!rpIdRegex.test(options.rpId)) {
-        return { valid: false, error: "rpId must be a valid hostname format" };
+      if (!rpIdRegex.test(options.rp.id)) {
+        return { valid: false, error: "rp.id must be a valid hostname format" };
       }
     }
     
@@ -42,34 +70,27 @@ export class InputValidator {
       }
     }
     
-    // Validate userVerification if provided
-    if (options.userVerification !== undefined) {
-      const validValues = ["required", "preferred", "discouraged"];
-      if (!validValues.includes(options.userVerification)) {
-        return { valid: false, error: "userVerification must be 'required', 'preferred', or 'discouraged'" };
+    // Validate authenticatorSelection if provided
+    if (options.authenticatorSelection !== undefined) {
+      if (options.authenticatorSelection.userVerification !== undefined) {
+        const validValues = ["required", "preferred", "discouraged"];
+        if (!validValues.includes(options.authenticatorSelection.userVerification)) {
+          return { valid: false, error: "authenticatorSelection.userVerification must be 'required', 'preferred', or 'discouraged'" };
+        }
       }
-    }
-    
-    // Validate authenticatorAttachment if provided
-    if (options.authenticatorAttachment !== undefined) {
-      const validValues = ["platform", "cross-platform"];
-      if (!validValues.includes(options.authenticatorAttachment)) {
-        return { valid: false, error: "authenticatorAttachment must be 'platform' or 'cross-platform'" };
+      
+      if (options.authenticatorSelection.authenticatorAttachment !== undefined) {
+        const validValues = ["platform", "cross-platform"];
+        if (!validValues.includes(options.authenticatorSelection.authenticatorAttachment)) {
+          return { valid: false, error: "authenticatorSelection.authenticatorAttachment must be 'platform' or 'cross-platform'" };
+        }
       }
-    }
-    
-    // Validate residentKey if provided
-    if (options.residentKey !== undefined) {
-      const validValues = ["required", "preferred", "discouraged"];
-      if (!validValues.includes(options.residentKey)) {
-        return { valid: false, error: "residentKey must be 'required', 'preferred', or 'discouraged'" };
-      }
-    }
-    
-    // Validate encryption salt if provided
-    if (options.encryptionSalt !== undefined) {
-      if (typeof options.encryptionSalt !== 'string' || options.encryptionSalt.trim().length === 0) {
-        return { valid: false, error: "encryptionSalt must be a non-empty string if provided" };
+      
+      if (options.authenticatorSelection.residentKey !== undefined) {
+        const validValues = ["required", "preferred", "discouraged"];
+        if (!validValues.includes(options.authenticatorSelection.residentKey)) {
+          return { valid: false, error: "authenticatorSelection.residentKey must be 'required', 'preferred', or 'discouraged'" };
+        }
       }
     }
     
@@ -80,16 +101,32 @@ export class InputValidator {
    * Validate authenticate options
    */
   static validateAuthOptions(options: AuthenticateOptions): {valid: boolean, error?: string} {
-    // Check required fields
-    if (!options.credentialId || options.credentialId.trim().length === 0) {
-      return { valid: false, error: "credentialId is required and cannot be empty" };
+    // Check required challenge
+    if (!options.challenge || options.challenge.trim().length === 0) {
+      return { valid: false, error: "challenge is required and cannot be empty" };
     }
     
-    // Validate credentialId format (should be base64)
-    try {
-      atob(options.credentialId);
-    } catch (error) {
-      return { valid: false, error: "credentialId must be a valid base64 string" };
+    // Check required allowCredentials
+    if (!Array.isArray(options.allowCredentials) || options.allowCredentials.length === 0) {
+      return { valid: false, error: "allowCredentials array is required and cannot be empty" };
+    }
+    
+    // Validate each credential descriptor
+    for (const cred of options.allowCredentials) {
+      if (!cred.id || cred.id.trim().length === 0) {
+        return { valid: false, error: "allowCredentials[].id is required and cannot be empty" };
+      }
+      
+      if (cred.type !== "public-key") {
+        return { valid: false, error: "allowCredentials[].type must be 'public-key'" };
+      }
+      
+      // Validate credential ID is valid base64
+      try {
+        atob(cred.id);
+      } catch (e) {
+        return { valid: false, error: "allowCredentials[].id must be a valid base64 string" };
+      }
     }
     
     // Validate timeout if provided
@@ -107,24 +144,9 @@ export class InputValidator {
       }
     }
     
-    // Validate encryptedData if provided (should be base64)
-    if (options.encryptedData !== undefined) {
-      if (typeof options.encryptedData !== 'string' || options.encryptedData.trim().length === 0) {
-        return { valid: false, error: "encryptedData must be a non-empty string if provided" };
-      }
-      
-      try {
-        atob(options.encryptedData);
-      } catch (error) {
-        return { valid: false, error: "encryptedData must be a valid base64 string" };
-      }
-    }
-    
-    // Validate encryption salt if provided
-    if (options.encryptionSalt !== undefined) {
-      if (typeof options.encryptionSalt !== 'string' || options.encryptionSalt.trim().length === 0) {
-        return { valid: false, error: "encryptionSalt must be a non-empty string if provided" };
-      }
+    // Check required encryptionSalt
+    if (!options.encryptionSalt || options.encryptionSalt.trim().length === 0) {
+      return { valid: false, error: "encryptionSalt is required and cannot be empty" };
     }
     
     return { valid: true };

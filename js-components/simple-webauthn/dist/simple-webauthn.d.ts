@@ -3,7 +3,7 @@ import { CreateCredentialOptions, AuthenticateOptions, CreateCredentialResult, A
  * SimpleWebAuthn - A reusable library for WebAuthn credential management
  * with optional PRF-based data encryption
  */
-export declare class SimpleWebAuthn {
+declare class SimpleWebAuthnClass {
     /**
      * Creates a new WebAuthn credential and optionally encrypts data
      * @param options - Credential creation options
@@ -29,13 +29,22 @@ export declare class SimpleWebAuthn {
      */
     private static getBasicDiagnostics;
     /**
+     * Convert CryptoKey to base64 string for transport
+     */
+    private static keyToBase64;
+    /**
      * Determine authenticator type based on platform and PRF support (from working code)
      */
     private static getAuthenticatorType;
 }
+declare const SimpleWebAuthn: {
+    createCredential: typeof SimpleWebAuthnClass.createCredential;
+    authenticate: typeof SimpleWebAuthnClass.authenticate;
+};
 declare global {
     interface Window {
         SimpleWebAuthn: typeof SimpleWebAuthn;
     }
 }
+export default SimpleWebAuthn;
 //# sourceMappingURL=simple-webauthn.d.ts.map

@@ -1,4 +1,4 @@
-var SimpleWebAuthn = (function (exports) {
+var SimpleWebAuthn = (function () {
     'use strict';
 
     /**
@@ -141,6 +141,13 @@ var SimpleWebAuthn = (function (exports) {
          */
         static async createCredential(options, platformConfig) {
             try {
+                // Validate required encryptionSalt
+                if (!options.encryptionSalt || options.encryptionSalt.trim() === '') {
+                    return {
+                        success: false,
+                        error: "encryptionSalt is required and cannot be empty"
+                    };
+                }
                 // Generate challenge and user ID
                 const challenge = crypto.getRandomValues(new Uint8Array(32));
                 const userId = crypto.getRandomValues(new Uint8Array(32));
@@ -148,28 +155,25 @@ var SimpleWebAuthn = (function (exports) {
                 const credentialCreationOptions = {
                     challenge: challenge,
                     rp: {
-                        name: options.rpName,
-                        id: options.rpId || window.location.hostname
+                        name: options.rp.name,
+                        id: options.rp.id || window.location.hostname
                     },
                     user: {
                         id: userId,
-                        name: options.userName,
-                        displayName: options.userDisplayName
+                        name: options.user.name,
+                        displayName: options.user.displayName
                     },
-                    pubKeyCredParams: [
-                        { alg: -7, type: "public-key" }, // ES256
-                        { alg: -257, type: "public-key" } // RS256
-                    ],
+                    pubKeyCredParams: options.pubKeyCredParams,
                     timeout: options.timeout || platformConfig.timeout,
                     authenticatorSelection: {
-                        authenticatorAttachment: options.authenticatorAttachment || "platform",
-                        userVerification: options.userVerification || "required",
-                        residentKey: options.residentKey || platformConfig.residentKey
+                        authenticatorAttachment: options.authenticatorSelection?.authenticatorAttachment || "platform",
+                        userVerification: options.authenticatorSelection?.userVerification || "required",
+                        residentKey: options.authenticatorSelection?.residentKey || platformConfig.residentKey
                     },
                     extensions: {
                         prf: {
                             eval: {
-                                first: new TextEncoder().encode(options.encryptionSalt || "webauthn-prf-salt-v1")
+                                first: new TextEncoder().encode(options.encryptionSalt)
                             }
                         }
                     }
@@ -212,7 +216,7 @@ var SimpleWebAuthn = (function (exports) {
                     else {
                         console.log("⚠️ PRF enabled but no results - attempting get() operation...");
                         // Need to do a get() operation to get PRF results
-                        const prfKeyMaterial = await this.attemptPRFGet(credential.rawId, options.encryptionSalt || "webauthn-prf-salt-v1", platformConfig);
+                        const prfKeyMaterial = await this.attemptPRFGet(credential.rawId, options.encryptionSalt, platformConfig);
                         if (prfKeyMaterial.success) {
                             keyMaterial = prfKeyMaterial.keyMaterial;
                             keyDerivationMethod = "PRF";
@@ -251,10 +255,17 @@ var SimpleWebAuthn = (function (exports) {
          */
         static async authenticate(options, platformConfig) {
             try {
+                // Validate required encryptionSalt
+                if (!options.encryptionSalt || options.encryptionSalt.trim() === '') {
+                    return {
+                        success: false,
+                        error: "encryptionSalt is required and cannot be empty"
+                    };
+                }
                 // Generate challenge
                 const challenge = crypto.getRandomValues(new Uint8Array(32));
                 // Convert credential ID from base64
-                const credentialIdBytes = Uint8Array.from(atob(options.credentialId), c => c.charCodeAt(0));
+                const credentialIdBytes = Uint8Array.from(atob(options.allowCredentials[0].id), c => c.charCodeAt(0));
                 // Build authentication options
                 const getOptions = {
                     challenge: challenge,
@@ -267,7 +278,7 @@ var SimpleWebAuthn = (function (exports) {
                     extensions: {
                         prf: {
                             eval: {
-                                first: new TextEncoder().encode(options.encryptionSalt || "webauthn-prf-salt-v1")
+                                first: new TextEncoder().encode(options.encryptionSalt)
                             }
                         }
                     }
@@ -392,25 +403,47 @@ var SimpleWebAuthn = (function (exports) {
          * Validate createCredential options
          */
         static validateCreateOptions(options) {
-            // Check required fields
-            if (!options.rpName || options.rpName.trim().length === 0) {
-                return { valid: false, error: "rpName is required and cannot be empty" };
+            // Check required rp object
+            if (!options.rp || typeof options.rp !== 'object') {
+                return { valid: false, error: "rp object is required" };
             }
-            if (!options.userName || options.userName.trim().length === 0) {
-                return { valid: false, error: "userName is required and cannot be empty" };
+            if (!options.rp.name || options.rp.name.trim().length === 0) {
+                return { valid: false, error: "rp.name is required and cannot be empty" };
             }
-            if (!options.userDisplayName || options.userDisplayName.trim().length === 0) {
-                return { valid: false, error: "userDisplayName is required and cannot be empty" };
+            // Check required user object
+            if (!options.user || typeof options.user !== 'object') {
+                return { valid: false, error: "user object is required" };
+            }
+            if (!options.user.id || options.user.id.trim().length === 0) {
+                return { valid: false, error: "user.id is required and cannot be empty" };
+            }
+            if (!options.user.name || options.user.name.trim().length === 0) {
+                return { valid: false, error: "user.name is required and cannot be empty" };
+            }
+            if (!options.user.displayName || options.user.displayName.trim().length === 0) {
+                return { valid: false, error: "user.displayName is required and cannot be empty" };
+            }
+            // Check required challenge
+            if (!options.challenge || options.challenge.trim().length === 0) {
+                return { valid: false, error: "challenge is required and cannot be empty" };
+            }
+            // Check required pubKeyCredParams
+            if (!Array.isArray(options.pubKeyCredParams) || options.pubKeyCredParams.length === 0) {
+                return { valid: false, error: "pubKeyCredParams array is required and cannot be empty" };
+            }
+            // Check required encryptionSalt
+            if (!options.encryptionSalt || options.encryptionSalt.trim().length === 0) {
+                return { valid: false, error: "encryptionSalt is required and cannot be empty" };
             }
             // Validate optional rpId if provided
-            if (options.rpId !== undefined) {
-                if (typeof options.rpId !== 'string' || options.rpId.trim().length === 0) {
-                    return { valid: false, error: "rpId must be a non-empty string if provided" };
+            if (options.rp.id !== undefined) {
+                if (typeof options.rp.id !== 'string' || options.rp.id.trim().length === 0) {
+                    return { valid: false, error: "rp.id must be a non-empty string if provided" };
                 }
                 // Basic validation - must be a valid hostname format
                 const rpIdRegex = /^[a-zA-Z0-9.-]+$/;
-                if (!rpIdRegex.test(options.rpId)) {
-                    return { valid: false, error: "rpId must be a valid hostname format" };
+                if (!rpIdRegex.test(options.rp.id)) {
+                    return { valid: false, error: "rp.id must be a valid hostname format" };
                 }
             }
             // Validate timeout if provided
@@ -419,31 +452,25 @@ var SimpleWebAuthn = (function (exports) {
                     return { valid: false, error: "timeout must be a positive number between 1 and 600000 (10 minutes)" };
                 }
             }
-            // Validate userVerification if provided
-            if (options.userVerification !== undefined) {
-                const validValues = ["required", "preferred", "discouraged"];
-                if (!validValues.includes(options.userVerification)) {
-                    return { valid: false, error: "userVerification must be 'required', 'preferred', or 'discouraged'" };
+            // Validate authenticatorSelection if provided
+            if (options.authenticatorSelection !== undefined) {
+                if (options.authenticatorSelection.userVerification !== undefined) {
+                    const validValues = ["required", "preferred", "discouraged"];
+                    if (!validValues.includes(options.authenticatorSelection.userVerification)) {
+                        return { valid: false, error: "authenticatorSelection.userVerification must be 'required', 'preferred', or 'discouraged'" };
+                    }
                 }
-            }
-            // Validate authenticatorAttachment if provided
-            if (options.authenticatorAttachment !== undefined) {
-                const validValues = ["platform", "cross-platform"];
-                if (!validValues.includes(options.authenticatorAttachment)) {
-                    return { valid: false, error: "authenticatorAttachment must be 'platform' or 'cross-platform'" };
+                if (options.authenticatorSelection.authenticatorAttachment !== undefined) {
+                    const validValues = ["platform", "cross-platform"];
+                    if (!validValues.includes(options.authenticatorSelection.authenticatorAttachment)) {
+                        return { valid: false, error: "authenticatorSelection.authenticatorAttachment must be 'platform' or 'cross-platform'" };
+                    }
                 }
-            }
-            // Validate residentKey if provided
-            if (options.residentKey !== undefined) {
-                const validValues = ["required", "preferred", "discouraged"];
-                if (!validValues.includes(options.residentKey)) {
-                    return { valid: false, error: "residentKey must be 'required', 'preferred', or 'discouraged'" };
-                }
-            }
-            // Validate encryption salt if provided
-            if (options.encryptionSalt !== undefined) {
-                if (typeof options.encryptionSalt !== 'string' || options.encryptionSalt.trim().length === 0) {
-                    return { valid: false, error: "encryptionSalt must be a non-empty string if provided" };
+                if (options.authenticatorSelection.residentKey !== undefined) {
+                    const validValues = ["required", "preferred", "discouraged"];
+                    if (!validValues.includes(options.authenticatorSelection.residentKey)) {
+                        return { valid: false, error: "authenticatorSelection.residentKey must be 'required', 'preferred', or 'discouraged'" };
+                    }
                 }
             }
             return { valid: true };
@@ -452,16 +479,29 @@ var SimpleWebAuthn = (function (exports) {
          * Validate authenticate options
          */
         static validateAuthOptions(options) {
-            // Check required fields
-            if (!options.credentialId || options.credentialId.trim().length === 0) {
-                return { valid: false, error: "credentialId is required and cannot be empty" };
+            // Check required challenge
+            if (!options.challenge || options.challenge.trim().length === 0) {
+                return { valid: false, error: "challenge is required and cannot be empty" };
             }
-            // Validate credentialId format (should be base64)
-            try {
-                atob(options.credentialId);
+            // Check required allowCredentials
+            if (!Array.isArray(options.allowCredentials) || options.allowCredentials.length === 0) {
+                return { valid: false, error: "allowCredentials array is required and cannot be empty" };
             }
-            catch (error) {
-                return { valid: false, error: "credentialId must be a valid base64 string" };
+            // Validate each credential descriptor
+            for (const cred of options.allowCredentials) {
+                if (!cred.id || cred.id.trim().length === 0) {
+                    return { valid: false, error: "allowCredentials[].id is required and cannot be empty" };
+                }
+                if (cred.type !== "public-key") {
+                    return { valid: false, error: "allowCredentials[].type must be 'public-key'" };
+                }
+                // Validate credential ID is valid base64
+                try {
+                    atob(cred.id);
+                }
+                catch (e) {
+                    return { valid: false, error: "allowCredentials[].id must be a valid base64 string" };
+                }
             }
             // Validate timeout if provided
             if (options.timeout !== undefined) {
@@ -476,33 +516,20 @@ var SimpleWebAuthn = (function (exports) {
                     return { valid: false, error: "userVerification must be 'required', 'preferred', or 'discouraged'" };
                 }
             }
-            // Validate encryptedData if provided (should be base64)
-            if (options.encryptedData !== undefined) {
-                if (typeof options.encryptedData !== 'string' || options.encryptedData.trim().length === 0) {
-                    return { valid: false, error: "encryptedData must be a non-empty string if provided" };
-                }
-                try {
-                    atob(options.encryptedData);
-                }
-                catch (error) {
-                    return { valid: false, error: "encryptedData must be a valid base64 string" };
-                }
-            }
-            // Validate encryption salt if provided
-            if (options.encryptionSalt !== undefined) {
-                if (typeof options.encryptionSalt !== 'string' || options.encryptionSalt.trim().length === 0) {
-                    return { valid: false, error: "encryptionSalt must be a non-empty string if provided" };
-                }
+            // Check required encryptionSalt
+            if (!options.encryptionSalt || options.encryptionSalt.trim().length === 0) {
+                return { valid: false, error: "encryptionSalt is required and cannot be empty" };
             }
             return { valid: true };
         }
     }
 
+    // Temporarily removed legacy interfaces - using any for WebAuthnCore compatibility
     /**
      * SimpleWebAuthn - A reusable library for WebAuthn credential management
      * with optional PRF-based data encryption
      */
-    class SimpleWebAuthn {
+    class SimpleWebAuthnClass {
         /**
          * Creates a new WebAuthn credential and optionally encrypts data
          * @param options - Credential creation options
@@ -530,7 +557,7 @@ var SimpleWebAuthn = (function (exports) {
                 }
                 // Detect platform configuration
                 const platformConfig = PlatformDetector.detectPlatform();
-                // Create credential using WebAuthn
+                // Pass options directly to WebAuthnCore (no conversion needed)
                 const webAuthnResult = await WebAuthnCore.createCredential(options, platformConfig);
                 if (!webAuthnResult.success) {
                     return {
@@ -541,26 +568,10 @@ var SimpleWebAuthn = (function (exports) {
                 }
                 const result = {
                     success: true,
-                    credential: webAuthnResult.credential,
+                    credentialId: webAuthnResult.credential.id,
+                    keyDerivationMethod: webAuthnResult.keyDerivationMethod,
                     diagnostics: this.buildDiagnostics(platformConfig, webAuthnResult.prfResult || null, webAuthnResult.keyDerivationMethod)
                 };
-                // Handle optional encryption
-                if (options.plaintextToEncrypt) {
-                    const encryptionResult = await EncryptionUtils.encryptData(options.plaintextToEncrypt, webAuthnResult.keyMaterial, options.encryptionSalt || "webauthn-prf-salt-v1");
-                    if (encryptionResult.success) {
-                        result.encryption = {
-                            encryptedData: encryptionResult.encryptedData,
-                            keyDerivationMethod: webAuthnResult.keyDerivationMethod
-                        };
-                    }
-                    else {
-                        return {
-                            success: false,
-                            error: `Encryption failed: ${encryptionResult.error}`,
-                            diagnostics: result.diagnostics
-                        };
-                    }
-                }
                 return result;
             }
             catch (error) {
@@ -598,7 +609,7 @@ var SimpleWebAuthn = (function (exports) {
                 }
                 // Detect platform configuration
                 const platformConfig = PlatformDetector.detectPlatform();
-                // Authenticate using WebAuthn
+                // Pass options directly to WebAuthnCore (no conversion needed)
                 const webAuthnResult = await WebAuthnCore.authenticate(options, platformConfig);
                 if (!webAuthnResult.success) {
                     return {
@@ -607,31 +618,22 @@ var SimpleWebAuthn = (function (exports) {
                         diagnostics: this.buildDiagnostics(platformConfig, null, webAuthnResult.keyDerivationMethod || "unknown")
                     };
                 }
+                // Create result with new API format
                 const result = {
                     success: true,
-                    authentication: {
-                        credentialId: webAuthnResult.credentialId,
-                        signature: webAuthnResult.signature,
-                        authenticatorData: webAuthnResult.authenticatorData,
-                        keyDerivationMethod: webAuthnResult.keyDerivationMethod
-                    },
+                    credentialId: webAuthnResult.credentialId,
+                    keyDerivationMethod: webAuthnResult.keyDerivationMethod,
                     diagnostics: this.buildDiagnostics(platformConfig, webAuthnResult.prfResult || null, webAuthnResult.keyDerivationMethod)
                 };
-                // Handle optional decryption
-                if (options.encryptedData) {
-                    const decryptionResult = await EncryptionUtils.decryptData(options.encryptedData, webAuthnResult.keyMaterial, options.encryptionSalt || "webauthn-prf-salt-v1");
-                    if (decryptionResult.success) {
-                        result.decryption = {
-                            plaintext: decryptionResult.plaintext,
-                            keyDerivationMethod: webAuthnResult.keyDerivationMethod
-                        };
-                    }
-                    else {
-                        return {
-                            success: false,
-                            error: `Decryption failed: ${decryptionResult.error}`,
-                            diagnostics: result.diagnostics
-                        };
+                // Add derived key if available
+                if (webAuthnResult.keyMaterial) {
+                    result.derivedKey = await this.keyToBase64(webAuthnResult.keyMaterial);
+                }
+                // Handle optional encryption of userData
+                if (options.userData && webAuthnResult.keyMaterial) {
+                    const encryptionResult = await EncryptionUtils.encryptData(options.userData, webAuthnResult.keyMaterial, options.encryptionSalt);
+                    if (encryptionResult.success) {
+                        result.encryptedUserData = encryptionResult.encryptedData;
                     }
                 }
                 return result;
@@ -720,6 +722,13 @@ var SimpleWebAuthn = (function (exports) {
             };
         }
         /**
+         * Convert CryptoKey to base64 string for transport
+         */
+        static async keyToBase64(key) {
+            const keyData = await crypto.subtle.exportKey('raw', key);
+            return btoa(String.fromCharCode(...new Uint8Array(keyData)));
+        }
+        /**
          * Determine authenticator type based on platform and PRF support (from working code)
          */
         static getAuthenticatorType(keyDerivationMethod, platformConfig, prfResult) {
@@ -746,14 +755,17 @@ var SimpleWebAuthn = (function (exports) {
             }
         }
     }
+    // For IIFE format, create object with static methods
+    const SimpleWebAuthn = {
+        createCredential: SimpleWebAuthnClass.createCredential.bind(SimpleWebAuthnClass),
+        authenticate: SimpleWebAuthnClass.authenticate.bind(SimpleWebAuthnClass)
+    };
     // Attach to window for browser usage
     if (typeof window !== 'undefined') {
         window.SimpleWebAuthn = SimpleWebAuthn;
     }
 
-    exports.SimpleWebAuthn = SimpleWebAuthn;
+    return SimpleWebAuthn;
 
-    return exports;
-
-})({});
+})();
 //# sourceMappingURL=simple-webauthn.js.map

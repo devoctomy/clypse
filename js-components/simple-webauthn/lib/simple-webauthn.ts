@@ -13,11 +13,13 @@ import { WebAuthnCore } from './webauthn-core.js';
 import { EncryptionUtils } from './encryption-utils.js';
 import { InputValidator } from './input-validator.js';
 
+// Temporarily removed legacy interfaces - using any for WebAuthnCore compatibility
+
 /**
  * SimpleWebAuthn - A reusable library for WebAuthn credential management 
  * with optional PRF-based data encryption
  */
-export class SimpleWebAuthn {
+class SimpleWebAuthnClass {
   
   /**
    * Creates a new WebAuthn credential and optionally encrypts data
@@ -49,7 +51,7 @@ export class SimpleWebAuthn {
       // Detect platform configuration
       const platformConfig = PlatformDetector.detectPlatform();
 
-      // Create credential using WebAuthn
+      // Pass options directly to WebAuthnCore (no conversion needed)
       const webAuthnResult = await WebAuthnCore.createCredential(options, platformConfig);
       if (!webAuthnResult.success) {
         return {
@@ -61,31 +63,10 @@ export class SimpleWebAuthn {
 
       const result: CreateCredentialResult = {
         success: true,
-        credential: webAuthnResult.credential!,
+        credentialId: webAuthnResult.credential!.id,
+        keyDerivationMethod: webAuthnResult.keyDerivationMethod!,
         diagnostics: this.buildDiagnostics(platformConfig, webAuthnResult.prfResult || null, webAuthnResult.keyDerivationMethod!)
       };
-
-      // Handle optional encryption
-      if (options.plaintextToEncrypt) {
-        const encryptionResult = await EncryptionUtils.encryptData(
-          options.plaintextToEncrypt,
-          webAuthnResult.keyMaterial!,
-          options.encryptionSalt || "webauthn-prf-salt-v1"
-        );
-
-        if (encryptionResult.success) {
-          result.encryption = {
-            encryptedData: encryptionResult.encryptedData!,
-            keyDerivationMethod: webAuthnResult.keyDerivationMethod!
-          };
-        } else {
-          return {
-            success: false,
-            error: `Encryption failed: ${encryptionResult.error}`,
-            diagnostics: result.diagnostics
-          };
-        }
-      }
 
       return result;
 
@@ -128,7 +109,7 @@ export class SimpleWebAuthn {
       // Detect platform configuration
       const platformConfig = PlatformDetector.detectPlatform();
 
-      // Authenticate using WebAuthn
+      // Pass options directly to WebAuthnCore (no conversion needed)
       const webAuthnResult = await WebAuthnCore.authenticate(options, platformConfig);
       if (!webAuthnResult.success) {
         return {
@@ -138,36 +119,29 @@ export class SimpleWebAuthn {
         };
       }
 
+      // Create result with new API format
       const result: AuthenticateResult = {
         success: true,
-        authentication: {
-          credentialId: webAuthnResult.credentialId!,
-          signature: webAuthnResult.signature!,
-          authenticatorData: webAuthnResult.authenticatorData!,
-          keyDerivationMethod: webAuthnResult.keyDerivationMethod!
-        },
+        credentialId: webAuthnResult.credentialId!,
+        keyDerivationMethod: webAuthnResult.keyDerivationMethod!,
         diagnostics: this.buildDiagnostics(platformConfig, webAuthnResult.prfResult || null, webAuthnResult.keyDerivationMethod!)
       };
 
-      // Handle optional decryption
-      if (options.encryptedData) {
-        const decryptionResult = await EncryptionUtils.decryptData(
-          options.encryptedData,
-          webAuthnResult.keyMaterial!,
-          options.encryptionSalt || "webauthn-prf-salt-v1"
+      // Add derived key if available
+      if (webAuthnResult.keyMaterial) {
+        result.derivedKey = await this.keyToBase64(webAuthnResult.keyMaterial);
+      }
+
+      // Handle optional encryption of userData
+      if (options.userData && webAuthnResult.keyMaterial) {
+        const encryptionResult = await EncryptionUtils.encryptData(
+          options.userData,
+          webAuthnResult.keyMaterial,
+          options.encryptionSalt
         );
 
-        if (decryptionResult.success) {
-          result.decryption = {
-            plaintext: decryptionResult.plaintext!,
-            keyDerivationMethod: webAuthnResult.keyDerivationMethod!
-          };
-        } else {
-          return {
-            success: false,
-            error: `Decryption failed: ${decryptionResult.error}`,
-            diagnostics: result.diagnostics
-          };
+        if (encryptionResult.success) {
+          result.encryptedUserData = encryptionResult.encryptedData!;
         }
       }
 
@@ -266,6 +240,14 @@ export class SimpleWebAuthn {
   }
 
   /**
+   * Convert CryptoKey to base64 string for transport
+   */
+  private static async keyToBase64(key: CryptoKey): Promise<string> {
+    const keyData = await crypto.subtle.exportKey('raw', key);
+    return btoa(String.fromCharCode(...new Uint8Array(keyData)));
+  }
+
+  /**
    * Determine authenticator type based on platform and PRF support (from working code)
    */
   private static getAuthenticatorType(keyDerivationMethod: KeyDerivationMethod, platformConfig: PlatformConfig, prfResult?: PRFResult | null): string {
@@ -285,6 +267,12 @@ export class SimpleWebAuthn {
   }
 }
 
+// For IIFE format, create object with static methods
+const SimpleWebAuthn = {
+  createCredential: SimpleWebAuthnClass.createCredential.bind(SimpleWebAuthnClass),
+  authenticate: SimpleWebAuthnClass.authenticate.bind(SimpleWebAuthnClass)
+};
+
 // Export for global window usage (IIFE format)
 declare global {
   interface Window {
@@ -296,3 +284,6 @@ declare global {
 if (typeof window !== 'undefined') {
   window.SimpleWebAuthn = SimpleWebAuthn;
 }
+
+// Export the API object as default
+export default SimpleWebAuthn;

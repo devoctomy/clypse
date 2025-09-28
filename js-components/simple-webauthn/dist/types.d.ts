@@ -1,21 +1,41 @@
 export interface CreateCredentialOptions {
-    rpName: string;
-    userName: string;
-    userDisplayName: string;
-    rpId?: string;
-    plaintextToEncrypt?: string;
-    encryptionSalt?: string;
+    rp: {
+        name: string;
+        id?: string;
+    };
+    user: {
+        id: string;
+        name: string;
+        displayName: string;
+    };
+    challenge: string;
+    pubKeyCredParams: PublicKeyCredentialParameters[];
+    authenticatorSelection?: {
+        authenticatorAttachment?: AuthenticatorAttachment;
+        userVerification?: UserVerificationRequirement;
+        residentKey?: ResidentKeyRequirement;
+    };
     timeout?: number;
-    userVerification?: UserVerificationRequirement;
-    authenticatorAttachment?: AuthenticatorAttachment;
-    residentKey?: ResidentKeyRequirement;
+    attestation?: AttestationConveyancePreference;
+    userData?: string;
+    encryptionSalt: string;
 }
 export interface AuthenticateOptions {
-    credentialId: string;
-    encryptedData?: string;
-    encryptionSalt?: string;
-    timeout?: number;
+    challenge: string;
+    allowCredentials: PublicKeyCredentialDescriptor[];
     userVerification?: UserVerificationRequirement;
+    timeout?: number;
+    userData?: string;
+    encryptionSalt: string;
+}
+export interface PublicKeyCredentialParameters {
+    alg: number;
+    type: "public-key";
+}
+export interface PublicKeyCredentialDescriptor {
+    id: string;
+    type: "public-key";
+    transports?: AuthenticatorTransport[];
 }
 export interface CredentialResult {
     id: string;
@@ -49,21 +69,25 @@ export interface DiagnosticsInfo {
 export interface CreateCredentialResult {
     success: boolean;
     error?: string;
-    credential?: CredentialResult;
-    encryption?: EncryptionResult;
-    diagnostics: DiagnosticsInfo;
+    credentialId?: string;
+    keyDerivationMethod?: KeyDerivationMethod;
+    diagnostics?: DiagnosticsInfo;
 }
 export interface AuthenticateResult {
     success: boolean;
     error?: string;
-    authentication?: AuthenticationResult;
-    decryption?: DecryptionResult;
-    diagnostics: DiagnosticsInfo;
+    credentialId?: string;
+    derivedKey?: string;
+    encryptedUserData?: string;
+    keyDerivationMethod?: KeyDerivationMethod;
+    diagnostics?: DiagnosticsInfo;
 }
 export type KeyDerivationMethod = "PRF" | "CredentialID";
 export type UserVerificationRequirement = "required" | "preferred" | "discouraged";
 export type AuthenticatorAttachment = "platform" | "cross-platform";
 export type ResidentKeyRequirement = "required" | "preferred" | "discouraged";
+export type AttestationConveyancePreference = "none" | "indirect" | "direct" | "enterprise";
+export type AuthenticatorTransport = "usb" | "nfc" | "ble" | "smart-card" | "hybrid" | "internal";
 export interface PlatformConfig {
     isSamsung: boolean;
     isIOS: boolean;

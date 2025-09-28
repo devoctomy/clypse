@@ -219,6 +219,49 @@
             </div>
         </div>
     </div>
+
+    <div class="row justify-content-center mt-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="text-center">SimpleWebAuthn Library Tests</h3>
+                    <small class="text-muted">New reusable library with improved API</small>
+                </div>
+                <div class="card-body">
+                    <!-- SimpleWebAuthn Test Results Display -->
+                    @if (!string.IsNullOrEmpty(simpleWebAuthnTestMessage))
+                    {
+                        <div class="alert @(simpleWebAuthnTestSuccess ? "alert-success" : "alert-danger") mb-3" role="alert">
+                            <strong>@(simpleWebAuthnTestSuccess ? "SUCCESS" : "ERROR"):</strong> @((MarkupString)simpleWebAuthnTestMessage)
+                        </div>
+                    }
+                    
+                    <div class="d-grid gap-2">
+                        <button class="btn btn-success" @onclick="HandleSimpleWebAuthnCreateCredential">
+                            <i class="bi bi-plus-circle"></i> Create Credential
+                        </button>
+                        
+                        <button class="btn btn-primary" @onclick="HandleSimpleWebAuthnAuthenticate" disabled="@(string.IsNullOrEmpty(storedCredentialId))">
+                            <i class="bi bi-shield-check"></i> Authenticate & Encrypt
+                        </button>
+                        
+                        @if (!string.IsNullOrEmpty(storedCredentialId))
+                        {
+                            <div class="alert alert-info">
+                                <small><strong>Stored Credential ID:</strong> @storedCredentialId</small>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="alert alert-warning">
+                                <small><strong>Note:</strong> Create a credential first to enable authentication test</small>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 @if (showKeyDerivationResults && keyDerivationResults != null)

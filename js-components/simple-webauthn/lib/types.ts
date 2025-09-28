@@ -1,36 +1,57 @@
 // SimpleWebAuthn Library Type Definitions
 
 export interface CreateCredentialOptions {
-  // Required
-  rpName: string;
-  userName: string;
-  userDisplayName: string;
-  
-  // Optional - Advanced Use Cases
-  rpId?: string;
-  
-  // Optional Encryption
-  plaintextToEncrypt?: string;
-  encryptionSalt?: string;
+  // Standard WebAuthn format
+  rp: {
+    name: string;
+    id?: string;
+  };
+  user: {
+    id: string;        // Base64-encoded user ID
+    name: string;      // Username
+    displayName: string;
+  };
+  challenge: string;   // Base64-encoded challenge
+  pubKeyCredParams: PublicKeyCredentialParameters[];
   
   // Optional WebAuthn Settings
+  authenticatorSelection?: {
+    authenticatorAttachment?: AuthenticatorAttachment;
+    userVerification?: UserVerificationRequirement;
+    residentKey?: ResidentKeyRequirement;
+  };
   timeout?: number;
-  userVerification?: UserVerificationRequirement;
-  authenticatorAttachment?: AuthenticatorAttachment;
-  residentKey?: ResidentKeyRequirement;
+  attestation?: AttestationConveyancePreference;
+  
+  // Optional Encryption
+  userData?: string;
+  encryptionSalt: string;  // Required salt for PRF extension
 }
 
 export interface AuthenticateOptions {
-  // Required
-  credentialId: string;
-  
-  // Optional Decryption
-  encryptedData?: string;
-  encryptionSalt?: string;
+  // Standard WebAuthn format
+  challenge: string;   // Base64-encoded challenge
+  allowCredentials: PublicKeyCredentialDescriptor[];
   
   // Optional WebAuthn Settings
-  timeout?: number;
   userVerification?: UserVerificationRequirement;
+  timeout?: number;
+  
+  // Optional user data to encrypt
+  userData?: string;
+  encryptionSalt: string;  // Required salt for PRF extension
+}
+
+// Standard WebAuthn types
+export interface PublicKeyCredentialParameters {
+  alg: number;
+  type: "public-key";
+}
+
+export interface PublicKeyCredentialDescriptor {
+  id: string;
+  type: "public-key";
+  transports?: AuthenticatorTransport[];
 }
 
 export interface CredentialResult {
@@ -70,17 +91,19 @@ export interface DiagnosticsInfo {
 export interface CreateCredentialResult {
   success: boolean;
   error?: string;
-  credential?: CredentialResult;
-  encryption?: EncryptionResult;
-  diagnostics: DiagnosticsInfo;
+  credentialId?: string;
+  keyDerivationMethod?: KeyDerivationMethod;
+  diagnostics?: DiagnosticsInfo;
 }
 
 export interface AuthenticateResult {
   success: boolean;
   error?: string;
-  authentication?: AuthenticationResult;
-  decryption?: DecryptionResult;
-  diagnostics: DiagnosticsInfo;
+  credentialId?: string;
+  derivedKey?: string;
+  encryptedUserData?: string;
+  keyDerivationMethod?: KeyDerivationMethod;
+  diagnostics?: DiagnosticsInfo;
 }
 
 // Enums and Type Aliases
@@ -88,6 +111,8 @@ export type KeyDerivationMethod = "PRF" | "CredentialID";
 export type UserVerificationRequirement = "required" | "preferred" | "discouraged";
 export type AuthenticatorAttachment = "platform" | "cross-platform";
 export type ResidentKeyRequirement = "required" | "preferred" | "discouraged";
+export type AttestationConveyancePreference = "none" | "indirect" | "direct" | "enterprise";
+export type AuthenticatorTransport = "usb" | "nfc" | "ble" | "smart-card" | "hybrid" | "internal";
 
 // Internal Types
 export interface PlatformConfig {

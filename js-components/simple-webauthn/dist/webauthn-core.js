@@ -8,6 +8,13 @@ export class WebAuthnCore {
      */
     static async createCredential(options, platformConfig) {
         try {
+            // Validate required encryptionSalt
+            if (!options.encryptionSalt || options.encryptionSalt.trim() === '') {
+                return {
+                    success: false,
+                    error: "encryptionSalt is required and cannot be empty"
+                };
+            }
             // Generate challenge and user ID
             const challenge = crypto.getRandomValues(new Uint8Array(32));
             const userId = crypto.getRandomValues(new Uint8Array(32));
@@ -15,28 +22,25 @@ export class WebAuthnCore {
             const credentialCreationOptions = {
                 challenge: challenge,
                 rp: {
-                    name: options.rpName,
-                    id: options.rpId || window.location.hostname
+                    name: options.rp.name,
+                    id: options.rp.id || window.location.hostname
                 },
                 user: {
                     id: userId,
-                    name: options.userName,
-                    displayName: options.userDisplayName
+                    name: options.user.name,
+                    displayName: options.user.displayName
                 },
-                pubKeyCredParams: [
-                    { alg: -7, type: "public-key" }, // ES256
-                    { alg: -257, type: "public-key" } // RS256
-                ],
+                pubKeyCredParams: options.pubKeyCredParams,
                 timeout: options.timeout || platformConfig.timeout,
                 authenticatorSelection: {
-                    authenticatorAttachment: options.authenticatorAttachment || "platform",
-                    userVerification: options.userVerification || "required",
-                    residentKey: options.residentKey || platformConfig.residentKey
+                    authenticatorAttachment: options.authenticatorSelection?.authenticatorAttachment || "platform",
+                    userVerification: options.authenticatorSelection?.userVerification || "required",
+                    residentKey: options.authenticatorSelection?.residentKey || platformConfig.residentKey
                 },
                 extensions: {
                     prf: {
                         eval: {
-                            first: new TextEncoder().encode(options.encryptionSalt || "webauthn-prf-salt-v1")
+                            first: new TextEncoder().encode(options.encryptionSalt)
                         }
                     }
                 }
@@ -79,7 +83,7 @@ export class WebAuthnCore {
                 else {
                     console.log("⚠️ PRF enabled but no results - attempting get() operation...");
                     // Need to do a get() operation to get PRF results
-                    const prfKeyMaterial = await this.attemptPRFGet(credential.rawId, options.encryptionSalt || "webauthn-prf-salt-v1", platformConfig);
+                    const prfKeyMaterial = await this.attemptPRFGet(credential.rawId, options.encryptionSalt, platformConfig);
                     if (prfKeyMaterial.success) {
                         keyMaterial = prfKeyMaterial.keyMaterial;
                         keyDerivationMethod = "PRF";
@@ -118,10 +122,17 @@ export class WebAuthnCore {
      */
     static async authenticate(options, platformConfig) {
         try {
+            // Validate required encryptionSalt
+            if (!options.encryptionSalt || options.encryptionSalt.trim() === '') {
+                return {
+                    success: false,
+                    error: "encryptionSalt is required and cannot be empty"
+                };
+            }
             // Generate challenge
             const challenge = crypto.getRandomValues(new Uint8Array(32));
             // Convert credential ID from base64
-            const credentialIdBytes = Uint8Array.from(atob(options.credentialId), c => c.charCodeAt(0));
+            const credentialIdBytes = Uint8Array.from(atob(options.allowCredentials[0].id), c => c.charCodeAt(0));
             // Build authentication options
             const getOptions = {
                 challenge: challenge,
@@ -134,7 +145,7 @@ export class WebAuthnCore {
                 extensions: {
                     prf: {
                         eval: {
-                            first: new TextEncoder().encode(options.encryptionSalt || "webauthn-prf-salt-v1")
+                            first: new TextEncoder().encode(options.encryptionSalt)
                         }
                     }
                 }
