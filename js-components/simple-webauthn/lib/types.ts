@@ -32,6 +32,7 @@ export interface AuthenticateOptions {
   // Standard WebAuthn format
   challenge: string;   // Base64-encoded challenge
   allowCredentials: PublicKeyCredentialDescriptor[];
+  rpId?: string;      // Relying party ID (must match creation)
   
   // Optional WebAuthn Settings
   userVerification?: UserVerificationRequirement;
@@ -49,16 +50,16 @@ export interface PublicKeyCredentialParameters {
 }
 
 export interface PublicKeyCredentialDescriptor {
-  id: string;
+  id: number[];  // Credential ID as byte array
   type: "public-key";
   transports?: AuthenticatorTransport[];
 }
 
 export interface CredentialResult {
-  id: string;                    // Base64-encoded credential ID
+  id: number[];                 // Credential ID as byte array
   rawId: ArrayBuffer;           // Raw credential ID bytes
-  publicKey?: string;           // Base64-encoded public key (if needed)
-  attestationObject?: string;   // Base64-encoded attestation (if needed)
+  publicKey?: number[];         // Public key as byte array
+  attestationObject?: number[]; // Attestation as byte array
 }
 
 export interface EncryptionResult {
@@ -91,7 +92,7 @@ export interface DiagnosticsInfo {
 export interface CreateCredentialResult {
   success: boolean;
   error?: string;
-  credentialId?: string;
+  credentialId?: number[];  // Credential ID as byte array
   encryptedData?: string;  // Base64-encoded encrypted data (if plaintextToEncrypt provided)
   keyDerivationMethod?: KeyDerivationMethod;
   diagnostics?: DiagnosticsInfo;
@@ -100,7 +101,7 @@ export interface CreateCredentialResult {
 export interface AuthenticateResult {
   success: boolean;
   error?: string;
-  credentialId?: string;
+  credentialId?: number[];  // Credential ID as byte array
   derivedKey?: string;
   decryptedData?: string;  // Plaintext result from decryption
   keyDerivationMethod?: KeyDerivationMethod;

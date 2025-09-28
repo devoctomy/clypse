@@ -39,19 +39,35 @@ export class WebAuthnCore {
       const challenge = crypto.getRandomValues(new Uint8Array(32));
       const userId = crypto.getRandomValues(new Uint8Array(32));
       
+      console.log("=== Credential Creation Debug ===");
+      console.log("Origin:", window.location.origin);
+      console.log("Challenge:", new Uint8Array(challenge));
+      console.log("User ID:", new Uint8Array(userId));
+      
       // Build credential creation options
+      const defaultPubKeyParams = [
+        {
+          alg: -7,  // ES256
+          type: "public-key"
+        },
+        {
+          alg: -257,  // RS256
+          type: "public-key"
+        }
+      ];
+
       const credentialCreationOptions: PublicKeyCredentialCreationOptions = {
-        challenge: challenge,
+        challenge: challenge.buffer,  // Use ArrayBuffer
         rp: {
           name: options.rp.name,
           id: options.rp.id || window.location.hostname
         },
         user: {
-          id: userId,
+          id: userId.buffer,  // Use ArrayBuffer
           name: options.user.name,
           displayName: options.user.displayName
         },
-        pubKeyCredParams: options.pubKeyCredParams,
+        pubKeyCredParams: options.pubKeyCredParams || defaultPubKeyParams,
         timeout: options.timeout || platformConfig.timeout,
         authenticatorSelection: {
           authenticatorAttachment: options.authenticatorSelection?.authenticatorAttachment || "platform",
@@ -67,6 +83,18 @@ export class WebAuthnCore {
         }
       };
 
+      // Serialize options for debugging
+      const serializedOptions = JSON.stringify(credentialCreationOptions, (_key, value) => {
+        if (value instanceof Uint8Array) {
+          return Array.from(value);
+        }
+        if (value instanceof ArrayBuffer) {
+          return Array.from(new Uint8Array(value));
+        }
+        return value;
+      }, 2);
+      console.log("Creation options for breakpoint:", serializedOptions);
+
       // Create the credential
       const credential = await navigator.credentials.create({
         publicKey: credentialCreationOptions
@@ -80,13 +108,16 @@ export class WebAuthnCore {
       }
 
       // Extract credential information
-      // Convert rawId to standard base64 (not URL-safe base64 like credential.id)
-      const credentialIdBase64 = btoa(String.fromCharCode(...new Uint8Array(credential.rawId)));
+      console.log("=== Created Credential Debug ===");
+      console.log("Raw credential ID:", new Uint8Array(credential.rawId));
+      console.log("Credential ID length:", credential.rawId.byteLength);
+      
+      // Store raw credential ID bytes directly
       const credentialResult: CredentialResult = {
-        id: credentialIdBase64,
+        id: Array.from(new Uint8Array(credential.rawId)),  // Store as number array
         rawId: credential.rawId,
-        publicKey: btoa(String.fromCharCode(...new Uint8Array(credential.rawId))), // For now, using credential ID
-        attestationObject: btoa(String.fromCharCode(...new Uint8Array((credential.response as AuthenticatorAttestationResponse).attestationObject)))
+        publicKey: Array.from(new Uint8Array(credential.rawId)),  // Store as number array
+        attestationObject: Array.from(new Uint8Array((credential.response as AuthenticatorAttestationResponse).attestationObject))
       };
 
       // Handle PRF extension results
@@ -170,18 +201,30 @@ export class WebAuthnCore {
           error: "encryptionSalt is required and cannot be empty"
         };
       }
+      console.log("=== Authentication Request Debug ===");
+      console.log("Origin:", window.location.origin);
+      console.log("Incoming credential bytes:", options.allowCredentials[0].id);
+      console.log("Incoming credential length:", options.allowCredentials[0].id.length);
+      
       // Generate challenge
       const challenge = crypto.getRandomValues(new Uint8Array(32));
+      console.log("Challenge:", new Uint8Array(challenge));
       
-      // Convert credential ID from base64
-      const credentialIdBytes = Uint8Array.from(atob(options.allowCredentials[0].id), c => c.charCodeAt(0));
+      // Convert credential ID from number array to Uint8Array
+      const credentialIdBytes = new Uint8Array(options.allowCredentials[0].id);
+      console.log("Credential bytes:", credentialIdBytes);
+      console.log("Credential length:", credentialIdBytes.length);
       
-      // Build authentication options
+      // Build authentication options using rpId from options or fallback to hostname
+      const rpId = options.rpId || window.location.hostname;
+      console.log("Using rpId:", rpId);
+      
       const getOptions: PublicKeyCredentialRequestOptions = {
-        challenge: challenge,
+        challenge: challenge.buffer,  // Use ArrayBuffer
+        rpId: rpId,
         allowCredentials: [{
           type: "public-key",
-          id: credentialIdBytes
+          id: credentialIdBytes.buffer  // Use ArrayBuffer
         }],
         timeout: options.timeout || platformConfig.timeout,
         userVerification: options.userVerification || "required",
@@ -194,7 +237,43 @@ export class WebAuthnCore {
         }
       };
 
+      // Log final options before WebAuthn call
+      console.log("=== WebAuthn Call Debug ===");
+      console.log("PublicKeyCredentialRequestOptions:", {
+        rpId: getOptions.rpId,
+        challenge: Array.from(new Uint8Array(getOptions.challenge as ArrayBuffer)),
+        allowCredentials: getOptions.allowCredentials?.map(cred => ({
+          type: cred.type,
+          id: Array.from(cred.id as Uint8Array),
+          transports: cred.transports
+        })),
+        timeout: getOptions.timeout,
+        userVerification: getOptions.userVerification,
+        extensions: getOptions.extensions
+      });
+      
+      // Log the credential bytes for comparison
+      console.log("Credential ID check:", {
+        incoming: options.allowCredentials[0].id,
+        converted: Array.from(credentialIdBytes),
+        matches: Array.from(credentialIdBytes).join(',') === 
+                 Array.from(credentialIdBytes).join(',')  // Compare with our converted bytes
+      });
+
+      // Serialize options for debugging
+      const serializedGetOptions = JSON.stringify(getOptions, (_key, value) => {
+        if (value instanceof Uint8Array) {
+          return Array.from(value);
+        }
+        if (value instanceof ArrayBuffer) {
+          return Array.from(new Uint8Array(value));
+        }
+        return value;
+      }, 2);
+      console.log("Get options for breakpoint:", serializedGetOptions);
+
       // Authenticate
+      console.log("Calling navigator.credentials.get()...");
       const credential = await navigator.credentials.get({
         publicKey: getOptions
       }) as PublicKeyCredential;
@@ -208,9 +287,15 @@ export class WebAuthnCore {
 
       const response = credential.response as AuthenticatorAssertionResponse;
       
+      console.log("=== Authentication Response Debug ===");
+      console.log("Raw credential ID:", new Uint8Array(credential.rawId));
+      console.log("Raw credential length:", credential.rawId.byteLength);
+      
       // Extract authentication information  
       // Convert rawId to standard base64 (not URL-safe base64 like credential.id)
       const credentialId = btoa(String.fromCharCode(...new Uint8Array(credential.rawId)));
+      console.log("Converted base64 credential:", credentialId);
+      console.log("Converted base64 length:", credentialId.length);
       const signature = btoa(String.fromCharCode(...new Uint8Array(response.signature)));
       const authenticatorData = btoa(String.fromCharCode(...new Uint8Array(response.authenticatorData)));
 

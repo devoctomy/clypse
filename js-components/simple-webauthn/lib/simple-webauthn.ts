@@ -63,7 +63,7 @@ class SimpleWebAuthnClass {
 
       const result: CreateCredentialResult = {
         success: true,
-        credentialId: webAuthnResult.credential!.id,
+        credentialId: webAuthnResult.credential!.id as number[],  // Already a byte array
         keyDerivationMethod: webAuthnResult.keyDerivationMethod!,
         diagnostics: this.buildDiagnostics(platformConfig, webAuthnResult.prfResult || null, webAuthnResult.keyDerivationMethod!)
       };
@@ -135,7 +135,7 @@ class SimpleWebAuthnClass {
       // Create result with new API format
       const result: AuthenticateResult = {
         success: true,
-        credentialId: webAuthnResult.credentialId!,
+        credentialId: Array.from(new Uint8Array((webAuthnResult as any).credential?.rawId || [])),  // Convert to byte array
         keyDerivationMethod: webAuthnResult.keyDerivationMethod!,
         diagnostics: this.buildDiagnostics(platformConfig, webAuthnResult.prfResult || null, webAuthnResult.keyDerivationMethod!)
       };

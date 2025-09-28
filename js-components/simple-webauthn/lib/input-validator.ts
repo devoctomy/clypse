@@ -113,19 +113,17 @@ export class InputValidator {
     
     // Validate each credential descriptor
     for (const cred of options.allowCredentials) {
-      if (!cred.id || cred.id.trim().length === 0) {
-        return { valid: false, error: "allowCredentials[].id is required and cannot be empty" };
+      if (!cred.id || !Array.isArray(cred.id) || cred.id.length === 0) {
+        return { valid: false, error: "allowCredentials[].id is required and must be a non-empty byte array" };
       }
       
       if (cred.type !== "public-key") {
         return { valid: false, error: "allowCredentials[].type must be 'public-key'" };
       }
       
-      // Validate credential ID is valid base64
-      try {
-        atob(cred.id);
-      } catch (e) {
-        return { valid: false, error: "allowCredentials[].id must be a valid base64 string" };
+      // Validate credential ID contains valid byte values
+      if (!cred.id.every(byte => Number.isInteger(byte) && byte >= 0 && byte <= 255)) {
+        return { valid: false, error: "allowCredentials[].id must contain valid byte values (0-255)" };
       }
     }
     
