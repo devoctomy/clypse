@@ -31,9 +31,6 @@ public partial class Test : ComponentBase
     private AwsCredentials? awsCredentials;
     private KeyDerivationBenchmarkResults? keyDerivationResults;
     
-    // WebAuthn test result display properties
-    private string? webAuthnTestMessage;
-    private bool webAuthnTestSuccess;
 
     private class LoginModel
     {
