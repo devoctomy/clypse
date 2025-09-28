@@ -493,6 +493,7 @@ public partial class Test : ComponentBase
                 },
                 timeout = 60000,
                 attestation = "none",
+                plaintextToEncrypt = "hello world from SimpleWebAuthn!",  // Data to encrypt during creation
                 encryptionSalt = "clypse-test-vault-salt-v1"  // Required salt parameter
             });
             
@@ -504,7 +505,15 @@ public partial class Test : ComponentBase
                 storedCredentialId = result.CredentialId;
                 await JSRuntime.InvokeVoidAsync("localStorage.setItem", "simple_webauthn_credential_id", result.CredentialId);
                 
+                // Store the encrypted data if encryption was performed
+                if (!string.IsNullOrEmpty(result.EncryptedData))
+                {
+                    await JSRuntime.InvokeVoidAsync("localStorage.setItem", "simple_webauthn_encrypted_data", result.EncryptedData);
+                }
+                
                 Console.WriteLine($"Credential created with ID: {result.CredentialId}");
+                Console.WriteLine($"Credential ID length: {result.CredentialId?.Length}");
+                Console.WriteLine($"Credential ID is valid base64: {IsValidBase64(result.CredentialId)}");
                 Console.WriteLine($"Key Derivation Method: {result.KeyDerivationMethod ?? "Unknown"}");
                 
                 var method = result.KeyDerivationMethod == "PRF" ? "PRF (biometric)" : "Credential ID (PIN)";
@@ -512,7 +521,8 @@ public partial class Test : ComponentBase
                 
                 var message = $"<strong>✅ Credential created successfully using {method} method!</strong><br><br>" +
                              $"🆔 <strong>Credential ID:</strong> {result.CredentialId}<br>" +
-                             $"🔧 <strong>Platform:</strong> {diagnostics?.Platform}<br>" +
+                             $"� <strong>Encrypted Data:</strong> {result.EncryptedData}<br>" +
+                             $"�🔧 <strong>Platform:</strong> {diagnostics?.Platform}<br>" +
                              $"🔑 <strong>Method:</strong> {result.KeyDerivationMethod}<br>" +
                              $"🛡️ <strong>Authenticator:</strong> {diagnostics?.AuthenticatorType}<br>" +
                              $"📊 <strong>PRF Supported:</strong> {(diagnostics?.PrfSupported == true ? "Yes" : "No")}<br>" +
@@ -540,8 +550,9 @@ public partial class Test : ComponentBase
         
         try
         {
-            // Get the stored credential ID
+            // Get the stored credential ID and encrypted data
             var credentialId = storedCredentialId ?? await JSRuntime.InvokeAsync<string>("localStorage.getItem", "simple_webauthn_credential_id");
+            var encryptedData = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "simple_webauthn_encrypted_data");
             
             if (string.IsNullOrEmpty(credentialId))
             {
@@ -551,6 +562,9 @@ public partial class Test : ComponentBase
             }
             
             Console.WriteLine("Starting SimpleWebAuthn authenticate...");
+            Console.WriteLine($"Using credential ID: {credentialId}");
+            Console.WriteLine($"Credential ID length: {credentialId?.Length}");
+            Console.WriteLine($"Credential ID is valid base64: {IsValidBase64(credentialId)}");
             
             // Authenticate with the new library
             var result = await JSRuntime.InvokeAsync<SimpleWebAuthnAuthResult>("SimpleWebAuthn.authenticate", new {
@@ -564,8 +578,8 @@ public partial class Test : ComponentBase
                 },
                 userVerification = "required",
                 timeout = 60000,
-                // Test data to encrypt/decrypt
-                userData = "hello world from SimpleWebAuthn!",
+                // Encrypted data to decrypt (if available)
+                encryptedData = encryptedData,
                 encryptionSalt = "clypse-test-vault-salt-v1"  // Required salt parameter - must match createCredential
             });
             
@@ -574,7 +588,7 @@ public partial class Test : ComponentBase
             if (result?.Success == true)
             {
                 Console.WriteLine($"Authentication successful with key: {result.DerivedKey?.Substring(0, 16)}...");
-                Console.WriteLine($"Encrypted data: {result.EncryptedUserData}");
+                Console.WriteLine($"Decrypted data: {result.DecryptedData}");
                 Console.WriteLine($"Key Derivation Method: {result.KeyDerivationMethod ?? "Unknown"}");
                 
                 var method = result.KeyDerivationMethod == "PRF" ? "PRF (biometric)" : "Credential ID (PIN)";
@@ -583,7 +597,7 @@ public partial class Test : ComponentBase
                 var message = $"<strong>✅ AUTHENTICATION SUCCESSFUL!</strong><br><br>" +
                              $"🔑 <strong>Method:</strong> {result.KeyDerivationMethod}<br>" +
                              $"🗝️ <strong>Derived Key:</strong> {result.DerivedKey?.Substring(0, 32)}...<br>" +
-                             $"🔒 <strong>Encrypted Data:</strong> {result.EncryptedUserData}<br>" +
+                             $"� <strong>Decrypted Data:</strong> {result.DecryptedData}<br>" +
                              $"🔧 <strong>Platform:</strong> {diagnostics?.Platform}<br>" +
                              $"🛡️ <strong>Authenticator:</strong> {diagnostics?.AuthenticatorType}<br>" +
                              $"📊 <strong>PRF Supported:</strong> {(diagnostics?.PrfSupported == true ? "Yes" : "No")}<br>" +
@@ -611,6 +625,7 @@ public partial class Test : ComponentBase
         public bool Success { get; set; }
         public string? Error { get; set; }
         public string? CredentialId { get; set; }
+        public string? EncryptedData { get; set; }
         public string? KeyDerivationMethod { get; set; }
         public WebAuthnDiagnostics? Diagnostics { get; set; }
     }
@@ -621,8 +636,22 @@ public partial class Test : ComponentBase
         public string? Error { get; set; }
         public string? CredentialId { get; set; }
         public string? DerivedKey { get; set; }
-        public string? EncryptedUserData { get; set; }
+        public string? DecryptedData { get; set; }
         public string? KeyDerivationMethod { get; set; }
         public WebAuthnDiagnostics? Diagnostics { get; set; }
+    }
+
+    private static bool IsValidBase64(string? value)
+    {
+        if (string.IsNullOrEmpty(value)) return false;
+        try
+        {
+            Convert.FromBase64String(value);
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
     }
 }

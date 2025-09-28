@@ -24,8 +24,8 @@ export interface CreateCredentialOptions {
   attestation?: AttestationConveyancePreference;
   
   // Optional Encryption
-  userData?: string;
-  encryptionSalt: string;  // Required salt for PRF extension
+  plaintextToEncrypt?: string;  // Data to encrypt during credential creation
+  encryptionSalt: string;       // Required salt for PRF extension
 }
 
 export interface AuthenticateOptions {
@@ -37,9 +37,9 @@ export interface AuthenticateOptions {
   userVerification?: UserVerificationRequirement;
   timeout?: number;
   
-  // Optional user data to encrypt
-  userData?: string;
-  encryptionSalt: string;  // Required salt for PRF extension
+  // Optional data to decrypt
+  encryptedData?: string;   // Base64-encoded encrypted data to decrypt
+  encryptionSalt: string;   // Required salt for PRF extension (must match creation)
 }
 
 // Standard WebAuthn types
@@ -92,6 +92,7 @@ export interface CreateCredentialResult {
   success: boolean;
   error?: string;
   credentialId?: string;
+  encryptedData?: string;  // Base64-encoded encrypted data (if plaintextToEncrypt provided)
   keyDerivationMethod?: KeyDerivationMethod;
   diagnostics?: DiagnosticsInfo;
 }
@@ -101,7 +102,7 @@ export interface AuthenticateResult {
   error?: string;
   credentialId?: string;
   derivedKey?: string;
-  encryptedUserData?: string;
+  decryptedData?: string;  // Plaintext result from decryption
   keyDerivationMethod?: KeyDerivationMethod;
   diagnostics?: DiagnosticsInfo;
 }

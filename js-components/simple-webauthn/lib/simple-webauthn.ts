@@ -68,6 +68,19 @@ class SimpleWebAuthnClass {
         diagnostics: this.buildDiagnostics(platformConfig, webAuthnResult.prfResult || null, webAuthnResult.keyDerivationMethod!)
       };
 
+      // Handle optional encryption of plaintextToEncrypt
+      if (options.plaintextToEncrypt && webAuthnResult.keyMaterial) {
+        const encryptionResult = await EncryptionUtils.encryptData(
+          options.plaintextToEncrypt,
+          webAuthnResult.keyMaterial,
+          options.encryptionSalt
+        );
+
+        if (encryptionResult.success) {
+          result.encryptedData = encryptionResult.encryptedData!;
+        }
+      }
+
       return result;
 
     } catch (error) {
@@ -132,16 +145,16 @@ class SimpleWebAuthnClass {
         result.derivedKey = await this.keyToBase64(webAuthnResult.keyMaterial);
       }
 
-      // Handle optional encryption of userData
-      if (options.userData && webAuthnResult.keyMaterial) {
-        const encryptionResult = await EncryptionUtils.encryptData(
-          options.userData,
+      // Handle optional decryption of encryptedData
+      if (options.encryptedData && webAuthnResult.keyMaterial) {
+        const decryptionResult = await EncryptionUtils.decryptData(
+          options.encryptedData,
           webAuthnResult.keyMaterial,
           options.encryptionSalt
         );
 
-        if (encryptionResult.success) {
-          result.encryptedUserData = encryptionResult.encryptedData!;
+        if (decryptionResult.success) {
+          result.decryptedData = decryptionResult.plaintext!;
         }
       }
 

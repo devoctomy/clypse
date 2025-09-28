@@ -242,7 +242,7 @@
                         </button>
                         
                         <button class="btn btn-primary" @onclick="HandleSimpleWebAuthnAuthenticate" disabled="@(string.IsNullOrEmpty(storedCredentialId))">
-                            <i class="bi bi-shield-check"></i> Authenticate & Encrypt
+                            <i class="bi bi-shield-check"></i> Authenticate & Decrypt
                         </button>
                         
                         @if (!string.IsNullOrEmpty(storedCredentialId))

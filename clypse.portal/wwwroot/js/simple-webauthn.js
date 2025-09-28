@@ -189,8 +189,10 @@ var SimpleWebAuthn = (function () {
                     };
                 }
                 // Extract credential information
+                // Convert rawId to standard base64 (not URL-safe base64 like credential.id)
+                const credentialIdBase64 = btoa(String.fromCharCode(...new Uint8Array(credential.rawId)));
                 const credentialResult = {
-                    id: credential.id,
+                    id: credentialIdBase64,
                     rawId: credential.rawId,
                     publicKey: btoa(String.fromCharCode(...new Uint8Array(credential.rawId))), // For now, using credential ID
                     attestationObject: btoa(String.fromCharCode(...new Uint8Array(credential.response.attestationObject)))
@@ -294,8 +296,9 @@ var SimpleWebAuthn = (function () {
                     };
                 }
                 const response = credential.response;
-                // Extract authentication information
-                const credentialId = credential.id;
+                // Extract authentication information  
+                // Convert rawId to standard base64 (not URL-safe base64 like credential.id)
+                const credentialId = btoa(String.fromCharCode(...new Uint8Array(credential.rawId)));
                 const signature = btoa(String.fromCharCode(...new Uint8Array(response.signature)));
                 const authenticatorData = btoa(String.fromCharCode(...new Uint8Array(response.authenticatorData)));
                 // Handle PRF extension results
@@ -572,6 +575,13 @@ var SimpleWebAuthn = (function () {
                     keyDerivationMethod: webAuthnResult.keyDerivationMethod,
                     diagnostics: this.buildDiagnostics(platformConfig, webAuthnResult.prfResult || null, webAuthnResult.keyDerivationMethod)
                 };
+                // Handle optional encryption of plaintextToEncrypt
+                if (options.plaintextToEncrypt && webAuthnResult.keyMaterial) {
+                    const encryptionResult = await EncryptionUtils.encryptData(options.plaintextToEncrypt, webAuthnResult.keyMaterial, options.encryptionSalt);
+                    if (encryptionResult.success) {
+                        result.encryptedData = encryptionResult.encryptedData;
+                    }
+                }
                 return result;
             }
             catch (error) {
@@ -629,11 +639,11 @@ var SimpleWebAuthn = (function () {
                 if (webAuthnResult.keyMaterial) {
                     result.derivedKey = await this.keyToBase64(webAuthnResult.keyMaterial);
                 }
-                // Handle optional encryption of userData
-                if (options.userData && webAuthnResult.keyMaterial) {
-                    const encryptionResult = await EncryptionUtils.encryptData(options.userData, webAuthnResult.keyMaterial, options.encryptionSalt);
-                    if (encryptionResult.success) {
-                        result.encryptedUserData = encryptionResult.encryptedData;
+                // Handle optional decryption of encryptedData
+                if (options.encryptedData && webAuthnResult.keyMaterial) {
+                    const decryptionResult = await EncryptionUtils.decryptData(options.encryptedData, webAuthnResult.keyMaterial, options.encryptionSalt);
+                    if (decryptionResult.success) {
+                        result.decryptedData = decryptionResult.plaintext;
                     }
                 }
                 return result;

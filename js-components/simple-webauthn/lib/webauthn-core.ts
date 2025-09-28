@@ -80,8 +80,10 @@ export class WebAuthnCore {
       }
 
       // Extract credential information
+      // Convert rawId to standard base64 (not URL-safe base64 like credential.id)
+      const credentialIdBase64 = btoa(String.fromCharCode(...new Uint8Array(credential.rawId)));
       const credentialResult: CredentialResult = {
-        id: credential.id,
+        id: credentialIdBase64,
         rawId: credential.rawId,
         publicKey: btoa(String.fromCharCode(...new Uint8Array(credential.rawId))), // For now, using credential ID
         attestationObject: btoa(String.fromCharCode(...new Uint8Array((credential.response as AuthenticatorAttestationResponse).attestationObject)))
@@ -206,8 +208,9 @@ export class WebAuthnCore {
 
       const response = credential.response as AuthenticatorAssertionResponse;
       
-      // Extract authentication information
-      const credentialId = credential.id;
+      // Extract authentication information  
+      // Convert rawId to standard base64 (not URL-safe base64 like credential.id)
+      const credentialId = btoa(String.fromCharCode(...new Uint8Array(credential.rawId)));
       const signature = btoa(String.fromCharCode(...new Uint8Array(response.signature)));
       const authenticatorData = btoa(String.fromCharCode(...new Uint8Array(response.authenticatorData)));
 
