@@ -1,0 +1,49 @@
+@startuml SimpleWebAuthn-Component
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+LAYOUT_WITH_LEGEND()
+
+title C4 Component Diagram - SimpleWebAuthn Library Internal Structure
+
+Container(frontend, "Frontend Application", "HTML/CSS/JavaScript", "Developer's web application")
+
+Container_Boundary(simplewebauthn, "SimpleWebAuthn Library") {
+    Component(api, "Public API", "JavaScript", "createCredential() and authenticate() methods")
+    Component(webauthn_core, "WebAuthn Core", "JavaScript", "Handles credential creation and authentication")
+    Component(encryption, "Encryption Engine", "JavaScript", "AES-GCM encryption with HKDF key derivation")
+    Component(prf_handler, "PRF Handler", "JavaScript", "Manages PRF extension usage and fallback")
+    Component(platform_detector, "Platform Detector", "JavaScript", "Detects Samsung, iOS, Windows platforms")
+    Component(diagnostics, "Diagnostics Engine", "JavaScript", "Collects platform and capability information")
+    Component(validator, "Input Validator", "JavaScript", "Validates parameters and options")
+}
+
+System_Ext(webauthn_api, "Browser WebAuthn API", "navigator.credentials")
+System_Ext(crypto_api, "Web Crypto API", "crypto.subtle")
+
+' Internal relationships
+Rel(frontend, api, "Calls library methods")
+Rel(api, validator, "Validates input parameters")
+Rel(api, webauthn_core, "Delegates WebAuthn operations")
+Rel(api, encryption, "Delegates encryption/decryption")
+Rel(webauthn_core, platform_detector, "Gets platform-specific settings")
+Rel(webauthn_core, prf_handler, "Handles PRF extension")
+Rel(webauthn_core, diagnostics, "Collects diagnostic data")
+Rel(encryption, prf_handler, "Gets key material")
+Rel(prf_handler, webauthn_api, "Manages PRF extension")
+Rel(webauthn_core, webauthn_api, "Creates/gets credentials")
+Rel(encryption, crypto_api, "Encrypts/decrypts data")
+
+' Component details
+note right of api : Entry Points:\n• createCredential(options)\n• authenticate(options)\n\nReturns structured responses\nwith success/error status
+
+note bottom of webauthn_core : Responsibilities:\n• Credential creation\n• Authentication\n• Challenge generation\n• Platform optimization
+
+note left of prf_handler : PRF Logic:\n• Attempts PRF extension\n• Detects Samsung Pass issues\n• Falls back to credential ID\n• Handles creation vs auth differences
+
+note bottom of encryption : Encryption Process:\n• HKDF key derivation\n• AES-GCM encryption\n• Random IV generation\n• Base64 encoding
+
+note right of platform_detector : Platform Detection:\n• Samsung Pass identification\n• iOS Safari detection\n• Windows Hello support\n• Timeout adjustments
+
+note top of diagnostics : Diagnostic Data:\n• User agent analysis\n• PRF capability detection\n• Authenticator type identification\n• Performance metrics
+
+@enduml

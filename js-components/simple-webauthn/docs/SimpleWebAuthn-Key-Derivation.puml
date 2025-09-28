@@ -1,0 +1,103 @@
+@startuml SimpleWebAuthn-Key-Derivation
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+title SimpleWebAuthn Key Derivation Architecture
+
+!define RECTANGLE class
+
+RECTANGLE WebAuthnCredential {
+    +rawId: ArrayBuffer
+    +getClientExtensionResults(): PRFResult
+}
+
+RECTANGLE PRFResult {
+    +enabled?: boolean
+    +results?: {first: ArrayBuffer}
+}
+
+package "Key Derivation Strategy" {
+    RECTANGLE PRFKeyDerivation {
+        +source: PRF Extension Output
+        +strength: High (cryptographic)
+        +availability: Platform dependent
+        +keyMaterial: 32-64 bytes
+    }
+    
+    RECTANGLE CredentialIDKeyDerivation {
+        +source: Credential.rawId
+        +strength: Medium (deterministic)
+        +availability: Always available
+        +keyMaterial: Variable length
+    }
+}
+
+package "Encryption Pipeline" {
+    RECTANGLE HKDFDerivation {
+        +algorithm: HKDF-SHA256
+        +salt: Custom application salt
+        +info: "encryption-key"
+        +output: 256-bit AES key
+    }
+    
+    RECTANGLE AESGCMEncryption {
+        +algorithm: AES-GCM-256
+        +iv: Random 12 bytes
+        +additionalData: None
+        +output: Encrypted data + auth tag
+    }
+}
+
+package "Platform Behaviors" {
+    RECTANGLE WindowsHello {
+        +PRF: ✅ Full support
+        +KeyMaterial: 32 bytes
+        +Reliability: High
+    }
+    
+    RECTANGLE TouchIDFaceID {
+        +PRF: ✅ Full support  
+        +KeyMaterial: 32 bytes
+        +Reliability: High
+    }
+    
+    RECTANGLE SamsungPass {
+        +PRF: ⚠️ Partial support
+        +KeyMaterial: Sometimes unavailable
+        +Reliability: Medium
+        +Fallback: Always uses credential ID
+    }
+    
+    RECTANGLE AndroidBiometric {
+        +PRF: ✅ Varies by device
+        +KeyMaterial: 32 bytes when available
+        +Reliability: Medium-High
+    }
+}
+
+' Key derivation flow
+WebAuthnCredential --> PRFResult: getClientExtensionResults()
+
+PRFResult --> PRFKeyDerivation: if results.first available
+WebAuthnCredential --> CredentialIDKeyDerivation: if PRF unavailable
+
+PRFKeyDerivation --> HKDFDerivation: Strong entropy
+CredentialIDKeyDerivation --> HKDFDerivation: Deterministic entropy
+
+HKDFDerivation --> AESGCMEncryption: 256-bit AES key
+AESGCMEncryption --> "Encrypted Data": Base64 output
+
+' Platform connections
+WindowsHello --> PRFKeyDerivation: Preferred
+TouchIDFaceID --> PRFKeyDerivation: Preferred
+SamsungPass --> CredentialIDKeyDerivation: Usually fallback
+AndroidBiometric --> PRFKeyDerivation: When supported
+
+note top of PRFKeyDerivation : PRF Extension provides\ncryptographically strong,\nuser-presence-bound\nkey material
+
+note bottom of CredentialIDKeyDerivation : Credential ID is deterministic\nbut still provides reasonable\nsecurity for most use cases
+
+note right of HKDFDerivation : HKDF ensures both PRF and\ncredential ID paths produce\nequally strong AES keys
+
+note left of SamsungPass : Samsung Pass reports PRF\nas "enabled" but often\ndoesn't return results.\nLibrary handles this gracefully.
+
+@enduml

@@ -1,0 +1,30 @@
+@startuml SimpleWebAuthn-Context
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+
+LAYOUT_WITH_LEGEND()
+
+title C4 Context Diagram - SimpleWebAuthn Library
+
+Person(developer, "Web Developer", "Integrates SimpleWebAuthn into their web application")
+Person(enduser, "End User", "Uses biometric authentication to secure their data")
+
+System_Boundary(webapp, "Web Application") {
+    System(app, "Web Application", "Developer's web application that needs secure authentication and encryption")
+}
+
+System_Ext(browser, "Web Browser", "Modern browser with WebAuthn support (Chrome, Firefox, Safari, Edge)")
+System_Ext(authenticator, "Platform Authenticator", "Built-in biometric authenticator (Windows Hello, Touch ID, Face ID, Samsung Pass)")
+
+' Relationships
+Rel(developer, app, "Integrates SimpleWebAuthn library")
+Rel(enduser, browser, "Uses browser to access application")
+Rel(browser, app, "Loads and executes web application")
+Rel(browser, authenticator, "Communicates via WebAuthn API")
+Rel(enduser, authenticator, "Provides biometric authentication")
+
+' Notes
+note right of authenticator : Supports PRF extension for\nkey derivation when available.\nFalls back to credential ID\nderivation when PRF unavailable.
+
+note bottom of app : SimpleWebAuthn provides:\n• Credential creation\n• Authentication\n• Optional data encryption\n• Platform-specific optimizations
+
+@enduml

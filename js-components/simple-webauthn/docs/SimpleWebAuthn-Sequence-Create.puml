@@ -1,0 +1,73 @@
+@startuml SimpleWebAuthn-Sequence-Create
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Sequence.puml
+
+title SimpleWebAuthn Credential Creation & Encryption Sequence
+
+participant "Web App" as App
+participant "SimpleWebAuthn" as SWA
+participant "Platform Detector" as PD
+participant "WebAuthn Core" as WAC
+participant "Browser WebAuthn" as Browser
+participant "Platform Authenticator" as Auth
+participant "PRF Handler" as PRF
+participant "Encryption Engine" as Encrypt
+participant "Web Crypto API" as Crypto
+
+App -> SWA: createCredential(options)
+activate SWA
+
+SWA -> SWA: validateInputs(options)
+SWA -> PD: detectPlatform(userAgent)
+PD --> SWA: platformConfig
+
+SWA -> WAC: createCredential(config)
+activate WAC
+
+WAC -> Browser: navigator.credentials.create()
+Browser -> Auth: Prompt for biometric
+Auth --> Browser: User authenticates
+Browser --> WAC: PublicKeyCredential
+
+WAC -> PRF: handlePRFExtension(credential)
+activate PRF
+
+alt PRF Extension Available
+    PRF -> PRF: checkPRFResults()
+    PRF --> WAC: PRF key material
+    note right: PRF provides cryptographic key
+else PRF Not Available  
+    PRF -> PRF: extractCredentialId()
+    PRF --> WAC: Credential ID material
+    note right: Fallback to credential ID
+end
+deactivate PRF
+
+WAC --> SWA: credential + keyMaterial
+deactivate WAC
+
+opt Encryption Requested
+    SWA -> Encrypt: encryptData(plaintext, keyMaterial, salt)
+    activate Encrypt
+    
+    Encrypt -> Crypto: deriveKey(HKDF, keyMaterial, salt)
+    Crypto --> Encrypt: AES-GCM key
+    
+    Encrypt -> Crypto: generateIV()
+    Crypto --> Encrypt: random IV
+    
+    Encrypt -> Crypto: encrypt(AES-GCM, plaintext, IV)
+    Crypto --> Encrypt: encrypted data
+    
+    Encrypt -> Encrypt: combineIVAndData()
+    Encrypt -> Encrypt: base64Encode()
+    Encrypt --> SWA: encryptedDataBase64
+    deactivate Encrypt
+end
+
+SWA -> SWA: buildDiagnostics()
+SWA --> App: {success, credential, encryption, diagnostics}
+deactivate SWA
+
+note over App: Developer stores credential.id\nand encrypted data in their\npreferred storage system
+
+@enduml
