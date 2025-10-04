@@ -3,6 +3,7 @@ using Microsoft.JSInterop;
 using clypse.portal.Services;
 using clypse.portal.Models;
 using System.Text.Json;
+using clypse.core.Cryptogtaphy.Interfaces;
 
 namespace clypse.portal.Pages;
 
@@ -12,6 +13,7 @@ public partial class Login : ComponentBase
     [Inject] public NavigationManager Navigation { get; set; } = default!;
     [Inject] public IJSRuntime JSRuntime { get; set; } = default!;
     [Inject] public AppSettings AppSettings { get; set; } = default!;
+    [Inject] public ICryptoService CryptoService { get; set; } = default!;
 
     private LoginModel loginModel = new();
     private bool isLoading = false;
@@ -52,6 +54,7 @@ public partial class Login : ComponentBase
         public string CredentialID { get; set; } = string.Empty;
         public string UserID { get; set; } = string.Empty;
         public DateTime CreatedAt { get; set; }
+        public string? EncryptedPassword { get; set; }
     }
 
     private class SavedUsersData
@@ -336,12 +339,28 @@ public partial class Login : ComponentBase
 
             if (result.Success && result.PrfEnabled)
             {
-                // Registration successful with PRF - store credential and continue to main app
+                // Registration successful with PRF - encrypt password and store credential
+                string? encryptedPassword = null;
+                
+                if (!string.IsNullOrEmpty(result.PrfOutput))
+                {
+                    try
+                    {
+                        encryptedPassword = await EncryptPasswordWithPrf(loginModel.Password, result.PrfOutput);
+                    }
+                    catch (Exception ex)
+                    {
+                        // Log the error but don't fail the entire process
+                        Console.WriteLine($"Failed to encrypt password: {ex.Message}");
+                    }
+                }
+                
                 var webAuthnCredential = new WebAuthnCredential
                 {
                     CredentialID = result.CredentialID ?? string.Empty,
                     UserID = result.UserID ?? string.Empty,
-                    CreatedAt = DateTime.UtcNow
+                    CreatedAt = DateTime.UtcNow,
+                    EncryptedPassword = encryptedPassword
                 };
                 
                 await SaveUser(loginModel.Username, webAuthnCredential);
@@ -388,5 +407,23 @@ public partial class Login : ComponentBase
         public string? UserID { get; set; }
         public string? Username { get; set; }
         public bool PrfEnabled { get; set; }
+        public string? PrfOutput { get; set; }
+    }
+
+    private async Task<string> EncryptPasswordWithPrf(string password, string prfOutputHex)
+    {
+        // Convert hex PRF output to bytes then to base64 key
+        var prfBytes = Convert.FromHexString(prfOutputHex);
+        var base64Key = Convert.ToBase64String(prfBytes);
+        
+        // Encrypt the password
+        var passwordBytes = System.Text.Encoding.UTF8.GetBytes(password);
+        using var inputStream = new MemoryStream(passwordBytes);
+        using var outputStream = new MemoryStream();
+        
+        await CryptoService.EncryptAsync(inputStream, outputStream, base64Key);
+        
+        // Return encrypted password as base64
+        return Convert.ToBase64String(outputStream.ToArray());
     }
 }

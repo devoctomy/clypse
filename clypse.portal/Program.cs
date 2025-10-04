@@ -1,5 +1,6 @@
 using clypse.core.Compression;
 using clypse.core.Cryptogtaphy;
+using clypse.core.Cryptogtaphy.Interfaces;
 using clypse.core.Extensions;
 using clypse.portal;
 using clypse.portal.Models;
@@ -23,6 +24,7 @@ builder.Services.AddScoped<IVaultManagerBootstrapperFactoryService, VaultManager
 builder.Services.AddScoped<IVaultStorageService, VaultStorageService>();
 builder.Services.AddScoped<IAuthenticationService, AwsCognitoAuthenticationService>();
 builder.Services.AddScoped<IPwaUpdateService, PwaUpdateService>();
+builder.Services.AddScoped<ICryptoService, BouncyCastleAesGcmCryptoService>();
 
 // Add Clypse core services
 builder.Services.AddClypseCoreServices();

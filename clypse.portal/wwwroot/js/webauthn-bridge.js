@@ -119,12 +119,55 @@ window.webAuthnWrapper = (function() {
             const attResp = await startRegistration({ optionsJSON });
             const clientExtensionResults = attResp.clientExtensionResults || {};
 
+            let prfOutput = null;
+            
+            // If PRF is enabled, perform a quick authentication to get PRF output
+            if (clientExtensionResults.prf?.enabled) {
+                try {
+                    const { startAuthentication } = SimpleWebAuthnBrowser;
+                    const authChallenge = toB64URL(randomBytes(32));
+                    
+                    const authOptionsJSON = {
+                        challenge: authChallenge,
+                        rpId: RP_ID,
+                        userVerification: 'preferred',
+                        allowCredentials: [
+                            {
+                                id: attResp.id,
+                                type: 'public-key',
+                                transports: ['internal', 'usb', 'ble', 'nfc', 'hybrid'],
+                            },
+                        ],
+                        timeout: 60_000,
+                        extensions: {
+                            prf: {
+                                eval: {
+                                    first: enc.encode('WebAuthn PRF Registration Salt')
+                                }
+                            }
+                        }
+                    };
+
+                    const authResp = await startAuthentication({ optionsJSON: authOptionsJSON });
+                    const authExtResults = authResp.clientExtensionResults || {};
+                    
+                    if (authExtResults.prf?.results?.first) {
+                        const prfResult = new Uint8Array(authExtResults.prf.results.first);
+                        prfOutput = Array.from(prfResult).map(b => b.toString(16).padStart(2, '0')).join('');
+                    }
+                } catch (prfError) {
+                    console.warn('Failed to get PRF output during registration:', prfError);
+                    // Continue without PRF output - registration was still successful
+                }
+            }
+
             return {
                 success: true,
                 credentialID: attResp.id,
                 userID: optionsJSON.user.id,
                 username: username,
                 prfEnabled: clientExtensionResults.prf?.enabled || false,
+                prfOutput: prfOutput,
                 error: null
             };
         } catch (error) {
