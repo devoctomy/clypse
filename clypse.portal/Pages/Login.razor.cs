@@ -29,6 +29,11 @@ public partial class Login : ComponentBase
     private bool rememberMeWhenResetStarted = false;
     private string newPassword = string.Empty;
     private string confirmPassword = string.Empty;
+    
+    // WebAuthn properties
+    private bool showWebAuthnPrompt = false;
+    private bool isWebAuthnProcessing = false;
+    private string? webAuthnErrorMessage;
 
     private class LoginModel
     {
@@ -39,6 +44,14 @@ public partial class Login : ComponentBase
     private class SavedUser
     {
         public string Email { get; set; } = string.Empty;
+        public WebAuthnCredential? WebAuthnCredential { get; set; }
+    }
+
+    private class WebAuthnCredential
+    {
+        public string CredentialID { get; set; } = string.Empty;
+        public string UserID { get; set; } = string.Empty;
+        public DateTime CreatedAt { get; set; }
     }
 
     private class SavedUsersData
@@ -118,22 +131,36 @@ public partial class Login : ComponentBase
         }
     }
 
-    private async Task SaveUser(string email)
+    private async Task SaveUser(string email, WebAuthnCredential? webAuthnCredential = null)
     {
         try
         {
-            var userToAdd = new SavedUser { Email = email };
-            
             // Check if user already exists
-            if (!savedUsers.Any(u => u.Email.Equals(email, StringComparison.OrdinalIgnoreCase)))
+            var existingUser = savedUsers.FirstOrDefault(u => u.Email.Equals(email, StringComparison.OrdinalIgnoreCase));
+            
+            if (existingUser != null)
             {
-                savedUsers.Add(userToAdd);
-                
-                var usersData = new SavedUsersData { Users = savedUsers };
-                var usersJson = System.Text.Json.JsonSerializer.Serialize(usersData);
-                
-                await JSRuntime.InvokeVoidAsync("localStorage.setItem", "users.json", usersJson);
+                // Update existing user with WebAuthn credential if provided
+                if (webAuthnCredential != null)
+                {
+                    existingUser.WebAuthnCredential = webAuthnCredential;
+                }
             }
+            else
+            {
+                // Add new user
+                var userToAdd = new SavedUser 
+                { 
+                    Email = email,
+                    WebAuthnCredential = webAuthnCredential
+                };
+                savedUsers.Add(userToAdd);
+            }
+            
+            var usersData = new SavedUsersData { Users = savedUsers };
+            var usersJson = System.Text.Json.JsonSerializer.Serialize(usersData);
+            
+            await JSRuntime.InvokeVoidAsync("localStorage.setItem", "users.json", usersJson);
         }
         catch (Exception)
         {
@@ -217,9 +244,14 @@ public partial class Login : ComponentBase
                 if (rememberMe && !string.IsNullOrEmpty(loginModel.Username))
                 {
                     await SaveUser(loginModel.Username);
+                    
+                    // Show WebAuthn setup prompt when remember me is checked
+                    showWebAuthnPrompt = true;
                 }
-                
-                Navigation.NavigateTo("/");
+                else
+                {
+                    Navigation.NavigateTo("/");
+                }
             }
             else if (result.PasswordResetRequired)
             {
@@ -266,9 +298,14 @@ public partial class Login : ComponentBase
                 if (rememberMeWhenResetStarted && !string.IsNullOrEmpty(loginModel.Username))
                 {
                     await SaveUser(loginModel.Username);
+                    
+                    // Show WebAuthn setup prompt when remember me was originally checked
+                    showWebAuthnPrompt = true;
                 }
-                
-                Navigation.NavigateTo("/");
+                else
+                {
+                    Navigation.NavigateTo("/");
+                }
             }
             else
             {
@@ -284,5 +321,72 @@ public partial class Login : ComponentBase
             isLoading = false;
             StateHasChanged();
         }
+    }
+
+    private async Task HandleWebAuthnSetup()
+    {
+        isWebAuthnProcessing = true;
+        webAuthnErrorMessage = null;
+        StateHasChanged();
+
+        try
+        {
+            var result = await JSRuntime.InvokeAsync<WebAuthnRegisterResult>("webAuthnWrapper.register", 
+                loginModel.Username, null);
+
+            if (result.Success && result.PrfEnabled)
+            {
+                // Registration successful with PRF - store credential and continue to main app
+                var webAuthnCredential = new WebAuthnCredential
+                {
+                    CredentialID = result.CredentialID ?? string.Empty,
+                    UserID = result.UserID ?? string.Empty,
+                    CreatedAt = DateTime.UtcNow
+                };
+                
+                await SaveUser(loginModel.Username, webAuthnCredential);
+                Navigation.NavigateTo("/");
+            }
+            else if (result.Success && !result.PrfEnabled)
+            {
+                webAuthnErrorMessage = "Your authenticator doesn't support the required security features for biometric login. Please continue with regular login.";
+            }
+            else
+            {
+                webAuthnErrorMessage = result.Error ?? "Failed to set up biometric login. Please try again or continue with regular login.";
+            }
+        }
+        catch (Exception ex)
+        {
+            webAuthnErrorMessage = $"Error setting up biometric login: {ex.Message}";
+        }
+        finally
+        {
+            isWebAuthnProcessing = false;
+            StateHasChanged();
+        }
+    }
+
+    private void SkipWebAuthnSetup()
+    {
+        showWebAuthnPrompt = false;
+        Navigation.NavigateTo("/");
+    }
+
+    private void DismissWebAuthnError()
+    {
+        webAuthnErrorMessage = null;
+        showWebAuthnPrompt = false;
+        Navigation.NavigateTo("/");
+    }
+
+    private class WebAuthnRegisterResult
+    {
+        public bool Success { get; set; }
+        public string? Error { get; set; }
+        public string? CredentialID { get; set; }
+        public string? UserID { get; set; }
+        public string? Username { get; set; }
+        public bool PrfEnabled { get; set; }
     }
 }
