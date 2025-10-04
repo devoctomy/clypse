@@ -8,13 +8,15 @@ public class AwsCognitoAuthenticationService : IAuthenticationService
 {
     private readonly IJSRuntime _jsRuntime;
     private readonly AwsCognitoConfig _cognitoConfig;
+    private readonly ILocalStorageService _localStorage;
     private bool _isInitialized;
     private bool _justLoggedIn;
 
-    public AwsCognitoAuthenticationService(IJSRuntime jsRuntime, AwsCognitoConfig cognitoConfig)
+    public AwsCognitoAuthenticationService(IJSRuntime jsRuntime, AwsCognitoConfig cognitoConfig, ILocalStorageService localStorage)
     {
         _jsRuntime = jsRuntime ?? throw new ArgumentNullException(nameof(jsRuntime));
         _cognitoConfig = cognitoConfig ?? throw new ArgumentNullException(nameof(cognitoConfig));
+        _localStorage = localStorage ?? throw new ArgumentNullException(nameof(localStorage));
     }
 
     public async Task Initialize()
@@ -206,7 +208,7 @@ public class AwsCognitoAuthenticationService : IAuthenticationService
 
     private async Task ClearStoredCredentials()
     {
-        // Clear ALL localStorage data
-        await _jsRuntime.InvokeVoidAsync("localStorage.clear");
+        // Clear all localStorage data except users.json
+        await _localStorage.ClearAllExceptUsersAsync();
     }
 }

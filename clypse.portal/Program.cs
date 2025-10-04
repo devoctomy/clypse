@@ -17,6 +17,7 @@ builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.
 builder.Services.AddSingleton(KeyDerivationServiceDefaultOptions.Blazor_Argon2id());
 
 // Register services
+builder.Services.AddScoped<ILocalStorageService, LocalStorageService>();
 builder.Services.AddScoped<IVaultManagerFactoryService, VaultManagerFactoryService>();
 builder.Services.AddScoped<IVaultManagerBootstrapperFactoryService, VaultManagerBootstrapperFactoryService>();
 builder.Services.AddScoped<IVaultStorageService, VaultStorageService>();

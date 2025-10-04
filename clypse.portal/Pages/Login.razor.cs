@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 using clypse.portal.Services;
 using clypse.portal.Models;
+using System.Text.Json;
 
 namespace clypse.portal.Pages;
 
@@ -17,11 +18,28 @@ public partial class Login : ComponentBase
     private string? errorMessage;
     private string currentTheme = "light";
     private string themeIcon = "bi-moon";
+    
+    // User management properties
+    private List<SavedUser> savedUsers = new();
+    private bool showUsersList = false;
+    private bool showRememberMe = true;
+    private bool rememberMe = false;
+    private bool isUsernameReadonly = false;
 
     private class LoginModel
     {
         public string Username { get; set; } = string.Empty;
         public string Password { get; set; } = string.Empty;
+    }
+
+    private class SavedUser
+    {
+        public string Email { get; set; } = string.Empty;
+    }
+
+    private class SavedUsersData
+    {
+        public List<SavedUser> Users { get; set; } = new();
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -30,6 +48,7 @@ public partial class Login : ComponentBase
         {
             await AuthService.Initialize();
             await InitializeTheme();
+            await LoadSavedUsers();
             
             // Check if already authenticated
             if (await AuthService.CheckAuthentication())
@@ -67,6 +86,79 @@ public partial class Login : ComponentBase
         StateHasChanged();
     }
 
+    private async Task LoadSavedUsers()
+    {
+        try
+        {
+            var usersJson = await JSRuntime.InvokeAsync<string?>("localStorage.getItem", "users.json");
+            
+            if (!string.IsNullOrEmpty(usersJson))
+            {
+                var usersData = System.Text.Json.JsonSerializer.Deserialize<SavedUsersData>(usersJson);
+                if (usersData?.Users != null && usersData.Users.Count > 0)
+                {
+                    savedUsers = usersData.Users;
+                    showUsersList = true;
+                    showRememberMe = false;
+                }
+            }
+            
+            StateHasChanged();
+        }
+        catch (Exception)
+        {
+            // If there's an error loading users, continue with normal login flow
+            savedUsers = new List<SavedUser>();
+            showUsersList = false;
+            showRememberMe = true;
+        }
+    }
+
+    private async Task SaveUser(string email)
+    {
+        try
+        {
+            var userToAdd = new SavedUser { Email = email };
+            
+            // Check if user already exists
+            if (!savedUsers.Any(u => u.Email.Equals(email, StringComparison.OrdinalIgnoreCase)))
+            {
+                savedUsers.Add(userToAdd);
+                
+                var usersData = new SavedUsersData { Users = savedUsers };
+                var usersJson = System.Text.Json.JsonSerializer.Serialize(usersData);
+                
+                await JSRuntime.InvokeVoidAsync("localStorage.setItem", "users.json", usersJson);
+            }
+        }
+        catch (Exception)
+        {
+            // If there's an error saving, continue silently
+        }
+    }
+
+    private void SelectUser(SavedUser user)
+    {
+        loginModel.Username = user.Email;
+        isUsernameReadonly = true;
+        showUsersList = false;
+        showRememberMe = false;
+        
+        StateHasChanged();
+    }
+
+    private void ShowLoginForm()
+    {
+        showUsersList = false;
+        showRememberMe = true;
+        isUsernameReadonly = false;
+        loginModel.Username = string.Empty;
+        loginModel.Password = string.Empty;
+        rememberMe = false;
+        
+        StateHasChanged();
+    }
+
     private async Task HandleLogin()
     {
         isLoading = true;
@@ -79,6 +171,12 @@ public partial class Login : ComponentBase
 
             if (result.Success)
             {
+                // Save user if remember me is checked and login was successful
+                if (rememberMe && !string.IsNullOrEmpty(loginModel.Username))
+                {
+                    await SaveUser(loginModel.Username);
+                }
+                
                 Navigation.NavigateTo("/");
             }
             else

@@ -149,8 +149,6 @@ window.CognitoAuth = {
         }
         AWS.config.credentials = null;
         
-        // Clear ALL localStorage data
-        localStorage.clear();
         
         return "Logged out";
     },
