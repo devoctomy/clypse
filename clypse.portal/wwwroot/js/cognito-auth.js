@@ -2,6 +2,7 @@ window.CognitoAuth = {
     userPool: null,
     cognitoUser: null,
     identityPool: null,
+    pendingPasswordResetUser: null,
     
     initialize: function(config) {
         AWS.config.region = config.region;
@@ -71,6 +72,9 @@ window.CognitoAuth = {
                     });
                 },
                 newPasswordRequired: (userAttributes, requiredAttributes) => {
+                    // Store the cognitoUser for later password completion
+                    this.pendingPasswordResetUser = this.cognitoUser;
+                    
                     // User needs to set a new password - return flag to UI
                     resolve({
                         success: false,
@@ -127,5 +131,60 @@ window.CognitoAuth = {
     
     isAuthenticated: function() {
         return this.cognitoUser && this.cognitoUser.getSignInUserSession() !== null;
+    },
+
+    completePasswordReset: function(username, newPassword) {
+        return new Promise((resolve, reject) => {
+            if (!this.pendingPasswordResetUser) {
+                resolve({
+                    success: false,
+                    error: "No pending password reset found"
+                });
+                return;
+            }
+
+            this.pendingPasswordResetUser.completeNewPasswordChallenge(newPassword, {}, {
+                onSuccess: async (result) => {
+                    console.log('CognitoAuth.completePasswordReset: Password reset successful');
+                    var accessToken = result.getAccessToken().getJwtToken();
+                    var idToken = result.getIdToken().getJwtToken();
+                    
+                    // Clear the pending user
+                    this.pendingPasswordResetUser = null;
+                    this.cognitoUser = result.user || this.cognitoUser;
+                    
+                    try {
+                        // Get AWS credentials
+                        console.log('CognitoAuth.completePasswordReset: Attempting to get AWS credentials');
+                        var credentials = await this.getAwsCredentials(idToken);
+                        console.log('CognitoAuth.completePasswordReset: AWS credentials received:', credentials);
+                        
+                        resolve({
+                            success: true,
+                            accessToken: accessToken,
+                            idToken: idToken,
+                            awsCredentials: credentials
+                        });
+                    } catch (error) {
+                        console.error('CognitoAuth.completePasswordReset: Failed to get AWS credentials:', error);
+                        resolve({
+                            success: true,
+                            accessToken: accessToken,
+                            idToken: idToken,
+                            awsCredentials: null,
+                            error: "Failed to get AWS credentials: " + error.message
+                        });
+                    }
+                },
+                onFailure: (err) => {
+                    console.error('CognitoAuth.completePasswordReset: Password reset failed:', err);
+                    this.pendingPasswordResetUser = null;
+                    resolve({
+                        success: false,
+                        error: "Failed to reset password: " + (err.message || err)
+                    });
+                }
+            });
+        });
     }
 };

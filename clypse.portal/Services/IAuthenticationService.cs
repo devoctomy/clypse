@@ -36,4 +36,12 @@ public interface IAuthenticationService
     /// </summary>
     /// <returns>The stored credentials if available, null otherwise.</returns>
     Task<StoredCredentials?> GetStoredCredentials();
+
+    /// <summary>
+    /// Completes the password reset process with a new password.
+    /// </summary>
+    /// <param name="username">The username for which to reset the password.</param>
+    /// <param name="newPassword">The new password to set.</param>
+    /// <returns>A LoginResult containing the authentication status and any associated credentials.</returns>
+    Task<LoginResult> CompletePasswordReset(string username, string newPassword);
 }

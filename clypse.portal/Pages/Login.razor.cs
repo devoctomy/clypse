@@ -26,6 +26,9 @@ public partial class Login : ComponentBase
     private bool rememberMe = false;
     private bool isUsernameReadonly = false;
     private bool passwordResetRequired = false;
+    private bool rememberMeWhenResetStarted = false;
+    private string newPassword = string.Empty;
+    private string confirmPassword = string.Empty;
 
     private class LoginModel
     {
@@ -221,11 +224,55 @@ public partial class Login : ComponentBase
             else if (result.PasswordResetRequired)
             {
                 passwordResetRequired = true;
+                rememberMeWhenResetStarted = rememberMe; // Preserve the remember me choice
                 errorMessage = result.Error ?? "Password reset required";
             }
             else
             {
                 errorMessage = result.Error ?? "Login failed";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"An error occurred: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task HandlePasswordChange()
+    {
+        if (string.IsNullOrEmpty(newPassword) || newPassword != confirmPassword)
+        {
+            errorMessage = "Passwords do not match";
+            StateHasChanged();
+            return;
+        }
+
+        isLoading = true;
+        errorMessage = null;
+        StateHasChanged();
+
+        try
+        {
+            var result = await AuthService.CompletePasswordReset(loginModel.Username, newPassword);
+
+            if (result.Success)
+            {
+                // Save user if remember me was checked before password reset was triggered
+                if (rememberMeWhenResetStarted && !string.IsNullOrEmpty(loginModel.Username))
+                {
+                    await SaveUser(loginModel.Username);
+                }
+                
+                Navigation.NavigateTo("/");
+            }
+            else
+            {
+                errorMessage = result.Error ?? "Failed to change password";
             }
         }
         catch (Exception ex)

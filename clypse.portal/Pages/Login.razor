@@ -121,6 +121,43 @@
                                 </div>
                             }
 
+                            @if (passwordResetRequired)
+                            {
+                                <div class="mt-3">
+                                    <div class="mb-3">
+                                        <div class="input-group">
+                                            <span class="input-group-text">
+                                                <i class="bi bi-lock"></i>
+                                            </span>
+                                            <InputText id="newPassword" type="password" class="form-control" @bind-Value="newPassword" placeholder="Enter new password" />
+                                        </div>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <div class="input-group">
+                                            <span class="input-group-text">
+                                                <i class="bi bi-lock-fill"></i>
+                                            </span>
+                                            <InputText id="confirmPassword" type="password" class="form-control" @bind-Value="confirmPassword" placeholder="Confirm new password" />
+                                        </div>
+                                    </div>
+
+                                    <div class="d-grid">
+                                        <button type="button" class="btn btn-primary" @onclick="HandlePasswordChange" disabled="@(isLoading || string.IsNullOrEmpty(newPassword) || newPassword != confirmPassword)">
+                                            @if (isLoading)
+                                            {
+                                                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                                <span>Changing password...</span>
+                                            }
+                                            else
+                                            {
+                                                <span>Change Password</span>
+                                            }
+                                        </button>
+                                    </div>
+                                </div>
+                            }
+
                             @if (!string.IsNullOrEmpty(errorMessage))
                             {
                                 <div class="alert alert-danger mt-3" role="alert">

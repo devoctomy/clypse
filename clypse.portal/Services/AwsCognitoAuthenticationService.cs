@@ -206,6 +206,40 @@ public class AwsCognitoAuthenticationService : IAuthenticationService
         Console.WriteLine("AwsCognitoAuthenticationService.StoreCredentials: Credentials stored successfully");
     }
 
+    public async Task<LoginResult> CompletePasswordReset(string username, string newPassword)
+    {
+        try
+        {
+            Console.WriteLine($"AwsCognitoAuthenticationService.CompletePasswordReset: Starting password reset for user: {username}");
+            var result = await _jsRuntime.InvokeAsync<LoginResult>("CognitoAuth.completePasswordReset", username, newPassword);
+
+            Console.WriteLine($"AwsCognitoAuthenticationService.CompletePasswordReset: Password reset result success: {result.Success}");
+            if (!string.IsNullOrEmpty(result.Error))
+            {
+                Console.WriteLine($"AwsCognitoAuthenticationService.CompletePasswordReset: Error: {result.Error}");
+            }
+
+            if (result.Success)
+            {
+                Console.WriteLine("AwsCognitoAuthenticationService.CompletePasswordReset: Storing credentials");
+                await StoreCredentials(result);
+                _justLoggedIn = true;
+                Console.WriteLine("AwsCognitoAuthenticationService.CompletePasswordReset: Set _justLoggedIn flag to prevent double AWS API calls");
+            }
+
+            return result;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"AwsCognitoAuthenticationService.CompletePasswordReset: Exception: {ex.Message}");
+            return new LoginResult
+            {
+                Success = false,
+                Error = $"An error occurred during password reset: {ex.Message}"
+            };
+        }
+    }
+
     private async Task ClearStoredCredentials()
     {
         // Clear all localStorage data except users.json
