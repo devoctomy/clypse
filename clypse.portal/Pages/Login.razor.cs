@@ -140,7 +140,7 @@ public partial class Login : ComponentBase
     private void SelectUser(SavedUser user)
     {
         loginModel.Username = user.Email;
-        isUsernameReadonly = true;
+        isUsernameReadonly = false;
         showUsersList = false;
         showRememberMe = false;
         
@@ -152,6 +152,17 @@ public partial class Login : ComponentBase
         showUsersList = false;
         showRememberMe = true;
         isUsernameReadonly = false;
+        loginModel.Username = string.Empty;
+        loginModel.Password = string.Empty;
+        rememberMe = false;
+        
+        StateHasChanged();
+    }
+
+    private void ShowUsersList()
+    {
+        showUsersList = true;
+        showRememberMe = false;
         loginModel.Username = string.Empty;
         loginModel.Password = string.Empty;
         rememberMe = false;
