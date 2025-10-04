@@ -1,23 +1,65 @@
 /**
- * JavaScript bridge for WebAuthn wrapper in Blazor
+ * WebAuthn bridge for Blazor - Direct SimpleWebAuthn integration
  */
 window.webAuthnWrapper = (function() {
-    let webAuthnWrapper;
+    const RP_ID = location.hostname || 'localhost';
+    const RP_NAME = 'Clypse Portal';
+    const enc = new TextEncoder();
 
-    function initWrapper() {
-        if (!webAuthnWrapper) {
-            if (typeof WebAuthnWrapper === 'undefined') {
-                throw new Error('WebAuthnWrapper not loaded. Please include webauthn-wrapper.js');
-            }
-            webAuthnWrapper = new WebAuthnWrapper();
+    // Check if SimpleWebAuthn is available
+    function checkLibrary() {
+        if (typeof SimpleWebAuthnBrowser === 'undefined') {
+            throw new Error('SimpleWebAuthnBrowser library not loaded');
         }
-        return webAuthnWrapper;
+    }
+
+    function randomBytes(len = 32) {
+        const a = new Uint8Array(len);
+        crypto.getRandomValues(a);
+        return a;
+    }
+    
+    function toB64URL(bytes) {
+        let str = btoa(String.fromCharCode(...bytes));
+        return str.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
+    }
+
+    function translateError(error) {
+        const errorMsg = error?.message || error?.toString() || 'Unknown error';
+        
+        if (errorMsg.includes('NotAllowedError')) {
+            return 'Operation was cancelled or timed out';
+        } else if (errorMsg.includes('InvalidStateError')) {
+            return 'A credential for this user might already exist or is not available';
+        }
+        
+        return errorMsg;
     }
 
     async function checkSupport() {
         try {
-            const wrapper = initWrapper();
-            return await wrapper.checkSupport();
+            checkLibrary();
+            
+            const {
+                browserSupportsWebAuthn,
+                platformAuthenticatorIsAvailable,
+            } = SimpleWebAuthnBrowser;
+
+            const result = {
+                supported: false,
+                platformAuthenticator: false,
+                error: null
+            };
+
+            if (!browserSupportsWebAuthn?.()) {
+                result.error = 'WebAuthn not supported in this browser';
+                return result;
+            }
+
+            result.supported = true;
+            result.platformAuthenticator = await platformAuthenticatorIsAvailable();
+            
+            return result;
         } catch (error) {
             return {
                 supported: false,
@@ -29,48 +71,135 @@ window.webAuthnWrapper = (function() {
 
     async function register(username, existingCredentialId = null) {
         try {
-            const wrapper = initWrapper();
-            const result = await wrapper.register(username, existingCredentialId);
+            checkLibrary();
             
+            if (!username?.trim()) {
+                throw new Error('Username is required');
+            }
+
+            const { startRegistration } = SimpleWebAuthnBrowser;
+            
+            const challenge = toB64URL(randomBytes(32));
+            const userIdBytes = enc.encode(username + '-' + Date.now());
+            
+            const optionsJSON = {
+                rp: { 
+                    id: RP_ID, 
+                    name: RP_NAME 
+                },
+                user: {
+                    id: toB64URL(userIdBytes),
+                    name: username,
+                    displayName: username,
+                },
+                challenge,
+                pubKeyCredParams: [
+                    { type: 'public-key', alg: -7 },   // ES256
+                    { type: 'public-key', alg: -257 }, // RS256
+                    { type: 'public-key', alg: -35 },  // ES384
+                    { type: 'public-key', alg: -36 },  // ES512
+                ],
+                timeout: 60_000,
+                attestation: 'none',
+                authenticatorSelection: {
+                    residentKey: 'preferred',
+                    requireResidentKey: false,
+                    userVerification: 'preferred',
+                },
+                excludeCredentials: existingCredentialId ? [{
+                    id: existingCredentialId,
+                    type: 'public-key',
+                    transports: ['internal', 'usb', 'ble', 'nfc', 'hybrid'],
+                }] : [],
+                extensions: {
+                    prf: {}
+                }
+            };
+
+            const attResp = await startRegistration({ optionsJSON });
+            const clientExtensionResults = attResp.clientExtensionResults || {};
+
             return {
                 success: true,
-                credentialID: result.credentialID,
-                userID: result.userID,
-                username: result.username,
-                prfEnabled: result.prfEnabled,
+                credentialID: attResp.id,
+                userID: optionsJSON.user.id,
+                username: username,
+                prfEnabled: clientExtensionResults.prf?.enabled || false,
                 error: null
             };
         } catch (error) {
+            console.error('WebAuthn registration failed:', error);
+            
             return {
                 success: false,
                 credentialID: null,
                 userID: null,
                 username: null,
                 prfEnabled: false,
-                error: error.message
+                error: translateError(error)
             };
         }
     }
 
     async function authenticate(credentialID) {
         try {
-            const wrapper = initWrapper();
-            const result = await wrapper.authenticate(credentialID);
+            checkLibrary();
             
+            if (!credentialID) {
+                throw new Error('Credential ID is required');
+            }
+
+            const { startAuthentication } = SimpleWebAuthnBrowser;
+            
+            const challenge = toB64URL(randomBytes(32));
+            
+            const optionsJSON = {
+                challenge,
+                rpId: RP_ID,
+                userVerification: 'preferred',
+                allowCredentials: [
+                    {
+                        id: credentialID,
+                        type: 'public-key',
+                        transports: ['internal', 'usb', 'ble', 'nfc', 'hybrid'],
+                    },
+                ],
+                timeout: 60_000,
+                extensions: {
+                    prf: {
+                        eval: {
+                            first: enc.encode('WebAuthn PRF Registration Salt')
+                        }
+                    }
+                }
+            };
+
+            const asseResp = await startAuthentication({ optionsJSON });
+            const flags = asseResp.response?.authenticatorDataFlags || {};
+            const clientExtensionResults = asseResp.clientExtensionResults || {};
+
+            let prfOutput = null;
+            if (clientExtensionResults.prf?.results?.first) {
+                const prfResult = new Uint8Array(clientExtensionResults.prf.results.first);
+                prfOutput = Array.from(prfResult).map(b => b.toString(16).padStart(2, '0')).join('');
+            }
+
             return {
                 success: true,
-                userPresent: result.userPresent,
-                userVerified: result.userVerified,
-                prfOutput: result.prfOutput,
+                userPresent: flags.up || false,
+                userVerified: flags.uv || false,
+                prfOutput: prfOutput,
                 error: null
             };
         } catch (error) {
+            console.error('WebAuthn authentication failed:', error);
+            
             return {
                 success: false,
                 userPresent: false,
                 userVerified: false,
                 prfOutput: null,
-                error: error.message
+                error: translateError(error)
             };
         }
     }
