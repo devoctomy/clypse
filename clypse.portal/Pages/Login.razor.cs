@@ -321,8 +321,15 @@ public partial class Login : ComponentBase
                 {
                     await SaveUser(loginModel.Username);
                     
-                    // Show WebAuthn setup prompt when remember me is checked
-                    showWebAuthnPrompt = true;
+                    // Show WebAuthn setup prompt when remember me is checked AND portal login auth is enabled
+                    if (AppSettings.EnablePortalLoginAuthn)
+                    {
+                        showWebAuthnPrompt = true;
+                    }
+                    else
+                    {
+                        Navigation.NavigateTo("/");
+                    }
                 }
                 else
                 {
@@ -375,8 +382,15 @@ public partial class Login : ComponentBase
                 {
                     await SaveUser(loginModel.Username);
                     
-                    // Show WebAuthn setup prompt when remember me was originally checked
-                    showWebAuthnPrompt = true;
+                    // Show WebAuthn setup prompt when remember me was originally checked AND portal login auth is enabled
+                    if (AppSettings.EnablePortalLoginAuthn)
+                    {
+                        showWebAuthnPrompt = true;
+                    }
+                    else
+                    {
+                        Navigation.NavigateTo("/");
+                    }
                 }
                 else
                 {
