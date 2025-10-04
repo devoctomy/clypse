@@ -71,6 +71,7 @@ window.CognitoAuth = {
                     });
                 },
                 newPasswordRequired: (userAttributes, requiredAttributes) => {
+                    // !!! This clearly needs to be handled better in a real app !!!
                     // User needs to set a new password
                     // For simplicity, we'll use the same password as the new password
                     this.cognitoUser.completeNewPasswordChallenge(password, {}, {
