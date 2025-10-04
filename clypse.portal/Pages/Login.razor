@@ -39,7 +39,14 @@
                                 {
                                     <div class="input-group">
                                         <button type="button" class="btn btn-outline-primary d-flex align-items-center flex-grow-1" @onclick="() => SelectUser(user)">
-                                            <i class="bi bi-person-circle me-3"></i>
+                                            @if (user.WebAuthnCredential != null)
+                                            {
+                                                <i class="bi bi-fingerprint me-3" title="Biometric login available"></i>
+                                            }
+                                            else
+                                            {
+                                                <i class="bi bi-person-circle me-3"></i>
+                                            }
                                             <span>@user.Email</span>
                                         </button>
                                         <button type="button" class="btn btn-outline-danger" @onclick="() => RemoveUser(user)" title="Remove user">
