@@ -204,6 +204,72 @@
             </div>
         </div>
     </div>
+
+    <div class="row justify-content-center mt-4">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="text-center">🔐 WebAuthn Tests</h3>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="webauthnUsername" class="form-label">Username:</label>
+                            <input id="webauthnUsername" class="form-control" @bind="webAuthnUsername" placeholder="Enter username" />
+                        </div>
+                        <div class="col-md-6 d-flex align-items-end">
+                            <small class="text-muted">Status: @webAuthnStatus</small>
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-start mb-3">
+                        <button class="btn btn-success" @onclick="HandleWebAuthnRegister" disabled="@(isWebAuthnProcessing || string.IsNullOrWhiteSpace(webAuthnUsername))">
+                            @if (isWebAuthnProcessing && webAuthnCurrentAction == "register")
+                            {
+                                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                <span>Registering...</span>
+                            }
+                            else
+                            {
+                                <span>🔑 Register Credential</span>
+                            }
+                        </button>
+                        
+                        <button class="btn btn-primary" @onclick="HandleWebAuthnAuthenticate" disabled="@(isWebAuthnProcessing || webAuthnCredential == null)">
+                            @if (isWebAuthnProcessing && webAuthnCurrentAction == "authenticate")
+                            {
+                                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                <span>Authenticating...</span>
+                            }
+                            else
+                            {
+                                <span>🔓 Authenticate</span>
+                            }
+                        </button>
+                        
+                        <button class="btn btn-secondary" @onclick="HandleWebAuthnClear">
+                            🗑️ Clear
+                        </button>
+                    </div>
+
+                    @if (webAuthnCredential != null)
+                    {
+                        <div class="alert alert-info">
+                            <strong>Registered Credential:</strong><br/>
+                            <small>ID: @webAuthnCredential.CredentialID.Substring(0, Math.Min(20, webAuthnCredential.CredentialID.Length))...</small><br/>
+                            <small>User: @webAuthnCredential.Username</small><br/>
+                            <small>PRF Enabled: @webAuthnCredential.PrfEnabled</small>
+                        </div>
+                    }
+
+                    <div class="mt-3">
+                        <h5>Activity Log:</h5>
+                        <div id="webauthnLog" class="border rounded p-3" style="height: 300px; overflow-y: auto; background: #f8f9fa; font-family: monospace; font-size: 0.85rem; white-space: pre-wrap;">@((MarkupString)webAuthnLog.Replace("\n", "<br/>"))</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 @if (showKeyDerivationResults && keyDerivationResults != null)

@@ -6,6 +6,7 @@ using clypse.core.Secrets;
 using clypse.core.Vault;
 using clypse.portal.Models;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Web;
 using Microsoft.JSInterop;
 
 namespace clypse.portal.Pages;
@@ -30,6 +31,14 @@ public partial class Test : ComponentBase
     private string? clypseTestError;
     private AwsCredentials? awsCredentials;
     private KeyDerivationBenchmarkResults? keyDerivationResults;
+    
+    // WebAuthn testing fields
+    private string webAuthnUsername = "demo-user";
+    private bool isWebAuthnProcessing = false;
+    private string webAuthnCurrentAction = "";
+    private string webAuthnStatus = "Ready";
+    private string webAuthnLog = "";
+    private WebAuthnCredentialInfo? webAuthnCredential;
     
 
     private class LoginModel
@@ -268,5 +277,159 @@ public partial class Test : ComponentBase
         public string SessionToken { get; set; } = string.Empty;
         public string Expiration { get; set; } = string.Empty;
         public string IdentityId { get; set; } = string.Empty;
+    }
+
+    private class WebAuthnCredentialInfo
+    {
+        public string CredentialID { get; set; } = string.Empty;
+        public string UserID { get; set; } = string.Empty;
+        public string Username { get; set; } = string.Empty;
+        public bool PrfEnabled { get; set; }
+    }
+
+    private void LogWebAuthn(string message)
+    {
+        var timestamp = DateTime.Now.ToString("HH:mm:ss");
+        webAuthnLog += $"[{timestamp}] {message}\n";
+        StateHasChanged();
+    }
+
+    private async Task HandleWebAuthnRegister()
+    {
+        if (string.IsNullOrWhiteSpace(webAuthnUsername))
+        {
+            LogWebAuthn("❌ Username is required");
+            return;
+        }
+
+        isWebAuthnProcessing = true;
+        webAuthnCurrentAction = "register";
+        webAuthnStatus = "Registering...";
+        StateHasChanged();
+
+        try
+        {
+            LogWebAuthn($"🔄 Starting registration for user: {webAuthnUsername}");
+
+            var result = await JSRuntime.InvokeAsync<WebAuthnRegisterResult>("webAuthnWrapper.register", 
+                webAuthnUsername, webAuthnCredential?.CredentialID);
+
+            if (result.Success)
+            {
+                webAuthnCredential = new WebAuthnCredentialInfo
+                {
+                    CredentialID = result.CredentialID!,
+                    UserID = result.UserID!,
+                    Username = result.Username!,
+                    PrfEnabled = result.PrfEnabled
+                };
+
+                LogWebAuthn("✅ Registration successful!");
+                var credId = result.CredentialID ?? "";
+                LogWebAuthn($"📝 Credential ID: {credId[..Math.Min(20, credId.Length)]}...");
+                LogWebAuthn($"👤 User ID: {result.UserID}");
+                LogWebAuthn($"🔑 PRF Extension: {(result.PrfEnabled ? "Enabled" : "Disabled")}");
+                LogWebAuthn("🎉 You can now authenticate with this credential!");
+
+                webAuthnStatus = "Credential registered";
+            }
+            else
+            {
+                LogWebAuthn($"❌ Registration failed: {result.Error}");
+                webAuthnStatus = "Registration failed";
+            }
+        }
+        catch (Exception ex)
+        {
+            LogWebAuthn($"❌ Registration error: {ex.Message}");
+            webAuthnStatus = "Registration error";
+        }
+        finally
+        {
+            isWebAuthnProcessing = false;
+            webAuthnCurrentAction = "";
+            StateHasChanged();
+        }
+    }
+
+    private async Task HandleWebAuthnAuthenticate()
+    {
+        if (webAuthnCredential == null)
+        {
+            LogWebAuthn("❌ No credential registered yet. Please register first.");
+            return;
+        }
+
+        isWebAuthnProcessing = true;
+        webAuthnCurrentAction = "authenticate";
+        webAuthnStatus = "Authenticating...";
+        StateHasChanged();
+
+        try
+        {
+            LogWebAuthn($"🔐 Starting authentication for: {webAuthnCredential.Username}");
+
+            var result = await JSRuntime.InvokeAsync<WebAuthnAuthenticateResult>("webAuthnWrapper.authenticate", 
+                webAuthnCredential.CredentialID);
+
+            if (result.Success)
+            {
+                LogWebAuthn("✅ Authentication successful!");
+                LogWebAuthn($"👤 User Present (UP): {(result.UserPresent ? "Yes" : "No")}");
+                LogWebAuthn($"🔒 User Verified (UV): {(result.UserVerified ? "Yes" : "No")}");
+                
+                if (!string.IsNullOrEmpty(result.PrfOutput))
+                {
+                    LogWebAuthn($"🔑 PRF Output: {result.PrfOutput[..Math.Min(32, result.PrfOutput.Length)]}...");
+                }
+
+                LogWebAuthn("🎊 Authentication completed successfully!");
+                webAuthnStatus = "Authentication successful";
+            }
+            else
+            {
+                LogWebAuthn($"❌ Authentication failed: {result.Error}");
+                webAuthnStatus = "Authentication failed";
+            }
+        }
+        catch (Exception ex)
+        {
+            LogWebAuthn($"❌ Authentication error: {ex.Message}");
+            webAuthnStatus = "Authentication error";
+        }
+        finally
+        {
+            isWebAuthnProcessing = false;
+            webAuthnCurrentAction = "";
+            StateHasChanged();
+        }
+    }
+
+    private void HandleWebAuthnClear()
+    {
+        webAuthnLog = "";
+        webAuthnCredential = null;
+        webAuthnStatus = "Ready";
+        LogWebAuthn("Log cleared.");
+        StateHasChanged();
+    }
+
+    private class WebAuthnRegisterResult
+    {
+        public bool Success { get; set; }
+        public string? Error { get; set; }
+        public string? CredentialID { get; set; }
+        public string? UserID { get; set; }
+        public string? Username { get; set; }
+        public bool PrfEnabled { get; set; }
+    }
+
+    private class WebAuthnAuthenticateResult
+    {
+        public bool Success { get; set; }
+        public string? Error { get; set; }
+        public bool UserPresent { get; set; }
+        public bool UserVerified { get; set; }
+        public string? PrfOutput { get; set; }
     }
 }
