@@ -71,40 +71,11 @@ window.CognitoAuth = {
                     });
                 },
                 newPasswordRequired: (userAttributes, requiredAttributes) => {
-                    // !!! This clearly needs to be handled better in a real app !!!
-                    // User needs to set a new password
-                    // For simplicity, we'll use the same password as the new password
-                    this.cognitoUser.completeNewPasswordChallenge(password, {}, {
-                        onSuccess: async (result) => {
-                            var accessToken = result.getAccessToken().getJwtToken();
-                            var idToken = result.getIdToken().getJwtToken();
-                            
-                            try {
-                                // Get AWS credentials
-                                var credentials = await this.getAwsCredentials(idToken);
-                                
-                                resolve({
-                                    success: true,
-                                    accessToken: accessToken,
-                                    idToken: idToken,
-                                    awsCredentials: credentials
-                                });
-                            } catch (error) {
-                                resolve({
-                                    success: true,
-                                    accessToken: accessToken,
-                                    idToken: idToken,
-                                    awsCredentials: null,
-                                    error: "Failed to get AWS credentials: " + error.message
-                                });
-                            }
-                        },
-                        onFailure: (err) => {
-                            resolve({
-                                success: false,
-                                error: "Failed to set new password: " + (err.message || err)
-                            });
-                        }
+                    // User needs to set a new password - return flag to UI
+                    resolve({
+                        success: false,
+                        passwordResetRequired: true,
+                        error: "Password reset required"
                     });
                 }
             });

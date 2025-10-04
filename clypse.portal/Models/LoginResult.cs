@@ -18,4 +18,7 @@ public class LoginResult
 
     [JsonPropertyName("awsCredentials")]
     public AwsCredentials? AwsCredentials { get; set; }
+
+    [JsonPropertyName("passwordResetRequired")]
+    public bool PasswordResetRequired { get; set; }
 }

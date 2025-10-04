@@ -25,6 +25,7 @@ public partial class Login : ComponentBase
     private bool showRememberMe = true;
     private bool rememberMe = false;
     private bool isUsernameReadonly = false;
+    private bool passwordResetRequired = false;
 
     private class LoginModel
     {
@@ -216,6 +217,11 @@ public partial class Login : ComponentBase
                 }
                 
                 Navigation.NavigateTo("/");
+            }
+            else if (result.PasswordResetRequired)
+            {
+                passwordResetRequired = true;
+                errorMessage = result.Error ?? "Password reset required";
             }
             else
             {

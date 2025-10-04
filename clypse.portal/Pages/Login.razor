@@ -71,49 +71,55 @@
                                 </div>
                             }
 
-                            <div class="mb-3">
-                                <div class="input-group">
-                                    <span class="input-group-text">
-                                        <i class="bi bi-person"></i>
-                                    </span>
-                                    <InputText id="username" class="form-control" @bind-Value="loginModel.Username" placeholder="Enter your username" readonly="@isUsernameReadonly" />
-                                </div>
-                            </div>
-
-                            <div class="mb-3">
-                                <div class="input-group">
-                                    <span class="input-group-text">
-                                        <i class="bi bi-lock"></i>
-                                    </span>
-                                    <InputText id="password" type="password" class="form-control" @bind-Value="loginModel.Password" placeholder="Enter your password" />
-                                </div>
-                            </div>
-
-                            @if (showRememberMe)
+                            @if (!passwordResetRequired)
                             {
                                 <div class="mb-3">
-                                    <div class="form-check">
-                                        <InputCheckbox id="rememberMe" class="form-check-input" @bind-Value="rememberMe" />
-                                        <label class="form-check-label" for="rememberMe">
-                                            Remember me
-                                        </label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">
+                                            <i class="bi bi-person"></i>
+                                        </span>
+                                        <InputText id="username" class="form-control" @bind-Value="loginModel.Username" placeholder="Enter your username" readonly="@isUsernameReadonly" />
                                     </div>
                                 </div>
+
+                                <div class="mb-3">
+                                    <div class="input-group">
+                                        <span class="input-group-text">
+                                            <i class="bi bi-lock"></i>
+                                        </span>
+                                        <InputText id="password" type="password" class="form-control" @bind-Value="loginModel.Password" placeholder="Enter your password" />
+                                    </div>
+                                </div>
+
+                                @if (showRememberMe)
+                                {
+                                    <div class="mb-3">
+                                        <div class="form-check">
+                                            <InputCheckbox id="rememberMe" class="form-check-input" @bind-Value="rememberMe" />
+                                            <label class="form-check-label" for="rememberMe">
+                                                Remember me
+                                            </label>
+                                        </div>
+                                    </div>
+                                }
                             }
 
-                            <div class="d-grid">
-                                <button type="submit" class="btn btn-primary" disabled="@isLoading">
-                                    @if (isLoading)
-                                    {
-                                        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                                        <span>Logging in...</span>
-                                    }
-                                    else
-                                    {
-                                        <span>Login</span>
-                                    }
-                                </button>
-                            </div>
+                            @if (!passwordResetRequired)
+                            {
+                                <div class="d-grid">
+                                    <button type="submit" class="btn btn-primary" disabled="@isLoading">
+                                        @if (isLoading)
+                                        {
+                                            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                            <span>Logging in...</span>
+                                        }
+                                        else
+                                        {
+                                            <span>Login</span>
+                                        }
+                                    </button>
+                                </div>
+                            }
 
                             @if (!string.IsNullOrEmpty(errorMessage))
                             {
