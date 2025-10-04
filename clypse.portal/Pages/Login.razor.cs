@@ -171,14 +171,87 @@ public partial class Login : ComponentBase
         }
     }
 
-    private void SelectUser(SavedUser user)
+    private async Task SelectUser(SavedUser user)
     {
+        // Check if user has WebAuthn credential for biometric login
+        if (user.WebAuthnCredential != null && !string.IsNullOrEmpty(user.WebAuthnCredential.EncryptedPassword))
+        {
+            await AttemptWebAuthnLogin(user);
+        }
+        else
+        {
+            // Traditional flow: show login form with username pre-populated
+            loginModel.Username = user.Email;
+            isUsernameReadonly = false;
+            showUsersList = false;
+            showRememberMe = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task AttemptWebAuthnLogin(SavedUser user)
+    {
+        isLoading = true;
+        errorMessage = null;
+        StateHasChanged();
+
+        try
+        {
+            // Attempt WebAuthn authentication
+            var authResult = await JSRuntime.InvokeAsync<WebAuthnAuthenticateResult>(
+                "webAuthnWrapper.authenticate", 
+                user.WebAuthnCredential!.CredentialID);
+
+            if (authResult.Success && !string.IsNullOrEmpty(authResult.PrfOutput))
+            {
+                // Decrypt the stored password using PRF output
+                var decryptedPassword = await DecryptPasswordWithPrf(
+                    user.WebAuthnCredential.EncryptedPassword!, 
+                    authResult.PrfOutput);
+
+                // Attempt login with decrypted credentials
+                var loginResult = await AuthService.Login(user.Email, decryptedPassword);
+
+                if (loginResult.Success)
+                {
+                    // Successful biometric login - navigate to app
+                    Navigation.NavigateTo("/");
+                }
+                else
+                {
+                    // Login failed - fall back to manual login
+                    errorMessage = "Biometric login failed. Please enter your password manually.";
+                    FallbackToManualLogin(user);
+                }
+            }
+            else
+            {
+                // WebAuthn authentication failed - fall back to manual login
+                errorMessage = authResult.Error ?? "Biometric authentication failed. Please enter your password manually.";
+                FallbackToManualLogin(user);
+            }
+        }
+        catch (Exception)
+        {
+            // Any error - fall back to manual login
+            errorMessage = "Biometric login error. Please enter your password manually.";
+            FallbackToManualLogin(user);
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private void FallbackToManualLogin(SavedUser user)
+    {
+        // Show traditional login form
         loginModel.Username = user.Email;
+        loginModel.Password = string.Empty;
         isUsernameReadonly = false;
         showUsersList = false;
         showRememberMe = false;
-        
-        StateHasChanged();
     }
 
     private void ShowLoginForm()
@@ -410,6 +483,15 @@ public partial class Login : ComponentBase
         public string? PrfOutput { get; set; }
     }
 
+    private class WebAuthnAuthenticateResult
+    {
+        public bool Success { get; set; }
+        public string? Error { get; set; }
+        public bool UserPresent { get; set; }
+        public bool UserVerified { get; set; }
+        public string? PrfOutput { get; set; }
+    }
+
     private async Task<string> EncryptPasswordWithPrf(string password, string prfOutputHex)
     {
         // Convert hex PRF output to bytes then to base64 key
@@ -425,5 +507,22 @@ public partial class Login : ComponentBase
         
         // Return encrypted password as base64
         return Convert.ToBase64String(outputStream.ToArray());
+    }
+
+    private async Task<string> DecryptPasswordWithPrf(string encryptedPasswordBase64, string prfOutputHex)
+    {
+        // Convert hex PRF output to bytes then to base64 key
+        var prfBytes = Convert.FromHexString(prfOutputHex);
+        var base64Key = Convert.ToBase64String(prfBytes);
+        
+        // Decrypt the password
+        var encryptedBytes = Convert.FromBase64String(encryptedPasswordBase64);
+        using var inputStream = new MemoryStream(encryptedBytes);
+        using var outputStream = new MemoryStream();
+        
+        await CryptoService.DecryptAsync(inputStream, outputStream, base64Key);
+        
+        // Return decrypted password
+        return System.Text.Encoding.UTF8.GetString(outputStream.ToArray());
     }
 }
