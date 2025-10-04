@@ -170,6 +170,33 @@ public partial class Login : ComponentBase
         StateHasChanged();
     }
 
+    private async Task RemoveUser(SavedUser user)
+    {
+        try
+        {
+            // Remove user from the list
+            savedUsers.Remove(user);
+            
+            // Update localStorage
+            var usersData = new SavedUsersData { Users = savedUsers };
+            var usersJson = System.Text.Json.JsonSerializer.Serialize(usersData);
+            await JSRuntime.InvokeVoidAsync("localStorage.setItem", "users.json", usersJson);
+            
+            // If no users left, switch to normal login form
+            if (!savedUsers.Any())
+            {
+                showUsersList = false;
+                showRememberMe = true;
+            }
+            
+            StateHasChanged();
+        }
+        catch (Exception)
+        {
+            // If there's an error, continue silently
+        }
+    }
+
     private async Task HandleLogin()
     {
         isLoading = true;

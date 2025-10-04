@@ -37,10 +37,15 @@
                             <div class="d-grid gap-2">
                                 @foreach (var user in savedUsers)
                                 {
-                                    <button type="button" class="btn btn-outline-primary d-flex align-items-center" @onclick="() => SelectUser(user)">
-                                        <i class="bi bi-person-circle me-3"></i>
-                                        <span>@user.Email</span>
-                                    </button>
+                                    <div class="input-group">
+                                        <button type="button" class="btn btn-outline-primary d-flex align-items-center flex-grow-1" @onclick="() => SelectUser(user)">
+                                            <i class="bi bi-person-circle me-3"></i>
+                                            <span>@user.Email</span>
+                                        </button>
+                                        <button type="button" class="btn btn-outline-danger" @onclick="() => RemoveUser(user)" title="Remove user">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </div>
                                 }
                             </div>
                             <div class="text-center mt-3">
