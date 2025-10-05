@@ -25,6 +25,7 @@ builder.Services.AddScoped<IVaultStorageService, VaultStorageService>();
 builder.Services.AddScoped<IAuthenticationService, AwsCognitoAuthenticationService>();
 builder.Services.AddScoped<IPwaUpdateService, PwaUpdateService>();
 builder.Services.AddScoped<ICryptoService, BouncyCastleAesGcmCryptoService>();
+builder.Services.AddScoped<IUserSettingsService, UserSettingsService>();
 
 // Add Clypse core services
 builder.Services.AddClypseCoreServices();

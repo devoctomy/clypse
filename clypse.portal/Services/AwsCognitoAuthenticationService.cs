@@ -242,7 +242,7 @@ public class AwsCognitoAuthenticationService : IAuthenticationService
 
     private async Task ClearStoredCredentials()
     {
-        // Clear all localStorage data except users.json
-        await _localStorage.ClearAllExceptUsersAsync();
+        // Clear all localStorage data except persistent user settings and saved users
+        await _localStorage.ClearAllExceptPersistentSettingsAsync();
     }
 }

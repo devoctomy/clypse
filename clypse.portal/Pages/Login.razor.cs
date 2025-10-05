@@ -14,6 +14,7 @@ public partial class Login : ComponentBase
     [Inject] public IJSRuntime JSRuntime { get; set; } = default!;
     [Inject] public AppSettings AppSettings { get; set; } = default!;
     [Inject] public ICryptoService CryptoService { get; set; } = default!;
+    [Inject] public IUserSettingsService UserSettingsService { get; set; } = default!;
 
     private LoginModel loginModel = new();
     private bool isLoading = false;
@@ -82,8 +83,7 @@ public partial class Login : ComponentBase
     {
         try
         {
-            var savedTheme = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "clypse_theme");
-            currentTheme = !string.IsNullOrEmpty(savedTheme) ? savedTheme : "light";
+            currentTheme = await UserSettingsService.GetThemeAsync();
             themeIcon = currentTheme == "light" ? "bi-moon" : "bi-sun";
             
             await JSRuntime.InvokeVoidAsync("document.documentElement.setAttribute", "data-theme", currentTheme);
@@ -100,7 +100,7 @@ public partial class Login : ComponentBase
         currentTheme = currentTheme == "light" ? "dark" : "light";
         themeIcon = currentTheme == "light" ? "bi-moon" : "bi-sun";
         
-        await JSRuntime.InvokeVoidAsync("localStorage.setItem", "clypse_theme", currentTheme);
+        await UserSettingsService.SetThemeAsync(currentTheme);
         await JSRuntime.InvokeVoidAsync("document.documentElement.setAttribute", "data-theme", currentTheme);
         
         StateHasChanged();
@@ -110,7 +110,7 @@ public partial class Login : ComponentBase
     {
         try
         {
-            var usersJson = await JSRuntime.InvokeAsync<string?>("localStorage.getItem", "users.json");
+            var usersJson = await JSRuntime.InvokeAsync<string?>("localStorage.getItem", "users");
             
             if (!string.IsNullOrEmpty(usersJson))
             {
@@ -163,7 +163,7 @@ public partial class Login : ComponentBase
             var usersData = new SavedUsersData { Users = savedUsers };
             var usersJson = System.Text.Json.JsonSerializer.Serialize(usersData);
             
-            await JSRuntime.InvokeVoidAsync("localStorage.setItem", "users.json", usersJson);
+            await JSRuntime.InvokeVoidAsync("localStorage.setItem", "users", usersJson);
         }
         catch (Exception)
         {
@@ -287,7 +287,7 @@ public partial class Login : ComponentBase
             // Update localStorage
             var usersData = new SavedUsersData { Users = savedUsers };
             var usersJson = System.Text.Json.JsonSerializer.Serialize(usersData);
-            await JSRuntime.InvokeVoidAsync("localStorage.setItem", "users.json", usersJson);
+            await JSRuntime.InvokeVoidAsync("localStorage.setItem", "users", usersJson);
             
             // If no users left, switch to normal login form
             if (!savedUsers.Any())

@@ -7,12 +7,14 @@ public interface ILocalStorageService
     Task<string?> GetItemAsync(string key);
     Task SetItemAsync(string key, string value);
     Task RemoveItemAsync(string key);
-    Task ClearAllExceptUsersAsync();
+    Task ClearAllExceptPersistentSettingsAsync();
 }
 
 public class LocalStorageService : ILocalStorageService
 {
     private readonly IJSRuntime _jsRuntime;
+    
+    private static readonly string[] PersistentStorageKeys = { "users", "clypse_user_settings" };
 
     public LocalStorageService(IJSRuntime jsRuntime)
     {
@@ -34,17 +36,19 @@ public class LocalStorageService : ILocalStorageService
         await _jsRuntime.InvokeVoidAsync("localStorage.removeItem", key);
     }
 
-    public async Task ClearAllExceptUsersAsync()
+    public async Task ClearAllExceptPersistentSettingsAsync()
     {
-        // Clear all localStorage data except users.json
-        await _jsRuntime.InvokeVoidAsync("eval", @"
+        // Clear all localStorage data except persistent user settings and saved users
+        var persistentKeysJson = System.Text.Json.JsonSerializer.Serialize(PersistentStorageKeys);
+        await _jsRuntime.InvokeVoidAsync("eval", $@"
+            const persistentKeys = {persistentKeysJson};
             const keysToRemove = [];
-            for (let i = 0; i < localStorage.length; i++) {
+            for (let i = 0; i < localStorage.length; i++) {{
                 const key = localStorage.key(i);
-                if (key !== 'users.json') {
+                if (!persistentKeys.includes(key)) {{
                     keysToRemove.push(key);
-                }
-            }
+                }}
+            }}
             keysToRemove.forEach(key => localStorage.removeItem(key));
         ");
     }

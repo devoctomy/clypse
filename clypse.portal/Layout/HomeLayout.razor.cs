@@ -11,6 +11,7 @@ public partial class HomeLayout : LayoutComponentBase, IDisposable
     [Inject] public NavigationManager Navigation { get; set; } = default!;
     [Inject] public AppSettings AppSettings { get; set; } = default!;
     [Inject] public IAuthenticationService AuthService { get; set; } = default!;
+    [Inject] public IUserSettingsService UserSettingsService { get; set; } = default!;
 
     private List<NavigationItem>? navigationItems;
     private Pages.Home? homePageRef;
@@ -69,8 +70,7 @@ public partial class HomeLayout : LayoutComponentBase, IDisposable
     {
         try
         {
-            var savedTheme = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "clypse_theme");
-            currentTheme = !string.IsNullOrEmpty(savedTheme) ? savedTheme : "light";
+            currentTheme = await UserSettingsService.GetThemeAsync();
             themeIcon = currentTheme == "light" ? "bi-moon" : "bi-sun";
             
             await JSRuntime.InvokeVoidAsync("document.documentElement.setAttribute", "data-theme", currentTheme);
@@ -87,7 +87,7 @@ public partial class HomeLayout : LayoutComponentBase, IDisposable
         currentTheme = currentTheme == "light" ? "dark" : "light";
         themeIcon = currentTheme == "light" ? "bi-moon" : "bi-sun";
         
-        await JSRuntime.InvokeVoidAsync("localStorage.setItem", "clypse_theme", currentTheme);
+        await UserSettingsService.SetThemeAsync(currentTheme);
         await JSRuntime.InvokeVoidAsync("document.documentElement.setAttribute", "data-theme", currentTheme);
         
         StateHasChanged();
