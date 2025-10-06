@@ -240,6 +240,58 @@ public class AwsCognitoAuthenticationService : IAuthenticationService
         }
     }
 
+    public async Task<ForgotPasswordResult> ForgotPassword(string username)
+    {
+        try
+        {
+            Console.WriteLine($"AwsCognitoAuthenticationService.ForgotPassword: Starting forgot password for user: {username}");
+            var result = await _jsRuntime.InvokeAsync<ForgotPasswordResult>("CognitoAuth.forgotPassword", username);
+
+            Console.WriteLine($"AwsCognitoAuthenticationService.ForgotPassword: Forgot password result success: {result.Success}");
+            if (!string.IsNullOrEmpty(result.Error))
+            {
+                Console.WriteLine($"AwsCognitoAuthenticationService.ForgotPassword: Error: {result.Error}");
+            }
+
+            return result;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"AwsCognitoAuthenticationService.ForgotPassword: Exception: {ex.Message}");
+            return new ForgotPasswordResult
+            {
+                Success = false,
+                Error = $"An error occurred during forgot password: {ex.Message}"
+            };
+        }
+    }
+
+    public async Task<ForgotPasswordResult> ConfirmForgotPassword(string username, string verificationCode, string newPassword)
+    {
+        try
+        {
+            Console.WriteLine($"AwsCognitoAuthenticationService.ConfirmForgotPassword: Starting confirm forgot password for user: {username}");
+            var result = await _jsRuntime.InvokeAsync<ForgotPasswordResult>("CognitoAuth.confirmForgotPassword", username, verificationCode, newPassword);
+
+            Console.WriteLine($"AwsCognitoAuthenticationService.ConfirmForgotPassword: Confirm forgot password result success: {result.Success}");
+            if (!string.IsNullOrEmpty(result.Error))
+            {
+                Console.WriteLine($"AwsCognitoAuthenticationService.ConfirmForgotPassword: Error: {result.Error}");
+            }
+
+            return result;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"AwsCognitoAuthenticationService.ConfirmForgotPassword: Exception: {ex.Message}");
+            return new ForgotPasswordResult
+            {
+                Success = false,
+                Error = $"An error occurred during confirm forgot password: {ex.Message}"
+            };
+        }
+    }
+
     private async Task ClearStoredCredentials()
     {
         // Clear all localStorage data except persistent user settings and saved users

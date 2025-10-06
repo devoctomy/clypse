@@ -44,4 +44,20 @@ public interface IAuthenticationService
     /// <param name="newPassword">The new password to set.</param>
     /// <returns>A LoginResult containing the authentication status and any associated credentials.</returns>
     Task<LoginResult> CompletePasswordReset(string username, string newPassword);
+
+    /// <summary>
+    /// Initiates a forgot password flow by sending a verification code to the user's registered email/phone.
+    /// </summary>
+    /// <param name="username">The username for which to initiate password reset.</param>
+    /// <returns>A ForgotPasswordResult containing the operation status and delivery details.</returns>
+    Task<ForgotPasswordResult> ForgotPassword(string username);
+
+    /// <summary>
+    /// Confirms the forgot password flow by verifying the code and setting a new password.
+    /// </summary>
+    /// <param name="username">The username for which to confirm password reset.</param>
+    /// <param name="verificationCode">The verification code sent to the user.</param>
+    /// <param name="newPassword">The new password to set.</param>
+    /// <returns>A ForgotPasswordResult containing the operation status.</returns>
+    Task<ForgotPasswordResult> ConfirmForgotPassword(string username, string verificationCode, string newPassword);
 }

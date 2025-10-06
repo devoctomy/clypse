@@ -115,7 +115,7 @@
                                 }
                             }
 
-                            @if (!passwordResetRequired)
+                            @if (!passwordResetRequired && !forgotPasswordMode)
                             {
                                 <div class="d-grid">
                                     <button type="submit" class="btn btn-primary" disabled="@isLoading">
@@ -129,6 +129,102 @@
                                             <span>Login</span>
                                         }
                                     </button>
+                                </div>
+
+                                <div class="text-center mt-3">
+                                    <button type="button" class="btn btn-link" @onclick="ShowForgotPassword">
+                                        Forgot your password?
+                                    </button>
+                                </div>
+                            }
+
+                            @if (forgotPasswordMode && !forgotPasswordCodeSent)
+                            {
+                                <div class="mt-3">
+                                    <div class="alert alert-info">
+                                        <i class="bi bi-info-circle me-2"></i>
+                                        Enter your username or email address and we'll send you a verification code to reset your password.
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <div class="input-group">
+                                            <span class="input-group-text">
+                                                <i class="bi bi-person"></i>
+                                            </span>
+                                            <InputText id="forgotPasswordUsername" class="form-control" @bind-Value="forgotPasswordUsername" placeholder="Enter your username or email" />
+                                        </div>
+                                    </div>
+
+                                    <div class="d-grid gap-2">
+                                        <button type="button" class="btn btn-primary" @onclick="HandleForgotPassword" disabled="@(isLoading || string.IsNullOrWhiteSpace(forgotPasswordUsername))">
+                                            @if (isLoading)
+                                            {
+                                                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                                <span>Sending code...</span>
+                                            }
+                                            else
+                                            {
+                                                <span>Send Verification Code</span>
+                                            }
+                                        </button>
+                                        <button type="button" class="btn btn-outline-secondary" @onclick="CancelForgotPassword" disabled="@isLoading">
+                                            Back to Login
+                                        </button>
+                                    </div>
+                                </div>
+                            }
+
+                            @if (forgotPasswordMode && forgotPasswordCodeSent)
+                            {
+                                <div class="mt-3">
+                                    <div class="alert alert-success">
+                                        <i class="bi bi-check-circle me-2"></i>
+                                        Verification code sent! Check your email/phone and enter the code below with your new password.
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <div class="input-group">
+                                            <span class="input-group-text">
+                                                <i class="bi bi-shield-check"></i>
+                                            </span>
+                                            <InputText id="verificationCode" class="form-control" @bind-Value="verificationCode" placeholder="Enter verification code" />
+                                        </div>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <div class="input-group">
+                                            <span class="input-group-text">
+                                                <i class="bi bi-lock"></i>
+                                            </span>
+                                            <InputText id="newPasswordForgot" type="password" class="form-control" @bind-Value="newPassword" placeholder="Enter new password" />
+                                        </div>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <div class="input-group">
+                                            <span class="input-group-text">
+                                                <i class="bi bi-lock-fill"></i>
+                                            </span>
+                                            <InputText id="confirmPasswordForgot" type="password" class="form-control" @bind-Value="confirmPassword" placeholder="Confirm new password" />
+                                        </div>
+                                    </div>
+
+                                    <div class="d-grid gap-2">
+                                        <button type="button" class="btn btn-success" @onclick="HandleConfirmForgotPassword" disabled="@(isLoading || string.IsNullOrWhiteSpace(verificationCode) || string.IsNullOrEmpty(newPassword) || newPassword != confirmPassword)">
+                                            @if (isLoading)
+                                            {
+                                                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                                <span>Resetting password...</span>
+                                            }
+                                            else
+                                            {
+                                                <span>Reset Password</span>
+                                            }
+                                        </button>
+                                        <button type="button" class="btn btn-outline-secondary" @onclick="CancelForgotPassword" disabled="@isLoading">
+                                            Back to Login
+                                        </button>
+                                    </div>
                                 </div>
                             }
 

@@ -33,6 +33,12 @@ public partial class Login : ComponentBase
     private string newPassword = string.Empty;
     private string confirmPassword = string.Empty;
     
+    // Forgot password properties
+    private bool forgotPasswordMode = false;
+    private bool forgotPasswordCodeSent = false;
+    private string forgotPasswordUsername = string.Empty;
+    private string verificationCode = string.Empty;
+    
     // WebAuthn properties
     private bool showWebAuthnPrompt = false;
     private bool isWebAuthnProcessing = false;
@@ -538,5 +544,133 @@ public partial class Login : ComponentBase
         
         // Return decrypted password
         return System.Text.Encoding.UTF8.GetString(outputStream.ToArray());
+    }
+
+    private void ShowForgotPassword()
+    {
+        forgotPasswordMode = true;
+        forgotPasswordCodeSent = false;
+        forgotPasswordUsername = string.Empty;
+        verificationCode = string.Empty;
+        newPassword = string.Empty;
+        confirmPassword = string.Empty;
+        errorMessage = null;
+        
+        StateHasChanged();
+    }
+
+    private void CancelForgotPassword()
+    {
+        forgotPasswordMode = false;
+        forgotPasswordCodeSent = false;
+        forgotPasswordUsername = string.Empty;
+        verificationCode = string.Empty;
+        newPassword = string.Empty;
+        confirmPassword = string.Empty;
+        errorMessage = null;
+        
+        StateHasChanged();
+    }
+
+    private async Task HandleForgotPassword()
+    {
+        if (string.IsNullOrWhiteSpace(forgotPasswordUsername))
+        {
+            errorMessage = "Please enter your username or email address";
+            StateHasChanged();
+            return;
+        }
+
+        isLoading = true;
+        errorMessage = null;
+        StateHasChanged();
+
+        try
+        {
+            var result = await AuthService.ForgotPassword(forgotPasswordUsername);
+
+            if (result.Success)
+            {
+                forgotPasswordCodeSent = true;
+                errorMessage = null;
+            }
+            else
+            {
+                errorMessage = result.Error ?? "Failed to send verification code";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"An error occurred: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task HandleConfirmForgotPassword()
+    {
+        if (string.IsNullOrWhiteSpace(verificationCode))
+        {
+            errorMessage = "Please enter the verification code";
+            StateHasChanged();
+            return;
+        }
+
+        if (string.IsNullOrEmpty(newPassword))
+        {
+            errorMessage = "Please enter a new password";
+            StateHasChanged();
+            return;
+        }
+
+        if (newPassword != confirmPassword)
+        {
+            errorMessage = "Passwords do not match";
+            StateHasChanged();
+            return;
+        }
+
+        isLoading = true;
+        errorMessage = null;
+        StateHasChanged();
+
+        try
+        {
+            var result = await AuthService.ConfirmForgotPassword(forgotPasswordUsername, verificationCode, newPassword);
+
+            if (result.Success)
+            {
+                // Reset successful - show success message and redirect to login
+                errorMessage = "Password reset successfully! You can now login with your new password.";
+                
+                // Reset forgot password mode and prefill username
+                forgotPasswordMode = false;
+                forgotPasswordCodeSent = false;
+                loginModel.Username = forgotPasswordUsername;
+                loginModel.Password = string.Empty;
+                
+                // Clear forgot password fields
+                forgotPasswordUsername = string.Empty;
+                verificationCode = string.Empty;
+                newPassword = string.Empty;
+                confirmPassword = string.Empty;
+            }
+            else
+            {
+                errorMessage = result.Error ?? "Failed to reset password";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"An error occurred: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
     }
 }

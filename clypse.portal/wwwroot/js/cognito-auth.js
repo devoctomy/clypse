@@ -186,5 +186,62 @@ window.CognitoAuth = {
                 }
             });
         });
+    },
+
+    forgotPassword: function(username) {
+        return new Promise((resolve, reject) => {
+            var userData = {
+                Username: username,
+                Pool: this.userPool
+            };
+            
+            var cognitoUser = new AmazonCognitoIdentity.CognitoUser(userData);
+            
+            cognitoUser.forgotPassword({
+                onSuccess: (result) => {
+                    console.log('CognitoAuth.forgotPassword: Success - code delivery details:', result);
+                    resolve({
+                        success: true,
+                        message: "Verification code sent to your registered email/phone number",
+                        codeDeliveryDetails: result
+                    });
+                },
+                onFailure: (err) => {
+                    console.error('CognitoAuth.forgotPassword: Error:', err);
+                    resolve({
+                        success: false,
+                        error: err.message || err
+                    });
+                }
+            });
+        });
+    },
+
+    confirmForgotPassword: function(username, verificationCode, newPassword) {
+        return new Promise((resolve, reject) => {
+            var userData = {
+                Username: username,
+                Pool: this.userPool
+            };
+            
+            var cognitoUser = new AmazonCognitoIdentity.CognitoUser(userData);
+            
+            cognitoUser.confirmPassword(verificationCode, newPassword, {
+                onSuccess: () => {
+                    console.log('CognitoAuth.confirmForgotPassword: Password reset successful');
+                    resolve({
+                        success: true,
+                        message: "Password reset successfully. You can now login with your new password."
+                    });
+                },
+                onFailure: (err) => {
+                    console.error('CognitoAuth.confirmForgotPassword: Error:', err);
+                    resolve({
+                        success: false,
+                        error: err.message || err
+                    });
+                }
+            });
+        });
     }
 };
