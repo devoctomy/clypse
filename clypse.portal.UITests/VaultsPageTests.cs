@@ -44,6 +44,9 @@ public class VaultsPageTests : TestBase
         // Click the Create Vault button in the navigation
         await Page.Locator("#nav-create-vault-button").ClickAsync();
 
+        // Wait for create vault form to be visible
+        await Expect(Page.Locator("#create-vault-button")).ToBeVisibleAsync(new() { Timeout = 10000 });
+
         // Fill in the create vault form
         await Page.Locator("#vaultName").FillAsync(vaultName);
         await Page.Locator("#vaultDescription").FillAsync(vaultDescription);
@@ -53,19 +56,16 @@ public class VaultsPageTests : TestBase
         // Click the create button
         await Page.Locator("#create-vault-button").ClickAsync();
 
-        await Task.Delay(2000, TestContext.CancellationTokenSource.Token);
-
         // Verify the vault list container is visible
         await Expect(Page.Locator("#vaults-list")).ToBeVisibleAsync(new() { Timeout = 10000 });
-        await Task.Delay(2000, TestContext.CancellationTokenSource.Token);
-        // Verify at least one vault card is visible (use .First to satisfy strict mode)
-        await Expect(Page.Locator("#vaults-list .vault-card-responsive").First).ToBeVisibleAsync();
+
+        // Verify the vault card is visible
+        var vaultCard = Page.Locator("#vaults-list .vault-card-responsive").Filter(new() { HasText = vaultDescription });
+        await Expect(vaultCard).ToBeVisibleAsync(new() { Timeout = 5000 });
 
         // STEP 2: Unlock Vault
         // Click on the specific vault card by matching the description text we just created (unique GUID)
-        var targetVaultCard = Page.Locator("#vaults-list .vault-card-responsive").Filter(new() { HasText = vaultDescription });
-        await Expect(targetVaultCard.First).ToBeVisibleAsync(new() { Timeout = 10000 });
-        await targetVaultCard.First.ClickAsync();
+        await vaultCard.ClickAsync();
 
         // Verify unlock dialog is visible
         await Expect(Page.Locator(".modal").Filter(new() { HasText = "Unlock Vault" })).ToBeVisibleAsync();
@@ -103,7 +103,6 @@ public class VaultsPageTests : TestBase
 
         // Now check for the no vaults message
         var hasNoVaultsMessage = await Page.Locator("#no-vaults-found").IsVisibleAsync();
-
         Assert.IsTrue(hasNoVaultsMessage, "Should show no vaults message after deletion and refresh");
     }
 }
