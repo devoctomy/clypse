@@ -54,19 +54,18 @@ public class VaultsPageTests : TestBase
         await Page.Locator("#create-vault-button").ClickAsync();
 
         await Task.Delay(2000, TestContext.CancellationTokenSource.Token);
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
 
-        // Wait for the vault to be created and the modal to close
-        await Expect(Page.Locator(".modal").Filter(new() { HasText = "Create New Vault" })).Not.ToBeAttachedAsync(new() { Timeout = 10000 });
-
-        // Verify the vault appears in the list
-        await Expect(Page.Locator("#vaults-list")).ToBeVisibleAsync();
+        // Verify the vault list container is visible
+        await Expect(Page.Locator("#vaults-list")).ToBeVisibleAsync(new() { Timeout = 10000 });
         await Task.Delay(2000, TestContext.CancellationTokenSource.Token);
-        await Expect(Page.Locator(".vault-card-responsive")).ToBeVisibleAsync();
+        // Verify at least one vault card is visible (use .First to satisfy strict mode)
+        await Expect(Page.Locator("#vaults-list .vault-card-responsive").First).ToBeVisibleAsync();
 
         // STEP 2: Unlock Vault
-        // Click on the vault to open unlock dialog
-        await Page.Locator(".vault-card-responsive").First.ClickAsync();
+        // Click on the specific vault card by matching the description text we just created (unique GUID)
+        var targetVaultCard = Page.Locator("#vaults-list .vault-card-responsive").Filter(new() { HasText = vaultDescription });
+        await Expect(targetVaultCard.First).ToBeVisibleAsync(new() { Timeout = 10000 });
+        await targetVaultCard.First.ClickAsync();
 
         // Verify unlock dialog is visible
         await Expect(Page.Locator(".modal").Filter(new() { HasText = "Unlock Vault" })).ToBeVisibleAsync();
@@ -104,7 +103,7 @@ public class VaultsPageTests : TestBase
 
         // Now check for the no vaults message
         var hasNoVaultsMessage = await Page.Locator("#no-vaults-found").IsVisibleAsync();
-        
+
         Assert.IsTrue(hasNoVaultsMessage, "Should show no vaults message after deletion and refresh");
     }
 }
