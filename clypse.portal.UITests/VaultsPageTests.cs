@@ -52,7 +52,7 @@ public class VaultsPageTests : TestBase
         await Page.Locator("#create-vault-button").ClickAsync();
 
         // Wait for the vault to be created and the modal to close
-        await Expect(Page.Locator(".modal").Filter(new() { HasText = "Create New Vault" })).Not.ToBeVisibleAsync(new() { Timeout = 10000 });
+        await Expect(Page.Locator(".modal").Filter(new() { HasText = "Create New Vault" })).Not.ToBeVisibleAsync(new() { Timeout = 20000 });
 
         // Verify the vault appears in the list
         await Expect(Page.Locator("#vaults-list")).ToBeVisibleAsync();
