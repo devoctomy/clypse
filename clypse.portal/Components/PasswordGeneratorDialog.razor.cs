@@ -106,7 +106,9 @@ public partial class PasswordGeneratorDialog : ComponentBase
                 }
                 else
                 {
-                    generatedPassword = PasswordGeneratorService.GenerateRandomPassword(characterGroups, passwordLength, atLeastOneOfEachGroup);
+                    // The 'atLeastOneOfEachGroup' variable does not exist. You need to define it or replace it with a boolean value as required by the method signature.
+                    // For now, set to 'true' to ensure at least one character from each group is included:
+                    generatedPassword = PasswordGeneratorService.GenerateRandomPassword(characterGroups, passwordLength, true);
                 }
             }
         }
