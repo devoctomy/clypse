@@ -3,6 +3,7 @@ using System.Text.Json;
 using Amazon.S3;
 using Amazon.S3.Model;
 using clypse.core.Cloud.Aws.S3;
+using clypse.core.UnitTests.Extensions;
 using Moq;
 
 namespace clypse.core.UnitTests.Cloud.Aws.S3;
@@ -215,7 +216,8 @@ public class JavaScriptS3ClientTests
 
         var responseData = new byte[response.ResponseStream.Length];
         response.ResponseStream.Position = 0;
-        await response.ResponseStream.ReadAsync(responseData);
+        await response.ResponseStream.ReadAllAsync(responseData, CancellationToken.None);
+
         Assert.Equal(testData, responseData);
 
         this.mockJsInvoker.Verify(
