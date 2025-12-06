@@ -96,7 +96,7 @@ jobs:
       
     - name: Run Integration Tests
       env:
-        CLYPSE_AWS_REGION: ${{ secrets.CLYPSE_AWS_BUCKETREGION }}
+        CLYPSE_AWS_BUCKETREGION: ${{ secrets.CLYPSE_AWS_BUCKETREGION }}
         CLYPSE_AWS_BUCKETNAME: ${{ secrets.CLYPSE_AWS_BUCKETNAME }}
         CLYPSE_AWS_ACCESSKEY: ${{ secrets.CLYPSE_AWS_ACCESSKEY }}
         CLYPSE_AWS_SECRETACCESSKEY: ${{ secrets.CLYPSE_AWS_SECRETACCESSKEY }}    
