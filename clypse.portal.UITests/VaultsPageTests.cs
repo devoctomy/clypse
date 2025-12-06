@@ -1,3 +1,5 @@
+using Microsoft.Playwright;
+
 namespace clypse.portal.UITests;
 
 [TestClass]
@@ -51,8 +53,11 @@ public class VaultsPageTests : TestBase
         // Click the create button
         await Page.Locator("#create-vault-button").ClickAsync();
 
+        await Task.Delay(2000, TestContext.CancellationTokenSource.Token);
+        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+
         // Wait for the vault to be created and the modal to close
-        await Expect(Page.Locator(".modal").Filter(new() { HasText = "Create New Vault" })).Not.ToBeVisibleAsync(new() { Timeout = 20000 });
+        await Expect(Page.Locator(".modal").Filter(new() { HasText = "Create New Vault" })).Not.ToBeAttachedAsync(new() { Timeout = 10000 });
 
         // Verify the vault appears in the list
         await Expect(Page.Locator("#vaults-list")).ToBeVisibleAsync();
