@@ -94,6 +94,10 @@ jobs:
     - name: Build
       run: dotnet build --no-restore --configuration Release
       
+    - name: Update appsettings.json
+      run: |
+        echo '${{ secrets.CLYPSE_PORTAL_APPSETTINGS }}' > clypse.portal/wwwroot/appsettings.json
+      
     - name: Run Integration Tests
       env:
         CLYPSE_AWS_REGION: ${{ secrets.CLYPSE_AWS_REGION }}
