@@ -44,7 +44,7 @@ public sealed class VaultStepDefinitions(TestContext testContext)
     [Given("aws region loaded from environment variable")]
     public void AwsRegionLoadedFromEnvironmentVariable()
     {
-        this.testContext.Region = Environment.GetEnvironmentVariable("CLYPSE_AWS_REGION") !;
+        this.testContext.Region = Environment.GetEnvironmentVariable("CLYPSE_AWS_BUCKETREGION") !;
     }
 
     [Given("key derivation service is initialised")]

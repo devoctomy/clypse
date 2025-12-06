@@ -96,7 +96,7 @@ jobs:
       
     - name: Run Integration Tests
       env:
-        CLYPSE_AWS_REGION: ${{ secrets.CLYPSE_AWS_REGION }}
+        CLYPSE_AWS_REGION: ${{ secrets.CLYPSE_AWS_BUCKETREGION }}
         CLYPSE_AWS_BUCKETNAME: ${{ secrets.CLYPSE_AWS_BUCKETNAME }}
         CLYPSE_AWS_ACCESSKEY: ${{ secrets.CLYPSE_AWS_ACCESSKEY }}
         CLYPSE_AWS_SECRETACCESSKEY: ${{ secrets.CLYPSE_AWS_SECRETACCESSKEY }}    
@@ -152,7 +152,7 @@ jobs:
       
     - name: Update appsettings.json
       run: |
-        echo '${{ secrets.CLYPSE_PORTAL_APPSETTINGS }}' > clypse.portal/wwwroot/appsettings.json
+        echo '${{ secrets.CLYPSE_UITTESTS_PORTAL_APPSETTINGS }}' > clypse.portal/wwwroot/appsettings.json
       
     - name: Run UI Tests
       env:
@@ -193,7 +193,7 @@ jobs:
       
     - name: Update appsettings.json
       run: |
-        echo '${{ secrets.CLYPSE_PORTAL_APPSETTINGS }}' > clypse.portal/wwwroot/appsettings.json
+        echo '${{ secrets.CLYPSENETPORTAL_APPSETTINGS }}' > clypse.portal/wwwroot/appsettings.json
       
     - name: Publish Blazor WebAssembly
       run: dotnet publish ./clypse.portal/clypse.portal.csproj -c Release -r browser-wasm --self-contained

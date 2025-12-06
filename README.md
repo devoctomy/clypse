@@ -44,7 +44,7 @@ dotnet test clypse.core.UnitTests --no-build --configuration Release --verbosity
 
 Integration testing requires the following environment variables
 
-* CLYPSE_AWS_REGION - Region of the test bucket
+* CLYPSE_AWS_BUCKETREGION - Region of the test bucket
 * CLYPSE_AWS_BUCKETNAME - Test bucket name
 * CLYPSE_AWS_ACCESSKEY - IAM credentials for accessing the s3 bucket
 * CLYPSE_AWS_SECRETACCESSKEY - IAM credentials for accessing the s3 bucket
@@ -86,3 +86,98 @@ dotnet serve -d ./clypse.portal/bin/Release/net8.0/publish/wwwroot -p 7153 --tls
 ```
 
 > You must have CORS configured for the S3 bucket for 'https://localhost:7153' otherwise all requests to S3 will fail.
+
+## GitHub Workflows
+
+The project uses a comprehensive CI/CD pipeline that runs automated tests and deploys to production when requested.
+
+### Workflow Overview
+
+The CI/CD workflow (`cicd.yml`) consists of four sequential jobs:
+
+#### 1. Unit Tests
+- **Purpose**: Validates core library functionality without external dependencies
+- **Environment**: Ubuntu container with Playwright for .NET
+- **Steps**:
+  - Installs Python (required for WASM build tools)
+  - Sets up .NET 8.0 SDK
+  - Configures HTTPS development certificates
+  - Installs WASM tools workload
+  - Restores dependencies and builds the project
+  - Runs unit tests from `clypse.core.UnitTests`
+  - Uploads test results as artifacts
+- **Required Secrets**: None
+
+#### 2. Integration Tests
+- **Purpose**: Tests AWS S3 storage integration using the core library
+- **Environment**: Ubuntu container with Playwright for .NET
+- **Steps**:
+  - Same setup as unit tests
+  - Runs integration tests from `clypse.core.IntTests` with AWS credentials
+  - Tests vault creation and secret management against a real S3 bucket
+  - Uploads test results as artifacts
+- **Required Secrets**:
+  - `CLYPSE_AWS_BUCKETREGION`     - AWS region for test bucket
+  - `CLYPSE_AWS_BUCKETNAME`       - Name of the S3 test bucket
+  - `CLYPSE_AWS_ACCESSKEY`        - IAM access key with S3 permissions
+  - `CLYPSE_AWS_SECRETACCESSKEY`  - IAM secret access key
+
+#### 3. UI Tests
+- **Purpose**: End-to-end testing of the Blazor portal including AWS Cognito authentication
+- **Environment**: Ubuntu container with Playwright browsers
+- **Steps**:
+  - Same setup as previous jobs
+  - **Updates `appsettings.json` with production configuration from secrets**
+  - Runs Playwright-based UI tests from `clypse.portal.UITests`
+  - Tests user authentication and vault management workflows
+  - Uploads test results as artifacts
+- **Required Secrets**:
+  - `CLYPSE_UITESTS_USERNAME`             - AWS Cognito test user username
+  - `CLYPSE_UITESTS_PASSWORD`             - AWS Cognito test user password
+  - `CLYPSE_UITTESTS_PORTAL_APPSETTINGS`  - Complete JSON configuration for the portal
+
+#### 4. Deploy
+- **Purpose**: Publishes the Blazor WebAssembly app to AWS S3 and invalidates CloudFront cache
+- **Trigger**: Only runs when manually triggered with the `deploy` input set to `true`
+- **Environment**: Ubuntu latest
+- **Steps**:
+  - Sets up .NET 8.0 SDK and WASM tools
+  - Restores dependencies
+  - **Updates `appsettings.json` with production configuration from secrets**
+  - Publishes Blazor WebAssembly in Release mode
+  - Configures AWS credentials
+  - Syncs published files to S3 bucket with public-read ACL
+  - Invalidates CloudFront distribution to refresh cached content
+- **Required Secrets**:
+  - `CLYPSENETPORTAL_AWS_BUCKETREGION`              - AWS region for production bucket
+  - `CLYPSENETPORTAL_AWS_BUCKETNAME`                - Production S3 bucket name
+  - `CLYPSENETPORTAL_AWS_ACCESSKEY`                 - AWS access key for deployment
+  - `CLYPSENETPORTAL_AWS_SECRETACCESSKEY`           - AWS secret access key for deployment
+  - `CLYPSENETPORTAL_AWS_CLOUDFRONTDISTRIBUTIONID`  - CloudFront distribution ID for cache invalidation
+  - `CLYPSENETPORTAL_APPSETTINGS`                   - Complete JSON configuration for the portal
+
+### Required GitHub Secrets Summary
+
+To run the complete CI/CD pipeline, configure the following secrets in your GitHub repository settings:
+
+**Testing Secrets:**
+- `CLYPSE_AWS_BUCKETREGION`                             - AWS region for test bucket
+- `CLYPSE_AWS_BUCKETNAME`                         - Name of the S3 test bucket
+- `CLYPSE_AWS_ACCESSKEY`                          - IAM access key with S3 permissions
+- `CLYPSE_AWS_SECRETACCESSKEY`                    - IAM secret access key
+- `CLYPSE_UITESTS_USERNAME`                       - AWS Cognito test user username
+- `CLYPSE_UITESTS_PASSWORD`                       - AWS Cognito test user password
+- `CLYPSE_UITTESTS_PORTAL_APPSETTINGS`            - Complete JSON configuration for the portal
+
+**Deployment Secrets:**
+- `CLYPSENETPORTAL_AWS_BUCKETREGION`              - AWS region for production bucket
+- `CLYPSENETPORTAL_AWS_BUCKETNAME`                - Production S3 bucket name
+- `CLYPSENETPORTAL_AWS_ACCESSKEY`                 - AWS access key for deployment
+- `CLYPSENETPORTAL_AWS_SECRETACCESSKEY`           - AWS secret access key for deployment
+- `CLYPSENETPORTAL_AWS_CLOUDFRONTDISTRIBUTIONID`  - CloudFront distribution ID for cache invalidation
+- `CLYPSENETPORTAL_APPSETTINGS`                   - Complete JSON configuration for the portal
+
+### Workflow Execution
+
+- **Automatic**: The workflow runs on every push and pull request, executing unit, integration, and UI tests
+- **Manual Deployment**: Use the "Run workflow" button in GitHub Actions and set the `deploy` checkbox to `true` to trigger production deployment after successful tests
