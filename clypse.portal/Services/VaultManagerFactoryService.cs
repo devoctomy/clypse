@@ -7,7 +7,7 @@ using clypse.portal.Models;
 
 namespace clypse.portal.Services
 {
-    public class VaultManagerFactoryService(AppSettings appSettings) : IVaultManagerFactoryService
+    public class VaultManagerFactoryService(KeyDerivationServiceOptions keyDerivationServiceOptions) : IVaultManagerFactoryService
     {
         /// <summary>
         /// Create an instance of IVaultManager that is suitable for use with Blazor.
@@ -29,12 +29,9 @@ namespace clypse.portal.Services
             string bucketName,
             string identityId)
         {
-            var keyDerivationOptions = appSettings.TestMode ?
-                KeyDerivationServiceDefaultOptions.Blazor_Argon2id_Test() :
-                KeyDerivationServiceDefaultOptions.Blazor_Argon2id();
             var keyDerivationService = new KeyDerivationService(
                 new RandomGeneratorService(),
-                keyDerivationOptions);
+                keyDerivationServiceOptions);
             var jsS3Client = new JavaScriptS3Client(
                 jsInvoker,
                 accessKey,
