@@ -1,4 +1,3 @@
-using clypse.core.Compression;
 using clypse.core.Cryptogtaphy;
 using clypse.core.Cryptogtaphy.Interfaces;
 using clypse.core.Extensions;
