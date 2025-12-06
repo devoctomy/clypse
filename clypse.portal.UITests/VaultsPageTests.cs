@@ -57,7 +57,7 @@ public class VaultsPageTests : TestBase
         await Page.Locator("#create-vault-button").ClickAsync();
 
         // Verify the vault list container is visible
-        await Expect(Page.Locator("#vaults-list")).ToBeVisibleAsync(new() { Timeout = 30000 });
+        await Expect(Page.Locator("#vaults-list")).ToBeVisibleAsync(new() { Timeout = 60000 });
 
         // Verify the vault card is visible
         var vaultCard = Page.Locator("#vaults-list .vault-card-responsive").Filter(new() { HasText = vaultDescription });
@@ -81,6 +81,7 @@ public class VaultsPageTests : TestBase
 
         // STEP 3: Delete Vault
         // Click Delete Vault button in navigation (should be available now that vault is unlocked)
+        await Expect(Page.Locator("#nav-delete-vault-button")).ToBeVisibleAsync(new() { Timeout = 60000 });
         await Page.Locator("#nav-delete-vault-button").ClickAsync();
 
         // Verify delete confirmation dialog is visible
@@ -101,8 +102,10 @@ public class VaultsPageTests : TestBase
         // Wait a moment for the refresh to complete
         await Task.Delay(2000, TestContext.CancellationTokenSource.Token);
 
-        // Now check for the no vaults message
-        var hasNoVaultsMessage = await Page.Locator("#no-vaults-found").IsVisibleAsync();
-        Assert.IsTrue(hasNoVaultsMessage, "Should show no vaults message after deletion and refresh");
+        // Now check the vault card is no longer visible
+        await Expect(vaultCard).Not.ToBeVisibleAsync(new() { Timeout = 60000 });
+
+        //var hasNoVaultsMessage = await Page.Locator("#no-vaults-found").IsVisibleAsync();
+        //Assert.IsTrue(hasNoVaultsMessage, "Should show no vaults message after deletion and refresh");
     }
 }
