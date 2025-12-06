@@ -49,7 +49,7 @@ Integration testing requires the following environment variables
 * CLYPSE_AWS_ACCESSKEY - IAM credentials for accessing the s3 bucket
 * CLYPSE_AWS_SECRETACCESSKEY - IAM credentials for accessing the s3 bucket
 
-The integration tests test the underlying core framework without any UI. The tests will create a vault, with a number of secrets and then clean up after itself.
+The integration tests test the underlying core framework, integrating with AWS S3, without any UI. The tests will create a vault, with a number of secrets and then clean up after itself.
 
 > The integration tests do not test any part of Aws Cognito integration. This is done with the UI tests.
 
@@ -161,7 +161,7 @@ The CI/CD workflow (`cicd.yml`) consists of four sequential jobs:
 To run the complete CI/CD pipeline, configure the following secrets in your GitHub repository settings:
 
 **Testing Secrets:**
-- `CLYPSE_AWS_BUCKETREGION`                             - AWS region for test bucket
+- `CLYPSE_AWS_BUCKETREGION`                       - AWS region for test bucket
 - `CLYPSE_AWS_BUCKETNAME`                         - Name of the S3 test bucket
 - `CLYPSE_AWS_ACCESSKEY`                          - IAM access key with S3 permissions
 - `CLYPSE_AWS_SECRETACCESSKEY`                    - IAM secret access key
