@@ -4,14 +4,6 @@ using clypse.portal.Models;
 
 namespace clypse.portal.Services;
 
-public interface IUserSettingsService
-{
-    Task<UserSettings> GetSettingsAsync();
-    Task SaveSettingsAsync(UserSettings settings);
-    Task<string> GetThemeAsync();
-    Task SetThemeAsync(string theme);
-}
-
 public class UserSettingsService : IUserSettingsService
 {
     private const string SETTINGS_KEY = "clypse_user_settings";
