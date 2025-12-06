@@ -134,7 +134,7 @@ jobs:
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: '8.0.x'
+        dotnet-version: '10.0.x'
         
     - name: Setup HTTPS development certificates
       run: |
@@ -183,7 +183,7 @@ jobs:
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: '8.0.x'
+        dotnet-version: '10.0.x'
         
     - name: Install .NET workloads
       run: dotnet workload install wasm-tools
@@ -206,7 +206,7 @@ jobs:
         aws-region: ${{ secrets.CLYPSENETPORTAL_AWS_BUCKETREGION }}
         
     - name: Upload to S3
-      run: aws s3 sync ./clypse.portal/bin/Release/net8.0/publish/wwwroot/ s3://${{ secrets.CLYPSENETPORTAL_AWS_BUCKETNAME }}/ --delete --acl public-read
+      run: aws s3 sync ./clypse.portal/bin/Release/net10.0/publish/wwwroot/ s3://${{ secrets.CLYPSENETPORTAL_AWS_BUCKETNAME }}/ --delete --acl public-read
       
     - name: Invalidate CloudFront distribution
       run: |
