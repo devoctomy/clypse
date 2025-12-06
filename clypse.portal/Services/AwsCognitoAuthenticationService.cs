@@ -28,10 +28,6 @@ public class AwsCognitoAuthenticationService : IAuthenticationService
         }
 
         Console.WriteLine("AwsCognitoAuthenticationService.Initialize: Starting initialization");
-        Console.WriteLine($"AwsCognitoAuthenticationService.Initialize: UserPoolId: {_cognitoConfig.UserPoolId}");
-        Console.WriteLine($"AwsCognitoAuthenticationService.Initialize: UserPoolClientId: {_cognitoConfig.UserPoolClientId}");
-        Console.WriteLine($"AwsCognitoAuthenticationService.Initialize: Region: {_cognitoConfig.Region}");
-        Console.WriteLine($"AwsCognitoAuthenticationService.Initialize: IdentityPoolId: {_cognitoConfig.IdentityPoolId}");
 
         // Initialize Cognito configuration in JavaScript
         await _jsRuntime.InvokeVoidAsync("eval", $@"
@@ -43,9 +39,7 @@ public class AwsCognitoAuthenticationService : IAuthenticationService
             }};
         ");
 
-        var initResult = await _jsRuntime.InvokeAsync<string>("CognitoAuth.initialize", _cognitoConfig);
-        Console.WriteLine($"AwsCognitoAuthenticationService.Initialize: JavaScript init result: {initResult}");
-        
+        var initResult = await _jsRuntime.InvokeAsync<string>("CognitoAuth.initialize", _cognitoConfig);        
         _isInitialized = true;
         Console.WriteLine("AwsCognitoAuthenticationService.Initialize: Initialization complete");
     }
@@ -125,9 +119,7 @@ public class AwsCognitoAuthenticationService : IAuthenticationService
             
             if (result.AwsCredentials != null)
             {
-                Console.WriteLine($"AwsCognitoAuthenticationService.Login: AWS Credentials received - AccessKeyId: {result.AwsCredentials.AccessKeyId}");
-                Console.WriteLine($"AwsCognitoAuthenticationService.Login: AWS Credentials IdentityId: '{result.AwsCredentials.IdentityId}'");
-                Console.WriteLine($"AwsCognitoAuthenticationService.Login: AWS Credentials Expiration: {result.AwsCredentials.Expiration}");
+                Console.WriteLine($"AwsCognitoAuthenticationService.Login: AWS Credentials received.");
             }
             else
             {

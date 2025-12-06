@@ -19,7 +19,7 @@ window.PWAUpdateService = {
      * @param {ServiceWorkerRegistration} registration - The service worker registration
      */
     initialize: function(registration) {
-        console.log('PWAUpdateService: Initializing with registration', registration);
+        console.log('PWAUpdateService: Initializing with registration');
         this.serviceWorkerRegistration = registration;
         
         if (!registration) {

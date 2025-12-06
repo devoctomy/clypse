@@ -46,7 +46,7 @@ window.CognitoAuth = {
                         // Get AWS credentials
                         console.log('CognitoAuth.login: Attempting to get AWS credentials');
                         var credentials = await this.getAwsCredentials(idToken);
-                        console.log('CognitoAuth.login: AWS credentials received:', credentials);
+                        console.log('CognitoAuth.login: AWS credentials received');
                         
                         resolve({
                             success: true,
@@ -103,9 +103,6 @@ window.CognitoAuth = {
                     reject(error);
                 } else {
                     console.log('CognitoAuth.getAwsCredentials: Credentials refreshed successfully');
-                    console.log('CognitoAuth.getAwsCredentials: AccessKeyId:', AWS.config.credentials.accessKeyId);
-                    console.log('CognitoAuth.getAwsCredentials: IdentityId:', AWS.config.credentials.identityId);
-                    console.log('CognitoAuth.getAwsCredentials: ExpireTime:', AWS.config.credentials.expireTime);
                     
                     resolve({
                         accessKeyId: AWS.config.credentials.accessKeyId,
@@ -157,7 +154,7 @@ window.CognitoAuth = {
                         // Get AWS credentials
                         console.log('CognitoAuth.completePasswordReset: Attempting to get AWS credentials');
                         var credentials = await this.getAwsCredentials(idToken);
-                        console.log('CognitoAuth.completePasswordReset: AWS credentials received:', credentials);
+                        console.log('CognitoAuth.completePasswordReset: AWS credentials received:');
                         
                         resolve({
                             success: true,
@@ -199,7 +196,7 @@ window.CognitoAuth = {
             
             cognitoUser.forgotPassword({
                 onSuccess: (result) => {
-                    console.log('CognitoAuth.forgotPassword: Success - code delivery details:', result);
+                    console.log('CognitoAuth.forgotPassword: Request reset successful.');
                     resolve({
                         success: true,
                         message: "Verification code sent to your registered email/phone number",

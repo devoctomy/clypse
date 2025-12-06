@@ -26,6 +26,8 @@ Once you have setup all of the above, you will need to configure the 'appsetting
   },
 ```
 
+> Make sure you do not check in any sensitive information into source control. If you are testing locally you can use 'appsettings.Development.json' which is gitignored.
+
 One way to test the setup is to use the Test Page which you can access from the Login page when in Debug configuration. Enter your Cognito user credentials and then click the button to 'Test Clypse Core', this will create a vault for you with a test credential, the password will be 'password123.
 
 ## Testing

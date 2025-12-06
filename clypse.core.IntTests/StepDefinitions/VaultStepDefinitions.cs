@@ -1,5 +1,3 @@
-using System.Diagnostics;
-using System.Security;
 using clypse.core.Cloud;
 using clypse.core.Cloud.Aws.S3;
 using clypse.core.Cloud.Interfaces;
