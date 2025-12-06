@@ -1,9 +1,10 @@
-﻿using System.Text;
-using Amazon.S3;
+﻿using Amazon.S3;
 using Amazon.S3.Model;
 using clypse.core.Cloud;
 using clypse.core.Cloud.Aws.S3;
+using clypse.core.UnitTests.Extensions;
 using Moq;
+using System.Text;
 
 namespace clypse.core.UnitTests.Cloud;
 
@@ -49,7 +50,7 @@ public class AwsS3SseCCloudStorageProviderTests
         {
             using var retrievedDataStream = await sut.GetEncryptedObjectAsync(key, Convert.ToBase64String(encryptionKey), CancellationToken.None);
             retrievedData = new byte[retrievedDataStream!.Length];
-            await retrievedDataStream.ReadAsync(retrievedData, CancellationToken.None);
+            await retrievedDataStream.ReadAllAsync(retrievedData, CancellationToken.None);
             deleted = await sut.DeleteEncryptedObjectAsync(key, Convert.ToBase64String(encryptionKey), CancellationToken.None);
         }
 
@@ -115,7 +116,7 @@ public class AwsS3SseCCloudStorageProviderTests
         {
             var retrievedDataStream = await sut.GetEncryptedObjectAsync(key, Convert.ToBase64String(decyptionKey), CancellationToken.None);
             retrievedData = new byte[retrievedDataStream!.Length];
-            await retrievedDataStream.ReadAsync(retrievedData, CancellationToken.None);
+            await retrievedDataStream.ReadAllAsync(retrievedData, CancellationToken.None);
             deleted = await sut.DeleteEncryptedObjectAsync(key, Convert.ToBase64String(encryptionKey), CancellationToken.None);
         }
 

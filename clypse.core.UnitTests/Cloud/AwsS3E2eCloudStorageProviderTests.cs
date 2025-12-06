@@ -5,6 +5,7 @@ using clypse.core.Cloud;
 using clypse.core.Cloud.Aws.S3;
 using clypse.core.Cryptogtaphy;
 using clypse.core.Cryptogtaphy.Interfaces;
+using clypse.core.UnitTests.Extensions;
 using Moq;
 
 namespace clypse.core.UnitTests.Cloud;
@@ -72,7 +73,7 @@ public class AwsS3E2eCloudStorageProviderTests
         {
             using var retrievedDataStream = await sut.GetEncryptedObjectAsync(key, Convert.ToBase64String(encryptionKey), CancellationToken.None);
             retrievedData = new byte[retrievedDataStream!.Length];
-            await retrievedDataStream.ReadAsync(retrievedData, CancellationToken.None);
+            await retrievedDataStream.ReadAllAsync(retrievedData, CancellationToken.None);
             deleted = await sut.DeleteEncryptedObjectAsync(key, Convert.ToBase64String(encryptionKey), CancellationToken.None);
         }
 
@@ -164,7 +165,7 @@ public class AwsS3E2eCloudStorageProviderTests
         {
             var retrievedDataStream = await sut.GetEncryptedObjectAsync(key, Convert.ToBase64String(decyptionKey), CancellationToken.None);
             retrievedData = new byte[retrievedDataStream!.Length];
-            await retrievedDataStream.ReadAsync(retrievedData, CancellationToken.None);
+            await retrievedDataStream.ReadAllAsync(retrievedData, CancellationToken.None);
             deleted = await sut.DeleteEncryptedObjectAsync(key, Convert.ToBase64String(encryptionKey), CancellationToken.None);
         }
 

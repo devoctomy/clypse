@@ -1,6 +1,7 @@
 ﻿using System.Security.Cryptography;
 using System.Text;
 using Konscious.Security.Cryptography;
+using Org.BouncyCastle.Asn1.Pkcs;
 
 namespace clypse.core.Cryptogtaphy;
 
@@ -156,8 +157,9 @@ public class CryptoHelpers
         {
             var passphraseBytes = Encoding.UTF8.GetBytes(passphrase);
             var salt = Convert.FromBase64String(base64Salt);
-            using var pbkdf2 = new Rfc2898DeriveBytes(passphraseBytes, salt, iterations, HashAlgorithmName.SHA256);
-            return pbkdf2.GetBytes(keyLength);
+
+            var bytes = Rfc2898DeriveBytes.Pbkdf2(passphraseBytes, salt, iterations, HashAlgorithmName.SHA256, keyLength);
+            return bytes;
         });
     }
 }

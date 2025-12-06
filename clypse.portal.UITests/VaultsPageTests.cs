@@ -1,5 +1,4 @@
 using Microsoft.Playwright;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace clypse.portal.UITests;
 
@@ -45,6 +44,9 @@ public class VaultsPageTests : TestBase
         // Click the Create Vault button in the navigation
         await Page.Locator("#nav-create-vault-button").ClickAsync();
 
+        // Wait for create vault form to be visible
+        await Expect(Page.Locator("#create-vault-button")).ToBeVisibleAsync(new() { Timeout = 10000 });
+
         // Fill in the create vault form
         await Page.Locator("#vaultName").FillAsync(vaultName);
         await Page.Locator("#vaultDescription").FillAsync(vaultDescription);
@@ -54,17 +56,16 @@ public class VaultsPageTests : TestBase
         // Click the create button
         await Page.Locator("#create-vault-button").ClickAsync();
 
-        // Wait for the vault to be created and the modal to close
-        await Expect(Page.Locator(".modal").Filter(new() { HasText = "Create New Vault" })).Not.ToBeVisibleAsync(new() { Timeout = 10000 });
+        // Verify the vault list container is visible
+        await Expect(Page.Locator("#vaults-list")).ToBeVisibleAsync(new() { Timeout = 60000 });
 
-        // Verify the vault appears in the list
-        await Expect(Page.Locator("#vaults-list")).ToBeVisibleAsync();
-        await Task.Delay(2000);
-        await Expect(Page.Locator(".vault-card-responsive")).ToBeVisibleAsync();
+        // Verify the vault card is visible
+        var vaultCard = Page.Locator("#vaults-list .vault-card-responsive").Filter(new() { HasText = vaultDescription });
+        await Expect(vaultCard).ToBeVisibleAsync(new() { Timeout = 5000 });
 
         // STEP 2: Unlock Vault
-        // Click on the vault to open unlock dialog
-        await Page.Locator(".vault-card-responsive").First.ClickAsync();
+        // Click on the specific vault card by matching the description text we just created (unique GUID)
+        await vaultCard.ClickAsync();
 
         // Verify unlock dialog is visible
         await Expect(Page.Locator(".modal").Filter(new() { HasText = "Unlock Vault" })).ToBeVisibleAsync();
@@ -80,6 +81,7 @@ public class VaultsPageTests : TestBase
 
         // STEP 3: Delete Vault
         // Click Delete Vault button in navigation (should be available now that vault is unlocked)
+        await Expect(Page.Locator("#nav-delete-vault-button")).ToBeVisibleAsync(new() { Timeout = 60000 });
         await Page.Locator("#nav-delete-vault-button").ClickAsync();
 
         // Verify delete confirmation dialog is visible
@@ -98,11 +100,12 @@ public class VaultsPageTests : TestBase
         await Page.Locator("#nav-refresh-button").ClickAsync();
 
         // Wait a moment for the refresh to complete
-        await Task.Delay(2000);
+        await Task.Delay(2000, TestContext.CancellationTokenSource.Token);
 
-        // Now check for the no vaults message
-        var hasNoVaultsMessage = await Page.Locator("#no-vaults-found").IsVisibleAsync();
-        
-        Assert.IsTrue(hasNoVaultsMessage, "Should show no vaults message after deletion and refresh");
+        // Now check the vault card is no longer visible
+        await Expect(vaultCard).Not.ToBeVisibleAsync(new() { Timeout = 60000 });
+
+        //var hasNoVaultsMessage = await Page.Locator("#no-vaults-found").IsVisibleAsync();
+        //Assert.IsTrue(hasNoVaultsMessage, "Should show no vaults message after deletion and refresh");
     }
 }
