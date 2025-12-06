@@ -42,4 +42,19 @@ public class KeyDerivationServiceDefaultOptions
 #endif
         return options;
     }
+
+    /// <summary>
+    /// Gets test options for Argon2id key derivation algorithm, suitable for testing Blazor applications. DO NOT USE THIS IN PRODUCTION.
+    /// </summary>
+    /// <returns>KeyDerivationServiceOptions for Argon2id suitable for Blazor testing.</returns>
+    public static KeyDerivationServiceOptions Blazor_Argon2id_Test()
+    {
+        var options = new KeyDerivationServiceOptions();
+        options.Parameters[KeyDerivationParameterKeys.Algorithm] = KeyDerivationAlgorithm.Argon2id.ToString();
+        options.Parameters[KeyDerivationParameterKeys.Argon2id_KeyLength] = 32;
+        options.Parameters[KeyDerivationParameterKeys.Argon2id_Parallelism] = 1;
+        options.Parameters[KeyDerivationParameterKeys.Argon2id_MemorySizeKb] = 1024;
+        options.Parameters[KeyDerivationParameterKeys.Argon2id_Iterations] = 1;
+        return options;
+    }
 }

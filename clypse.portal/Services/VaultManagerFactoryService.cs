@@ -3,10 +3,11 @@ using clypse.core.Cloud.Aws.S3;
 using clypse.core.Compression;
 using clypse.core.Cryptogtaphy;
 using clypse.core.Vault;
+using clypse.portal.Models;
 
 namespace clypse.portal.Services
 {
-    public class VaultManagerFactoryService : IVaultManagerFactoryService
+    public class VaultManagerFactoryService(AppSettings appSettings) : IVaultManagerFactoryService
     {
         /// <summary>
         /// Create an instance of IVaultManager that is suitable for use with Blazor.
@@ -28,9 +29,12 @@ namespace clypse.portal.Services
             string bucketName,
             string identityId)
         {
+            var keyDerivationOptions = appSettings.TestMode ?
+                KeyDerivationServiceDefaultOptions.Blazor_Argon2id_Test() :
+                KeyDerivationServiceDefaultOptions.Blazor_Argon2id();
             var keyDerivationService = new KeyDerivationService(
                 new RandomGeneratorService(),
-                KeyDerivationServiceDefaultOptions.Blazor_Argon2id());
+                keyDerivationOptions);
             var jsS3Client = new JavaScriptS3Client(
                 jsInvoker,
                 accessKey,

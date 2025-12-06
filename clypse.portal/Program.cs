@@ -13,9 +13,6 @@ builder.RootComponents.Add<HeadOutlet>("head::after");
 
 builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
 
-// Default key derivation service options
-builder.Services.AddSingleton(KeyDerivationServiceDefaultOptions.Blazor_Argon2id());
-
 // Register services
 builder.Services.AddScoped<ILocalStorageService, LocalStorageService>();
 builder.Services.AddScoped<IVaultManagerFactoryService, VaultManagerFactoryService>();
@@ -43,6 +40,12 @@ builder.Services.AddSingleton(awsS3Config);
 var appSettings = new AppSettings();
 builder.Configuration.GetSection("AppSettings").Bind(appSettings);
 builder.Services.AddSingleton(appSettings);
+
+// Default key derivation service options
+builder.Services.AddSingleton(
+    appSettings.TestMode ?
+    KeyDerivationServiceDefaultOptions.Blazor_Argon2id_Test() :
+    KeyDerivationServiceDefaultOptions.Blazor_Argon2id());
 
 var app = builder.Build();
 await app.RunAsync();
