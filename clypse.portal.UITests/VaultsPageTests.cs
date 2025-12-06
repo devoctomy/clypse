@@ -1,6 +1,3 @@
-using Microsoft.Playwright;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-
 namespace clypse.portal.UITests;
 
 [TestClass]
@@ -59,7 +56,7 @@ public class VaultsPageTests : TestBase
 
         // Verify the vault appears in the list
         await Expect(Page.Locator("#vaults-list")).ToBeVisibleAsync();
-        await Task.Delay(2000);
+        await Task.Delay(2000, TestContext.CancellationTokenSource.Token);
         await Expect(Page.Locator(".vault-card-responsive")).ToBeVisibleAsync();
 
         // STEP 2: Unlock Vault
@@ -98,7 +95,7 @@ public class VaultsPageTests : TestBase
         await Page.Locator("#nav-refresh-button").ClickAsync();
 
         // Wait a moment for the refresh to complete
-        await Task.Delay(2000);
+        await Task.Delay(2000, TestContext.CancellationTokenSource.Token);
 
         // Now check for the no vaults message
         var hasNoVaultsMessage = await Page.Locator("#no-vaults-found").IsVisibleAsync();
