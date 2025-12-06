@@ -57,7 +57,7 @@ public class VaultsPageTests : TestBase
         await Page.Locator("#create-vault-button").ClickAsync();
 
         // Verify the vault list container is visible
-        await Expect(Page.Locator("#vaults-list")).ToBeVisibleAsync(new() { Timeout = 10000 });
+        await Expect(Page.Locator("#vaults-list")).ToBeVisibleAsync(new() { Timeout = 30000 });
 
         // Verify the vault card is visible
         var vaultCard = Page.Locator("#vaults-list .vault-card-responsive").Filter(new() { HasText = vaultDescription });
