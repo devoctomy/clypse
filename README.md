@@ -1,4 +1,4 @@
-[![CI](https://github.com/devoctomy/clypse/actions/workflows/ci.yml/badge.svg)](https://github.com/devoctomy/clypse/actions/workflows/ci.yml)
+[![CI](https://github.com/devoctomy/clypse/actions/workflows/cicd.yml/badge.svg)](https://github.com/devoctomy/clypse/actions/workflows/cicd.yml)
 
 # clypse
 Clypse secrets management.
