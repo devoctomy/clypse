@@ -2,7 +2,7 @@ using clypse.core.Cryptogtaphy;
 using clypse.core.Cryptogtaphy.Interfaces;
 using clypse.core.Extensions;
 using clypse.portal;
-using clypse.portal.Models;
+using clypse.portal.Extensions;
 using clypse.portal.Services;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
@@ -26,24 +26,11 @@ builder.Services.AddScoped<IUserSettingsService, UserSettingsService>();
 // Add Clypse core services
 builder.Services.AddClypseCoreServices();
 
-// Configure AWS Cognito settings from appsettings.json
-var cognitoConfig = new AwsCognitoConfig();
-builder.Configuration.GetSection("AwsCognito").Bind(cognitoConfig);
-builder.Services.AddSingleton(cognitoConfig);
-
-// Configure AWS S3 settings from appsettings.json
-var awsS3Config = new AwsS3Config();
-builder.Configuration.GetSection("AwsS3").Bind(awsS3Config);
-builder.Services.AddSingleton(awsS3Config);
-
-// Configure App settings from appsettings.json
-var appSettings = new AppSettings();
-builder.Configuration.GetSection("AppSettings").Bind(appSettings);
-builder.Services.AddSingleton(appSettings);
+var settings = builder.GetSettings();
 
 // Default key derivation service options
 builder.Services.AddSingleton(
-    appSettings.TestMode ?
+    settings.AppSettings.TestMode ?
     KeyDerivationServiceDefaultOptions.Blazor_Argon2id_Test() :
     KeyDerivationServiceDefaultOptions.Blazor_Argon2id());
 
