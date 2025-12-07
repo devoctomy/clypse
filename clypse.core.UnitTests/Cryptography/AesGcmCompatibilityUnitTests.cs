@@ -17,8 +17,8 @@ public class AesGcmCompatibilityUnitTests : IDisposable
     // Define the AES-GCM implementations to test for compatibility
     private readonly string[] aesGcmServiceTypeNames =
     [
-        "clypse.core.Cryptogtaphy.NativeAesGcmCryptoService",
-        "clypse.core.Cryptogtaphy.BouncyCastleAesGcmCryptoService",
+        "clypse.core.Cryptography.NativeAesGcmCryptoService",
+        "clypse.core.Cryptography.BouncyCastleAesGcmCryptoService",
     ];
 
     public AesGcmCompatibilityUnitTests()
