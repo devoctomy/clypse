@@ -1,7 +1,7 @@
 ﻿using clypse.core.Cloud;
 using clypse.core.Cloud.Aws.S3;
 using clypse.core.Compression;
-using clypse.core.Cryptogtaphy;
+using clypse.core.Cryptography;
 using clypse.core.Vault;
 
 namespace clypse.portal.Services;

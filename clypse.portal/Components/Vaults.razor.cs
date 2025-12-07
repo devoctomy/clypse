@@ -4,8 +4,8 @@ using Microsoft.JSInterop;
 using System.Security;
 using clypse.portal.Models;
 using clypse.portal.Services;
-using clypse.core.Cryptogtaphy;
-using clypse.core.Cryptogtaphy.Interfaces;
+using clypse.core.Cryptography;
+using clypse.core.Cryptography.Interfaces;
 using clypse.core.Vault;
 using clypse.core.Cloud.Aws.S3;
 

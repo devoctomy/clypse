@@ -1,4 +1,4 @@
-﻿namespace clypse.core.Cryptogtaphy;
+﻿namespace clypse.core.Cryptography;
 
 #pragma warning disable CS1591
 #pragma warning disable SA1600

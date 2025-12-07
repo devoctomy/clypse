@@ -1,7 +1,7 @@
 using System.Security.Cryptography;
-using clypse.core.Cryptogtaphy.Interfaces;
+using clypse.core.Cryptography.Interfaces;
 
-namespace clypse.core.Cryptogtaphy;
+namespace clypse.core.Cryptography;
 
 /// <summary>
 /// Implementation of ICryptoService using AES encryption in CBC mode

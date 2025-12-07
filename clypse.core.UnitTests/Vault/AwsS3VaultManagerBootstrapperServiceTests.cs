@@ -2,8 +2,8 @@
 using clypse.core.Cloud.Aws.S3;
 using clypse.core.Cloud.Interfaces;
 using clypse.core.Compression;
-using clypse.core.Cryptogtaphy;
-using clypse.core.Cryptogtaphy.Interfaces;
+using clypse.core.Cryptography;
+using clypse.core.Cryptography.Interfaces;
 using clypse.core.Vault;
 using clypse.core.Vault.Exceptions;
 using Moq;

@@ -1,4 +1,4 @@
-namespace clypse.core.Cryptogtaphy.Interfaces;
+namespace clypse.core.Cryptography.Interfaces;
 
 /// <summary>
 /// Interface for cryptographic services providing encryption and decryption capabilities.

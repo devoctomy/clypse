@@ -3,8 +3,8 @@ using System.Text.Json.Serialization;
 using clypse.core.Cloud.Interfaces;
 using clypse.core.Compression;
 using clypse.core.Compression.Interfaces;
-using clypse.core.Cryptogtaphy;
-using clypse.core.Cryptogtaphy.Interfaces;
+using clypse.core.Cryptography;
+using clypse.core.Cryptography.Interfaces;
 using clypse.core.Json;
 using clypse.core.Vault.Exceptions;
 

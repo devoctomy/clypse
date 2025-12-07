@@ -3,7 +3,7 @@ using System.Text;
 using Konscious.Security.Cryptography;
 using Org.BouncyCastle.Asn1.Pkcs;
 
-namespace clypse.core.Cryptogtaphy;
+namespace clypse.core.Cryptography;
 
 /// <summary>
 /// Provides utility methods for cryptographic operations including random byte generation, hashing, and key derivation.

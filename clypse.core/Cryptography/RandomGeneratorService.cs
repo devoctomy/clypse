@@ -1,7 +1,7 @@
 ﻿using System.Security.Cryptography;
 using System.Text;
 
-namespace clypse.core.Cryptogtaphy;
+namespace clypse.core.Cryptography;
 
 /// <summary>
 /// Implementation of IRandomGeneratorService.

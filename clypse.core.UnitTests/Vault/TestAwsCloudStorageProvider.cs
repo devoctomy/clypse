@@ -1,7 +1,7 @@
 ﻿using Amazon.S3.Model;
 using clypse.core.Cloud;
 using clypse.core.Cloud.Interfaces;
-using clypse.core.Cryptogtaphy.Interfaces;
+using clypse.core.Cryptography.Interfaces;
 using Moq;
 
 namespace clypse.core.UnitTests.Vault;

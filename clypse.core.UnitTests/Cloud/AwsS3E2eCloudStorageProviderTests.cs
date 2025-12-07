@@ -3,8 +3,8 @@ using Amazon.S3;
 using Amazon.S3.Model;
 using clypse.core.Cloud;
 using clypse.core.Cloud.Aws.S3;
-using clypse.core.Cryptogtaphy;
-using clypse.core.Cryptogtaphy.Interfaces;
+using clypse.core.Cryptography;
+using clypse.core.Cryptography.Interfaces;
 using clypse.core.UnitTests.Extensions;
 using Moq;
 

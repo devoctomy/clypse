@@ -1,6 +1,6 @@
 using System.Security.Cryptography;
 using System.Text;
-using clypse.core.Cryptogtaphy;
+using clypse.core.Cryptography;
 
 namespace clypse.core.UnitTests.Cryptography;
 

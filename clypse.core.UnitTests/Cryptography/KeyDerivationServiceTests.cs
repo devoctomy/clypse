@@ -1,4 +1,4 @@
-﻿using clypse.core.Cryptogtaphy;
+﻿using clypse.core.Cryptography;
 using clypse.core.Enums;
 
 namespace clypse.core.UnitTests.Cryptography;

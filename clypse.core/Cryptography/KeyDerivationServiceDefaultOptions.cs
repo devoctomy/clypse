@@ -1,6 +1,6 @@
 ﻿using clypse.core.Enums;
 
-namespace clypse.core.Cryptogtaphy;
+namespace clypse.core.Cryptography;
 
 /// <summary>
 /// Provides default configuration options for the KeyDerivationService.

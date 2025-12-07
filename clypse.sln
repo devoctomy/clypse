@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 17
-VisualStudioVersion = 17.14.36127.28
+# Visual Studio Version 18
+VisualStudioVersion = 18.0.11222.15 d18.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "clypse.core", "clypse.core\clypse.core.csproj", "{87944EA8-C122-4283-B5FB-F58A0FC78575}"
 EndProject
@@ -29,6 +29,11 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "UI Tests", "UI Tests", "{18DDBCE1-AF0A-4625-B8CA-BA848F6DB43A}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "clypse.portal.UITests", "clypse.portal.UITests\clypse.portal.UITests.csproj", "{E991BCD7-5623-467A-A6F2-BBD3A222E9AD}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Github", "Github", "{68B3BA25-0290-41C7-97A6-B7F5F903CE75}"
+	ProjectSection(SolutionItems) = preProject
+		.github\workflows\cicd.yml = .github\workflows\cicd.yml
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -64,6 +69,7 @@ Global
 		{73782589-C78B-40D8-95A2-4C0C3D67240E} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 		{6A33D703-4495-4C63-8C41-0DC8273A751B} = {41200558-8DBA-4864-AF03-31DA8BED5936}
 		{E991BCD7-5623-467A-A6F2-BBD3A222E9AD} = {18DDBCE1-AF0A-4625-B8CA-BA848F6DB43A}
+		{68B3BA25-0290-41C7-97A6-B7F5F903CE75} = {3BA7C657-5D0E-4A72-BE18-554252D9C24A}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {234CE61D-11A8-4ABB-BE55-10C28007EE2A}

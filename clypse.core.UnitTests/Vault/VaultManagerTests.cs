@@ -4,7 +4,7 @@ using Amazon.S3.Model;
 using clypse.core.Cloud.Exceptions;
 using clypse.core.Cloud.Interfaces;
 using clypse.core.Compression.Interfaces;
-using clypse.core.Cryptogtaphy.Interfaces;
+using clypse.core.Cryptography.Interfaces;
 using clypse.core.Json;
 using clypse.core.Secrets;
 using clypse.core.Vault;
@@ -40,7 +40,7 @@ public class VaultManagerTests
 
         this.mockKeyDerivationService.SetupGet(
             x => x.Options)
-            .Returns(new Cryptogtaphy.KeyDerivationServiceOptions());
+            .Returns(new core.Cryptography.KeyDerivationServiceOptions());
 
         this.mockEncryptedCloudStorageProvider.SetupGet(
             x => x.InnerProvider)

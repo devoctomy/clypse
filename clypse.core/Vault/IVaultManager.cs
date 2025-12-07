@@ -1,4 +1,4 @@
-﻿using clypse.core.Cryptogtaphy.Interfaces;
+﻿using clypse.core.Cryptography.Interfaces;
 using clypse.core.Secrets;
 
 namespace clypse.core.Vault;

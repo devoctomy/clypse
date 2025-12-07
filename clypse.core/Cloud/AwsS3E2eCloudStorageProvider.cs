@@ -1,7 +1,7 @@
 ﻿using Amazon.S3.Model;
 using clypse.core.Cloud.Aws.S3;
 using clypse.core.Cloud.Interfaces;
-using clypse.core.Cryptogtaphy.Interfaces;
+using clypse.core.Cryptography.Interfaces;
 
 namespace clypse.core.Cloud;
 

@@ -3,7 +3,7 @@ using Microsoft.JSInterop;
 using clypse.portal.Services;
 using clypse.portal.Models;
 using System.Text.Json;
-using clypse.core.Cryptogtaphy.Interfaces;
+using clypse.core.Cryptography.Interfaces;
 
 namespace clypse.portal.Pages;
 

@@ -82,7 +82,7 @@ Then run the following to publish the build locally and serve it over SSL.
 ```
 dotnet tool install -g dotnet-serve
 dotnet publish ./clypse.portal/clypse.portal.csproj -c Release -r browser-wasm --self-contained
-dotnet serve -d ./clypse.portal/bin/Release/net8.0/publish/wwwroot -p 7153 --tls
+dotnet serve -d ./clypse.portal/bin/Release/net10.0/publish/wwwroot -p 7153 --tls
 ```
 
 > You must have CORS configured for the S3 bucket for 'https://localhost:7153' otherwise all requests to S3 will fail.
@@ -100,7 +100,7 @@ The CI/CD workflow (`cicd.yml`) consists of four sequential jobs:
 - **Environment**: Ubuntu container with Playwright for .NET
 - **Steps**:
   - Installs Python (required for WASM build tools)
-  - Sets up .NET 8.0 SDK
+  - Sets up .NET 10.0 SDK
   - Configures HTTPS development certificates
   - Installs WASM tools workload
   - Restores dependencies and builds the project
@@ -141,7 +141,7 @@ The CI/CD workflow (`cicd.yml`) consists of four sequential jobs:
 - **Trigger**: Only runs when manually triggered with the `deploy` input set to `true`
 - **Environment**: Ubuntu latest
 - **Steps**:
-  - Sets up .NET 8.0 SDK and WASM tools
+  - Sets up .NET 10.0 SDK and WASM tools
   - Restores dependencies
   - **Updates `appsettings.json` with production configuration from secrets**
   - Publishes Blazor WebAssembly in Release mode

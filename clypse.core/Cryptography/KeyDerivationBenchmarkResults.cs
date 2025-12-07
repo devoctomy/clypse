@@ -1,4 +1,4 @@
-﻿namespace clypse.core.Cryptogtaphy;
+﻿namespace clypse.core.Cryptography;
 
 /// <summary>
 /// Results container for key derivation benchmarks.

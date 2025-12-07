@@ -1,5 +1,5 @@
 ﻿using System.Text.Json.Serialization;
-using clypse.core.Cryptogtaphy;
+using clypse.core.Cryptography;
 
 namespace clypse.core.Vault;
 

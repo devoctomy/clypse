@@ -1,6 +1,6 @@
 ﻿using clypse.core.Enums;
 
-namespace clypse.core.Cryptogtaphy;
+namespace clypse.core.Cryptography;
 
 /// <summary>
 /// Key derivation results for a specific key derivation algorithm.

@@ -1,4 +1,4 @@
-﻿using clypse.core.Cryptogtaphy;
+﻿using clypse.core.Cryptography;
 using clypse.core.Enums;
 using clypse.core.Password;
 using Moq;

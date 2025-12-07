@@ -1,4 +1,4 @@
-﻿namespace clypse.core.Cryptogtaphy;
+﻿namespace clypse.core.Cryptography;
 
 /// <summary>
 /// Defines methods for generating cryptographically secure random values.

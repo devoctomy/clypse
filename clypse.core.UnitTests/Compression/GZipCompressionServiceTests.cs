@@ -1,6 +1,6 @@
 using System.Text;
 using clypse.core.Compression;
-using clypse.core.Cryptogtaphy;
+using clypse.core.Cryptography;
 
 namespace clypse.core.UnitTests.Compression;
 

@@ -1,4 +1,4 @@
-﻿using clypse.core.Cryptogtaphy.Interfaces;
+﻿using clypse.core.Cryptography.Interfaces;
 
 namespace clypse.core.Cloud.Interfaces;
 

@@ -1,4 +1,4 @@
-﻿namespace clypse.core.Cryptogtaphy;
+﻿namespace clypse.core.Cryptography;
 
 /// <summary>
 /// Represents configuration options for a key derivation service, including a collection of parameters that can be used
