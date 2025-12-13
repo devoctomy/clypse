@@ -1,6 +1,8 @@
-[![CI](https://github.com/devoctomy/clypse/actions/workflows/cicd.yml/badge.svg)](https://github.com/devoctomy/clypse/actions/workflows/cicd.yml)
-
+[![Tests](https://github.com/devoctomy/clypse/actions/workflows/tests.yml/badge.svg)](https://github.com/devoctomy/clypse/actions/workflows/tests.yml)
 [![codecov](https://codecov.io/gh/devoctomy/clypse/graph/badge.svg?token=6FUB0KRLUV)](https://codecov.io/gh/devoctomy/clypse)
+
+[![Deploy](https://github.com/devoctomy/clypse/actions/workflows/deploy.yml/badge.svg)](https://github.com/devoctomy/clypse/actions/workflows/deploy.yml)
+
 # clypse
 Clypse secrets management.
 
