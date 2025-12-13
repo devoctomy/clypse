@@ -1,0 +1,37 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.BlazorWebAssembly">
+	<PropertyGroup>
+		<TargetFramework>net10.0</TargetFramework>
+		<Nullable>enable</Nullable>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<ServiceWorkerAssetsManifest>service-worker-assets.js</ServiceWorkerAssetsManifest>
+	</PropertyGroup>
+	<PropertyGroup>
+		<AssemblyVersion>1.0.0.*</AssemblyVersion>
+		<Deterministic>false</Deterministic>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(RuntimeIdentifier)' == 'browser-wasm'">
+		<RunAOTCompilation>true</RunAOTCompilation>
+		<WasmEnableSIMD>true</WasmEnableSIMD>
+		<InvariantGlobalization>true</InvariantGlobalization>
+	</PropertyGroup>
+	<ItemGroup>
+		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" />
+		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" PrivateAssets="all" />
+		<PackageReference Include="Microsoft.AspNetCore.App.Internal.Assets" />
+	</ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\clypse.core\clypse.core.csproj" />
+	</ItemGroup>
+	<ItemGroup>
+		<ServiceWorker Include="wwwroot\service-worker.js" PublishedContent="wwwroot\service-worker.published.js" />
+	</ItemGroup>
+	<ItemGroup>
+		<Content Update="wwwroot\appsettings.Development.json">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</Content>
+	</ItemGroup>
+	<PropertyGroup>
+		<!-- Stop compiler from complaining about version number wildcard. This auto increments the revision number and is working as expected. -->
+		<NoWarn>$(NoWarn);CS7035</NoWarn>
+	</PropertyGroup>
+</Project>

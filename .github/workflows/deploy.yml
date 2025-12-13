@@ -1,0 +1,78 @@
+name: Deploy
+
+on:
+  workflow_run:
+    workflows:
+      - Tests
+    types:
+      - completed
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    if: github.repository == 'devoctomy/clypse' && github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main' && (github.event.workflow_run.event == 'push' || github.event.workflow_run.event == 'workflow_dispatch')
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+    - name: Checkout source at tested commit
+      uses: actions/checkout@v4
+      with:
+        repository: ${{ github.event.workflow_run.repository.full_name }}
+        ref: ${{ github.event.workflow_run.head_sha }}
+
+    - name: Setup Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.x'
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '10.0.x'
+
+    - name: Setup HTTPS development certificates
+      run: |
+        dotnet dev-certs https --clean
+        dotnet dev-certs https --trust
+
+    - name: Install .NET workloads
+      run: dotnet workload install wasm-tools
+
+    - name: Restore dependencies
+      run: dotnet restore
+
+    - name: Update appsettings.json
+      run: |
+        echo '${{ secrets.CLYPSE_PUBLISH_APPSETTINGS }}' > clypse.portal/wwwroot/appsettings.json
+
+    - name: Publish Blazor WebAssembly
+      run: dotnet publish ./clypse.portal/clypse.portal.csproj -c Release -r browser-wasm --self-contained
+
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.CLYPSE_PUBLISH_AWS_ACCESSKEY }}
+        aws-secret-access-key: ${{ secrets.CLYPSE_PUBLISH_AWS_SECRETACCESSKEY }}
+        aws-region: ${{ secrets.CLYPSE_PUBLISH_AWS_BUCKETREGION }}
+
+    - name: Upload to S3
+      run: aws s3 sync ./clypse.portal/bin/Release/net10.0/publish/wwwroot/ s3://${{ secrets.CLYPSE_PUBLISH_AWS_BUCKETNAME }}/ --delete --acl public-read
+
+    - name: Invalidate CloudFront distribution
+      run: |
+        aws cloudfront create-invalidation \
+          --distribution-id ${{ secrets.CLYPSE_PUBLISH_AWS_CLOUDFRONTDISTRIBUTIONID }} \
+          --paths "/*"
+
+    - name: Deployment summary
+      run: |
+        echo "Tested commit: ${{ github.event.workflow_run.head_sha }}"
+        echo "Branch: ${{ github.event.workflow_run.head_branch }}"
+        echo "Run ID: ${{ github.event.workflow_run.id }}"
+        echo "Deployment completed successfully."
+        echo "Published Blazor WebAssembly app to S3 bucket: ${{ secrets.CLYPSE_PUBLISH_AWS_BUCKETNAME }}"
+        echo "CloudFront distribution invalidated: ${{ secrets.CLYPSE_PUBLISH_AWS_CLOUDFRONTDISTRIBUTIONID }}"
+        echo "Site should be available shortly at your CloudFront domain"

@@ -1,0 +1,220 @@
+@inherits LayoutComponentBase
+@using clypse.portal.Models
+@implements IDisposable
+
+<CascadingValue Value="this">
+    <div class="app-shell d-flex flex-column vh-100">
+        <!-- Title Bar -->
+        <div class="title-bar text-white p-3 d-flex justify-content-between align-items-center" style="background-color: var(--clypse-primary);">
+            <div class="d-flex align-items-center">
+                <!-- Burger Menu Button -->
+                <button class="btn btn-link text-white p-0 me-3 burger-btn" 
+                        @onclick="ToggleSidebar" 
+                        aria-expanded="@isExpanded.ToString().ToLower()" 
+                        aria-controls="sidebar-navigation"
+                        aria-label="Toggle navigation menu"
+                        title="Toggle navigation menu">
+                    <i class="bi bi-list" style="font-size: 1.5rem;"></i>
+                </button>
+                @if (AppSettings.ShowLogoInTitleBar)
+                {
+                    <img src="/images/titlebar-logo.png" alt="@AppSettings.ApplicationTitle" class="me-2" style="height: 32px;" />
+                }
+                else
+                {
+                    <h4 class="mb-0">@AppSettings.ApplicationTitle</h4>
+                }
+            </div>
+            <div class="d-flex align-items-center">
+                <button class="theme-switcher me-3" @onclick="ToggleTheme" title="Toggle theme">
+                    <i class="bi @themeIcon"></i>
+                </button>
+                <button class="theme-switcher" @onclick="HandleLogout" title="Logout">
+                    <i class="bi bi-box-arrow-right"></i>
+                </button>
+            </div>
+        </div>
+
+        <div class="flex-grow-1 d-flex">
+            <!-- Navigation Sidebar -->
+            <nav id="sidebar-navigation" 
+                 class="sidebar-responsive @(isExpanded ? "expanded" : "collapsed")" 
+                 style="background-color: var(--clypse-surface-tertiary); border-right: 1px solid var(--clypse-border-light); transition: width 0.3s ease; display:flex; flex-direction:column;">
+                <!-- Scrollable navigation region -->
+                <div class="sidebar-scroll p-3">
+                    @if (navigationItems != null && navigationItems.Any())
+                    {
+                        @foreach (var item in navigationItems.Where(i => i.Action != "delete-vault"))
+                        {
+                            <button class="btn @item.ButtonClass btn-sm w-100 mb-2 sidebar-btn-responsive" 
+                                    id="@($"nav-{item.Action}-button")"
+                                    title="@item.Text"
+                                    @onclick="() => HandleNavigationAction(item.Action)">
+                                <i class="@item.Icon sidebar-icon-responsive"></i>
+                                <span class="sidebar-text-responsive">@item.Text</span>
+                            </button>
+                        }
+                    }
+                    @if (navigationItems != null && navigationItems.Any(i => i.Action == "delete-vault"))
+                    {
+                        var deleteItem = navigationItems.First(i => i.Action == "delete-vault");
+                        <div class="mb-3">
+                            <button class="btn @deleteItem.ButtonClass btn-sm w-100 mb-2 sidebar-btn-responsive" 
+                                    id="@($"nav-{deleteItem.Action}-button")"
+                                    title="@deleteItem.Text"
+                                    @onclick="() => HandleNavigationAction(deleteItem.Action)">
+                                <i class="@deleteItem.Icon sidebar-icon-responsive"></i>
+                                <span class="sidebar-text-responsive">@deleteItem.Text</span>
+                            </button>
+                        </div>
+                    }
+                </div>
+                <!-- Footer removed as per design change -->
+            </nav>
+
+            <!-- Main Content Area -->
+            <main class="flex-grow-1 main-content-area p-4">
+                @Body
+                
+                <!-- Simple backdrop - show when sidebar expanded -->
+                @if (isExpanded)
+                {
+                    <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: var(--clypse-backdrop-overlay); z-index: 1000; cursor: pointer;" @onclick="ToggleSidebar"></div>
+                }
+            </main>
+        </div>
+    </div>
+</CascadingValue>
+
+<style>
+    /* Define title bar height as a CSS custom property */
+    :root {
+        --title-bar-height: calc(1rem + 1rem + 32px); /* p-3 top + p-3 bottom + logo height */
+    }
+    
+    .title-bar {
+        height: var(--title-bar-height);
+    }
+
+    .sidebar {
+        width: 80px;
+        min-width: 80px;
+        overflow: hidden;
+    }
+
+    .sidebar.expanded {
+        width: 250px;
+        min-width: 250px;
+    }
+
+    .sidebar-btn {
+        display: flex;
+        align-items: center;
+        text-align: left;
+        white-space: nowrap;
+        padding: 0.5rem;
+        border: none;
+    }
+
+    .sidebar-icon {
+        min-width: 1.25rem;
+        text-align: center;
+        margin-right: 0.75rem;
+    }
+
+    .sidebar.collapsed .sidebar-text {
+        opacity: 0;
+        width: 0;
+        margin-left: 0;
+        overflow: hidden;
+    }
+
+    .sidebar.expanded .sidebar-text {
+        opacity: 1;
+        width: auto;
+        margin-left: 0;
+    }
+
+    .sidebar.collapsed .sidebar-icon {
+        margin-right: 0;
+    }
+
+    .sidebar.collapsed .sidebar-btn {
+        justify-content: center;
+        padding: 0.5rem;
+        width: 100%;
+        margin: 0 0 0.5rem 0;
+    }
+
+    .theme-switcher {
+        background: none;
+        border: none;
+        color: inherit;
+        padding: 0.25rem;
+        border-radius: 0.25rem;
+        transition: background-color 0.15s ease;
+    }
+
+    .theme-switcher:hover {
+        background-color: rgba(255, 255, 255, 0.1);
+    }
+
+    .theme-switcher i {
+        font-size: 1.25rem;
+    }
+
+    /* Smooth transitions for text and icons */
+    .sidebar-text, .sidebar-icon {
+        transition: opacity 0.3s ease, width 0.3s ease, margin 0.3s ease;
+    }
+
+    /* Tooltip for collapsed state */
+    .sidebar.collapsed .sidebar-btn {
+        position: relative;
+    }
+
+    .sidebar.collapsed .sidebar-btn:hover::after {
+        content: attr(title);
+        position: absolute;
+        left: 100%;
+        top: 50%;
+        transform: translateY(-50%);
+        background: var(--bs-dark);
+        color: white;
+        padding: 0.25rem 0.5rem;
+        border-radius: 0.25rem;
+        white-space: nowrap;
+        z-index: 1000;
+        margin-left: 0.5rem;
+        font-size: 0.875rem;
+    }
+
+    /* Mobile responsive behavior */
+    @@media (max-width: 768px) {
+        .sidebar.expanded {
+            position: fixed;
+            top: var(--title-bar-height); /* Use exact title bar height */
+            left: 0;
+            height: calc(100vh - var(--title-bar-height)); /* Full height minus exact title bar height */
+            z-index: 1050;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+        }
+        
+        .sidebar.expanded ~ main {
+            margin-left: 0;
+        }
+
+        /* Ensure burger button stays visible on mobile */
+        .burger-btn {
+            z-index: 1060;
+            position: relative;
+        }
+    }
+
+    /* Hide burger menu button on large screens if always expanded */
+    .burger-btn {
+        transition: opacity 0.3s ease;
+    }
+</style>
+
+

@@ -1,0 +1,28 @@
+﻿@page "/"
+@page "/home"
+@layout HomeLayout
+
+<PageTitle>Clypse Portal - Home</PageTitle>
+
+@if (currentPage == "vaults")
+{
+    <Vaults @ref="vaultsComponent" OnVaultUnlocked="HandleVaultUnlocked" />
+}
+else if (currentPage == "credentials")
+{
+    <Credentials @ref="credentialsComponent" CurrentVault="@currentVault" CurrentVaultKey="@currentVaultKey" LoadedVault="@loadedVault" VaultManager="@vaultManager" OnLockVault="HandleLockVault" OnVaultUpdated="HandleVaultUpdated" />
+}
+
+<VerifyDialog Show="showVerifyDialog" Results="verifyResults" OnClose="() => { showVerifyDialog = false; verifyResults = null; }" />
+<VaultDeleteConfirmDialog Show="showDeleteVaultDialog" 
+                          VaultToDelete="vaultToDelete" 
+                          IsDeleting="isDeletingVault"
+                          ErrorMessage="@deleteVaultErrorMessage"
+                          OnConfirm="HandleDeleteVaultConfirm" 
+                          OnCancel="CancelDeleteVault" />
+<VaultCreateDialog Show="showCreateVaultDialog"
+                   IsCreating="isCreatingVault"
+                   ErrorMessage="@createVaultErrorMessage"
+                   OnCreateVault="HandleCreateVaultFromDialog"
+                   OnCancel="CancelCreateVault" />
+

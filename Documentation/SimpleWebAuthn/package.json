@@ -1,0 +1,16 @@
+{
+  "name": "simplewebauthn-test",
+  "version": "1.0.0",
+  "description": "A simple one-page application to test WebAuthn credential registration and authentication",
+  "main": "index.html",
+  "scripts": {
+    "start": "npx http-server -p 3000 -o",
+    "dev": "npx http-server -p 3000 -o"
+  },
+  "keywords": ["webauthn", "authentication", "credentials"],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "http-server": "^14.1.1"
+  }
+}

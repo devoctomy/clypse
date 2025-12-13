@@ -1,0 +1,91 @@
+@using clypse.portal.Models
+
+@if (Show)
+{
+    <div class="modal" style="display: block; background-color: rgba(0,0,0,0.5);">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="bi bi-plus-circle me-2"></i>
+                        Create New Vault
+                    </h5>
+                    <button type="button" class="btn-close" @onclick="HandleCancel"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="vaultName" class="form-label">Name</label>
+                        <input type="text" 
+                               class="form-control" 
+                               id="vaultName" 
+                               @ref="nameInput"
+                               @bind="vaultName" 
+                               @bind:event="oninput"
+                               placeholder="Enter vault name"
+                               disabled="@IsCreating" />
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="vaultDescription" class="form-label">Description</label>
+                        <input type="text" 
+                               class="form-control" 
+                               id="vaultDescription" 
+                               @bind="vaultDescription" 
+                               @bind:event="oninput"
+                               placeholder="Enter vault description"
+                               disabled="@IsCreating" />
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="vaultPassphrase" class="form-label">Passphrase</label>
+                        <input type="password" 
+                               class="form-control" 
+                               id="vaultPassphrase" 
+                               @bind="vaultPassphrase" 
+                               @bind:event="oninput"
+                               placeholder="Enter passphrase"
+                               disabled="@IsCreating" />
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="vaultPassphraseConfirm" class="form-label">Confirm Passphrase</label>
+                        <input type="password" 
+                               class="form-control" 
+                               id="vaultPassphraseConfirm" 
+                               @bind="vaultPassphraseConfirm" 
+                               @bind:event="oninput"
+                               placeholder="Confirm passphrase"
+                               disabled="@IsCreating" />
+                    </div>
+                    
+                    @if (!string.IsNullOrEmpty(ErrorMessage))
+                    {
+                        <div class="alert alert-danger" role="alert">
+                            @ErrorMessage
+                        </div>
+                    }
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @onclick="HandleCancel" disabled="@IsCreating">
+                        Cancel
+                    </button>
+                    <button type="button" 
+                            class="btn btn-primary" 
+                            id="create-vault-button"
+                            @onclick="HandleCreateVault" 
+                            disabled="@(!IsFormValid() || IsCreating)">
+                        @if (IsCreating)
+                        {
+                            <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                            <span>Creating...</span>
+                        }
+                        else
+                        {
+                            <span>Create Vault</span>
+                        }
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}

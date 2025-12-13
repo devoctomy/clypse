@@ -1,0 +1,39 @@
+﻿using clypse.core.Cryptography;
+using clypse.core.Enums;
+
+namespace clypse.core.Password;
+
+/// <summary>
+/// Interface for password generation service.
+/// </summary>
+public interface IPasswordGeneratorService
+{
+    /// <summary>
+    /// Gets the random generator service.
+    /// </summary>
+    public IRandomGeneratorService RandomGeneratorService { get; }
+
+    /// <summary>
+    /// Generates a memorable password based on the provided template.
+    /// </summary>
+    /// <param name="template">Template to use for password generation.</param>
+    /// <param name="shuffleTokens">Whether to shuffle the tokens in the generated password.</param>
+    /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
+    /// <returns>Returns a password adhering to the format specified by the provided template.</returns>
+    public Task<string> GenerateMemorablePasswordAsync(
+        string template,
+        bool shuffleTokens,
+        CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Generates a random password based on the specified character groups and length.
+    /// </summary>
+    /// <param name="groups">Character groups to include in the password.</param>
+    /// <param name="length">Length of the password to generate.</param>
+    /// <param name="atLeastOneOfEachGroup">Whether to include at least one character from each specified group.</param>
+    /// <returns>A randomly generated password.</returns>
+    public string GenerateRandomPassword(
+        CharacterGroup groups,
+        int length,
+        bool atLeastOneOfEachGroup);
+}

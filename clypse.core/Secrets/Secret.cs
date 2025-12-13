@@ -1,0 +1,162 @@
+﻿using System.Text.Json.Serialization;
+using clypse.core.Base;
+using clypse.core.Enums;
+using clypse.core.Secrets.Interfaces;
+
+namespace clypse.core.Secrets;
+
+/// <summary>
+/// Generic secret which other secrets may be derived from.
+/// </summary>
+public class Secret : ClypseObject, ITaggedObject
+{
+    /// <summary>
+    /// Initializes a new instance of the <see cref="Secret"/> class.
+    /// </summary>
+    public Secret()
+    {
+        this.SecretType = SecretType.None;
+    }
+
+    /// <summary>
+    /// Gets or Sets SecretType for this secret.
+    /// </summary>
+    [RequiredData]
+    [JsonIgnore]
+    public SecretType SecretType
+    {
+        get
+        {
+            var secretType = this.GetData(nameof(this.SecretType));
+            return Enum.Parse<SecretType>(secretType!, true);
+        }
+
+        set
+        {
+            this.SetData(nameof(this.SecretType), value.ToString());
+        }
+    }
+
+    /// <summary>
+    /// Gets or sets Name for this secret.
+    /// </summary>
+    [RequiredData]
+    [SecretField(DisplayOrder = 10, FieldType = SecretFieldType.SingleLineText)]
+    [JsonIgnore]
+    public string? Name
+    {
+        get { return this.GetData(nameof(this.Name)); }
+        set { this.SetData(nameof(this.Name), value); }
+    }
+
+    /// <summary>
+    /// Gets or sets Description of this secret.
+    /// </summary>
+    [SecretField(DisplayOrder = 20, FieldType = SecretFieldType.SingleLineText)]
+    [JsonIgnore]
+    public string? Description
+    {
+        get { return this.GetData(nameof(this.Description)); }
+        set { this.SetData(nameof(this.Description), value); }
+    }
+
+    /// <summary>
+    /// Gets list of Tags for this secret.
+    /// </summary>
+    [SecretField(DisplayOrder = 100, FieldType = SecretFieldType.TagList)]
+    [JsonIgnore]
+    public List<string> Tags
+    {
+        get
+        {
+            var tags = this.GetData(nameof(this.Tags));
+            if (string.IsNullOrEmpty(tags))
+            {
+                return [];
+            }
+
+            return [.. tags.Split(',')];
+        }
+    }
+
+    /// <summary>
+    /// Gets or sets Comments for this secret.
+    /// </summary>
+    [SecretField(DisplayOrder = 110, FieldType = SecretFieldType.MultiLineText)]
+    [JsonIgnore]
+    public string? Comments
+    {
+        get { return this.GetData(nameof(this.Comments)); }
+        set { this.SetData(nameof(this.Comments), value); }
+    }
+
+    /// <summary>
+    /// Creates a Secret instance from a dictionary of key-value pairs.
+    /// </summary>
+    /// <param name="data">The dictionary containing secret data.</param>
+    /// <returns>A Secret instance populated with the provided data.</returns>
+    public static Secret FromDictionary(Dictionary<string, string> data)
+    {
+        var secret = new Secret();
+        foreach (var kvp in data)
+        {
+            secret.SetData(kvp.Key, kvp.Value);
+        }
+
+        return secret;
+    }
+
+    /// <summary>
+    /// Add a tag to this secret.
+    /// </summary>
+    /// <param name="tag">Tag to add.</param>
+    /// <returns>True when successfully added.</returns>
+    public bool AddTag(string tag)
+    {
+        var tags = this.Tags;
+        if (tags.Contains(tag))
+        {
+            return false;
+        }
+
+        tags.Add(tag);
+        this.UpdateTags(tags);
+        return true;
+    }
+
+    /// <summary>
+    /// Remove a tag from this secret.
+    /// </summary>
+    /// <param name="tag">Tag to remove.</param>
+    /// <returns>True when successfully removed.</returns>
+    public bool RemoveTag(string tag)
+    {
+        var tags = this.Tags;
+        if (!tags.Contains(tag))
+        {
+            return false;
+        }
+
+        tags.Remove(tag);
+        this.UpdateTags(tags);
+        return true;
+    }
+
+    /// <summary>
+    /// Clear all tags for this secret.
+    /// </summary>
+    public void ClearTags()
+    {
+        this.UpdateTags([]);
+    }
+
+    /// <summary>
+    /// Update all tags for this secret, replacing all existing tags.
+    /// </summary>
+    /// <param name="tags">Tags to update this secret with.</param>
+    public void UpdateTags(List<string> tags)
+    {
+        var tagsCsv = string.Join(',', tags);
+        this.SetData(nameof(this.Tags), tagsCsv);
+    }
+}

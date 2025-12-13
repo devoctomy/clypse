@@ -1,0 +1,311 @@
+﻿@page "/test"
+
+<PageTitle>Clypse Portal - Test</PageTitle>
+
+
+
+<div class="container mt-4 test-page-container" style="min-height: calc(100vh + 200px); padding-bottom: 100px;">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="text-center">Login</h3>
+                </div>
+                <div class="card-body">
+                    @if (!isAuthenticated)
+                    {
+                        <EditForm Model="@loginModel" OnValidSubmit="@HandleLogin">
+                            <DataAnnotationsValidator />
+                            <ValidationSummary />
+
+                            <div class="mb-3">
+                                <label for="username" class="form-label">Username:</label>
+                                <InputText id="username" class="form-control" @bind-Value="loginModel.Username" placeholder="Enter your username" />
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="password" class="form-label">Password:</label>
+                                <InputText id="password" type="password" class="form-control" @bind-Value="loginModel.Password" placeholder="Enter your password" />
+                            </div>
+
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-primary" disabled="@isLoading">
+                                    @if (isLoading)
+                                    {
+                                        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                        <span>Logging in...</span>
+                                    }
+                                    else
+                                    {
+                                        <span>Login</span>
+                                    }
+                                </button>
+                            </div>
+
+                            @if (!string.IsNullOrEmpty(errorMessage))
+                            {
+                                <div class="alert alert-danger mt-3" role="alert">
+                                    @errorMessage
+                                </div>
+                            }
+                        </EditForm>
+                    }
+                    else
+                    {
+                        <div class="text-center">
+                            <h4 class="text-success mb-4">Successfully Logged In!</h4>
+                            
+                            <div class="row">
+                                <div class="col-12 mb-3">
+                                    <label class="form-label fw-bold">Access Token:</label>
+                                    <textarea class="form-control" rows="3" readonly>@(accessToken ?? "Not available")</textarea>
+                                </div>
+                                
+                                <div class="col-12 mb-3">
+                                    <label class="form-label fw-bold">ID Token:</label>
+                                    <textarea class="form-control" rows="3" readonly>@(idToken ?? "Not available")</textarea>
+                                </div>
+                            </div>
+
+                            @if (awsCredentials != null)
+                            {
+                                <div class="row">
+                                    <div class="col-12 mb-3">
+                                        <label class="form-label fw-bold">AWS Access Key ID:</label>
+                                        <input type="text" class="form-control" readonly value="@awsCredentials.AccessKeyId" />
+                                    </div>
+                                    
+                                    <div class="col-12 mb-3">
+                                        <label class="form-label fw-bold">AWS Secret Access Key:</label>
+                                        <input type="password" class="form-control" readonly value="@awsCredentials.SecretAccessKey" />
+                                    </div>
+
+                                    @if (!string.IsNullOrEmpty(awsCredentials.SessionToken))
+                                    {
+                                        <div class="col-12 mb-3">
+                                            <label class="form-label fw-bold">AWS Session Token:</label>
+                                            <textarea class="form-control" rows="2" readonly>@awsCredentials.SessionToken</textarea>
+                                        </div>
+                                    }
+
+                                    @if (!string.IsNullOrEmpty(awsCredentials.IdentityId))
+                                    {
+                                        <div class="col-12 mb-3">
+                                            <label class="form-label fw-bold">Identity ID (cognito-identity.amazonaws.com:sub):</label>
+                                            <input type="text" class="form-control" value="@awsCredentials.IdentityId" readonly />
+                                        </div>
+                                    }
+
+                                    <div class="col-12 mb-3">
+                                        <label class="form-label fw-bold">Token Expiration:</label>
+                                        <input type="text" class="form-control" readonly value="@awsCredentials.Expiration" />
+                                    </div>
+                                </div>
+                            }
+
+                            <div class="d-grid gap-2">
+                                <button class="btn btn-success" @onclick="HandleTestClypse" disabled="@isTestingClypse">
+                                    @if (isTestingClypse)
+                                    {
+                                        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                        <span>Testing Clypse...</span>
+                                    }
+                                    else
+                                    {
+                                        <span>Test Clypse Core</span>
+                                    }
+                                </button>
+                                <button class="btn btn-secondary" @onclick="HandleLogout">Logout</button>
+                            </div>
+
+                            @if (showKeyDerivationResults && keyDerivationResults != null)
+                            {
+                                <div class="modal" tabindex="-1" style="display: block; background-color: rgba(0,0,0,0.5);">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title">Key Derivation Benchmark Results</h5>
+                                                <button type="button" class="btn-close" @onclick="() => showKeyDerivationResults = false"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <table class="table">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>Algorithm</th>
+                                                            <th>Average Time (ms)</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        @foreach (var result in keyDerivationResults.Results)
+                                                        {
+                                                            <tr>
+                                                                <td>@result.Algorithm</td>
+                                                                <td>@result.Average!.Value.TotalMilliseconds.ToString("F2")</td>
+                                                            </tr>
+                                                        }
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary" @onclick="() => showKeyDerivationResults = false">Close</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                            
+                            @if (!string.IsNullOrEmpty(clypseTestResult))
+                            {
+                                <div class="alert alert-info mt-3" role="alert">
+                                    <strong>Clypse Test Result:</strong><br/>
+                                    @clypseTestResult
+                                </div>
+                            }
+                            
+                            @if (!string.IsNullOrEmpty(clypseTestError))
+                            {
+                                <div class="alert alert-danger mt-3" role="alert">
+                                    <strong>Clypse Test Error:</strong><br/>
+                                    @clypseTestError
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+            <div class="text-center mt-3">
+                <a href="/login" class="btn btn-link">Back to Login Page</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row justify-content-center mt-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="text-center">Cryptography Tests</h3>
+                </div>
+                <div class="card-body">
+                    
+                    <div class="d-grid gap-2">
+                        <button class="btn btn-primary" @onclick="HandleTestKeyDerivation" disabled="@isTestingKeyDerivation">
+                            @if (isTestingKeyDerivation)
+                            {
+                                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                <span>Testing Key Derivation...</span>
+                            }
+                            else
+                            {
+                                <span>Test Key Derivation Algorithms</span>
+                            }
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row justify-content-center mt-4">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="text-center">🔐 WebAuthn Tests</h3>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="webauthnUsername" class="form-label">Username:</label>
+                            <input id="webauthnUsername" class="form-control" @bind="webAuthnUsername" placeholder="Enter username" />
+                        </div>
+                        <div class="col-md-6 d-flex align-items-end">
+                            <small class="text-muted">Status: @webAuthnStatus</small>
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-start mb-3">
+                        <button class="btn btn-success" @onclick="HandleWebAuthnRegister" disabled="@(isWebAuthnProcessing || string.IsNullOrWhiteSpace(webAuthnUsername))">
+                            @if (isWebAuthnProcessing && webAuthnCurrentAction == "register")
+                            {
+                                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                <span>Registering...</span>
+                            }
+                            else
+                            {
+                                <span>🔑 Register Credential</span>
+                            }
+                        </button>
+                        
+                        <button class="btn btn-primary" @onclick="HandleWebAuthnAuthenticate" disabled="@(isWebAuthnProcessing || webAuthnCredential == null)">
+                            @if (isWebAuthnProcessing && webAuthnCurrentAction == "authenticate")
+                            {
+                                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                <span>Authenticating...</span>
+                            }
+                            else
+                            {
+                                <span>🔓 Authenticate</span>
+                            }
+                        </button>
+                        
+                        <button class="btn btn-secondary" @onclick="HandleWebAuthnClear">
+                            🗑️ Clear
+                        </button>
+                    </div>
+
+                    @if (webAuthnCredential != null)
+                    {
+                        <div class="alert alert-info">
+                            <strong>Registered Credential:</strong><br/>
+                            <small>ID: @webAuthnCredential.CredentialID.Substring(0, Math.Min(20, webAuthnCredential.CredentialID.Length))...</small><br/>
+                            <small>User: @webAuthnCredential.Username</small><br/>
+                            <small>PRF Enabled: @webAuthnCredential.PrfEnabled</small>
+                        </div>
+                    }
+
+                    <div class="mt-3">
+                        <h5>Activity Log:</h5>
+                        <div id="webauthnLog" class="border rounded p-3" style="height: 300px; overflow-y: auto; background: #f8f9fa; font-family: monospace; font-size: 0.85rem; white-space: pre-wrap;">@((MarkupString)webAuthnLog.Replace("\n", "<br/>"))</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@if (showKeyDerivationResults && keyDerivationResults != null)
+{
+    <div class="modal" tabindex="-1" style="display: block; background-color: rgba(0,0,0,0.5);">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Key Derivation Benchmark Results</h5>
+                    <button type="button" class="btn-close" @onclick="() => showKeyDerivationResults = false"></button>
+                </div>
+                <div class="modal-body">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Algorithm</th>
+                                <th>Average Time (ms)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var result in keyDerivationResults.Results)
+                            {
+                                <tr>
+                                    <td>@result.Algorithm</td>
+                                    <td>@result.Average!.Value.TotalMilliseconds.ToString("F2")</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @onclick="() => showKeyDerivationResults = false">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+

@@ -1,0 +1,425 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>SimpleWebAuthn – Register & Authenticate Demo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <!-- UMD build exposes `SimpleWebAuthnBrowser` global -->
+  <script src="https://unpkg.com/@simplewebauthn/browser/dist/bundle/index.umd.min.js"></script>
+  <style>
+    body { 
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; 
+      margin: 2rem; 
+      max-width: 800px;
+      line-height: 1.6;
+    }
+    label, input, button { font-size: 1rem; }
+    .row { 
+      display: flex; 
+      gap: .5rem; 
+      align-items: center; 
+      margin-bottom: 1rem; 
+      flex-wrap: wrap;
+    }
+    #log { 
+      white-space: pre-wrap; 
+      background: #f6f6f8; 
+      border: 1px solid #ddd; 
+      padding: 1rem; 
+      border-radius: .5rem; 
+      min-height: 200px;
+      font-family: 'Courier New', monospace;
+      font-size: 0.9rem;
+    }
+    button { 
+      padding: .6rem .9rem; 
+      border-radius: .5rem; 
+      border: 1px solid #ccc; 
+      cursor: pointer; 
+      background: white;
+      transition: background-color 0.2s;
+    }
+    button:hover:not(:disabled) { 
+      background: #f0f0f0; 
+    }
+    button:disabled { 
+      opacity: .55; 
+      cursor: not-allowed; 
+    }
+    input {
+      padding: .5rem;
+      border: 1px solid #ccc;
+      border-radius: .25rem;
+      min-width: 200px;
+    }
+    .success { color: #28a745; }
+    .error { color: #dc3545; }
+    .info { color: #17a2b8; }
+    .warning { color: #ffc107; }
+    
+    .status-indicator {
+      display: inline-block;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      margin-right: 8px;
+    }
+    .status-ready { background-color: #28a745; }
+    .status-pending { background-color: #ffc107; }
+    .status-error { background-color: #dc3545; }
+    
+    .instructions {
+      background: #e7f3ff;
+      border: 1px solid #b3d9ff;
+      border-radius: .5rem;
+      padding: 1rem;
+      margin-bottom: 2rem;
+    }
+  </style>
+</head>
+<body>
+  <h1>🔐 SimpleWebAuthn Demo</h1>
+  
+  <div class="instructions">
+    <h3>How to use:</h3>
+    <ol>
+      <li>Enter a username (can be any string)</li>
+      <li>Click "Register Credential" to create a new WebAuthn credential</li>
+      <li>Follow your browser's prompts (Touch ID, Windows Hello, security key, etc.)</li>
+      <li>Once registered, click "Authenticate" to test the credential</li>
+    </ol>
+  </div>
+
+  <div class="row">
+    <label for="username">Username:</label>
+    <input id="username" placeholder="Enter username (e.g., user@example.com)" value="demo-user" />
+  </div>
+
+  <div class="row">
+    <button id="btnRegister">
+      <span class="status-indicator status-ready"></span>
+      1️⃣ Register Credential
+    </button>
+    <button id="btnAuth" disabled>
+      <span class="status-indicator"></span>
+      2️⃣ Authenticate
+    </button>
+    <button id="btnClear">🗑️ Clear Log</button>
+  </div>
+
+  <div class="row">
+    <small id="status">Ready to register credentials</small>
+  </div>
+
+  <h3>Activity Log:</h3>
+  <div id="log" aria-live="polite">Welcome! This demo shows WebAuthn credential registration and authentication.
+
+Check browser compatibility below...</div>
+
+  <script>
+    const {
+      startRegistration,
+      startAuthentication,
+      browserSupportsWebAuthn,
+      platformAuthenticatorIsAvailable,
+    } = SimpleWebAuthnBrowser;
+
+    const logEl = document.getElementById('log');
+    const btnRegister = document.getElementById('btnRegister');
+    const btnAuth = document.getElementById('btnAuth');
+    const btnClear = document.getElementById('btnClear');
+    const usernameEl = document.getElementById('username');
+    const statusEl = document.getElementById('status');
+
+    const RP_ID = location.hostname || 'localhost'; // your relying party ID
+    const RP_NAME = 'SimpleWebAuthn Demo App';
+
+    // --- Base64URL helpers ---
+    const enc = new TextEncoder();
+    
+    function randomBytes(len = 32) {
+      const a = new Uint8Array(len);
+      crypto.getRandomValues(a);
+      return a;
+    }
+    
+    function toB64URL(bytes) {
+      let str = btoa(String.fromCharCode(...bytes));
+      return str.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
+    }
+
+    // Store credential info (in real app, this would be server-side)
+    let stored = {
+      credentialID: null, // base64url string
+      userID: null,       // base64url string
+      username: null,
+    };
+
+    // --- Initialize app ---
+    async function initializeApp() {
+      log('🔍 Checking WebAuthn browser support...');
+      
+      if (!browserSupportsWebAuthn?.()) {
+        log('❌ This browser does not support WebAuthn.');
+        logError('WebAuthn is not supported in this browser. Please use a modern browser like Chrome, Firefox, Safari, or Edge.');
+        btnRegister.disabled = btnAuth.disabled = true;
+        updateStatus('Browser not supported', 'error');
+        return;
+      }
+
+      log('✅ WebAuthn is supported in this browser.');
+
+      try {
+        const platformAvailable = await platformAuthenticatorIsAvailable();
+        if (platformAvailable) {
+          log('✅ Platform authenticator available (Touch ID, Windows Hello, etc.)');
+          updateStatus('Platform authenticator ready', 'ready');
+        } else {
+          log('⚠️  No platform authenticator detected. You can still use security keys or other authenticators.');
+          updateStatus('Security key authenticator available', 'warning');
+        }
+      } catch (err) {
+        log('⚠️  Could not check platform authenticator availability: ' + err.message);
+        updateStatus('Authenticator status unknown', 'warning');
+      }
+
+      log('\n🚀 Ready to register credentials!');
+    }
+
+    // --- Registration ---
+    btnRegister.addEventListener('click', async () => {
+      const username = usernameEl.value.trim();
+      if (!username) {
+        logError('Please enter a username first.');
+        usernameEl.focus();
+        return;
+      }
+
+      btnRegister.disabled = true;
+      updateButtonStatus(btnRegister, 'pending');
+      updateStatus('Registering credential...', 'pending');
+
+      try {
+        log(`\n🔄 Starting registration for user: ${username}`);
+        
+        // Create registration options
+        const challenge = toB64URL(randomBytes(32));
+        const userIdBytes = enc.encode(username + '-' + Date.now()); // Make unique
+        const optionsJSON = {
+          rp: { 
+            id: RP_ID, 
+            name: RP_NAME 
+          },
+          user: {
+            id: toB64URL(userIdBytes),
+            name: username,
+            displayName: username,
+          },
+          challenge,
+          pubKeyCredParams: [
+            { type: 'public-key', alg: -7 },   // ES256
+            { type: 'public-key', alg: -257 }, // RS256
+            { type: 'public-key', alg: -35 },  // ES384
+            { type: 'public-key', alg: -36 },  // ES512
+          ],
+          timeout: 60_000,
+          attestation: 'none',
+          authenticatorSelection: {
+            residentKey: 'preferred',
+            requireResidentKey: false,
+            userVerification: 'preferred',
+            // authenticatorAttachment: 'platform', // Uncomment to prefer built-in authenticators
+          },
+          excludeCredentials: stored.credentialID ? [{
+            id: stored.credentialID,
+            type: 'public-key',
+            transports: ['internal', 'usb', 'ble', 'nfc', 'hybrid'],
+          }] : [],
+          extensions: {
+            prf: {}
+          }
+        };
+
+        log('📋 Registration options created');
+        log('🖱️  Please interact with your authenticator...');
+
+        const attResp = await startRegistration({ optionsJSON });
+        const clientExtensionResults = attResp.clientExtensionResults || {};
+
+        // Store the credential info
+        stored.credentialID = attResp.id;
+        stored.userID = optionsJSON.user.id;
+        stored.username = username;
+
+        log(`✅ Registration successful!`);
+        log(`📝 Credential ID: ${stored.credentialID.substring(0, 20)}...`);
+        log(`👤 User ID: ${stored.userID}`);
+        
+        // Debug extension results
+        log(`🔍 Extension Results:`);
+        if (Object.keys(clientExtensionResults).length === 0) {
+          log('  No extension results returned');
+        } else {
+          log(JSON.stringify(clientExtensionResults, null, 2));
+        }
+        
+        // Specifically check PRF
+        if (clientExtensionResults.prf) {
+          log(`🔑 PRF Extension: ${clientExtensionResults.prf.enabled ? 'Enabled' : 'Disabled'}`);
+        } else {
+          log('🔑 PRF Extension: Not supported or not returned');
+        }
+        
+        log(`\n🎉 You can now authenticate with this credential!`);
+
+        btnAuth.disabled = false;
+        updateButtonStatus(btnAuth, 'ready');
+        updateStatus('Credential registered successfully', 'ready');
+
+      } catch (err) {
+        const errorMsg = err?.message || err?.toString() || 'Unknown error';
+        logError(`Registration failed: ${errorMsg}`);
+        
+        if (errorMsg.includes('NotAllowedError')) {
+          log('💡 This usually means the operation was cancelled or timed out.');
+        } else if (errorMsg.includes('InvalidStateError')) {
+          log('💡 A credential for this user might already exist.');
+        }
+        
+        updateStatus('Registration failed', 'error');
+      } finally {
+        btnRegister.disabled = false;
+        updateButtonStatus(btnRegister, 'ready');
+      }
+    });
+
+    // --- Authentication ---
+    btnAuth.addEventListener('click', async () => {
+      if (!stored.credentialID) {
+        logError('No credential registered yet. Please register first.');
+        return;
+      }
+
+      btnAuth.disabled = true;
+      updateButtonStatus(btnAuth, 'pending');
+      updateStatus('Authenticating...', 'pending');
+
+      try {
+        log(`\n🔐 Starting authentication for: ${stored.username}`);
+        
+        const challenge = toB64URL(randomBytes(32));
+        const optionsJSON = {
+          challenge,
+          rpId: RP_ID,
+          userVerification: 'preferred',
+          allowCredentials: [
+            {
+              id: stored.credentialID,
+              type: 'public-key',
+              transports: ['internal', 'usb', 'ble', 'nfc', 'hybrid'],
+            },
+          ],
+          timeout: 60_000,
+        };
+
+        // Always try PRF extension during authentication
+        optionsJSON.extensions = {
+          prf: {
+            eval: {
+              first: new TextEncoder().encode('WebAuthn PRF Registration Salt')
+            }
+          }
+        };
+
+        log('🖱️  Please authenticate with your credential...');
+
+        const asseResp = await startAuthentication({ optionsJSON });
+
+        const flags = asseResp.response?.authenticatorDataFlags || {};
+        const clientExtensionResults = asseResp.clientExtensionResults || {};
+        
+        log('✅ Authentication successful!');
+        log(`👤 User Present (UP): ${flags.up ? 'Yes' : 'No'}`);
+        log(`🔒 User Verified (UV): ${flags.uv ? 'Yes' : 'No'}`);
+        log(`📊 Signature Counter: ${asseResp.response?.authenticatorData ? 'Present' : 'N/A'}`);
+        
+        // Display PRF results if available
+        if (clientExtensionResults.prf && clientExtensionResults.prf.results && clientExtensionResults.prf.results.first) {
+          const prfResult = new Uint8Array(clientExtensionResults.prf.results.first);
+          const prfHex = Array.from(prfResult).map(b => b.toString(16).padStart(2, '0')).join('');
+          log(`🔑 PRF Output: ${prfHex}`);
+        }
+        
+        log('\n🎊 Authentication completed successfully!');
+        log('💡 In a real application, this response would be sent to your server for verification.');
+
+        updateStatus('Authentication successful', 'ready');
+
+      } catch (err) {
+        const errorMsg = err?.message || err?.toString() || 'Unknown error';
+        logError(`Authentication failed: ${errorMsg}`);
+        
+        if (errorMsg.includes('NotAllowedError')) {
+          log('💡 Authentication was cancelled or timed out.');
+        } else if (errorMsg.includes('InvalidStateError')) {
+          log('💡 The credential might not be available on this device.');
+        }
+
+        updateStatus('Authentication failed', 'error');
+      } finally {
+        btnAuth.disabled = false;
+        updateButtonStatus(btnAuth, 'ready');
+      }
+    });
+
+    // --- Clear log ---
+    btnClear.addEventListener('click', () => {
+      logEl.textContent = 'Log cleared.\n';
+    });
+
+    // --- Helper functions ---
+    function log(msg) {
+      const timestamp = new Date().toLocaleTimeString();
+      logEl.textContent += `[${timestamp}] ${msg}\n`;
+      logEl.scrollTop = logEl.scrollHeight;
+    }
+
+    function logError(msg) {
+      log(`❌ ${msg}`);
+    }
+
+    function updateStatus(msg, type = 'info') {
+      statusEl.textContent = msg;
+      statusEl.className = type;
+    }
+
+    function updateButtonStatus(button, status) {
+      const indicator = button.querySelector('.status-indicator');
+      indicator.className = `status-indicator status-${status}`;
+    }
+
+    // --- Initialize the app ---
+    initializeApp();
+  </script>
+
+  <footer style="margin-top: 3rem; padding-top: 2rem; border-top: 1px solid #ddd; color: #666; font-size: 0.9rem;">
+    <h4>About This Demo:</h4>
+    <p>
+      This is a client-side only demo of WebAuthn credential registration and authentication using 
+      <a href="https://simplewebauthn.dev/" target="_blank">SimpleWebAuthn</a>.
+    </p>
+    <p>
+      <strong>Note:</strong> In a production application, you would:
+    </p>
+    <ul>
+      <li>Generate registration/authentication options on your server</li>
+      <li>Verify the responses on your server using cryptographic validation</li>
+      <li>Store credential data securely in a database</li>
+      <li>Implement proper user sessions and security measures</li>
+    </ul>
+    <p>
+      This demo stores credential data locally in JavaScript variables for demonstration purposes only.
+    </p>
+  </footer>
+</body>
+</html>

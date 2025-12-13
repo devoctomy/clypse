@@ -1,0 +1,199 @@
+@using clypse.core.Cryptography
+@using clypse.core.Vault
+@using clypse.portal.Models
+@using clypse.portal.Services
+
+<div class="vaults-page">
+    <h2>Vaults</h2>
+    
+    @if (isLoading)
+    {
+        <div class="d-flex justify-content-center">
+            <div class="spinner-border" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+    }
+    else if (vaults == null || vaults.Count == 0)
+    {
+        <div class="alert alert-info" role="alert" id="no-vaults-found">
+            <h5 class="alert-heading">No Vaults Found</h5>
+            <p>No vaults are available. Click the "Refresh" button to search for vaults.</p>
+        </div>
+    }
+    else
+    {
+        <div class="vaults-grid-responsive" id="vaults-list">
+            @foreach (var vault in vaults)
+            {
+                <div class="vault-card-responsive" data-vault-id="@vault.Id" @onclick="() => ShowPassphrasePanel(vault)">
+                    <div class="vault-lock-icon-responsive">
+                        <i class="bi bi-lock-fill"></i>
+                    </div>
+                    <div class="vault-details-icon-responsive">
+                        <button class="btn btn-outline-secondary btn-sm" 
+                                title="Show vault details" 
+                                @onclick="() => ShowVaultDetailsPanel(vault)" 
+                                @onclick:stopPropagation="true">
+                            <i class="bi bi-question-circle"></i>
+                        </button>
+                    </div>
+                    <div class="vault-content" style="margin-left: 1.5rem;">
+                        <div class="vault-field">
+                            <strong>Id:</strong> @vault.Id
+                        </div>
+                        <div class="vault-field">
+                            <strong>Name:</strong> 
+                            @if (string.IsNullOrEmpty(vault.Name))
+                            {
+                                <span class="text-muted">Unknown, you must unlock this vault first</span>
+                            }
+                            else
+                            {
+                                <span>@vault.Name</span>
+                            }
+                        </div>
+                        <div class="vault-field">
+                            <strong>Description:</strong> 
+                            @if (string.IsNullOrEmpty(vault.Description))
+                            {
+                                <span class="text-muted">Unknown, you must unlock this vault first</span>
+                            }
+                            else
+                            {
+                                <span>@vault.Description</span>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+    
+    @* Unlock Vault Dialog *@
+    <UnlockVaultDialog IsVisible="showPassphrasePanel"
+                      Vault="selectedVault"
+                      IsUnlocking="isUnlocking"
+                      ErrorMessage="@errorMessage"
+                      OnCancel="HidePassphrasePanel"
+                      OnUnlock="HandleUnlockVault" />
+    
+    @* Vault Details Panel *@
+    @if (showVaultDetailsPanel && selectedVault != null && selectedVaultListing != null)
+    {
+        <div class="modal vault-details-modal" style="display: block; background-color: rgba(0,0,0,0.7);" @onclick="HideVaultDetailsPanel">
+            <div class="modal-dialog modal-dialog-centered modal-fullscreen m-2" style="max-height: calc(100vh - 16px);" @onclick:stopPropagation="true">
+                <div class="modal-content" style="max-height: calc(100vh - 16px); display: flex; flex-direction: column; border-radius: 4px;">
+                    <div class="modal-header" style="flex-shrink: 0;">
+                        <h5 class="modal-title">
+                            <i class="bi bi-info-circle me-2"></i>
+                            Vault Details
+                        </h5>
+                        <button type="button" class="btn-close vault-details-close" @onclick="HideVaultDetailsPanel"></button>
+                    </div>
+                    <div class="modal-body" style="overflow-y: auto; flex: 1; min-height: 0;">
+                        <div class="row">
+                            <div class="col-12">
+                                <h6 class="text-primary mb-3">Vault Information</h6>
+                                <div class="row mb-2">
+                                    <div class="col-sm-3"><strong>ID:</strong></div>
+                                    <div class="col-sm-9"><code>@selectedVault.Id</code></div>
+                                </div>
+                                <div class="row mb-2">
+                                    <div class="col-sm-3"><strong>Name:</strong></div>
+                                    <div class="col-sm-9">
+                                        @if (string.IsNullOrEmpty(selectedVault.Name))
+                                        {
+                                            <span class="text-muted">Unknown (unlock vault to view)</span>
+                                        }
+                                        else
+                                        {
+                                            <span>@selectedVault.Name</span>
+                                        }
+                                    </div>
+                                </div>
+                                <div class="row mb-4">
+                                    <div class="col-sm-3"><strong>Description:</strong></div>
+                                    <div class="col-sm-9">
+                                        @if (string.IsNullOrEmpty(selectedVault.Description))
+                                        {
+                                            <span class="text-muted">Unknown (unlock vault to view)</span>
+                                        }
+                                        else
+                                        {
+                                            <span>@selectedVault.Description</span>
+                                        }
+                                    </div>
+                                </div>
+                                
+                                <h6 class="text-primary mb-3">Vault Manifest</h6>
+                                @if (selectedVaultListing.Manifest != null)
+                                {
+                                    <div class="list-group list-group-flush">
+                                        @if (!string.IsNullOrEmpty(selectedVaultListing.Manifest.ClypseCoreVersion))
+                                        {
+                                            <div class="list-group-item list-group-item-action d-flex align-items-center bg-transparent border-secondary">
+                                                <i class="bi bi-file-text me-2 text-muted"></i>
+                                                <div>
+                                                    <strong>Clypse Core Version:</strong> @selectedVaultListing.Manifest.ClypseCoreVersion
+                                                </div>
+                                            </div>
+                                        }
+                                        @if (!string.IsNullOrEmpty(selectedVaultListing.Manifest.CompressionServiceName))
+                                        {
+                                            <div class="list-group-item list-group-item-action d-flex align-items-center bg-transparent border-secondary">
+                                                <i class="bi bi-file-text me-2 text-muted"></i>
+                                                <div>
+                                                    <strong>Compression Service:</strong> @selectedVaultListing.Manifest.CompressionServiceName
+                                                </div>
+                                            </div>
+                                        }
+                                        @if (!string.IsNullOrEmpty(selectedVaultListing.Manifest.CryptoServiceName))
+                                        {
+                                            <div class="list-group-item list-group-item-action d-flex align-items-center bg-transparent border-secondary">
+                                                <i class="bi bi-file-text me-2 text-muted"></i>
+                                                <div>
+                                                    <strong>Crypto Service:</strong> @selectedVaultListing.Manifest.CryptoServiceName
+                                                </div>
+                                            </div>
+                                        }
+                                        @if (!string.IsNullOrEmpty(selectedVaultListing.Manifest.EncryptedCloudStorageProviderName))
+                                        {
+                                            <div class="list-group-item list-group-item-action d-flex align-items-center bg-transparent border-secondary">
+                                                <i class="bi bi-file-text me-2 text-muted"></i>
+                                                <div>
+                                                    <strong>Encrypted Cloud Storage Provider:</strong> @selectedVaultListing.Manifest.EncryptedCloudStorageProviderName
+                                                </div>
+                                            </div>
+                                        }
+                                        @if (selectedVaultListing.Manifest.Parameters != null && selectedVaultListing.Manifest.Parameters.Any())
+                                        {
+                                            @foreach (var parameter in selectedVaultListing.Manifest.Parameters)
+                                            {
+                                                <div class="list-group-item list-group-item-action d-flex align-items-center bg-transparent border-secondary">
+                                                    <i class="bi bi-file-text me-2 text-muted"></i>
+                                                    <div>
+                                                        <strong>@parameter.Key:</strong> @parameter.Value
+                                                    </div>
+                                                </div>
+                                            }
+                                        }
+                                    </div>
+                                }
+                                else
+                                {
+                                    <div class="alert alert-warning" role="alert">
+                                        <i class="bi bi-exclamation-triangle me-2"></i>
+                                        No manifest data available for this vault.
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+
