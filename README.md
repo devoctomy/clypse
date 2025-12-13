@@ -92,11 +92,11 @@ dotnet serve -d ./clypse.portal/bin/Release/net10.0/publish/wwwroot -p 7153 --tl
 
 ## GitHub Workflows
 
-The project uses a comprehensive CI/CD pipeline that runs automated tests and deploys to production when requested.
+The project uses a comprehensive CI/CD pipeline that runs automated tests and deploys to production after approval and successful Tests workflow run.
 
 ### Workflow Overview
 
-The CI/CD workflow (`cicd.yml`) consists of four sequential jobs:
+The Tests workflow (`tests.yml`) consists of 3 sequential jobs:
 
 #### 1. Unit Tests
 - **Purpose**: Validates core library functionality without external dependencies
@@ -109,6 +109,7 @@ The CI/CD workflow (`cicd.yml`) consists of four sequential jobs:
   - Restores dependencies and builds the project
   - Runs unit tests from `clypse.core.UnitTests`
   - Uploads test results as artifacts
+  - Uploads code coverage report to Codecov
 - **Required Secrets**: None
 
 #### 2. Integration Tests
@@ -139,7 +140,21 @@ The CI/CD workflow (`cicd.yml`) consists of four sequential jobs:
   - `CLYPSE_UITESTS_PASSWORD`             - AWS Cognito test user password
   - `CLYPSE_UITESTS_PORTAL_APPSETTINGS`   - Complete JSON configuration for the portal
 
-#### 4. Deploy
+#### Required GitHub Secrets Summary
+
+To run the Tests pipeline, configure the following secrets in your GitHub repository settings:
+
+- `CLYPSE_INTTEST_AWS_BUCKETREGION`              - AWS region for test bucket
+- `CLYPSE_INTTEST_AWS_BUCKETNAME`                - Name of the S3 test bucket
+- `CLYPSE_INTTEST_AWS_ACCESSKEY`                 - IAM access key with S3 permissions
+- `CLYPSE_INTTEST_AWS_SECRETACCESSKEY`           - IAM secret access key
+- `CLYPSE_UITESTS_USERNAME`                      - AWS Cognito test user username
+- `CLYPSE_UITESTS_PASSWORD`                      - AWS Cognito test user password
+- `CLYPSE_UITESTS_PORTAL_APPSETTINGS`            - Complete JSON configuration for the portal 
+  
+The Deploy workflow (`deploy.yml`) consists of 1 job:
+
+#### 1. Deploy
 - **Purpose**: Publishes the Blazor WebAssembly app to AWS S3 and invalidates CloudFront cache
 - **Trigger**: Only runs when manually triggered with the `deploy` input set to `true`
 - **Environment**: Ubuntu latest
@@ -159,20 +174,10 @@ The CI/CD workflow (`cicd.yml`) consists of four sequential jobs:
   - `CLYPSE_PUBLISH_AWS_CLOUDFRONTDISTRIBUTIONID`  - CloudFront distribution ID for cache invalidation
   - `CLYPSE_PUBLISH_APPSETTINGS`                   - Complete JSON configuration for the portal
 
-### Required GitHub Secrets Summary
+#### Required GitHub Secrets Summary
 
-To run the complete CI/CD pipeline, configure the following secrets in your GitHub repository settings:
+To run the Deploy pipeline, configure the following secrets in your GitHub repository settings:
 
-**Testing Secrets:**
-- `CLYPSE_INTTEST_AWS_BUCKETREGION`              - AWS region for test bucket
-- `CLYPSE_INTTEST_AWS_BUCKETNAME`                - Name of the S3 test bucket
-- `CLYPSE_INTTEST_AWS_ACCESSKEY`                 - IAM access key with S3 permissions
-- `CLYPSE_INTTEST_AWS_SECRETACCESSKEY`           - IAM secret access key
-- `CLYPSE_UITESTS_USERNAME`                      - AWS Cognito test user username
-- `CLYPSE_UITESTS_PASSWORD`                      - AWS Cognito test user password
-- `CLYPSE_UITESTS_PORTAL_APPSETTINGS`            - Complete JSON configuration for the portal
-
-**Deployment Secrets:**
 - `CLYPSE_PUBLISH_AWS_BUCKETREGION`              - AWS region for production bucket
 - `CLYPSE_PUBLISH_AWS_BUCKETNAME`                - Production S3 bucket name
 - `CLYPSE_PUBLISH_AWS_ACCESSKEY`                 - AWS access key for deployment
@@ -182,5 +187,7 @@ To run the complete CI/CD pipeline, configure the following secrets in your GitH
 
 ### Workflow Execution
 
-- **Automatic**: The workflow runs on every push and pull request, executing unit, integration, and UI tests
-- **Manual Deployment**: Use the "Run workflow" button in GitHub Actions and set the `deploy` checkbox to `true` to trigger production deployment after successful tests
+- **tests.yml · Unit Tests**: Runs automatically on every push, pull request, or manual dispatch; this is the first job and it must succeed before anything else can execute.
+- **tests.yml · Integration Tests**: Starts only after `unit-tests` succeeds and only for first-party branches (forked PRs are skipped); gated on the AWS integration secrets being available.
+- **tests.yml · UI Tests**: Queues after `integration-tests` completes successfully, reuses the same runner image, and requires the Cognito credentials plus portal appsettings secret before it can run.
+- **deploy.yml · Production Deploy**: Auto-triggers when the Tests workflow finishes successfully on `main` (push or manual rerun), targets the protected `production` environment, and will not start publishing to AWS until a maintainer approves the environment gate.
