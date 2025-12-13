@@ -6,21 +6,18 @@ on:
   workflow_dispatch:
 
 jobs:
-  security-scan:
-    name: Security Scan
+  codacy-analysis:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    - name: Run Codacy Analysis CLI
-      uses: codacy/codacy-analysis-cli-action@v4
-      with:
-        upload: true
-        gh-code-scanning-compat: true
-        max-allowed-issues: 2147483647
-        gh-code-scanning-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Run Codacy Analysis
+        uses: codacy/codacy-analysis-cli-action@v4
+        with:
+          project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
+          verbose: true
 
   unit-tests:
     runs-on: ubuntu-latest
