@@ -75,12 +75,17 @@ public class StandardWesternPasswordGeneratorServiceTests : IDisposable
     }
 
     [Theory]
-    [InlineData("{dict(adjective):random}{randstr(0123456789,6):random}{dict(verb):random}{randstr(-=_,1)}{dict(noun):random}", true, null)]
-    [InlineData("{randstr(0,1)}{randstr(1,1)}{randstr(2,1)}{randstr(3,1)}{randstr(4,1)}{randstr(5,1)}{randstr(6,1)}{randstr(7,1)}{randstr(8,1)}{randstr(9,1)}", true, "0123456789")]
+    [InlineData("{randstr(h,6):initialupper}", true, null, "Hhhhhh")]
+    [InlineData("{randstr(H,6):initiallower}", true, null, "hHHHHH")]
+    [InlineData("{randstr(H,6):lower}", true, null, "hhhhhh")]
+    [InlineData("{randstr(h,6):upper}", true, null, "HHHHHH")]
+    [InlineData("{dict(adjective):random}{randstr(0123456789,6):random}{dict(verb):random}{randstr(-=_,1)}{dict(noun):random}", true, null, null)]
+    [InlineData("{randstr(0,1)}{randstr(1,1)}{randstr(2,1)}{randstr(3,1)}{randstr(4,1)}{randstr(5,1)}{randstr(6,1)}{randstr(7,1)}{randstr(8,1)}{randstr(9,1)}", true, "0123456789", null)]
     public async Task GivenTemplate_AndShuffleTokens_WhenGenerateMemorablePassword_ThenPasswordReturned(
         string template,
         bool shuffleTokens,
-        string? notEqualTo)
+        string? notEqualTo,
+        string? expectedPassword)
     {
         // Arrange
         this.mockEmbeddedResourceLoaderService.Setup(x => x.LoadHashSetAsync(
@@ -104,6 +109,11 @@ public class StandardWesternPasswordGeneratorServiceTests : IDisposable
         if (!string.IsNullOrEmpty(notEqualTo))
         {
             Assert.NotEqual(notEqualTo, result);
+        }
+
+        if (!string.IsNullOrEmpty(expectedPassword))
+        {
+            Assert.Equal(expectedPassword, result);
         }
     }
 
