@@ -75,7 +75,7 @@ jobs:
         path: ./TestResults/UnitTests
 
     - name: Collect code coverage
-      uses: codecov/codecov-action@v5
+      uses: codecov/codecov-action@671740ac38dd9b0130fbe1cec585b89eea48d3de
       with:
         fail_ci_if_error: true
         files: ./TestResults/UnitTests/**/coverage.opencover.xml
