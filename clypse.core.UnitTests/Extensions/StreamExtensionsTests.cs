@@ -1,6 +1,6 @@
 namespace clypse.core.UnitTests.Extensions;
 
-public static class StreamExtensions
+public static class StreamExtensionsTests
 {
     public static async Task<int> ReadAllAsync(
         this Stream stream,
