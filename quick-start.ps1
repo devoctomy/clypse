@@ -524,7 +524,7 @@ function Setup-Cognito {
             throw "User pool id missing prior to client creation."
         }
         $tokenUnits = 'AccessToken=minutes,IdToken=minutes,RefreshToken=days'
-        $userPoolClientResponse = Invoke-AwsCli -Arguments @('cognito-idp', 'create-user-pool-client', '--user-pool-id', $script:CognitoUserPoolId, '--client-name', $clientName, '--no-generate-secret', '--explicit-auth-flows', 'ALLOW_USER_PASSWORD_AUTH', 'ALLOW_REFRESH_TOKEN_AUTH', '--refresh-token-validity', '30', '--access-token-validity', '60', '--id-token-validity', '60', '--token-validity-units', $tokenUnits) -ExpectJson
+        $userPoolClientResponse = Invoke-AwsCli -Arguments @('cognito-idp', 'create-user-pool-client', '--user-pool-id', $script:CognitoUserPoolId, '--client-name', $clientName, '--no-generate-secret', '--explicit-auth-flows', 'ALLOW_USER_AUTH', 'ALLOW_USER_SRP_AUTH', 'ALLOW_REFRESH_TOKEN_AUTH', '--refresh-token-validity', '30', '--access-token-validity', '60', '--id-token-validity', '60', '--token-validity-units', $tokenUnits) -ExpectJson
         if (-not $userPoolClientResponse.UserPoolClient -or -not $userPoolClientResponse.UserPoolClient.ClientId) {
             throw "Unexpected response when creating user pool client."
         }
