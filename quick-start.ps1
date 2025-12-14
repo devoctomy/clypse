@@ -20,6 +20,12 @@ $script:CognitoUserPoolClientId = $null
 $script:CognitoIdentityPoolId = $null
 $script:PortalBucketName = $null
 $script:DataBucketName = $null
+$script:PortalUserPolicyArn = $null
+$script:PortalUserCognitoPolicyArn = $null
+$script:PortalUserRoleArn = $null
+$script:CloudFrontDistributionId = $null
+$script:CloudFrontDistributionDomain = $null
+$script:AwsAccountId = $null
 $script:ConfigFilePath = Join-Path -Path $script:QuickStartRoot -ChildPath "quick-start.settings.json"
 $script:AwsResourcesOutputPath = Join-Path -Path $script:QuickStartRoot -ChildPath "quick-start.aws-resources.json"
 
@@ -43,6 +49,48 @@ function Load-QuickStartConfig {
     if ($config.InitialUserEmail) { $script:InitialUserEmail = $config.InitialUserEmail }
 }
 
+function Import-AwsResourcesState {
+    if (-not (Test-Path $script:AwsResourcesOutputPath)) {
+        return
+    }
+
+    try {
+        $raw = Get-Content -Path $script:AwsResourcesOutputPath -Raw
+        if ([string]::IsNullOrWhiteSpace($raw)) { return }
+        $state = $raw | ConvertFrom-Json
+    }
+    catch {
+        Write-Host "Warning: Unable to read AWS resource output state. $_" -ForegroundColor Yellow
+        return
+    }
+
+    if ($state.AwsCognito) {
+        if ($state.AwsCognito.UserPoolId) { $script:CognitoUserPoolId = $state.AwsCognito.UserPoolId }
+        if ($state.AwsCognito.UserPoolClientId) { $script:CognitoUserPoolClientId = $state.AwsCognito.UserPoolClientId }
+        if ($state.AwsCognito.IdentityPoolId) { $script:CognitoIdentityPoolId = $state.AwsCognito.IdentityPoolId }
+        if ($state.AwsCognito.Region) { $script:AwsRegion = $state.AwsCognito.Region }
+    }
+
+    if ($state.AwsS3 -and $state.AwsS3.BucketName) {
+        $script:PortalBucketName = $state.AwsS3.BucketName
+    }
+
+    if ($state.AwsS3Data -and $state.AwsS3Data.BucketName) {
+        $script:DataBucketName = $state.AwsS3Data.BucketName
+    }
+
+    if ($state.AwsIamPortalUsers) {
+        if ($state.AwsIamPortalUsers.RoleArn) { $script:PortalUserRoleArn = $state.AwsIamPortalUsers.RoleArn }
+        if ($state.AwsIamPortalUsers.DataPolicyArn) { $script:PortalUserPolicyArn = $state.AwsIamPortalUsers.DataPolicyArn }
+        if ($state.AwsIamPortalUsers.CognitoAuthenticatedPolicyArn) { $script:PortalUserCognitoPolicyArn = $state.AwsIamPortalUsers.CognitoAuthenticatedPolicyArn }
+    }
+
+    if ($state.AwsCloudFront) {
+        if ($state.AwsCloudFront.DistributionId) { $script:CloudFrontDistributionId = $state.AwsCloudFront.DistributionId }
+        if ($state.AwsCloudFront.DomainName) { $script:CloudFrontDistributionDomain = $state.AwsCloudFront.DomainName }
+    }
+}
+
 function Save-QuickStartConfig {
     $config = [ordered]@{
         AwsRegion = $script:AwsRegion
@@ -59,6 +107,7 @@ function Save-QuickStartConfig {
 }
 
 Load-QuickStartConfig
+Import-AwsResourcesState
 
 function Update-AwsRegionEnvironment {
     if ([string]::IsNullOrWhiteSpace($script:AwsRegion)) {
@@ -108,10 +157,19 @@ function Show-Menu {
     $dataBucketStatus = if ($script:DataBucketName) { " (bucket: $($script:DataBucketName))" } else { "" }
     Write-Host "6. Configure data S3 bucket$dataBucketStatus"
 
-    $bucketStatus = if ($script:PortalBucketName) { " (bucket: $($script:PortalBucketName))" } else { "" }
-    Write-Host "7. Configure portal S3 bucket$bucketStatus"
+    $iamStatus = if ($script:PortalUserRoleArn) { " (role: $($script:PortalUserRoleArn))" } else { "" }
+    Write-Host "7. Setup IAM for portal users$iamStatus"
 
-    Write-Host "8. Build and deploy portal to S3"
+    $cognitoRoleStatus = if ($script:CognitoIdentityPoolId -and $script:PortalUserRoleArn) { " (role applied)" } else { "" }
+    Write-Host "8. Apply IAM role to Cognito identities$cognitoRoleStatus"
+
+    $bucketStatus = if ($script:PortalBucketName) { " (bucket: $($script:PortalBucketName))" } else { "" }
+    Write-Host "9. Configure portal S3 bucket$bucketStatus"
+
+    Write-Host "10. Build and deploy portal to S3"
+
+    $cdnStatus = if ($script:CloudFrontDistributionId) { " (domain: $($script:CloudFrontDistributionDomain))" } else { "" }
+    Write-Host "11. Setup CloudFront distribution$cdnStatus"
 
     Write-Host "Q. Quit"
 }
@@ -175,7 +233,7 @@ function Set-InitialUserEmail {
     $raw = Read-Host "Enter first Cognito user email"
     if ($null -eq $raw) { $raw = "" }
     $candidate = $raw.Trim()
-    $emailPattern = '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$'
+    $emailPattern = '^[A-Za-z0-9._%+-]+@[A-ZaZ0-9.-]+\.[A-Za-z]{2,}$'
     if ($candidate -notmatch $emailPattern) {
         Write-Host "Invalid email address. Please try again." -ForegroundColor Red
         return
@@ -271,6 +329,21 @@ function Write-AwsResourcesOutput {
         $config.AwsS3Data = [ordered]@{
             BucketName = $script:DataBucketName
             Region = $script:AwsRegion
+        }
+    }
+
+    if ($script:PortalUserRoleArn -or $script:PortalUserPolicyArn -or $script:PortalUserCognitoPolicyArn) {
+        $config.AwsIamPortalUsers = [ordered]@{
+            RoleArn = $script:PortalUserRoleArn
+            DataPolicyArn = $script:PortalUserPolicyArn
+            CognitoAuthenticatedPolicyArn = $script:PortalUserCognitoPolicyArn
+        }
+    }
+
+    if ($script:CloudFrontDistributionId -and $script:CloudFrontDistributionDomain) {
+        $config.AwsCloudFront = [ordered]@{
+            DistributionId = $script:CloudFrontDistributionId
+            DomainName = $script:CloudFrontDistributionDomain
         }
     }
 
@@ -663,6 +736,462 @@ function Setup-DataBucket {
     Write-AwsResourcesOutput
 }
 
+function Setup-IamPolicy {
+    param(
+        [Parameter(Mandatory = $true)][string]$PolicyName,
+        [Parameter(Mandatory = $true)]$PolicyObject
+    )
+
+    $policyArn = $null
+    if (-not $script:AwsAccountId) {
+        try {
+            $identity = Invoke-AwsCli -Arguments @('sts', 'get-caller-identity') -ExpectJson
+            $script:AwsAccountId = $identity.Account
+        }
+        catch {
+            throw "Unable to determine AWS account id. $_"
+        }
+    }
+
+    $candidateArn = if ($script:AwsAccountId) { "arn:aws:iam::$($script:AwsAccountId):policy/$PolicyName" } else { $null }
+    if ($candidateArn) {
+        try {
+            $existing = Invoke-AwsCli -Arguments @('iam', 'get-policy', '--policy-arn', $candidateArn) -ExpectJson
+            if ($existing.Policy -and $existing.Policy.Arn) {
+                return $existing.Policy.Arn
+            }
+        }
+        catch {
+            # continue to creation
+        }
+    }
+
+    $policyPath = New-JsonTempFile -Object $PolicyObject
+    try {
+        $createResult = Invoke-AwsCli -Arguments @('iam', 'create-policy', '--policy-name', $PolicyName, '--policy-document', "file://$policyPath") -ExpectJson
+        if ($createResult.Policy -and $createResult.Policy.Arn) {
+            return $createResult.Policy.Arn
+        }
+    }
+    catch {
+        $err = $_.ToString()
+        if ($err -match 'EntityAlreadyExists') {
+            try {
+                $policies = Invoke-AwsCli -Arguments @('iam', 'list-policies', '--scope', 'Local') -ExpectJson
+                $existingPolicy = $policies.Policies | Where-Object { $_.PolicyName -eq $PolicyName } | Select-Object -First 1
+                if ($existingPolicy) {
+                    return $existingPolicy.Arn
+                }
+            }
+            catch {
+                throw "Unable to retrieve existing IAM policy '$PolicyName'. $_"
+            }
+        }
+        throw "Unable to create IAM policy '$PolicyName'. $err"
+    }
+    finally {
+        Remove-Item $policyPath -ErrorAction SilentlyContinue
+    }
+
+    throw "Unable to determine IAM policy ARN for '$PolicyName'."
+}
+
+function Setup-PortalUserIam {
+    $missing = @()
+    if (-not (Test-AwsCredentialsPresent)) { $missing += "AWS credentials" }
+    if ([string]::IsNullOrWhiteSpace($script:AwsResourcePrefix)) { $missing += "AWS resource prefix" }
+    if ([string]::IsNullOrWhiteSpace($script:DataBucketName) -and -not [string]::IsNullOrWhiteSpace($script:AwsResourcePrefix)) {
+        $script:DataBucketName = "$($script:AwsResourcePrefix).clypse.data"
+    }
+    if ([string]::IsNullOrWhiteSpace($script:DataBucketName)) { $missing += "Data S3 bucket" }
+    if ([string]::IsNullOrWhiteSpace($script:CognitoIdentityPoolId)) { $missing += "Cognito identity pool" }
+
+    if ($missing.Count -gt 0) {
+        Write-Host "Cannot continue. Missing: $($missing -join ', ')." -ForegroundColor Red
+        return
+    }
+
+    try {
+        Ensure-AwsCliAvailable
+    }
+    catch {
+        Write-Host $_ -ForegroundColor Red
+        return
+    }
+
+    try {
+        Set-AwsCredentialEnvironment
+    }
+    catch {
+        Write-Host $_ -ForegroundColor Red
+        return
+    }
+
+    if (-not $script:AwsAccountId) {
+        try {
+            $identity = Invoke-AwsCli -Arguments @('sts', 'get-caller-identity') -ExpectJson
+            $script:AwsAccountId = $identity.Account
+        }
+        catch {
+            Write-Host "Unable to determine AWS account id. $_" -ForegroundColor Red
+            return
+        }
+    }
+
+    $dataPolicyName = "$($script:AwsResourcePrefix).clypse.user.policy"
+    $authPolicyName = "$($script:AwsResourcePrefix).clypse.user.cognitoauthenticated.policy"
+    $roleName = "$($script:AwsResourcePrefix).clypse.user.role"
+    $identityFolder = '${cognito-identity.amazonaws.com:sub}/*'
+
+    $dataPolicyObject = @{
+        Version = '2012-10-17'
+        Statement = @(
+            @{
+                Effect = 'Allow'
+                Action = @('s3:GetBucketLocation', 's3:ListBucket')
+                Resource = "arn:aws:s3:::$($script:DataBucketName)"
+                Condition = @{
+                    StringLike = @{
+                        's3:prefix' = @($identityFolder)
+                    }
+                }
+            },
+            @{
+                Effect = 'Allow'
+                Action = @('s3:GetObject', 's3:PutObject', 's3:DeleteObject')
+                Resource = "arn:aws:s3:::$($script:DataBucketName)/$identityFolder"
+            }
+        )
+    }
+
+    $authPolicyObject = @{
+        Version = '2012-10-17'
+        Statement = @(
+            @{
+                Effect = 'Allow'
+                Action = @('cognito-identity:GetCredentialsForIdentity')
+                Resource = @('*')
+            }
+        )
+    }
+
+    try {
+        $script:PortalUserPolicyArn = Setup-IamPolicy -PolicyName $dataPolicyName -PolicyObject $dataPolicyObject
+        $script:PortalUserCognitoPolicyArn = Setup-IamPolicy -PolicyName $authPolicyName -PolicyObject $authPolicyObject
+    }
+    catch {
+        Write-Host $_ -ForegroundColor Red
+        return
+    }
+
+    $assumeRolePolicy = @{
+        Version = '2012-10-17'
+        Statement = @(
+            @{
+                Effect = 'Allow'
+                Principal = @{ Federated = 'cognito-identity.amazonaws.com' }
+                Action = 'sts:AssumeRoleWithWebIdentity'
+                Condition = @{
+                    StringEquals = @{ 'cognito-identity.amazonaws.com:aud' = $script:CognitoIdentityPoolId }
+                    'ForAnyValue:StringLike' = @{ 'cognito-identity.amazonaws.com:amr' = 'authenticated' }
+                }
+            }
+        )
+    }
+
+    $assumeDocPath = New-JsonTempFile -Object $assumeRolePolicy
+    $roleCreated = $false
+    try {
+        try {
+            $roleResult = Invoke-AwsCli -Arguments @('iam', 'create-role', '--role-name', $roleName, '--assume-role-policy-document', "file://$assumeDocPath") -ExpectJson
+            if ($roleResult.Role -and $roleResult.Role.Arn) {
+                $script:PortalUserRoleArn = $roleResult.Role.Arn
+                $roleCreated = $true
+            }
+        }
+        catch {
+            $err = $_.ToString()
+            if ($err -match 'EntityAlreadyExists') {
+                try {
+                    Invoke-AwsCli -Arguments @('iam', 'update-assume-role-policy', '--role-name', $roleName, '--policy-document', "file://$assumeDocPath") | Out-Null
+                    $existingRole = Invoke-AwsCli -Arguments @('iam', 'get-role', '--role-name', $roleName) -ExpectJson
+                    if ($existingRole.Role -and $existingRole.Role.Arn) {
+                        $script:PortalUserRoleArn = $existingRole.Role.Arn
+                    }
+                }
+                catch {
+                    Write-Host "Unable to update existing IAM role '$roleName'. $_" -ForegroundColor Red
+                    return
+                }
+            }
+            else {
+                Write-Host "Unable to create IAM role '$roleName'. $err" -ForegroundColor Red
+                return
+            }
+        }
+    }
+    finally {
+        Remove-Item $assumeDocPath -ErrorAction SilentlyContinue
+    }
+
+    if (-not $script:PortalUserRoleArn) {
+        Write-Host "IAM role '$roleName' could not be determined." -ForegroundColor Red
+        return
+    }
+
+    try {
+        if ($script:PortalUserPolicyArn) {
+            Invoke-AwsCli -Arguments @('iam', 'attach-role-policy', '--role-name', $roleName, '--policy-arn', $script:PortalUserPolicyArn) | Out-Null
+        }
+        if ($script:PortalUserCognitoPolicyArn) {
+            Invoke-AwsCli -Arguments @('iam', 'attach-role-policy', '--role-name', $roleName, '--policy-arn', $script:PortalUserCognitoPolicyArn) | Out-Null
+        }
+    }
+    catch {
+        Write-Host "Failed to attach IAM policies to role '$roleName'. $_" -ForegroundColor Red
+        return
+    }
+
+    Write-Host "IAM configuration for portal users complete." -ForegroundColor Green
+    Write-Host "Role ARN: $script:PortalUserRoleArn"
+    if ($script:PortalUserPolicyArn) { Write-Host "Data policy ARN: $script:PortalUserPolicyArn" }
+    if ($script:PortalUserCognitoPolicyArn) { Write-Host "Cognito auth policy ARN: $script:PortalUserCognitoPolicyArn" }
+
+    Write-AwsResourcesOutput
+}
+
+function Apply-IamRoleToCognito {
+    $missing = @()
+    if (-not (Test-AwsCredentialsPresent)) { $missing += "AWS credentials" }
+    if ([string]::IsNullOrWhiteSpace($script:CognitoIdentityPoolId)) { $missing += "Cognito identity pool" }
+    if ([string]::IsNullOrWhiteSpace($script:PortalUserRoleArn)) { $missing += "IAM role for portal users" }
+
+    if ($missing.Count -gt 0) {
+        Write-Host "Cannot continue. Missing: $($missing -join ', ')." -ForegroundColor Red
+        return
+    }
+
+    try {
+        Ensure-AwsCliAvailable
+    }
+    catch {
+        Write-Host $_ -ForegroundColor Red
+        return
+    }
+
+    try {
+        Set-AwsCredentialEnvironment
+    }
+    catch {
+        Write-Host $_ -ForegroundColor Red
+        return
+    }
+
+    $identityPoolId = $script:CognitoIdentityPoolId
+    $roleArn = $script:PortalUserRoleArn
+
+    Write-Host "Applying IAM role to Cognito identity pool..." -ForegroundColor Cyan
+    try {
+        $mapping = @{}
+        $mapping[$roleArn] = 'authenticated'
+        $mappingJson = $mapping | ConvertTo-Json -Depth 10
+
+        $tempFile = [System.IO.Path]::GetTempFileName()
+        Set-Content -Path $tempFile -Value $mappingJson -Encoding utf8
+
+        Invoke-AwsCli -Arguments @('cognito-identity', 'set-identity-pool-roles', '--identity-pool-id', $identityPoolId, '--roles', "file://$tempFile") | Out-Null
+    }
+    catch {
+        Write-Host "Failed to apply IAM role to Cognito identity pool: $_" -ForegroundColor Red
+        return
+    }
+    finally {
+        Remove-Item $tempFile -ErrorAction SilentlyContinue
+    }
+
+    Write-Host "IAM role applied to Cognito identity pool." -ForegroundColor Green
+
+    Write-AwsResourcesOutput
+}
+
+function Apply-CognitoIdentityRole {
+    $missing = @()
+    if (-not (Test-AwsCredentialsPresent)) { $missing += "AWS credentials" }
+    if ([string]::IsNullOrWhiteSpace($script:CognitoIdentityPoolId)) { $missing += "Cognito identity pool" }
+    if ([string]::IsNullOrWhiteSpace($script:PortalUserRoleArn)) { $missing += "Portal IAM role" }
+
+    if ($missing.Count -gt 0) {
+        Write-Host "Cannot continue. Missing: $($missing -join ', ')." -ForegroundColor Red
+        return
+    }
+
+    try {
+        Ensure-AwsCliAvailable
+    }
+    catch {
+        Write-Host $_ -ForegroundColor Red
+        return
+    }
+
+    try {
+        Set-AwsCredentialEnvironment
+    }
+    catch {
+        Write-Host $_ -ForegroundColor Red
+        return
+    }
+
+    $roleMappingArg = "authenticated=$($script:PortalUserRoleArn)"
+
+    try {
+        Invoke-AwsCli -Arguments @('cognito-identity', 'set-identity-pool-roles', '--identity-pool-id', $script:CognitoIdentityPoolId, '--roles', $roleMappingArg) | Out-Null
+    }
+    catch {
+        Write-Host "Failed to assign IAM role to Cognito identity pool: $_" -ForegroundColor Red
+        return
+    }
+
+    Write-Host "Authenticated Cognito identities now assume role '$($script:PortalUserRoleArn)'." -ForegroundColor Green
+
+    Write-AwsResourcesOutput
+}
+
+function Setup-CloudFrontDistribution {
+    $missing = @()
+    if (-not (Test-AwsCredentialsPresent)) { $missing += "AWS credentials" }
+    if ([string]::IsNullOrWhiteSpace($script:PortalBucketName) -and -not [string]::IsNullOrWhiteSpace($script:AwsResourcePrefix)) {
+        $script:PortalBucketName = "$($script:AwsResourcePrefix).clypse"
+    }
+    if ([string]::IsNullOrWhiteSpace($script:PortalBucketName)) { $missing += "Portal S3 bucket" }
+    if ([string]::IsNullOrWhiteSpace($script:AwsResourcePrefix)) { $missing += "AWS resource prefix" }
+
+    if ($missing.Count -gt 0) {
+        Write-Host "Cannot continue. Missing: $($missing -join ', ')." -ForegroundColor Red
+        return
+    }
+
+    if ($script:CloudFrontDistributionId) {
+        Write-Host "CloudFront distribution already exists (ID: $($script:CloudFrontDistributionId))." -ForegroundColor Yellow
+        return
+    }
+
+    try {
+        Ensure-AwsCliAvailable
+    }
+    catch {
+        Write-Host $_ -ForegroundColor Red
+        return
+    }
+
+    try {
+        Set-AwsCredentialEnvironment
+    }
+    catch {
+        Write-Host $_ -ForegroundColor Red
+        return
+    }
+
+    $websiteEndpoint = "$($script:PortalBucketName).s3-website-$($script:AwsRegion).amazonaws.com"
+    $originId = "s3-website-$($script:PortalBucketName)"
+    $callerReference = [guid]::NewGuid().ToString()
+
+    $distributionConfig = [ordered]@{
+        CallerReference = $callerReference
+        Comment = "Clypse portal CDN ($($script:AwsResourcePrefix))"
+        DefaultRootObject = 'index.html'
+        Enabled = $true
+        PriceClass = 'PriceClass_100'
+        HttpVersion = 'http2'
+        IsIPV6Enabled = $true
+        Origins = [ordered]@{
+            Quantity = 1
+            Items = @(
+                [ordered]@{
+                    Id = $originId
+                    DomainName = $websiteEndpoint
+                    CustomOriginConfig = [ordered]@{
+                        HTTPPort = 80
+                        HTTPSPort = 443
+                        OriginProtocolPolicy = 'http-only'
+                        OriginReadTimeout = 30
+                        OriginKeepaliveTimeout = 5
+                        OriginSslProtocols = [ordered]@{
+                            Quantity = 3
+                            Items = @('TLSv1','TLSv1.1','TLSv1.2')
+                        }
+                    }
+                }
+            )
+        }
+        DefaultCacheBehavior = [ordered]@{
+            TargetOriginId = $originId
+            ViewerProtocolPolicy = 'redirect-to-https'
+            AllowedMethods = [ordered]@{
+                Quantity = 2
+                Items = @('GET','HEAD')
+                CachedMethods = [ordered]@{
+                    Quantity = 2
+                    Items = @('GET','HEAD')
+                }
+            }
+            TrustedSigners = [ordered]@{ Enabled = $false; Quantity = 0 }
+            TrustedKeyGroups = [ordered]@{ Enabled = $false; Quantity = 0 }
+            Compress = $true
+            CachePolicyId = '658327ea-f89d-4fab-a63d-7e88639e58f6'
+        }
+        Aliases = [ordered]@{ Quantity = 0 }
+        Restrictions = [ordered]@{
+            GeoRestriction = [ordered]@{
+                RestrictionType = 'none'
+                Quantity = 0
+            }
+        }
+        ViewerCertificate = [ordered]@{
+            CloudFrontDefaultCertificate = $true
+            MinimumProtocolVersion = 'TLSv1'
+        }
+        Logging = [ordered]@{
+            Enabled = $false
+            IncludeCookies = $false
+            Bucket = ''
+            Prefix = ''
+        }
+        CustomErrorResponses = [ordered]@{
+            Quantity = 2
+            Items = @(
+                [ordered]@{ ErrorCode = 403; ResponseCode = '200'; ResponsePagePath = '/index.html'; ErrorCachingMinTTL = 0 },
+                [ordered]@{ ErrorCode = 404; ResponseCode = '200'; ResponsePagePath = '/index.html'; ErrorCachingMinTTL = 0 }
+            )
+        }
+    }
+
+    $configPath = New-JsonTempFile -Object $distributionConfig
+    try {
+        $response = Invoke-AwsCli -Arguments @('cloudfront', 'create-distribution', '--distribution-config', "file://$configPath") -ExpectJson
+    }
+    catch {
+        Write-Host "Failed to create CloudFront distribution: $_" -ForegroundColor Red
+        return
+    }
+    finally {
+        Remove-Item $configPath -ErrorAction SilentlyContinue
+    }
+
+    if (-not $response.Distribution -or -not $response.Distribution.Id) {
+        Write-Host "Unexpected CloudFront response; distribution details unavailable." -ForegroundColor Red
+        return
+    }
+
+    $script:CloudFrontDistributionId = $response.Distribution.Id
+    $script:CloudFrontDistributionDomain = $response.Distribution.DomainName
+
+    Write-Host "CloudFront distribution created." -ForegroundColor Green
+    Write-Host "Distribution ID: $($script:CloudFrontDistributionId)" -ForegroundColor Green
+    Write-Host "Domain: https://$($script:CloudFrontDistributionDomain)" -ForegroundColor Green
+
+    Write-AwsResourcesOutput
+}
+
 while ($true) {
     Show-Menu
     $choice = Read-Host "Select an option"
@@ -674,8 +1203,11 @@ while ($true) {
         "4" { Set-InitialUserEmail }
         "5" { Setup-Cognito }
         "6" { Setup-DataBucket }
-        "7" { Setup-PortalHosting }
-        "8" { Publish-PortalSite }
+        "7" { Setup-PortalUserIam }
+        "8" { Apply-CognitoIdentityRole }
+        "9" { Setup-PortalHosting }
+        "10" { Publish-PortalSite }
+        "11" { Setup-CloudFrontDistribution }
         "Q" { Write-Host "Exiting setup wizard."; return }
         default { Write-Host "Invalid selection. Please try again." -ForegroundColor Red }
     }
