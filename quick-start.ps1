@@ -173,6 +173,8 @@ function Show-Menu {
 
     Write-Host "12. Publish portal appsettings.json"
 
+    Write-Host "13. Set CORS configuration for data bucket"
+
     Write-Host "Q. Quit"
 }
 
@@ -307,7 +309,7 @@ function Write-AwsResourcesOutput {
                 if ($existing) {
                     foreach ($prop in $existing.PSObject.Properties) {
                         $config[$prop.Name] = $prop.Value
-                    }
+                      }
                 }
             }
         }
@@ -1281,6 +1283,69 @@ function Publish-PortalAppSettings {
     Write-Host "Portal appsettings.json updated in bucket '$($script:PortalBucketName)'." -ForegroundColor Green
 }
 
+function Set-DataBucketCorsConfiguration {
+    $missing = @()
+    if (-not (Test-AwsCredentialsPresent)) { $missing += "AWS credentials" }
+    if ([string]::IsNullOrWhiteSpace($script:DataBucketName) -and -not [string]::IsNullOrWhiteSpace($script:AwsResourcePrefix)) {
+        $script:DataBucketName = "$($script:AwsResourcePrefix).clypse.data"
+    }
+    if ([string]::IsNullOrWhiteSpace($script:DataBucketName)) { $missing += "Data S3 bucket" }
+    if ([string]::IsNullOrWhiteSpace($script:CloudFrontDistributionDomain)) { $missing += "CloudFront distribution" }
+
+    if ($missing.Count -gt 0) {
+        Write-Host "Cannot continue. Missing: $($missing -join ', ')." -ForegroundColor Red
+        return
+    }
+
+    try {
+        Ensure-AwsCliAvailable
+    }
+    catch {
+        Write-Host $_ -ForegroundColor Red
+        return
+    }
+
+    try {
+        Set-AwsCredentialEnvironment
+    }
+    catch {
+        Write-Host $_ -ForegroundColor Red
+        return
+    }
+
+    $cloudFrontOrigin = "https://$($script:CloudFrontDistributionDomain)"
+
+    Write-Host "Configuring CORS for data bucket '$($script:DataBucketName)'..." -ForegroundColor Cyan
+    Write-Host "Allowing origin: $cloudFrontOrigin" -ForegroundColor Cyan
+
+    $corsConfiguration = [ordered]@{
+        CORSRules = @(
+            [ordered]@{
+                AllowedHeaders = @('*')
+                AllowedMethods = @('GET', 'PUT', 'POST', 'DELETE', 'HEAD')
+                AllowedOrigins = @($cloudFrontOrigin)
+                ExposeHeaders = @('ETag')
+                MaxAgeSeconds = 3000
+            }
+        )
+    }
+
+    $corsConfigPath = New-JsonTempFile -Object $corsConfiguration
+    try {
+        Invoke-AwsCli -Arguments @('s3api', 'put-bucket-cors', '--bucket', $script:DataBucketName, '--cors-configuration', "file://$corsConfigPath") | Out-Null
+    }
+    catch {
+        Write-Host "Failed to set CORS configuration: $_" -ForegroundColor Red
+        return
+    }
+    finally {
+        Remove-Item $corsConfigPath -ErrorAction SilentlyContinue
+    }
+
+    Write-Host "CORS configuration applied to data bucket '$($script:DataBucketName)'." -ForegroundColor Green
+    Write-Host "Allowed origin: $cloudFrontOrigin" -ForegroundColor Green
+}
+
 while ($true) {
     Show-Menu
     $choice = Read-Host "Select an option"
@@ -1298,6 +1363,7 @@ while ($true) {
         "10" { Publish-PortalSite }
         "11" { Setup-CloudFrontDistribution }
         "12" { Publish-PortalAppSettings }
+        "13" { Set-DataBucketCorsConfiguration }
         "Q" { Write-Host "Exiting setup wizard."; return }
         default { Write-Host "Invalid selection. Please try again." -ForegroundColor Red }
     }
