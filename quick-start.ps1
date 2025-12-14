@@ -171,6 +171,8 @@ function Show-Menu {
     $cdnStatus = if ($script:CloudFrontDistributionId) { " (domain: $($script:CloudFrontDistributionDomain))" } else { "" }
     Write-Host "11. Setup CloudFront distribution$cdnStatus"
 
+    Write-Host "12. Publish portal appsettings.json"
+
     Write-Host "Q. Quit"
 }
 
@@ -260,7 +262,8 @@ function Set-AwsCredentialEnvironment {
 function Invoke-AwsCli {
     param(
         [Parameter(Mandatory = $true)][string[]]$Arguments,
-        [switch]$ExpectJson
+        [switch]$ExpectJson,
+        [string]$InputText
     )
 
     $fullArgs = $Arguments + @('--region', $script:AwsRegion)
@@ -268,7 +271,13 @@ function Invoke-AwsCli {
         $fullArgs += @('--output', 'json')
     }
 
-    $output = & aws @fullArgs 2>&1
+    if ($PSBoundParameters.ContainsKey('InputText')) {
+        $output = $InputText | & aws @fullArgs 2>&1
+    }
+    else {
+        $output = & aws @fullArgs 2>&1
+    }
+
     if ($LASTEXITCODE -ne 0) {
         throw "AWS CLI command failed: $($output -join [Environment]::NewLine)"
     }
@@ -1192,6 +1201,95 @@ function Setup-CloudFrontDistribution {
     Write-AwsResourcesOutput
 }
 
+function Publish-PortalAppSettings {
+    $missing = @()
+    if (-not (Test-AwsCredentialsPresent)) { $missing += "AWS credentials" }
+    if ([string]::IsNullOrWhiteSpace($script:PortalBucketName) -and -not [string]::IsNullOrWhiteSpace($script:AwsResourcePrefix)) {
+        $script:PortalBucketName = "$($script:AwsResourcePrefix).clypse"
+    }
+    if ([string]::IsNullOrWhiteSpace($script:PortalBucketName)) { $missing += "Portal S3 bucket" }
+    if ([string]::IsNullOrWhiteSpace($script:AwsRegion)) { $missing += "AWS region" }
+    if ([string]::IsNullOrWhiteSpace($script:CognitoUserPoolId)) { $missing += "Cognito user pool" }
+    if ([string]::IsNullOrWhiteSpace($script:CognitoUserPoolClientId)) { $missing += "Cognito user pool client" }
+    if ([string]::IsNullOrWhiteSpace($script:CognitoIdentityPoolId)) { $missing += "Cognito identity pool" }
+
+    if ($missing.Count -gt 0) {
+        Write-Host "Cannot continue. Missing: $($missing -join ', ')." -ForegroundColor Red
+        return
+    }
+
+    try {
+        Ensure-AwsCliAvailable
+    }
+    catch {
+        Write-Host $_ -ForegroundColor Red
+        return
+    }
+
+    try {
+        Set-AwsCredentialEnvironment
+    }
+    catch {
+        Write-Host $_ -ForegroundColor Red
+        return
+    }
+
+    $appSettingsPath = Join-Path -Path $script:QuickStartRoot -ChildPath 'clypse.portal/wwwroot/appsettings.json'
+    if (-not (Test-Path $appSettingsPath)) {
+        Write-Host "Portal appsettings template not found at '$appSettingsPath'." -ForegroundColor Red
+        return
+    }
+
+    try {
+        $raw = Get-Content -Path $appSettingsPath -Raw
+        if ([string]::IsNullOrWhiteSpace($raw)) {
+            $appSettings = [ordered]@{}
+        }
+        else {
+            $appSettings = $raw | ConvertFrom-Json
+        }
+    }
+    catch {
+        Write-Host "Unable to parse portal appsettings template: $_" -ForegroundColor Red
+        return
+    }
+
+    if (-not $appSettings) {
+        $appSettings = [ordered]@{}
+    }
+
+    $appSettings.AwsS3 = [ordered]@{
+        BucketName = $script:PortalBucketName
+        Region = $script:AwsRegion
+    }
+
+    $appSettings.AwsCognito = [ordered]@{
+        UserPoolId = $script:CognitoUserPoolId
+        UserPoolClientId = $script:CognitoUserPoolClientId
+        Region = $script:AwsRegion
+        IdentityPoolId = $script:CognitoIdentityPoolId
+    }
+
+    try {
+        $json = $appSettings | ConvertTo-Json -Depth 10
+    }
+    catch {
+        Write-Host "Unable to serialize portal appsettings configuration: $_" -ForegroundColor Red
+        return
+    }
+
+    $destinationKey = 'appsettings.json'
+    try {
+        Invoke-AwsCli -Arguments @('s3', 'cp', '-', "s3://$($script:PortalBucketName)/$destinationKey", '--acl', 'public-read', '--content-type', 'application/json') -InputText $json | Out-Null
+    }
+    catch {
+        Write-Host "Failed to upload portal appsettings.json: $_" -ForegroundColor Red
+        return
+    }
+
+    Write-Host "Portal appsettings.json updated in bucket '$($script:PortalBucketName)'." -ForegroundColor Green
+}
+
 while ($true) {
     Show-Menu
     $choice = Read-Host "Select an option"
@@ -1208,6 +1306,7 @@ while ($true) {
         "9" { Setup-PortalHosting }
         "10" { Publish-PortalSite }
         "11" { Setup-CloudFrontDistribution }
+        "12" { Publish-PortalAppSettings }
         "Q" { Write-Host "Exiting setup wizard."; return }
         default { Write-Host "Invalid selection. Please try again." -ForegroundColor Red }
     }
