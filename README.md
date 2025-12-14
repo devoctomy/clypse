@@ -3,8 +3,13 @@
 
 [![Deploy](https://github.com/devoctomy/clypse/actions/workflows/deploy.yml/badge.svg)](https://github.com/devoctomy/clypse/actions/workflows/deploy.yml)
 
+> AI has been used in the generation of some parts of this application. This includes the portal code and a large number of bulk unit tests. The underlying core library which handles the cyrptographic operations as well as S3 file management has been written by myself. The portal code is pretty messy and not yet adequately covered by tests. This application is also not yet ready for production, so use at your own risk.
+
 # clypse
-Clypse secrets management.
+
+Clypse, is a complete password management system that you host yourself in Amazon S3. Completely serverless, hosted as a static website with some additional Cognito configuration for user management. Super easy, and super cheap.
+
+It is designed to use the latest cryptographic standards but also be highly customisable.
 
 ## Requirements
 
