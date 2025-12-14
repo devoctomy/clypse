@@ -194,4 +194,4 @@ To run the Deploy pipeline, configure the following secrets in your GitHub repos
 
 ## Screenshots
 
-[Screenshot 1](blob/quickstart/Resources/Screenshots/1.png)
+![Screenshot 1](blob/quickstart/Resources/Screenshots/1.png)
