@@ -2,6 +2,16 @@ Write-Host "Welcome to the Clypse infrastructure setup wizard." -ForegroundColor
 Write-Host "This script will provision AWS resources, build, publish, and deploy the Blazor WebAssembly portal." -ForegroundColor Cyan
 Write-Host "Use the menu below to progress through each step." -ForegroundColor Cyan
 
+$script:QuickStartRoot = if ($PSCommandPath) {
+    Split-Path -Parent $PSCommandPath
+}
+elseif ($MyInvocation.MyCommand.Path) {
+    Split-Path -Parent $MyInvocation.MyCommand.Path
+}
+else {
+    (Get-Location).Path
+}
+
 $script:AwsResourcePrefix = $null
 $script:InitialUserEmail = $null
 $script:AwsRegion = "eu-west-2"
@@ -9,8 +19,8 @@ $script:CognitoUserPoolId = $null
 $script:CognitoUserPoolClientId = $null
 $script:CognitoIdentityPoolId = $null
 $script:PortalBucketName = $null
-$script:ConfigFilePath = Join-Path -Path (Split-Path -Parent $MyInvocation.MyCommand.Path) -ChildPath "quick-start.settings.json"
-$script:AwsResourcesOutputPath = Join-Path -Path (Split-Path -Parent $MyInvocation.MyCommand.Path) -ChildPath "quick-start.aws-resources.json"
+$script:ConfigFilePath = Join-Path -Path $script:QuickStartRoot -ChildPath "quick-start.settings.json"
+$script:AwsResourcesOutputPath = Join-Path -Path $script:QuickStartRoot -ChildPath "quick-start.aws-resources.json"
 
 function Load-QuickStartConfig {
     if (-not (Test-Path $script:ConfigFilePath)) {
@@ -96,6 +106,8 @@ function Show-Menu {
 
     $bucketStatus = if ($script:PortalBucketName) { " (bucket: $($script:PortalBucketName))" } else { "" }
     Write-Host "6. Configure portal S3 bucket$bucketStatus"
+
+    Write-Host "7. Build and deploy portal to S3"
 
     Write-Host "Q. Quit"
 }
@@ -216,6 +228,22 @@ function New-JsonTempFile {
 
 function Write-AwsResourcesOutput {
     $config = [ordered]@{}
+    if (Test-Path $script:AwsResourcesOutputPath) {
+        try {
+            $existingRaw = Get-Content -Path $script:AwsResourcesOutputPath -Raw
+            if (-not [string]::IsNullOrWhiteSpace($existingRaw)) {
+                $existing = $existingRaw | ConvertFrom-Json
+                if ($existing) {
+                    foreach ($prop in $existing.PSObject.Properties) {
+                        $config[$prop.Name] = $prop.Value
+                    }
+                }
+            }
+        }
+        catch {
+            Write-Host "Warning: Unable to read existing AWS resource config. $_" -ForegroundColor Yellow
+        }
+    }
 
     if ($script:CognitoUserPoolId -and $script:CognitoUserPoolClientId -and $script:CognitoIdentityPoolId) {
         $config.AwsCognito = [ordered]@{
@@ -485,6 +513,76 @@ function Setup-PortalHosting {
     Write-AwsResourcesOutput
 }
 
+function Publish-PortalSite {
+    $missing = @()
+    if (-not (Test-AwsCredentialsPresent)) { $missing += "AWS credentials" }
+    if ([string]::IsNullOrWhiteSpace($script:PortalBucketName) -and -not [string]::IsNullOrWhiteSpace($script:AwsResourcePrefix)) {
+        $script:PortalBucketName = "$($script:AwsResourcePrefix).clypse"
+    }
+    if ([string]::IsNullOrWhiteSpace($script:PortalBucketName)) { $missing += "Portal S3 bucket" }
+
+    if ($missing.Count -gt 0) {
+        Write-Host "Cannot continue. Missing: $($missing -join ', ')." -ForegroundColor Red
+        return
+    }
+
+    try {
+        Ensure-AwsCliAvailable
+    }
+    catch {
+        Write-Host $_ -ForegroundColor Red
+        return
+    }
+
+    try {
+        Set-AwsCredentialEnvironment
+    }
+    catch {
+        Write-Host $_ -ForegroundColor Red
+        return
+    }
+
+    $scriptDir = $script:QuickStartRoot
+    $projectPath = Join-Path -Path $scriptDir -ChildPath 'clypse.portal/clypse.portal.csproj'
+    $publishOutput = Join-Path -Path $scriptDir -ChildPath 'clypse.portal/bin/Release/net10.0/publish/wwwroot'
+
+    Write-Host "Building and publishing Blazor WebAssembly portal..." -ForegroundColor Cyan
+    Push-Location $scriptDir
+    try {
+        dotnet restore $projectPath
+        if ($LASTEXITCODE -ne 0) { throw "dotnet restore failed." }
+
+        dotnet build $projectPath -c Release
+        if ($LASTEXITCODE -ne 0) { throw "dotnet build failed." }
+
+        dotnet publish $projectPath -c Release -r browser-wasm --self-contained
+        if ($LASTEXITCODE -ne 0) { throw "dotnet publish failed." }
+    }
+    catch {
+        Write-Host "Failed to build/publish portal: $_" -ForegroundColor Red
+        return
+    }
+    finally {
+        Pop-Location
+    }
+
+    if (-not (Test-Path $publishOutput)) {
+        Write-Host "Publish output not found at '$publishOutput'." -ForegroundColor Red
+        return
+    }
+
+    Write-Host "Uploading published assets to S3 bucket '$($script:PortalBucketName)'..." -ForegroundColor Cyan
+    try {
+        Invoke-AwsCli -Arguments @('s3', 'sync', $publishOutput, "s3://$($script:PortalBucketName)/", '--delete', '--acl', 'public-read') | Out-Null
+    }
+    catch {
+        Write-Host "Failed to upload to S3: $_" -ForegroundColor Red
+        return
+    }
+
+    Write-Host "Portal deployment complete." -ForegroundColor Green
+}
+
 while ($true) {
     Show-Menu
     $choice = Read-Host "Select an option"
@@ -496,6 +594,7 @@ while ($true) {
         "4" { Set-InitialUserEmail }
         "5" { Setup-Cognito }
         "6" { Setup-PortalHosting }
+        "7" { Publish-PortalSite }
         "Q" { Write-Host "Exiting setup wizard."; return }
         default { Write-Host "Invalid selection. Please try again." -ForegroundColor Red }
     }
