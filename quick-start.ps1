@@ -19,6 +19,7 @@ $script:CognitoUserPoolId = $null
 $script:CognitoUserPoolClientId = $null
 $script:CognitoIdentityPoolId = $null
 $script:PortalBucketName = $null
+$script:DataBucketName = $null
 $script:ConfigFilePath = Join-Path -Path $script:QuickStartRoot -ChildPath "quick-start.settings.json"
 $script:AwsResourcesOutputPath = Join-Path -Path $script:QuickStartRoot -ChildPath "quick-start.aws-resources.json"
 
@@ -104,10 +105,13 @@ function Show-Menu {
     $cognitoStatus = if ($script:CognitoIdentityPoolId) { " (completed)" } else { "" }
     Write-Host "5. Setup AWS Cognito resources$cognitoStatus"
 
-    $bucketStatus = if ($script:PortalBucketName) { " (bucket: $($script:PortalBucketName))" } else { "" }
-    Write-Host "6. Configure portal S3 bucket$bucketStatus"
+    $dataBucketStatus = if ($script:DataBucketName) { " (bucket: $($script:DataBucketName))" } else { "" }
+    Write-Host "6. Configure data S3 bucket$dataBucketStatus"
 
-    Write-Host "7. Build and deploy portal to S3"
+    $bucketStatus = if ($script:PortalBucketName) { " (bucket: $($script:PortalBucketName))" } else { "" }
+    Write-Host "7. Configure portal S3 bucket$bucketStatus"
+
+    Write-Host "8. Build and deploy portal to S3"
 
     Write-Host "Q. Quit"
 }
@@ -260,6 +264,13 @@ function Write-AwsResourcesOutput {
             BucketName = $script:PortalBucketName
             Region = $script:AwsRegion
             WebsiteUrl = $websiteHost
+        }
+    }
+
+    if ($script:DataBucketName) {
+        $config.AwsS3Data = [ordered]@{
+            BucketName = $script:DataBucketName
+            Region = $script:AwsRegion
         }
     }
 
@@ -583,6 +594,75 @@ function Publish-PortalSite {
     Write-Host "Portal deployment complete." -ForegroundColor Green
 }
 
+function Setup-DataBucket {
+    $missing = @()
+    if (-not (Test-AwsCredentialsPresent)) { $missing += "AWS credentials" }
+    if ([string]::IsNullOrWhiteSpace($script:AwsResourcePrefix)) { $missing += "AWS resource prefix" }
+
+    if ($missing.Count -gt 0) {
+        Write-Host "Cannot continue. Missing: $($missing -join ', ')." -ForegroundColor Red
+        return
+    }
+
+    try {
+        Ensure-AwsCliAvailable
+    }
+    catch {
+        Write-Host $_ -ForegroundColor Red
+        return
+    }
+
+    try {
+        Set-AwsCredentialEnvironment
+    }
+    catch {
+        Write-Host $_ -ForegroundColor Red
+        return
+    }
+
+    $bucketName = "$($script:AwsResourcePrefix).clypse.data"
+    $script:DataBucketName = $bucketName
+
+    $bucketExists = $false
+    try {
+        Invoke-AwsCli -Arguments @('s3api', 'head-bucket', '--bucket', $bucketName) | Out-Null
+        $bucketExists = $true
+        Write-Host "Data bucket '$bucketName' already exists. Reapplying configuration." -ForegroundColor Yellow
+    }
+    catch {
+        $bucketExists = $false
+    }
+
+    if (-not $bucketExists) {
+        Write-Host "Creating data S3 bucket '$bucketName'..." -ForegroundColor Cyan
+        $createArgs = @('s3api', 'create-bucket', '--bucket', $bucketName)
+        if ($script:AwsRegion -ne 'us-east-1') {
+            $createArgs += @('--create-bucket-configuration', "LocationConstraint=$($script:AwsRegion)")
+        }
+        Invoke-AwsCli -Arguments $createArgs | Out-Null
+    }
+
+    Write-Host "Ensuring public access remains blocked for '$bucketName'..." -ForegroundColor Cyan
+    Invoke-AwsCli -Arguments @('s3api', 'put-public-access-block', '--bucket', $bucketName, '--public-access-block-configuration', 'BlockPublicAcls=true,IgnorePublicAcls=true,BlockPublicPolicy=true,RestrictPublicBuckets=true') | Out-Null
+
+    Write-Host "Enabling default SSE-S3 encryption..." -ForegroundColor Cyan
+    $encryptionConfigPath = New-JsonTempFile -Object (@{
+            Rules = @(
+                @{ ApplyServerSideEncryptionByDefault = @{ SSEAlgorithm = 'AES256' } }
+            )
+        })
+    try {
+        Invoke-AwsCli -Arguments @('s3api', 'put-bucket-encryption', '--bucket', $bucketName, '--server-side-encryption-configuration', "file://$encryptionConfigPath") | Out-Null
+    }
+    finally {
+        Remove-Item $encryptionConfigPath -ErrorAction SilentlyContinue
+    }
+
+    Write-Host "Data bucket '$bucketName' configured." -ForegroundColor Green
+
+    Write-AwsResourcesOutput
+}
+
 while ($true) {
     Show-Menu
     $choice = Read-Host "Select an option"
@@ -593,8 +673,9 @@ while ($true) {
         "3" { Set-AwsResourcePrefix }
         "4" { Set-InitialUserEmail }
         "5" { Setup-Cognito }
-        "6" { Setup-PortalHosting }
-        "7" { Publish-PortalSite }
+        "6" { Setup-DataBucket }
+        "7" { Setup-PortalHosting }
+        "8" { Publish-PortalSite }
         "Q" { Write-Host "Exiting setup wizard."; return }
         default { Write-Host "Invalid selection. Please try again." -ForegroundColor Red }
     }
