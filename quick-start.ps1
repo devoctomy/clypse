@@ -326,7 +326,7 @@ function Write-AwsResourcesOutput {
     }
 
     if ($script:PortalBucketName) {
-        $websiteHost = "http://$($script:PortalBucketName).s3-website-$($script:AwsRegion).amazonaws.com"
+        $websiteHost = "http://$($script:PortalBucketName).s3-website.$($script:AwsRegion).amazonaws.com"
         $config.AwsS3 = [ordered]@{
             BucketName = $script:PortalBucketName
             Region = $script:AwsRegion
@@ -396,15 +396,6 @@ function Setup-PortalBucket {
         Invoke-AwsCli -Arguments $createArgs | Out-Null
     }
 
-    Write-Host "Enabling ACL support (BucketOwnerPreferred) for '$bucketName'..." -ForegroundColor Cyan
-    $ownershipConfigPath = New-JsonTempFile -Object (@{ Rules = @(@{ ObjectOwnership = 'BucketOwnerPreferred' }) })
-    try {
-        Invoke-AwsCli -Arguments @('s3api', 'put-bucket-ownership-controls', '--bucket', $bucketName, '--ownership-controls', "file://$ownershipConfigPath") | Out-Null
-    }
-    finally {
-        Remove-Item $ownershipConfigPath -ErrorAction SilentlyContinue
-    }
-
     Write-Host "Disabling public access blocking for '$bucketName'..." -ForegroundColor Cyan
     Invoke-AwsCli -Arguments @('s3api', 'put-public-access-block', '--bucket', $bucketName, '--public-access-block-configuration', 'BlockPublicAcls=false,IgnorePublicAcls=false,BlockPublicPolicy=false,RestrictPublicBuckets=false') | Out-Null
 
@@ -463,7 +454,7 @@ function Setup-PortalBucket {
         Remove-Item $policyPath -ErrorAction SilentlyContinue
     }
 
-    $websiteEndpoint = "http://$bucketName.s3-website-$($script:AwsRegion).amazonaws.com"
+    $websiteEndpoint = "http://$bucketName.s3-website.$($script:AwsRegion).amazonaws.com"
     Write-Host "Portal bucket '$bucketName' configured. Website endpoint: $websiteEndpoint" -ForegroundColor Green
 }
 
@@ -598,7 +589,7 @@ function Setup-PortalHosting {
     }
 
     if ($script:PortalBucketName) {
-        $websiteEndpoint = "http://$($script:PortalBucketName).s3-website-$($script:AwsRegion).amazonaws.com"
+        $websiteEndpoint = "http://$($script:PortalBucketName).s3-website.$($script:AwsRegion).amazonaws.com"
         Write-Host "Portal Bucket: $($script:PortalBucketName)" -ForegroundColor Green
         Write-Host "Website Endpoint: $websiteEndpoint" -ForegroundColor Green
     }
@@ -1100,7 +1091,7 @@ function Setup-CloudFrontDistribution {
         return
     }
 
-    $websiteEndpoint = "$($script:PortalBucketName).s3-website-$($script:AwsRegion).amazonaws.com"
+    $websiteEndpoint = "$($script:PortalBucketName).s3-website.$($script:AwsRegion).amazonaws.com"
     $originId = "s3-website-$($script:PortalBucketName)"
     $callerReference = [guid]::NewGuid().ToString()
 
