@@ -8,6 +8,7 @@ $script:AwsRegion = "eu-west-2"
 $script:CognitoUserPoolId = $null
 $script:CognitoUserPoolClientId = $null
 $script:CognitoIdentityPoolId = $null
+$script:PortalBucketName = $null
 $script:ConfigFilePath = Join-Path -Path (Split-Path -Parent $MyInvocation.MyCommand.Path) -ChildPath "quick-start.settings.json"
 $script:AwsResourcesOutputPath = Join-Path -Path (Split-Path -Parent $MyInvocation.MyCommand.Path) -ChildPath "quick-start.aws-resources.json"
 
@@ -92,6 +93,9 @@ function Show-Menu {
 
     $cognitoStatus = if ($script:CognitoIdentityPoolId) { " (completed)" } else { "" }
     Write-Host "5. Setup AWS Cognito resources$cognitoStatus"
+
+    $bucketStatus = if ($script:PortalBucketName) { " (bucket: $($script:PortalBucketName))" } else { "" }
+    Write-Host "6. Configure portal S3 bucket$bucketStatus"
 
     Write-Host "Q. Quit"
 }
@@ -202,20 +206,37 @@ function Invoke-AwsCli {
     return $output
 }
 
-function Write-AwsResourcesOutput {
-    if ([string]::IsNullOrWhiteSpace($script:CognitoUserPoolId) -or
-        [string]::IsNullOrWhiteSpace($script:CognitoUserPoolClientId) -or
-        [string]::IsNullOrWhiteSpace($script:CognitoIdentityPoolId)) {
-        return
-    }
+function New-JsonTempFile {
+    param([Parameter(Mandatory = $true)]$Object)
 
-    $config = [ordered]@{
-        AwsCognito = [ordered]@{
+    $tempPath = [System.IO.Path]::GetTempFileName()
+    $Object | ConvertTo-Json -Depth 10 | Out-File -FilePath $tempPath -Encoding ascii
+    return $tempPath
+}
+
+function Write-AwsResourcesOutput {
+    $config = [ordered]@{}
+
+    if ($script:CognitoUserPoolId -and $script:CognitoUserPoolClientId -and $script:CognitoIdentityPoolId) {
+        $config.AwsCognito = [ordered]@{
             UserPoolId = $script:CognitoUserPoolId
             UserPoolClientId = $script:CognitoUserPoolClientId
             Region = $script:AwsRegion
             IdentityPoolId = $script:CognitoIdentityPoolId
         }
+    }
+
+    if ($script:PortalBucketName) {
+        $websiteHost = "http://$($script:PortalBucketName).s3-website-$($script:AwsRegion).amazonaws.com"
+        $config.AwsS3 = [ordered]@{
+            BucketName = $script:PortalBucketName
+            Region = $script:AwsRegion
+            WebsiteUrl = $websiteHost
+        }
+    }
+
+    if ($config.Count -eq 0) {
+        return
     }
 
     try {
@@ -225,6 +246,104 @@ function Write-AwsResourcesOutput {
     catch {
         Write-Host "Warning: Unable to write AWS resource config file. $_" -ForegroundColor Yellow
     }
+}
+
+function Setup-PortalBucket {
+    if ([string]::IsNullOrWhiteSpace($script:AwsResourcePrefix)) {
+        throw "AWS resource prefix must be set before creating the portal bucket."
+    }
+
+    $bucketName = "$($script:AwsResourcePrefix).clypse"
+    $script:PortalBucketName = $bucketName
+
+    $bucketExists = $false
+    try {
+        Invoke-AwsCli -Arguments @('s3api', 'head-bucket', '--bucket', $bucketName) | Out-Null
+        $bucketExists = $true
+        Write-Host "Bucket '$bucketName' already exists. Reapplying configuration." -ForegroundColor Yellow
+    }
+    catch {
+        $bucketExists = $false
+    }
+
+    if (-not $bucketExists) {
+        Write-Host "Creating portal S3 bucket '$bucketName'..." -ForegroundColor Cyan
+        $createArgs = @('s3api', 'create-bucket', '--bucket', $bucketName)
+        if ($script:AwsRegion -ne 'us-east-1') {
+            $createArgs += @('--create-bucket-configuration', "LocationConstraint=$($script:AwsRegion)")
+        }
+        Invoke-AwsCli -Arguments $createArgs | Out-Null
+    }
+
+    Write-Host "Enabling ACL support (BucketOwnerPreferred) for '$bucketName'..." -ForegroundColor Cyan
+    $ownershipConfigPath = New-JsonTempFile -Object (@{ Rules = @(@{ ObjectOwnership = 'BucketOwnerPreferred' }) })
+    try {
+        Invoke-AwsCli -Arguments @('s3api', 'put-bucket-ownership-controls', '--bucket', $bucketName, '--ownership-controls', "file://$ownershipConfigPath") | Out-Null
+    }
+    finally {
+        Remove-Item $ownershipConfigPath -ErrorAction SilentlyContinue
+    }
+
+    Write-Host "Disabling public access blocking for '$bucketName'..." -ForegroundColor Cyan
+    Invoke-AwsCli -Arguments @('s3api', 'put-public-access-block', '--bucket', $bucketName, '--public-access-block-configuration', 'BlockPublicAcls=false,IgnorePublicAcls=false,BlockPublicPolicy=false,RestrictPublicBuckets=false') | Out-Null
+
+    Write-Host "Applying bucket ACL grants (public read)..." -ForegroundColor Cyan
+    $currentAcl = Invoke-AwsCli -Arguments @('s3api', 'get-bucket-acl', '--bucket', $bucketName) -ExpectJson
+    $ownerId = $currentAcl.Owner.ID
+    $ownerName = $currentAcl.Owner.DisplayName
+    $ownerObject = [ordered]@{ ID = $ownerId }
+    if ($ownerName) { $ownerObject.DisplayName = $ownerName }
+    $ownerGrantee = [ordered]@{ Type = 'CanonicalUser'; ID = $ownerId }
+    if ($ownerName) { $ownerGrantee.DisplayName = $ownerName }
+    $aclPolicy = [ordered]@{
+        Owner = $ownerObject
+        Grants = @(
+            @{ Grantee = $ownerGrantee; Permission = 'FULL_CONTROL' }
+            @{ Grantee = @{ Type = 'Group'; URI = 'http://acs.amazonaws.com/groups/global/AllUsers' }; Permission = 'READ_ACP' }
+        )
+    }
+    $aclPolicyPath = New-JsonTempFile -Object $aclPolicy
+    try {
+        Invoke-AwsCli -Arguments @('s3api', 'put-bucket-acl', '--bucket', $bucketName, '--access-control-policy', "file://$aclPolicyPath") | Out-Null
+    }
+    finally {
+        Remove-Item $aclPolicyPath -ErrorAction SilentlyContinue
+    }
+
+    Write-Host "Configuring static website hosting..." -ForegroundColor Cyan
+    $websiteConfigPath = New-JsonTempFile -Object (@{
+            IndexDocument = @{ Suffix = 'index.html' }
+            ErrorDocument = @{ Key = 'index.html' }
+        })
+    try {
+        Invoke-AwsCli -Arguments @('s3api', 'put-bucket-website', '--bucket', $bucketName, '--website-configuration', "file://$websiteConfigPath") | Out-Null
+    }
+    finally {
+        Remove-Item $websiteConfigPath -ErrorAction SilentlyContinue
+    }
+
+    Write-Host "Applying public-read bucket policy..." -ForegroundColor Cyan
+    $policyPath = New-JsonTempFile -Object (@{
+            Version = '2012-10-17'
+            Statement = @(
+                @{
+                    Sid = 'PublicReadGetObject'
+                    Effect = 'Allow'
+                    Principal = '*'
+                    Action = 's3:GetObject'
+                    Resource = "arn:aws:s3:::$bucketName/*"
+                }
+            )
+        })
+    try {
+        Invoke-AwsCli -Arguments @('s3api', 'put-bucket-policy', '--bucket', $bucketName, '--policy', "file://$policyPath") | Out-Null
+    }
+    finally {
+        Remove-Item $policyPath -ErrorAction SilentlyContinue
+    }
+
+    $websiteEndpoint = "http://$bucketName.s3-website-$($script:AwsRegion).amazonaws.com"
+    Write-Host "Portal bucket '$bucketName' configured. Website endpoint: $websiteEndpoint" -ForegroundColor Green
 }
 
 function Setup-Cognito {
@@ -323,6 +442,49 @@ function Setup-Cognito {
     Write-AwsResourcesOutput
 }
 
+function Setup-PortalHosting {
+    $missing = @()
+    if (-not (Test-AwsCredentialsPresent)) { $missing += "AWS credentials" }
+    if ([string]::IsNullOrWhiteSpace($script:AwsResourcePrefix)) { $missing += "AWS resource prefix" }
+
+    if ($missing.Count -gt 0) {
+        Write-Host "Cannot continue. Missing: $($missing -join ', ')." -ForegroundColor Red
+        return
+    }
+
+    try {
+        Ensure-AwsCliAvailable
+    }
+    catch {
+        Write-Host $_ -ForegroundColor Red
+        return
+    }
+
+    try {
+        Set-AwsCredentialEnvironment
+    }
+    catch {
+        Write-Host $_ -ForegroundColor Red
+        return
+    }
+
+    try {
+        Setup-PortalBucket
+    }
+    catch {
+        Write-Host "Failed to configure portal bucket: $_" -ForegroundColor Red
+        return
+    }
+
+    if ($script:PortalBucketName) {
+        $websiteEndpoint = "http://$($script:PortalBucketName).s3-website-$($script:AwsRegion).amazonaws.com"
+        Write-Host "Portal Bucket: $($script:PortalBucketName)" -ForegroundColor Green
+        Write-Host "Website Endpoint: $websiteEndpoint" -ForegroundColor Green
+    }
+
+    Write-AwsResourcesOutput
+}
+
 while ($true) {
     Show-Menu
     $choice = Read-Host "Select an option"
@@ -333,6 +495,7 @@ while ($true) {
         "3" { Set-AwsResourcePrefix }
         "4" { Set-InitialUserEmail }
         "5" { Setup-Cognito }
+        "6" { Setup-PortalHosting }
         "Q" { Write-Host "Exiting setup wizard."; return }
         default { Write-Host "Invalid selection. Please try again." -ForegroundColor Red }
     }
