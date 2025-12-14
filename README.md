@@ -38,6 +38,29 @@ Once you have setup all of the above, you will need to configure the 'appsetting
 
 One way to test the setup is to use the Test Page which you can access from the Login page when in Debug configuration. Enter your Cognito user credentials and then click the button to 'Test Clypse Core', this will create a vault for you with a test credential, the password will be 'password123.
 
+### AWS Resource Summary
+
+When fully deployed to AWS S3, using Cognito for authentication, clypse will use the following resources,
+
+* 🪣 2 x S3 Buckets
+  - One for the portal
+  - One for the user data
+    + Each user has read/write access to their own folder
+* 👥 Cognito identity pool
+* 👤 Cognito user pool
+  - This is where the users are configured, not via IAM
+* 🛂 2 x IAM Policies
+  - One for authenticated Cognito users to give access to their user area in user data bucket
+  - One for internal AWS Cognito use
+* 🎖️ IAM Role for clypse user
+  - This is the role that will be assigned to authenticated users
+* ☁️ Cloudfront distribution
+  - Enables HTTPS access to the S3 website
+
+All of these resources are PAYG and cost practically nothing to operate.
+
+> I am currently working on a PowerShell script which will create and deploy everything in a working state. You can try the first version of this script 'quick-start.ps1', this should have everything in it you require but you will need to go through each menu item from top to bottom. It has not been thoroughly tested and was generated with AI assistance.
+
 ## Testing
 
 ### Unit Testing
