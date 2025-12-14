@@ -187,7 +187,11 @@ To run the Deploy pipeline, configure the following secrets in your GitHub repos
 
 ### Workflow Execution
 
-- **tests.yml · Unit Tests**: Runs automatically on every push, pull request, or manual dispatch; this is the first job and it must succeed before anything else can execute.
-- **tests.yml · Integration Tests**: Starts only after `unit-tests` succeeds and only for first-party branches (forked PRs are skipped); gated on the AWS integration secrets being available.
-- **tests.yml · UI Tests**: Queues after `integration-tests` completes successfully, reuses the same runner image, and requires the Cognito credentials plus portal appsettings secret before it can run.
-- **deploy.yml · Production Deploy**: Auto-triggers when the Tests workflow finishes successfully on `main` (push or manual rerun), targets the protected `production` environment, and will not start publishing to AWS until a maintainer approves the environment gate.
+- **tests.yml ï¿½ Unit Tests**: Runs automatically on every push, pull request, or manual dispatch; this is the first job and it must succeed before anything else can execute.
+- **tests.yml ï¿½ Integration Tests**: Starts only after `unit-tests` succeeds and only for first-party branches (forked PRs are skipped); gated on the AWS integration secrets being available.
+- **tests.yml ï¿½ UI Tests**: Queues after `integration-tests` completes successfully, reuses the same runner image, and requires the Cognito credentials plus portal appsettings secret before it can run.
+- **deploy.yml ï¿½ Production Deploy**: Auto-triggers when the Tests workflow finishes successfully on `main` (push or manual rerun), targets the protected `production` environment, and will not start publishing to AWS until a maintainer approves the environment gate.
+
+## Screenshots
+
+[Screenshot 1](blob/quickstart/Resources/Screenshots/1.png)
