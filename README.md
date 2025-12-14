@@ -3,8 +3,13 @@
 
 [![Deploy](https://github.com/devoctomy/clypse/actions/workflows/deploy.yml/badge.svg)](https://github.com/devoctomy/clypse/actions/workflows/deploy.yml)
 
+> AI has been used in the generation of some parts of this application. This includes the portal code and a large number of bulk unit tests. The underlying core library which handles the cyrptographic operations as well as S3 file management has been written by myself. The portal code is pretty messy and not yet adequately covered by tests. This application is also not yet ready for production, so use at your own risk.
+
 # clypse
-Clypse secrets management.
+
+Clypse, is a complete password management system that you host yourself in Amazon S3. Completely serverless, hosted as a static website with some additional Cognito configuration for user management. Super easy, and super cheap.
+
+It is designed to use the latest cryptographic standards but also be highly customisable.
 
 ## Requirements
 
@@ -187,7 +192,29 @@ To run the Deploy pipeline, configure the following secrets in your GitHub repos
 
 ### Workflow Execution
 
-- **tests.yml · Unit Tests**: Runs automatically on every push, pull request, or manual dispatch; this is the first job and it must succeed before anything else can execute.
-- **tests.yml · Integration Tests**: Starts only after `unit-tests` succeeds and only for first-party branches (forked PRs are skipped); gated on the AWS integration secrets being available.
-- **tests.yml · UI Tests**: Queues after `integration-tests` completes successfully, reuses the same runner image, and requires the Cognito credentials plus portal appsettings secret before it can run.
-- **deploy.yml · Production Deploy**: Auto-triggers when the Tests workflow finishes successfully on `main` (push or manual rerun), targets the protected `production` environment, and will not start publishing to AWS until a maintainer approves the environment gate.
+- **tests.yml ï¿½ Unit Tests**: Runs automatically on every push, pull request, or manual dispatch; this is the first job and it must succeed before anything else can execute.
+- **tests.yml ï¿½ Integration Tests**: Starts only after `unit-tests` succeeds and only for first-party branches (forked PRs are skipped); gated on the AWS integration secrets being available.
+- **tests.yml ï¿½ UI Tests**: Queues after `integration-tests` completes successfully, reuses the same runner image, and requires the Cognito credentials plus portal appsettings secret before it can run.
+- **deploy.yml ï¿½ Production Deploy**: Auto-triggers when the Tests workflow finishes successfully on `main` (push or manual rerun), targets the protected `production` environment, and will not start publishing to AWS until a maintainer approves the environment gate.
+
+## Screenshots
+
+![Login Page in Light Theme](Resources/Screenshots/1.png)
+
+![Login Page in Dark Theme](Resources/Screenshots/2.png)
+
+![Biometric support with PRF](Resources/Screenshots/3.png)
+
+![Vault Creation](Resources/Screenshots/4.png)
+
+![Vault Unlocking](Resources/Screenshots/5.png)
+
+![Credential Creation](Resources/Screenshots/6.png)
+
+![Memorable Password Generation with Customisable Token Format](Resources/Screenshots/7.png)
+
+![Random Password Generation With Customsable Character Groups](Resources/Screenshots/8.png)
+
+![Credential Listing](Resources/Screenshots/9.png)
+
+![Login Page with Remembered User and Quick Biometric Login](Resources/Screenshots/10.png)
