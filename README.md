@@ -194,4 +194,22 @@ To run the Deploy pipeline, configure the following secrets in your GitHub repos
 
 ## Screenshots
 
-![Screenshot 1](Resources/Screenshots/1.png)
+![Login Page in Light Theme](Resources/Screenshots/1.png)
+
+![Login Page in Dark Theme](Resources/Screenshots/2.png)
+
+![Biometric support with PRF](Resources/Screenshots/3.png)
+
+![Vault Creation](Resources/Screenshots/4.png)
+
+![Vault Unlocking](Resources/Screenshots/5.png)
+
+![Credential Creation](Resources/Screenshots/6.png)
+
+![Memorable Password Generation with Customisable Token Format](Resources/Screenshots/7.png)
+
+![Random Password Generation With Customsable Character Groups](Resources/Screenshots/8.png)
+
+![Credential Listing](Resources/Screenshots/9.png)
+
+![Login Page with Remembered User and Quick Biometric Login](Resources/Screenshots/10.png)
