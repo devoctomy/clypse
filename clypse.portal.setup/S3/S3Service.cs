@@ -9,7 +9,7 @@ public class S3Service(
     AwsServiceOptions options,
     ILogger<S3Service> logger) : IS3Service
 {
-    public async Task<PutBucketResponse> CreateBucket(string bucketName)
+    public async Task<bool> CreateBucket(string bucketName)
     {
         var bucketNameWithPrefix = $"{options.ResourcePrefix}.{bucketName}";
         logger.LogInformation("Creating S3 bucket: {BucketName}", bucketNameWithPrefix);
@@ -17,6 +17,9 @@ public class S3Service(
         {
             BucketName = bucketNameWithPrefix
         };
-        return await amazonS3.PutBucketAsync(putBucketRequest);
+        var response = await amazonS3.PutBucketAsync(putBucketRequest);
+        return
+            response.HttpStatusCode == System.Net.HttpStatusCode.OK ||
+            response.HttpStatusCode == System.Net.HttpStatusCode.Created;
     }
 }

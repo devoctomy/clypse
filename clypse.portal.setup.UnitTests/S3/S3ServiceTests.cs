@@ -29,12 +29,16 @@ public class S3ServiceTests
             .Setup(s3 => s3.PutBucketAsync(
                 It.Is<PutBucketRequest>(req => req.BucketName == expectedBucketName),
                 It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new PutBucketResponse());
+            .ReturnsAsync(new PutBucketResponse
+            {
+                HttpStatusCode = System.Net.HttpStatusCode.OK
+            });
         
         // Act
-        var response = await s3Service.CreateBucket(bucketName);
+        var success = await s3Service.CreateBucket(bucketName);
 
         // Assert
+        Assert.True(success);
         mockAmazonS3.Verify(s3 => s3.PutBucketAsync(
             It.Is<PutBucketRequest>(req => req.BucketName == expectedBucketName),
             It.IsAny<CancellationToken>()),
