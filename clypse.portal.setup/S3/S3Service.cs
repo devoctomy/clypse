@@ -11,7 +11,7 @@ public class S3Service(
 {
     public async Task<PutBucketResponse> CreateBucket(string bucketName)
     {
-        var bucketNameWithPrefix = $"{options.ResourcePrefix}-{bucketName}";
+        var bucketNameWithPrefix = $"{options.ResourcePrefix}.{bucketName}";
         logger.LogInformation("Creating S3 bucket: {BucketName}", bucketNameWithPrefix);
         var putBucketRequest = new PutBucketRequest
         {
