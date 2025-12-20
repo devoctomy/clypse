@@ -2,7 +2,6 @@ name: Tests
 
 on:
   push:
-  pull_request:
   workflow_dispatch:
 
 jobs:
@@ -83,7 +82,6 @@ jobs:
         verbose: true
 
   integration-tests:
-    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
     needs: unit-tests
     runs-on: ubuntu-latest
     container:
@@ -137,7 +135,6 @@ jobs:
         path: ./TestResults/IntegrationTests
 
   ui-tests:
-    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
     needs: integration-tests
     runs-on: ubuntu-latest
     container:
