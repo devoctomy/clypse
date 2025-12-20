@@ -7,7 +7,7 @@ services:
     environment:
       - DEBUG=0
       - PERSISTENCE=1
-      - SERVICES=s3,secretsmanager,kms,ssm,sts,lambda,cloudformation,iam,cognito-idp
+      - SERVICES=s3,secretsmanager,kms,ssm,sts,lambda,cloudformation,iam,cognito-idp,cognito-identity
       - LOCALSTACK_AUTH_TOKEN=${LOCALSTACK_AUTH_TOKEN}
     volumes:
       - localstack-data:/var/lib/localstack

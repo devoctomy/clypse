@@ -50,8 +50,13 @@ if ($createdDataBucket -eq $false) {
 Write-Host "Creating ICognitoService..."
 $cognitoService = $provider.GetService([clypse.portal.setup.Cognito.ICognitoService])
 
-$userPoolId = $cognitoService.CreateUserPoolAsync('clypse.userpool').GetAwaiter().GetResult()
+$identityPoolId = $cognitoService.CreateIdentityPoolAsync('clypse.identitypool').GetAwaiter().GetResult()
+Write-Host "Created identity pool with ID: $identityPoolId"
 
+$userPoolId = $cognitoService.CreateUserPoolAsync('clypse.userpool').GetAwaiter().GetResult()
 Write-Host "Created user pool with ID: $userPoolId"
+
+$userPoolClientId = $cognitoService.CreateUserPoolClientAsync('clypse.userpoolclient', $userPoolId).GetAwaiter().GetResult()
+Write-Host "Created user pool client with ID: $userPoolClientId"
 
 Write-Host "Operation completed."
