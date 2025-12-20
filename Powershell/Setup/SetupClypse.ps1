@@ -1,12 +1,9 @@
-function Setup-Clypse {
-    $ErrorActionPreference = 'Stop'
-
+function Initialise {
     $repoRoot = Split-Path -Parent $PSScriptRoot
     $repoRoot = Split-Path -Parent $repoRoot
-
     $setupProject = Join-Path $repoRoot 'clypse.portal.setup/clypse.portal.setup.csproj'
 
-    dotnet build $setupProject -c Release -f net10.0 /p:CopyLocalLockFileAssemblies=true
+    dotnet build $setupProject -c Release -f net10.0 /p:CopyLocalLockFileAssemblies=true | Out-Null
 
     $setupBin = Join-Path $repoRoot 'clypse.portal.setup/bin/Release/net10.0'
 
@@ -25,13 +22,16 @@ function Setup-Clypse {
 
     $provider = [Microsoft.Extensions.DependencyInjection.ServiceCollectionContainerBuilderExtensions]::BuildServiceProvider($services)
 
-    $s3Service = [Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions]::GetRequiredService(
-        $provider,
-        [clypse.portal.setup.S3.IS3Service]
-    )
-
-    $null = $s3Service.CreateBucket('test').GetAwaiter().GetResult()
-    Write-Host "Created bucket 'test'."
+    return $provider
 }
 
-Setup-Clypse
+Write-Host "Initialising Clypse setup services..."
+$provider = Initialise
+
+Write-Host "Creating IS3Service..."
+$s3Service = $provider.GetService([clypse.portal.setup.S3.IS3Service])
+
+Write-Host "Creating bucket..."
+$null = $s3Service.CreateBucket('test').GetAwaiter().GetResult()
+
+Write-Host "Operation completed."
