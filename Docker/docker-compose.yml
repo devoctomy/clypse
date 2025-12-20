@@ -1,0 +1,36 @@
+services:
+  localstack:
+    image: localstack/localstack:latest
+    container_name: localstack
+    ports:
+      - "4566:4566" # LocalStack Gateway
+    environment:
+      - DEBUG=0
+      - PERSISTENCE=1
+      - SERVICES=s3,secretsmanager,kms,ssm,sts,lambda,cloudformation,iam,cognito-idp
+    volumes:
+      - localstack-data:/var/lib/localstack
+      - /var/run/docker.sock:/var/run/docker.sock
+
+  clypse-setup:
+    image: mcr.microsoft.com/dotnet/sdk:10.0
+    container_name: clypse-setup
+    depends_on:
+      - localstack
+    working_dir: /workspace
+    volumes:
+      - ..:/workspace
+    environment:
+      - AWS_EC2_METADATA_DISABLED=true
+      - CLYPSE_SETUP__BaseUrl=http://localstack:4566
+      - CLYPSE_SETUP__AccessKey=test
+      - CLYPSE_SETUP__SecretKey=test
+      - CLYPSE_SETUP__Region=us-east-1
+    command:
+      - /bin/bash
+      - -lc
+      - mkdir -p /workspace; cd /workspace; dotnet tool install -g PowerShell; export PATH="$$PATH:/root/.dotnet/tools"; pwsh -NoLogo -NoProfile -File /workspace/Powershell/Setup/SetupClypse.ps1
+    restart: "no"
+
+volumes:
+  localstack-data:

@@ -37,6 +37,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Github", "Github", "{68B3BA
 		.github\workflows\tests.yml = .github\workflows\tests.yml
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "clypse.portal.setup", "clypse.portal.setup\clypse.portal.setup.csproj", "{D37ED4C6-46FE-4746-A1F3-34246B7CD0D7}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -63,6 +65,10 @@ Global
 		{E991BCD7-5623-467A-A6F2-BBD3A222E9AD}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E991BCD7-5623-467A-A6F2-BBD3A222E9AD}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E991BCD7-5623-467A-A6F2-BBD3A222E9AD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D37ED4C6-46FE-4746-A1F3-34246B7CD0D7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D37ED4C6-46FE-4746-A1F3-34246B7CD0D7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D37ED4C6-46FE-4746-A1F3-34246B7CD0D7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D37ED4C6-46FE-4746-A1F3-34246B7CD0D7}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
