@@ -35,7 +35,7 @@ public class S3ServiceTests
             });
         
         // Act
-        var success = await s3Service.CreateBucket(bucketName);
+        var success = await s3Service.CreateBucketAsync(bucketName);
 
         // Assert
         Assert.True(success);

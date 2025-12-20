@@ -2,5 +2,7 @@
 
 public interface IS3Service
 {
-    public Task<bool> CreateBucket(string bucketName);
+    public Task<bool> CreateBucketAsync(
+        string bucketName,
+        CancellationToken cancellationToken = default);
 }

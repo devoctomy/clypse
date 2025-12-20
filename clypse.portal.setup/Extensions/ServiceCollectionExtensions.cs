@@ -1,5 +1,8 @@
-﻿using Amazon.S3;
+﻿using Amazon.CognitoIdentity;
+using Amazon.CognitoIdentityProvider;
+using Amazon.S3;
 using clypse.portal.setup;
+using clypse.portal.setup.Cognito;
 using clypse.portal.setup.S3;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -32,7 +35,7 @@ public static class ServiceCollectionExtensions
         services.AddLogging(logging =>
         {
             logging.AddConsole();
-            logging.SetMinimumLevel(LogLevel.Information);
+            logging.SetMinimumLevel(Microsoft.Extensions.Logging.LogLevel.Information);
         });
 
         services.AddScoped<IAmazonS3>((sp) =>
@@ -54,7 +57,44 @@ public static class ServiceCollectionExtensions
                 config);
         });
 
+        services.AddScoped<IAmazonCognitoIdentity>((sp) =>
+        {
+            var config = new AmazonCognitoIdentityConfig
+            {
+                RegionEndpoint = Amazon.RegionEndpoint.GetBySystemName(options.Region)
+            };
+
+            if (!string.IsNullOrWhiteSpace(options.BaseUrl))
+            {
+                config.ServiceURL = options.BaseUrl;
+            }
+
+            return new AmazonCognitoIdentityClient(
+                options.AccessKey,
+                options.SecretKey,
+                config);
+        });
+
+        services.AddScoped<IAmazonCognitoIdentityProvider>((sp) =>
+        {
+            var config = new AmazonCognitoIdentityProviderConfig
+            {
+                RegionEndpoint = Amazon.RegionEndpoint.GetBySystemName(options.Region)
+            };
+
+            if (!string.IsNullOrWhiteSpace(options.BaseUrl))
+            {
+                config.ServiceURL = options.BaseUrl;
+            }
+
+            return new AmazonCognitoIdentityProviderClient(
+                options.AccessKey,
+                options.SecretKey,
+                config);
+        });
+
         services.AddScoped<IS3Service, S3Service>();
+        services.AddScoped<ICognitoService, CognitoService>();
 
         return services;
     }
