@@ -10,18 +10,9 @@ function Setup-Clypse {
 
     $setupBin = Join-Path $repoRoot 'clypse.portal.setup/bin/Release/net10.0'
 
-    $dllPaths = @(
-        (Join-Path $setupBin 'clypse.portal.setup.dll'),
-        (Join-Path $setupBin 'Amazon.S3.dll'),
-        (Join-Path $setupBin 'Microsoft.Extensions.Logging.dll'),
-        (Join-Path $setupBin 'Microsoft.Extensions.Logging.Abstractions.dll'),
-        (Join-Path $setupBin 'Microsoft.Extensions.Logging.Console.dll'),
-        (Join-Path $setupBin 'Microsoft.Extensions.DependencyInjection.dll'),
-        (Join-Path $setupBin 'Microsoft.Extensions.DependencyInjection.Abstractions.dll'),
-        (Join-Path $setupBin 'Microsoft.Extensions.Configuration.dll'),
-        (Join-Path $setupBin 'Microsoft.Extensions.Configuration.Binder.dll'),
-        (Join-Path $setupBin 'Microsoft.Extensions.Configuration.EnvironmentVariables.dll')
-    )
+    $dllPaths = Get-ChildItem -Path $setupBin -Filter '*.dll' -File |
+        Sort-Object -Property Name |
+        Select-Object -ExpandProperty FullName
 
     foreach ($dllPath in $dllPaths) {
         if (Test-Path $dllPath) {
