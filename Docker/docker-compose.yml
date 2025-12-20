@@ -1,6 +1,6 @@
 services:
   localstack:
-    image: localstack/localstack:latest
+    image: localstack/localstack-pro:latest
     container_name: localstack
     ports:
       - "4566:4566" # LocalStack Gateway
@@ -8,6 +8,7 @@ services:
       - DEBUG=0
       - PERSISTENCE=1
       - SERVICES=s3,secretsmanager,kms,ssm,sts,lambda,cloudformation,iam,cognito-idp
+      - LOCALSTACK_AUTH_TOKEN=${LOCALSTACK_AUTH_TOKEN}
     volumes:
       - localstack-data:/var/lib/localstack
       - /var/run/docker.sock:/var/run/docker.sock

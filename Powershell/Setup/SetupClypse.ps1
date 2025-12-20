@@ -32,7 +32,7 @@ Write-Host "Creating IS3Service..."
 $s3Service = $provider.GetService([clypse.portal.setup.S3.IS3Service])
 
 Write-Host "Creating portal bucket..."
-$createdPortalBucket = $s3Service.CreateBucket('portal').GetAwaiter().GetResult()
+$createdPortalBucket = $s3Service.CreateBucketAsync('clypse.portal').GetAwaiter().GetResult()
 
 if ($createdPortalBucket -eq $false) {
 	Write-Host "Failed to create portal bucket."
@@ -40,11 +40,18 @@ if ($createdPortalBucket -eq $false) {
 }
 
 Write-Host "Creating data bucket..."
-$createdDataBucket = $s3Service.CreateBucket('data').GetAwaiter().GetResult()
+$createdDataBucket = $s3Service.CreateBucketAsync('clypse.data').GetAwaiter().GetResult()
 
 if ($createdDataBucket -eq $false) {
 	Write-Host "Failed to create data bucket."
 	return -1
 }
+
+Write-Host "Creating ICognitoService..."
+$cognitoService = $provider.GetService([clypse.portal.setup.Cognito.ICognitoService])
+
+$userPoolId = $cognitoService.CreateUserPoolAsync('clypse.userpool').GetAwaiter().GetResult()
+
+Write-Host "Created user pool with ID: $userPoolId"
 
 Write-Host "Operation completed."
