@@ -32,9 +32,19 @@ Write-Host "Creating IS3Service..."
 $s3Service = $provider.GetService([clypse.portal.setup.S3.IS3Service])
 
 Write-Host "Creating portal bucket..."
-$null = $s3Service.CreateBucket('portal').GetAwaiter().GetResult()
+$createdPortalBucket = $s3Service.CreateBucket('portal').GetAwaiter().GetResult()
+
+if ($createdPortalBucket -eq $false) {
+	Write-Host "Failed to create portal bucket."
+	return -1
+}
 
 Write-Host "Creating data bucket..."
-$null = $s3Service.CreateBucket('data').GetAwaiter().GetResult()
+$createdDataBucket = $s3Service.CreateBucket('data').GetAwaiter().GetResult()
+
+if ($createdDataBucket -eq $false) {
+	Write-Host "Failed to create data bucket."
+	return -1
+}
 
 Write-Host "Operation completed."
