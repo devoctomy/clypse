@@ -13,7 +13,7 @@ public interface ICognitoService
         CancellationToken cancellationToken = default);
 
     public Task<string> CreateUserPoolClientAsync(
-        string userPoolId,
         string name,
+        string userPoolId,
         CancellationToken cancellationToken = default);
 }

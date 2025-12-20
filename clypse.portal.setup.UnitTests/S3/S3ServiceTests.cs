@@ -13,7 +13,6 @@ public class S3ServiceTests
     {
         // Arrange
         var mockAmazonS3 = new Mock<IAmazonS3>();
-        var mockLogger = new Mock<ILogger<S3Service>>();
         var options = new AwsServiceOptions
         {
             ResourcePrefix = "test-prefix"
@@ -21,7 +20,7 @@ public class S3ServiceTests
         var s3Service = new S3Service(
             mockAmazonS3.Object,
             options,
-            mockLogger.Object);
+            Mock.Of<ILogger<S3Service>>());
         var bucketName = "my-bucket";
         var expectedBucketName = "test-prefix.my-bucket";
 
