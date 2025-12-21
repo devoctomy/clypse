@@ -297,4 +297,77 @@ public class S3ServiceTests
         // Assert
         Assert.False(success);
     }
+
+    [Fact]
+    public async Task GivenBucketAcl_WhenSetBucketAcl_ThenSetsBucketAcl()
+    {
+        // Arrange
+        var mockAmazonS3 = new Mock<IAmazonS3>();
+        var options = new AwsServiceOptions
+        {
+            ResourcePrefix = "test-prefix"
+        };
+        var s3Service = new S3Service(
+            mockAmazonS3.Object,
+            options,
+            Mock.Of<ILogger<S3Service>>());
+        var bucketName = "my-bucket";
+        var expectedBucketName = "test-prefix.my-bucket";
+        var acl = S3CannedACL.PublicRead;
+
+        mockAmazonS3
+            .Setup(s3 => s3.PutBucketAclAsync(
+                It.Is<PutBucketAclRequest>(req =>
+                    req.BucketName == expectedBucketName &&
+                    req.ACL == acl),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new PutBucketAclResponse
+            {
+                HttpStatusCode = System.Net.HttpStatusCode.OK
+            });
+
+        // Act
+        var success = await s3Service.SetBucketAcl(bucketName, acl);
+
+        // Assert
+        Assert.True(success);
+        mockAmazonS3.Verify(s3 => s3.PutBucketAclAsync(
+            It.Is<PutBucketAclRequest>(req =>
+                req.BucketName == expectedBucketName &&
+                req.ACL == acl),
+            It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task GivenBucketAcl_WhenSetBucketAclFails_ThenReturnsFalse()
+    {
+        // Arrange
+        var mockAmazonS3 = new Mock<IAmazonS3>();
+        var options = new AwsServiceOptions
+        {
+            ResourcePrefix = "test-prefix"
+        };
+        var s3Service = new S3Service(
+            mockAmazonS3.Object,
+            options,
+            Mock.Of<ILogger<S3Service>>());
+        var bucketName = "my-bucket";
+        var acl = S3CannedACL.Private;
+
+        mockAmazonS3
+            .Setup(s3 => s3.PutBucketAclAsync(
+                It.IsAny<PutBucketAclRequest>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new PutBucketAclResponse
+            {
+                HttpStatusCode = System.Net.HttpStatusCode.Forbidden
+            });
+
+        // Act
+        var success = await s3Service.SetBucketAcl(bucketName, acl);
+
+        // Assert
+        Assert.False(success);
+    }
 }

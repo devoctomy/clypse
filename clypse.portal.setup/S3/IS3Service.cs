@@ -1,4 +1,6 @@
-﻿namespace clypse.portal.setup.S3;
+﻿using Amazon.S3;
+
+namespace clypse.portal.setup.S3;
 
 /// <summary>
 /// Defines operations for managing Amazon S3 buckets and their configurations.
@@ -55,5 +57,10 @@ public interface IS3Service
         string bucketName,
         string indexDocumentSuffix = "index.html",
         string errorDocument = "error.html",
+        CancellationToken cancellationToken = default);
+
+    public Task<bool> SetBucketAcl(
+        string bucketName,
+        S3CannedACL acl,
         CancellationToken cancellationToken = default);
 }

@@ -1,6 +1,7 @@
 ﻿using Amazon.S3;
 using Amazon.S3.Model;
 using Microsoft.Extensions.Logging;
+using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -143,6 +144,33 @@ public class S3Service(
 
         var response = await amazonS3.PutBucketWebsiteAsync(
             putBucketWebsiteRequest,
+            cancellationToken);
+        return response.HttpStatusCode == System.Net.HttpStatusCode.OK;
+    }
+
+    /// <summary>
+    /// Sets the Access Control List (ACL) for the specified S3 bucket.
+    /// </summary>
+    /// <param name="bucketName">Name of the bucket to configure (without the resource prefix).</param>
+    /// <param name="acl">The canned ACL to apply to the bucket (e.g., PublicRead, Private).</param>
+    /// <param name="cancellationToken">Cancellation token to cancel the operation.</param>
+    /// <returns>True if the ACL was set successfully; otherwise, false.</returns>
+    public async Task<bool> SetBucketAcl(
+        string bucketName,
+        S3CannedACL acl,
+        CancellationToken cancellationToken = default)
+    {
+        var bucketNameWithPrefix = $"{options.ResourcePrefix}.{bucketName}";
+        logger.LogInformation("Setting ACL for bucket: {BucketName}", bucketNameWithPrefix);
+
+        var putBucketAclRequest = new PutBucketAclRequest
+        {
+            BucketName = bucketNameWithPrefix,
+            ACL = acl
+        };
+
+        var response = await amazonS3.PutBucketAclAsync(
+            putBucketAclRequest,
             cancellationToken);
         return response.HttpStatusCode == System.Net.HttpStatusCode.OK;
     }
