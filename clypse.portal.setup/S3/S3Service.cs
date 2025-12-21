@@ -15,6 +15,7 @@ public class S3Service(
     {
         var bucketNameWithPrefix = $"{options.ResourcePrefix}.{bucketName}";
         logger.LogInformation("Creating S3 bucket: {BucketName}", bucketNameWithPrefix);
+
         var putBucketRequest = new PutBucketRequest
         {
             BucketName = bucketNameWithPrefix

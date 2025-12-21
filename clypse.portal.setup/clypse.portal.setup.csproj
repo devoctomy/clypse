@@ -10,6 +10,7 @@
   <ItemGroup>
     <PackageReference Include="AWSSDK.CognitoIdentity" />
     <PackageReference Include="AWSSDK.CognitoIdentityProvider" />
+    <PackageReference Include="AWSSDK.IdentityManagement" />
     <PackageReference Include="AWSSDK.S3" />
     <PackageReference Include="Microsoft.Extensions.Configuration" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Binder" />

@@ -137,4 +137,50 @@ public class CognitoServiceTests
             It.IsAny<CancellationToken>()),
             Times.Once);
     }
+
+    [Fact]
+    public async Task GivenEmailAndUserPoolId_WhenCreateUserAsync_ThenCreatesUserAndReturnsTrue()
+    {
+        // Arrange
+        var mockCognitoIdentity = new Mock<IAmazonCognitoIdentity>();
+        var mockCognitoIdentityProvider = new Mock<IAmazonCognitoIdentityProvider>();
+        var options = new AwsServiceOptions
+        {
+            ResourcePrefix = "test-prefix"
+        };
+        var cognitoService = new CognitoService(
+            mockCognitoIdentity.Object,
+            mockCognitoIdentityProvider.Object,
+            options,
+            Mock.Of<ILogger<CognitoService>>());
+        var email = "test@example.com";
+        var userPoolId = "us-east-1_ABC123DEF";
+
+        mockCognitoIdentityProvider
+            .Setup(c => c.AdminCreateUserAsync(
+                It.Is<AdminCreateUserRequest>(req => 
+                    req.UserPoolId == userPoolId && 
+                    req.Username == email &&
+                    req.UserAttributes.Any(attr => attr.Name == "email" && attr.Value == email) &&
+                    req.DesiredDeliveryMediums.Contains("EMAIL")),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new AdminCreateUserResponse
+            {
+                HttpStatusCode = System.Net.HttpStatusCode.OK
+            });
+        
+        // Act
+        var result = await cognitoService.CreateUserAsync(email, userPoolId);
+
+        // Assert
+        Assert.True(result);
+        mockCognitoIdentityProvider.Verify(c => c.AdminCreateUserAsync(
+            It.Is<AdminCreateUserRequest>(req => 
+                req.UserPoolId == userPoolId && 
+                req.Username == email &&
+                req.UserAttributes.Any(attr => attr.Name == "email" && attr.Value == email) &&
+                req.DesiredDeliveryMediums.Contains("EMAIL")),
+            It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
 }

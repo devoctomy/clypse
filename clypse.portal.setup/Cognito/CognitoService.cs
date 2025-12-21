@@ -16,7 +16,8 @@ public class CognitoService(
         CancellationToken cancellationToken = default)
     {
         var identityPoolNameWithPrefix = $"{options.ResourcePrefix}.{name}";
-        logger.LogInformation($"Creating Identity Pool: {identityPoolNameWithPrefix}");
+        logger.LogInformation("Creating Identity Pool: {identityPoolNameWithPrefix}", identityPoolNameWithPrefix);
+
         var createIdentityPool = new Amazon.CognitoIdentity.Model.CreateIdentityPoolRequest
         {
             IdentityPoolName = identityPoolNameWithPrefix
@@ -25,12 +26,43 @@ public class CognitoService(
         return response.IdentityPoolId;
     }
 
+    public async Task<bool> CreateUserAsync(
+        string email,
+        string userPoolId,
+        CancellationToken cancellationToken = default)
+    {
+        var adminCreateUserRequest = new AdminCreateUserRequest
+        {
+            UserPoolId = userPoolId,
+            Username = email,
+            UserAttributes =
+            [
+                new() {
+                    Name = "email",
+                    Value = email
+                }
+            ],
+            DesiredDeliveryMediums =
+            [
+                "EMAIL"
+            ]
+        };
+
+        var response = await amazonCognitoIdentityProvider.AdminCreateUserAsync(
+            adminCreateUserRequest,
+            cancellationToken);
+        return
+            response.HttpStatusCode == System.Net.HttpStatusCode.OK ||
+            response.HttpStatusCode == System.Net.HttpStatusCode.Created;
+    }
+
     public async Task<string> CreateUserPoolAsync(
         string name,
         CancellationToken cancellationToken = default)
     {
         var userPoolNameWithPrefix = $"{options.ResourcePrefix}.{name}";
-        logger.LogInformation($"Creating User Pool: {userPoolNameWithPrefix}");
+        logger.LogInformation("Creating User Pool: {userPoolNameWithPrefix}", userPoolNameWithPrefix);
+
         var createUserPoolRequest = new CreateUserPoolRequest
         {
             PoolName = userPoolNameWithPrefix,
@@ -45,7 +77,8 @@ public class CognitoService(
         CancellationToken cancellationToken = default)
     {
         var userPoolClientNameWithPrefix = $"{options.ResourcePrefix}.{name}";
-        logger.LogInformation($"Creating User Pool Client: {userPoolClientNameWithPrefix}");
+        logger.LogInformation("Creating User Pool Client: {userPoolClientNameWithPrefix}", userPoolClientNameWithPrefix);
+
         var createUserPoolClientRequest = new CreateUserPoolClientRequest
         {
             ClientName = userPoolClientNameWithPrefix,

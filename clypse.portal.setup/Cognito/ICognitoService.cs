@@ -1,6 +1,4 @@
-﻿using Amazon.CognitoIdentityProvider.Model;
-
-namespace clypse.portal.setup.Cognito;
+﻿namespace clypse.portal.setup.Cognito;
 
 public interface ICognitoService
 {
@@ -14,6 +12,11 @@ public interface ICognitoService
 
     public Task<string> CreateUserPoolClientAsync(
         string name,
+        string userPoolId,
+        CancellationToken cancellationToken = default);
+
+    public Task<bool> CreateUserAsync(
+        string email,
         string userPoolId,
         CancellationToken cancellationToken = default);
 }
