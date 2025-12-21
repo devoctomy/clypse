@@ -6,6 +6,9 @@ using System.Text.Json.Serialization;
 
 namespace clypse.portal.setup.S3;
 
+/// <summary>
+/// Provides functionality for managing Amazon S3 buckets and their configurations.
+/// </summary>
 public class S3Service(
     IAmazonS3 amazonS3,
     AwsServiceOptions options,
@@ -20,6 +23,12 @@ public class S3Service(
         }
     };
 
+    /// <summary>
+    /// Creates a new S3 bucket with the specified name.
+    /// </summary>
+    /// <param name="bucketName">The name of the bucket to create (without the resource prefix).</param>
+    /// <param name="cancellationToken">Cancellation token to cancel the operation.</param>
+    /// <returns>True if the bucket was created successfully; otherwise, false.</returns>
     public async Task<bool> CreateBucketAsync(
         string bucketName,
         CancellationToken cancellationToken = default)
@@ -40,12 +49,12 @@ public class S3Service(
     /// <summary>
     /// Sets the CORS configuration for the specified S3 bucket.
     /// </summary>
-    /// <param name="bucketName">Name of the bucket to configure.</param>
-    /// <param name="allowedHeaders"></param>
-    /// <param name="allowedMethods"></param>
-    /// <param name="allowedOrigins"></param>
-    /// <param name="cancellationToken"></param>
-    /// <returns></returns>
+    /// <param name="bucketName">Name of the bucket to configure (without the resource prefix).</param>
+    /// <param name="allowedHeaders">List of allowed headers in CORS requests (e.g., ["*"]).</param>
+    /// <param name="allowedMethods">List of allowed HTTP methods (e.g., ["GET", "POST", "PUT", "DELETE", "HEAD"]).</param>
+    /// <param name="allowedOrigins">List of allowed origins for CORS requests (e.g., ["https://example.com"]).</param>
+    /// <param name="cancellationToken">Cancellation token to cancel the operation.</param>
+    /// <returns>True if the CORS configuration was set successfully; otherwise, false.</returns>
     public async Task<bool> SetBucketCorsConfigurationAsync(
         string bucketName,
         List<string> allowedHeaders,
@@ -78,6 +87,13 @@ public class S3Service(
         return response.HttpStatusCode == System.Net.HttpStatusCode.OK;
     }
 
+    /// <summary>
+    /// Sets the bucket policy for the specified S3 bucket.
+    /// </summary>
+    /// <param name="bucketName">Name of the bucket to configure (without the resource prefix).</param>
+    /// <param name="policyDocument">The policy document as an object to be serialized to JSON.</param>
+    /// <param name="cancellationToken">Cancellation token to cancel the operation.</param>
+    /// <returns>True if the bucket policy was set successfully; otherwise, false.</returns>
     public async Task<bool> SetBucketPolicyAsync(
         string bucketName,
         object policyDocument,
@@ -98,4 +114,36 @@ public class S3Service(
         return response.HttpStatusCode == System.Net.HttpStatusCode.OK;
     }
 
+    /// <summary>
+    /// Configures the specified S3 bucket to host a static website.
+    /// </summary>
+    /// <param name="bucketName">Name of the bucket to configure (without the resource prefix).</param>
+    /// <param name="indexDocumentSuffix">The suffix for the index document. Default is "index.html".</param>
+    /// <param name="errorDocument">The error document to use. Default is "error.html".</param>
+    /// <param name="cancellationToken">Cancellation token to cancel the operation.</param>
+    /// <returns>True if the website configuration was set successfully; otherwise, false.</returns>
+    public async Task<bool> SetBucketWebsiteConfigurationAsync(
+        string bucketName,
+        string indexDocumentSuffix = "index.html",
+        string errorDocument = "error.html",
+        CancellationToken cancellationToken = default)
+    {
+        var bucketNameWithPrefix = $"{options.ResourcePrefix}.{bucketName}";
+        logger.LogInformation("Setting website configuration for bucket: {BucketName}", bucketNameWithPrefix);
+
+        var putBucketWebsiteRequest = new PutBucketWebsiteRequest
+        {
+            BucketName = bucketNameWithPrefix,
+            WebsiteConfiguration = new WebsiteConfiguration
+            {
+                IndexDocumentSuffix = indexDocumentSuffix,
+                ErrorDocument = errorDocument
+            }
+        };
+
+        var response = await amazonS3.PutBucketWebsiteAsync(
+            putBucketWebsiteRequest,
+            cancellationToken);
+        return response.HttpStatusCode == System.Net.HttpStatusCode.OK;
+    }
 }

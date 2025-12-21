@@ -222,4 +222,79 @@ public class S3ServiceTests
         // Assert
         Assert.False(success);
     }
+
+    [Fact]
+    public async Task GivenWebsiteConfiguration_WhenSetBucketWebsiteConfigurationAsync_ThenSetsWebsiteConfiguration()
+    {
+        // Arrange
+        var mockAmazonS3 = new Mock<IAmazonS3>();
+        var options = new AwsServiceOptions
+        {
+            ResourcePrefix = "test-prefix"
+        };
+        var s3Service = new S3Service(
+            mockAmazonS3.Object,
+            options,
+            Mock.Of<ILogger<S3Service>>());
+        var bucketName = "my-bucket";
+        var expectedBucketName = "test-prefix.my-bucket";
+        var indexDocumentSuffix = "index.html";
+        var errorDocument = "error.html";
+
+        mockAmazonS3
+            .Setup(s3 => s3.PutBucketWebsiteAsync(
+                It.Is<PutBucketWebsiteRequest>(req =>
+                    req.BucketName == expectedBucketName &&
+                    req.WebsiteConfiguration.IndexDocumentSuffix == indexDocumentSuffix &&
+                    req.WebsiteConfiguration.ErrorDocument == errorDocument),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new PutBucketWebsiteResponse
+            {
+                HttpStatusCode = System.Net.HttpStatusCode.OK
+            });
+
+        // Act
+        var success = await s3Service.SetBucketWebsiteConfigurationAsync(
+            bucketName,
+            indexDocumentSuffix,
+            errorDocument);
+
+        // Assert
+        Assert.True(success);
+        mockAmazonS3.Verify(s3 => s3.PutBucketWebsiteAsync(
+            It.Is<PutBucketWebsiteRequest>(req => req.BucketName == expectedBucketName),
+            It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task GivenWebsiteConfiguration_WhenSetBucketWebsiteConfigurationAsyncFails_ThenReturnsFalse()
+    {
+        // Arrange
+        var mockAmazonS3 = new Mock<IAmazonS3>();
+        var options = new AwsServiceOptions
+        {
+            ResourcePrefix = "test-prefix"
+        };
+        var s3Service = new S3Service(
+            mockAmazonS3.Object,
+            options,
+            Mock.Of<ILogger<S3Service>>());
+        var bucketName = "my-bucket";
+
+        mockAmazonS3
+            .Setup(s3 => s3.PutBucketWebsiteAsync(
+                It.IsAny<PutBucketWebsiteRequest>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new PutBucketWebsiteResponse
+            {
+                HttpStatusCode = System.Net.HttpStatusCode.Forbidden
+            });
+
+        // Act
+        var success = await s3Service.SetBucketWebsiteConfigurationAsync(bucketName);
+
+        // Assert
+        Assert.False(success);
+    }
 }
