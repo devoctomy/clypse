@@ -105,7 +105,7 @@ internal class ClypseAwsSetupOrchestration(
         var authPolicyArn = await iamService.CreatePolicyAsync("clypse.auth.policy", authPolicyDocument, cancellationToken);
         logger.LogInformation("Auth policy '{authPolicyArn}' created.", authPolicyArn);
 
-        // setup cognito resources
+        // Cognito
         logger.LogInformation("Setting up Cognito resources.");
 
         logger.LogInformation("Creating user pool.");
@@ -116,7 +116,16 @@ internal class ClypseAwsSetupOrchestration(
         var identityPoolId = await cognitoService.CreateIdentityPoolAsync("clypse.identity.pool", cancellationToken);
         logger.LogInformation("Identity pool '{userPoolId}' created.", userPoolId);
 
-        // setup identity pool authenticated role here
+        logger.LogInformation("Setting identity pool authenticated role.");
+        var setAuthenticatedRole = await cognitoService.SetIdentityPoolAuthenticatedRoleAsync(
+            identityPoolId,
+            dataPolicyArn,
+            cancellationToken);
+        if (!setAuthenticatedRole)
+        {
+            logger.LogError("Failed to set authenticated role for identity pool.");
+            throw new Exception("Failed to set authenticated role for identity pool.");
+        }
 
         // setup cloudfront resources (required for https delivery of portal)
 

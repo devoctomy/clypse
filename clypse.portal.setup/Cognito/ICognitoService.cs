@@ -48,4 +48,9 @@ public interface ICognitoService
         string email,
         string userPoolId,
         CancellationToken cancellationToken = default);
+
+    public Task<bool> SetIdentityPoolAuthenticatedRoleAsync(
+        string identityPoolId,
+        string roleArn,
+        CancellationToken cancellationToken = default);
 }

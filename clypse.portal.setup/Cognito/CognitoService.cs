@@ -1,4 +1,5 @@
 ﻿using Amazon.CognitoIdentity;
+using Amazon.CognitoIdentity.Model;
 using Amazon.CognitoIdentityProvider;
 using Amazon.CognitoIdentityProvider.Model;
 using Microsoft.Extensions.Logging;
@@ -113,7 +114,26 @@ public class CognitoService(
             ClientName = userPoolClientNameWithPrefix,
             UserPoolId = userPoolId
         };
+
         var response = await amazonCognitoIdentityProvider.CreateUserPoolClientAsync(createUserPoolClientRequest, cancellationToken);
         return response.UserPoolClient.ClientId;
+    }
+
+    public async Task<bool> SetIdentityPoolAuthenticatedRoleAsync(
+        string identityPoolId,
+        string roleArn,
+        CancellationToken cancellationToken = default)
+    {
+        var setIdentityPoolRolesRequest = new SetIdentityPoolRolesRequest
+        {
+            IdentityPoolId = identityPoolId,
+            Roles = new Dictionary<string, string>
+            {
+                { "authenticated", roleArn }
+            }
+        };
+
+        var response = await amazonCognitoIdentity.SetIdentityPoolRolesAsync(setIdentityPoolRolesRequest, cancellationToken);
+        return response.HttpStatusCode == System.Net.HttpStatusCode.OK;
     }
 }
