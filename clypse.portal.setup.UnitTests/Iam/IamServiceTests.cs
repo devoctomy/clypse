@@ -6,7 +6,7 @@ using Moq;
 
 namespace clypse.portal.setup.UnitTests.Iam;
 
-public class IamClientTests
+public class IamServiceTests
 {
     [Fact]
     public async Task GivenNameAndPolicyDocument_WhenCreatePolicy_ThenCreatesPolicy()
@@ -17,10 +17,10 @@ public class IamClientTests
         {
             ResourcePrefix = "test-prefix"
         };
-        var iamClient = new IamClient(
+        var sut = new IamService(
             mockAmazonIam.Object,
             options,
-            Mock.Of<ILogger<IamClient>>());
+            Mock.Of<ILogger<IamService>>());
         var policyName = "test-policy";
         var expectedPolicyName = "test-prefix.test-policy";
         var expectedPolicyArn = "arn:aws:iam::123456789012:policy/test-prefix.test-policy";
@@ -51,7 +51,7 @@ public class IamClientTests
             });
         
         // Act
-        var policyArn = await iamClient.CreatePolicyAsync(policyName, policyDocument);
+        var policyArn = await sut.CreatePolicyAsync(policyName, policyDocument);
 
         // Assert
         Assert.Equal(expectedPolicyArn, policyArn);
@@ -70,10 +70,10 @@ public class IamClientTests
         {
             ResourcePrefix = "test-prefix"
         };
-        var iamClient = new IamClient(
+        var sut = new IamService(
             mockAmazonIam.Object,
             options,
-            Mock.Of<ILogger<IamClient>>());
+            Mock.Of<ILogger<IamService>>());
         var roleName = "test-role";
         var expectedRoleName = "test-prefix.test-role";
 
@@ -90,7 +90,7 @@ public class IamClientTests
             });
         
         // Act
-        var returnedRoleName = await iamClient.CreateRoleAsync(roleName);
+        var returnedRoleName = await sut.CreateRoleAsync(roleName);
 
         // Assert
         Assert.Equal(expectedRoleName, returnedRoleName);
@@ -109,10 +109,10 @@ public class IamClientTests
         {
             ResourcePrefix = "test-prefix"
         };
-        var iamClient = new IamClient(
+        var sut = new IamService(
             mockAmazonIam.Object,
             options,
-            Mock.Of<ILogger<IamClient>>());
+            Mock.Of<ILogger<IamService>>());
         var roleName = "test-role";
         var policyArn = "arn:aws:iam::123456789012:policy/test-policy";
 
@@ -128,7 +128,7 @@ public class IamClientTests
             });
         
         // Act
-        var success = await iamClient.AttachPolicyToRoleAsync(roleName, policyArn);
+        var success = await sut.AttachPolicyToRoleAsync(roleName, policyArn);
 
         // Assert
         Assert.True(success);

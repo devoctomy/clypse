@@ -5,7 +5,7 @@ namespace clypse.portal.setup.Iam;
 /// <summary>
 /// Defines operations for managing AWS IAM policies and roles.
 /// </summary>
-public interface IIamClient
+public interface IIamService
 {
     /// <summary>
     /// Creates a new IAM policy with the specified name and policy document.

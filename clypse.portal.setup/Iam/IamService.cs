@@ -3,16 +3,17 @@ using Amazon.IdentityManagement.Model;
 using Microsoft.Extensions.Logging;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Xml.Linq;
 
 namespace clypse.portal.setup.Iam;
 
 /// <summary>
 /// Provides functionality for managing AWS IAM policies and roles.
 /// </summary>
-public class IamClient(
+public class IamService(
     IAmazonIdentityManagementService amazonIdentityManagementService,
     AwsServiceOptions options,
-    ILogger<IamClient> logger) : IIamClient
+    ILogger<IamService> logger) : IIamService
 {
     private static JsonSerializerOptions _jsonSerializerOptions = new JsonSerializerOptions
     {
@@ -35,11 +36,12 @@ public class IamClient(
         string policyArn,
         CancellationToken cancellationToken = default)
     {
-        logger.LogInformation("Attaching policy to role: Role Name = {policyNameWithPrefix}, Policy Arn = {policyArn}", roleName, policyArn);
+        var roleNameWithPrefix = $"{options.ResourcePrefix}.{roleName}";
+        logger.LogInformation("Attaching policy to role: Role Name = {policyNameWithPrefix}, Policy Arn = {policyArn}", roleNameWithPrefix, policyArn);
 
         var attachRolePolicyRequest = new AttachRolePolicyRequest
         {
-            RoleName = roleName,
+            RoleName = roleNameWithPrefix,
             PolicyArn = policyArn
         };
 

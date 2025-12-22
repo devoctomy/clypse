@@ -20,7 +20,7 @@ public class CognitoServiceTests
         {
             ResourcePrefix = "test-prefix"
         };
-        var cognitoService = new CognitoService(
+        var sut = new CognitoService(
             mockCognitoIdentity.Object,
             mockCognitoIdentityProvider.Object,
             options,
@@ -39,7 +39,7 @@ public class CognitoServiceTests
             });
         
         // Act
-        var identityPoolId = await cognitoService.CreateIdentityPoolAsync(identityPoolName);
+        var identityPoolId = await sut.CreateIdentityPoolAsync(identityPoolName);
 
         // Assert
         Assert.Equal(expectedIdentityPoolId, identityPoolId);
@@ -59,7 +59,7 @@ public class CognitoServiceTests
         {
             ResourcePrefix = "test-prefix"
         };
-        var cognitoService = new CognitoService(
+        var sut = new CognitoService(
             mockCognitoIdentity.Object,
             mockCognitoIdentityProvider.Object,
             options,
@@ -81,7 +81,7 @@ public class CognitoServiceTests
             });
         
         // Act
-        var userPoolId = await cognitoService.CreateUserPoolAsync(userPoolName);
+        var userPoolId = await sut.CreateUserPoolAsync(userPoolName);
 
         // Assert
         Assert.Equal(expectedUserPoolId, userPoolId);
@@ -101,7 +101,7 @@ public class CognitoServiceTests
         {
             ResourcePrefix = "test-prefix"
         };
-        var cognitoService = new CognitoService(
+        var sut = new CognitoService(
             mockCognitoIdentity.Object,
             mockCognitoIdentityProvider.Object,
             options,
@@ -126,7 +126,7 @@ public class CognitoServiceTests
             });
         
         // Act
-        var clientId = await cognitoService.CreateUserPoolClientAsync(clientName, userPoolId);
+        var clientId = await sut.CreateUserPoolClientAsync(clientName, userPoolId);
 
         // Assert
         Assert.Equal(expectedClientId, clientId);
@@ -148,7 +148,7 @@ public class CognitoServiceTests
         {
             ResourcePrefix = "test-prefix"
         };
-        var cognitoService = new CognitoService(
+        var sut = new CognitoService(
             mockCognitoIdentity.Object,
             mockCognitoIdentityProvider.Object,
             options,
@@ -170,7 +170,7 @@ public class CognitoServiceTests
             });
         
         // Act
-        var result = await cognitoService.CreateUserAsync(email, userPoolId);
+        var result = await sut.CreateUserAsync(email, userPoolId);
 
         // Assert
         Assert.True(result);

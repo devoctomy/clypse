@@ -87,7 +87,7 @@ public class CognitoService(
 
         var createUserPoolRequest = new CreateUserPoolRequest
         {
-            PoolName = userPoolNameWithPrefix,
+            PoolName = userPoolNameWithPrefix
         };
         var response = await amazonCognitoIdentityProvider.CreateUserPoolAsync(createUserPoolRequest, cancellationToken);
         return response.UserPool.Id;
@@ -111,7 +111,7 @@ public class CognitoService(
         var createUserPoolClientRequest = new CreateUserPoolClientRequest
         {
             ClientName = userPoolClientNameWithPrefix,
-            UserPoolId = userPoolId,
+            UserPoolId = userPoolId
         };
         var response = await amazonCognitoIdentityProvider.CreateUserPoolClientAsync(createUserPoolClientRequest, cancellationToken);
         return response.UserPoolClient.ClientId;

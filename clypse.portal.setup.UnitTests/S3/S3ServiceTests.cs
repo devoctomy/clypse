@@ -17,7 +17,7 @@ public class S3ServiceTests
         {
             ResourcePrefix = "test-prefix"
         };
-        var s3Service = new S3Service(
+        var sut = new S3Service(
             mockAmazonS3.Object,
             options,
             Mock.Of<ILogger<S3Service>>());
@@ -34,7 +34,7 @@ public class S3ServiceTests
             });
         
         // Act
-        var success = await s3Service.CreateBucketAsync(bucketName);
+        var success = await sut.CreateBucketAsync(bucketName);
 
         // Assert
         Assert.True(success);
@@ -53,7 +53,7 @@ public class S3ServiceTests
         {
             ResourcePrefix = "test-prefix"
         };
-        var s3Service = new S3Service(
+        var sut = new S3Service(
             mockAmazonS3.Object,
             options,
             Mock.Of<ILogger<S3Service>>());
@@ -80,7 +80,7 @@ public class S3ServiceTests
             });
 
         // Act
-        var success = await s3Service.SetBucketCorsConfigurationAsync(
+        var success = await sut.SetBucketCorsConfigurationAsync(
             bucketName,
             allowedHeaders,
             allowedMethods,
@@ -104,7 +104,7 @@ public class S3ServiceTests
         {
             ResourcePrefix = "test-prefix"
         };
-        var s3Service = new S3Service(
+        var sut = new S3Service(
             mockAmazonS3.Object,
             options,
             Mock.Of<ILogger<S3Service>>());
@@ -124,7 +124,7 @@ public class S3ServiceTests
             });
 
         // Act
-        var success = await s3Service.SetBucketCorsConfigurationAsync(
+        var success = await sut.SetBucketCorsConfigurationAsync(
             bucketName,
             allowedHeaders,
             allowedMethods,
@@ -143,7 +143,7 @@ public class S3ServiceTests
         {
             ResourcePrefix = "test-prefix"
         };
-        var s3Service = new S3Service(
+        var sut = new S3Service(
             mockAmazonS3.Object,
             options,
             Mock.Of<ILogger<S3Service>>());
@@ -177,7 +177,7 @@ public class S3ServiceTests
             });
 
         // Act
-        var success = await s3Service.SetBucketPolicyAsync(
+        var success = await sut.SetBucketPolicyAsync(
             bucketName,
             policyDocument);
 
@@ -198,7 +198,7 @@ public class S3ServiceTests
         {
             ResourcePrefix = "test-prefix"
         };
-        var s3Service = new S3Service(
+        var sut = new S3Service(
             mockAmazonS3.Object,
             options,
             Mock.Of<ILogger<S3Service>>());
@@ -215,7 +215,7 @@ public class S3ServiceTests
             });
 
         // Act
-        var success = await s3Service.SetBucketPolicyAsync(
+        var success = await sut.SetBucketPolicyAsync(
             bucketName,
             policyDocument);
 
@@ -232,7 +232,7 @@ public class S3ServiceTests
         {
             ResourcePrefix = "test-prefix"
         };
-        var s3Service = new S3Service(
+        var sut = new S3Service(
             mockAmazonS3.Object,
             options,
             Mock.Of<ILogger<S3Service>>());
@@ -254,7 +254,7 @@ public class S3ServiceTests
             });
 
         // Act
-        var success = await s3Service.SetBucketWebsiteConfigurationAsync(
+        var success = await sut.SetBucketWebsiteConfigurationAsync(
             bucketName,
             indexDocumentSuffix,
             errorDocument);
@@ -276,7 +276,7 @@ public class S3ServiceTests
         {
             ResourcePrefix = "test-prefix"
         };
-        var s3Service = new S3Service(
+        var sut = new S3Service(
             mockAmazonS3.Object,
             options,
             Mock.Of<ILogger<S3Service>>());
@@ -292,7 +292,7 @@ public class S3ServiceTests
             });
 
         // Act
-        var success = await s3Service.SetBucketWebsiteConfigurationAsync(bucketName);
+        var success = await sut.SetBucketWebsiteConfigurationAsync(bucketName);
 
         // Assert
         Assert.False(success);
@@ -307,7 +307,7 @@ public class S3ServiceTests
         {
             ResourcePrefix = "test-prefix"
         };
-        var s3Service = new S3Service(
+        var sut = new S3Service(
             mockAmazonS3.Object,
             options,
             Mock.Of<ILogger<S3Service>>());
@@ -327,7 +327,7 @@ public class S3ServiceTests
             });
 
         // Act
-        var success = await s3Service.SetBucketAcl(bucketName, acl);
+        var success = await sut.SetBucketAcl(bucketName, acl);
 
         // Assert
         Assert.True(success);
@@ -348,7 +348,7 @@ public class S3ServiceTests
         {
             ResourcePrefix = "test-prefix"
         };
-        var s3Service = new S3Service(
+        var sut = new S3Service(
             mockAmazonS3.Object,
             options,
             Mock.Of<ILogger<S3Service>>());
@@ -365,7 +365,7 @@ public class S3ServiceTests
             });
 
         // Act
-        var success = await s3Service.SetBucketAcl(bucketName, acl);
+        var success = await sut.SetBucketAcl(bucketName, acl);
 
         // Assert
         Assert.False(success);
