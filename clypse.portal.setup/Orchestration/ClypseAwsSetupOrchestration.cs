@@ -1,5 +1,4 @@
-﻿using Amazon.Runtime.Internal.Util;
-using clypse.portal.setup.Cognito;
+﻿using clypse.portal.setup.Cognito;
 using clypse.portal.setup.Extensions;
 using clypse.portal.setup.Iam;
 using clypse.portal.setup.S3;
