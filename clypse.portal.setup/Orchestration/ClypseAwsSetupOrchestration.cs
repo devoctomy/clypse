@@ -1,4 +1,6 @@
-﻿using clypse.portal.setup.Cognito;
+﻿using Amazon.Runtime.Internal.Util;
+using clypse.portal.setup.Cognito;
+using clypse.portal.setup.Extensions;
 using clypse.portal.setup.Iam;
 using clypse.portal.setup.S3;
 using Microsoft.Extensions.Logging;
@@ -15,6 +17,23 @@ internal class ClypseAwsSetupOrchestration(
     public async Task SetupClypseOnAwsAsync(CancellationToken cancellationToken)
     {
         logger.LogInformation("Starting Clypse AWS setup orchestration.");
+
+        logger.LogDebug("Using AWS Base Url: {baseUrl}", options.BaseUrl);
+        logger.LogDebug("Using AWS Region: {region}", options.Region);
+        logger.LogDebug("Using Resource Prefix: {resourcePrefix}", options.ResourcePrefix);
+        logger.LogDebug("Using IAM Access Id: {accessId}", options.AccessId);
+        logger.LogDebug("Using IAM Secret Access Key: {secretAccessKey}", options.SecretAccessKey.Redact(3));
+
+        if(!options.IsValid())
+        {
+            throw new Exception("Options are not valid.");
+        }
+
+        if (options.InteractiveMode)
+        {
+            logger.LogInformation("Press any key to begin.");
+            Console.ReadKey();
+        }
 
         // S3
         logger.LogInformation("Setting up S3 resources.");

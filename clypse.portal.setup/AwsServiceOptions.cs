@@ -13,12 +13,12 @@ public class AwsServiceOptions
     /// <summary>
     /// Gets or sets the AWS access key for authentication.
     /// </summary>
-    public string AccessKey { get; set; } = string.Empty;
+    public string AccessId { get; set; } = string.Empty;
 
     /// <summary>
     /// Gets or sets the AWS secret key for authentication.
     /// </summary>
-    public string SecretKey { get; set; } = string.Empty;
+    public string SecretAccessKey { get; set; } = string.Empty;
 
     /// <summary>
     /// Gets or sets the AWS region where resources will be created.
@@ -28,5 +28,15 @@ public class AwsServiceOptions
     /// <summary>
     /// Gets or sets the prefix to be added to all AWS resource names.
     /// </summary>
-    public string ResourcePrefix { get; set; } = "test";
+    public string ResourcePrefix { get; set; } = string.Empty;
+
+    public bool InteractiveMode { get; set; } = true;
+
+    public bool IsValid()
+    {
+        return !string.IsNullOrWhiteSpace(AccessId)
+            && !string.IsNullOrWhiteSpace(SecretAccessKey)
+            && !string.IsNullOrWhiteSpace(Region)
+            && !string.IsNullOrWhiteSpace(ResourcePrefix);
+    }
 }

@@ -1,8 +1,11 @@
 ﻿using Amazon.CognitoIdentity;
 using Amazon.CognitoIdentityProvider;
+using Amazon.IdentityManagement;
 using Amazon.S3;
 using clypse.portal.setup;
 using clypse.portal.setup.Cognito;
+using clypse.portal.setup.Iam;
+using clypse.portal.setup.Orchestration;
 using clypse.portal.setup.S3;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -19,8 +22,11 @@ public static class ServiceCollectionExtensions
     /// Adds Clypse setup services to the service collection.
     /// </summary>
     /// <param name="services">The service collection to add services to.</param>
+    /// <param name="logLevel">The log level to configure for setup orchestration.</param>
     /// <returns>The updated service collection.</returns>
-    public static IServiceCollection AddClypseSetupServices(this IServiceCollection services)
+    public static IServiceCollection AddClypseSetupServices(
+        this IServiceCollection services,
+        Microsoft.Extensions.Logging.LogLevel logLevel = Microsoft.Extensions.Logging.LogLevel.Debug)
     {
         var configuration = new ConfigurationBuilder()
             .AddEnvironmentVariables()
@@ -35,7 +41,7 @@ public static class ServiceCollectionExtensions
         services.AddLogging(logging =>
         {
             logging.AddConsole();
-            logging.SetMinimumLevel(Microsoft.Extensions.Logging.LogLevel.Information);
+            logging.SetMinimumLevel(logLevel);
         });
 
         services.AddScoped<IAmazonS3>((sp) =>
@@ -52,8 +58,8 @@ public static class ServiceCollectionExtensions
             }
 
             return new AmazonS3Client(
-                options.AccessKey,
-                options.SecretKey,
+                options.AccessId,
+                options.SecretAccessKey,
                 config);
         });
 
@@ -70,8 +76,8 @@ public static class ServiceCollectionExtensions
             }
 
             return new AmazonCognitoIdentityClient(
-                options.AccessKey,
-                options.SecretKey,
+                options.AccessId,
+                options.SecretAccessKey,
                 config);
         });
 
@@ -88,13 +94,33 @@ public static class ServiceCollectionExtensions
             }
 
             return new AmazonCognitoIdentityProviderClient(
-                options.AccessKey,
-                options.SecretKey,
+                options.AccessId,
+                options.SecretAccessKey,
+                config);
+        });
+
+        services.AddScoped<IAmazonIdentityManagementService>((sp) =>
+        {
+            var config = new AmazonIdentityManagementServiceConfig
+            {
+                RegionEndpoint = Amazon.RegionEndpoint.GetBySystemName(options.Region)
+            };
+
+            if (!string.IsNullOrWhiteSpace(options.BaseUrl))
+            {
+                config.ServiceURL = options.BaseUrl;
+            }
+            
+            return new AmazonIdentityManagementServiceClient(
+                options.AccessId,
+                options.SecretAccessKey,
                 config);
         });
 
         services.AddScoped<IS3Service, S3Service>();
         services.AddScoped<ICognitoService, CognitoService>();
+        services.AddScoped<IIamService, IamService>();
+        services.AddScoped<IClypseAwsSetupOrchestration, ClypseAwsSetupOrchestration>();
 
         return services;
     }

@@ -12,25 +12,28 @@ services:
     volumes:
       - localstack-data:/var/lib/localstack
       - /var/run/docker.sock:/var/run/docker.sock
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4566/_localstack/health"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
   clypse-setup:
-    image: mcr.microsoft.com/dotnet/sdk:10.0
+    build:
+      context: ..
+      dockerfile: clypse.portal.setup/Dockerfile
     container_name: clypse-setup
     depends_on:
-      - localstack
-    working_dir: /workspace
-    volumes:
-      - ..:/workspace
+      localstack:
+        condition: service_healthy
     environment:
       - AWS_EC2_METADATA_DISABLED=true
       - CLYPSE_SETUP__BaseUrl=http://localstack:4566
-      - CLYPSE_SETUP__AccessKey=test
-      - CLYPSE_SETUP__SecretKey=test
+      - CLYPSE_SETUP__AccessId=test
+      - CLYPSE_SETUP__SecretAccessKey=test
       - CLYPSE_SETUP__Region=us-east-1
-    command:
-      - /bin/bash
-      - -lc
-      - mkdir -p /workspace; cd /workspace; dotnet tool install -g PowerShell; export PATH="$$PATH:/root/.dotnet/tools"; pwsh -NoLogo -NoProfile -File /workspace/Powershell/Setup/SetupClypse.ps1
+      - CLYPSE_SETUP__InteractiveMode=false
+      - CLYPSE_SETUP__ResourcePrefix=testing
     restart: "no"
 
 volumes:
