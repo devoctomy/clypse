@@ -57,17 +57,16 @@ jobs:
       run: |
         echo "🧪 Running Unit Tests..."
         dotnet test \
-          --no-build \
-          --configuration Release \
+          --no-restore \
           --verbosity normal \
           --filter "FullyQualifiedName~UnitTests" \
-          --logger trx \
           --results-directory ./TestResults/UnitTests \
           -p:CollectCoverage=true \
           -p:CoverletOutputFormat="json%2copencover" \
           -p:CoverletOutput="../coverage" \
           -p:MergeWith="../coverage.json" \
-          clypse.sln
+          -c Release
+          --no-build devoctomy.Passchamp.sln
         echo "✅ Unit Tests completed"
       
     - name: Upload unit test results
