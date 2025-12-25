@@ -115,11 +115,12 @@ public class IamServiceTests
             Mock.Of<ILogger<IamService>>());
         var roleName = "test-role";
         var policyArn = "arn:aws:iam::123456789012:policy/test-policy";
+        var expectedRoleName = "test-prefix.test-role";
 
         mockAmazonIam
             .Setup(iam => iam.AttachRolePolicyAsync(
                 It.Is<AttachRolePolicyRequest>(req => 
-                    req.RoleName == roleName && 
+                    req.RoleName == expectedRoleName && 
                     req.PolicyArn == policyArn),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(new AttachRolePolicyResponse
@@ -134,7 +135,7 @@ public class IamServiceTests
         Assert.True(success);
         mockAmazonIam.Verify(iam => iam.AttachRolePolicyAsync(
             It.Is<AttachRolePolicyRequest>(req => 
-                req.RoleName == roleName && 
+                req.RoleName == expectedRoleName && 
                 req.PolicyArn == policyArn),
             It.IsAny<CancellationToken>()),
             Times.Once);
