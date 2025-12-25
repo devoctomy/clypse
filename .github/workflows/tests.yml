@@ -60,11 +60,14 @@ jobs:
           --no-build \
           --configuration Release \
           --verbosity normal \
+          --filter "FullyQualifiedName~UnitTests" \
           --logger trx \
           --results-directory ./TestResults/UnitTests \
-          --collect:"XPlat Code Coverage" \
-          --filter "FullyQualifiedName~UnitTests" \
-          -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=opencover
+          -p:CollectCoverage=true \
+          -p:CoverletOutputFormat="json%2copencover" \
+          -p:CoverletOutput="../coverage" \
+          -p:MergeWith="../coverage.json" \
+          clypse.sln
         echo "✅ Unit Tests completed"
       
     - name: Upload unit test results
