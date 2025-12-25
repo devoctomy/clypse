@@ -28,21 +28,21 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
       
-    - name: Install Python (required for WASM build)
-      run: |
-        apt-get update
-        apt-get install -y python3 python3-pip
-        ln -sf /usr/bin/python3 /usr/bin/python
+#    - name: Install Python (required for WASM build)
+#      run: |
+#        apt-get update
+#        apt-get install -y python3 python3-pip
+#        ln -sf /usr/bin/python3 /usr/bin/python
       
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: '10.0.x'
         
-    - name: Setup HTTPS development certificates
-      run: |
-        dotnet dev-certs https --clean
-        dotnet dev-certs https --trust
+#    - name: Setup HTTPS development certificates
+#     run: |
+#       dotnet dev-certs https --clean
+#       dotnet dev-certs https --trust
         
     - name: Install .NET workloads
       run: dotnet workload install wasm-tools
