@@ -65,7 +65,7 @@ jobs:
           -p:CoverletOutputFormat="json%2copencover" \
           -p:CoverletOutput="../coverage" \
           -p:MergeWith="../coverage.json" \
-          -c Release
+          -c Release \
           --no-build clypse.sln
         echo "✅ Unit Tests completed"
       
