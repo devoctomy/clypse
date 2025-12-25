@@ -8,6 +8,20 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Data\CommandLineTestOptions3HelpMessage.txt" />
+    <None Remove="Data\CommandLineTestOptionsHelpMessage.txt" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="Data\CommandLineTestOptions3HelpMessage.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Data\CommandLineTestOptionsHelpMessage.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
 	  <PackageReference Include="AWSSDK.S3" />
 	  <PackageReference Include="coverlet.collector">
 		  <PrivateAssets>all</PrivateAssets>
@@ -34,7 +48,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Cognito\" />
+    <Folder Include="Services\Cognito\" />
   </ItemGroup>
 
 </Project>
