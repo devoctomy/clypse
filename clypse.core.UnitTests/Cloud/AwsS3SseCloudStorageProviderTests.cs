@@ -2,21 +2,65 @@
 using Amazon.S3.Model;
 using clypse.core.Cloud;
 using clypse.core.Cloud.Aws.S3;
+using clypse.core.Cryptography;
+using clypse.core.Cryptography.Interfaces;
 using clypse.core.UnitTests.Extensions;
 using Moq;
 using System.Text;
 
 namespace clypse.core.UnitTests.Cloud;
 
-public class AwsS3SseCCloudStorageProviderTests
+public class AwsS3SseCloudStorageProviderTests
 {
+    [Fact]
+    public async Task GivenPrefix_AndDelimiter_WhenListObjectsAsync_ThenAmazonS3ClientCalled_AndResultsReturned()
+    {
+        // Arrange
+        var bucketName = "Foo";
+        var mockAmazonS3Client = new Mock<IAmazonS3Client>();
+        var sut = new AwsS3SseCloudStorageProvider(bucketName, mockAmazonS3Client.Object);
+
+        var prefix = "Pop/";
+        var delimiter = "/";
+        var cancellationTokenSource = new CancellationTokenSource();
+
+        // Setup the mock to return a list of objects
+        var listObjectsResponse = new ListObjectsV2Response
+        {
+            CommonPrefixes =
+            [
+                "Pop/Bar1/",
+                "Pop/Bar2/",
+                "Pop/Bar3/",
+            ],
+            IsTruncated = false,
+        };
+
+        mockAmazonS3Client.Setup(x => x.ListObjectsV2Async(
+            It.IsAny<ListObjectsV2Request>(),
+            It.Is<CancellationToken>(y => y == cancellationTokenSource.Token)))
+            .ReturnsAsync(listObjectsResponse);
+
+        // Act
+        var result = await sut.ListObjectsAsync(
+            prefix,
+            delimiter,
+            cancellationTokenSource.Token);
+
+        // Assert
+        Assert.Equal(3, result.Count);
+        Assert.Contains("Bar1", result);
+        Assert.Contains("Bar2", result);
+        Assert.Contains("Bar3", result);
+    }
+
     [Fact]
     public async Task GivenBucketName_AndCredentials_AndEncryptionKey_AndData_WhenPutObjectAsync_AndGetObjectAsync_AndDeleteObjectAsync_ThenObjectSuccessfullyPut_AndObjectSuccessfullyGot_AndObjectSuccessfullyDeleted()
     {
         // Arrange
         var bucketName = "Foo";
         var mockAmazonS3Client = new Mock<IAmazonS3Client>();
-        var sut = new AwsS3SseCCloudStorageProvider(bucketName, mockAmazonS3Client.Object);
+        var sut = new AwsS3SseCloudStorageProvider(bucketName, mockAmazonS3Client.Object);
 
         var key = Guid.NewGuid().ToString();
         var data = Encoding.UTF8.GetBytes("Hello World!");
@@ -80,7 +124,7 @@ public class AwsS3SseCCloudStorageProviderTests
         // Arrange
         var bucketName = "Foo";
         var mockAmazonS3Client = new Mock<IAmazonS3Client>();
-        var sut = new AwsS3SseCCloudStorageProvider(bucketName, mockAmazonS3Client.Object);
+        var sut = new AwsS3SseCloudStorageProvider(bucketName, mockAmazonS3Client.Object);
 
         var key = Guid.NewGuid().ToString();
         var data = Encoding.UTF8.GetBytes("Hello World!");
@@ -145,7 +189,7 @@ public class AwsS3SseCCloudStorageProviderTests
         // Arrange
         var bucketName = "Foo";
         var mockAmazonS3Client = new Mock<IAmazonS3Client>();
-        var sut = new AwsS3SseCCloudStorageProvider(bucketName, mockAmazonS3Client.Object);
+        var sut = new AwsS3SseCloudStorageProvider(bucketName, mockAmazonS3Client.Object);
 
         var key = Guid.NewGuid().ToString();
         var encryptionKey = new byte[32];

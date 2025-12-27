@@ -13,6 +13,50 @@ namespace clypse.core.UnitTests.Cloud;
 public class AwsS3E2eCloudStorageProviderTests
 {
     [Fact]
+    public async Task GivenPrefix_AndDelimiter_WhenListObjectsAsync_ThenAmazonS3ClientCalled_AndResultsReturned()
+    {
+        // Arrange
+        var bucketName = "Foo";
+        var mockAmazonS3Client = new Mock<IAmazonS3Client>();
+        var mockCryptoService = new Mock<ICryptoService>();
+        using var randomGeneratorService = new RandomGeneratorService();
+        var sut = new AwsS3E2eCloudStorageProvider(bucketName, mockAmazonS3Client.Object, mockCryptoService.Object);
+
+        var prefix = "Pop/";
+        var delimiter = "/";
+        var cancellationTokenSource = new CancellationTokenSource();
+
+        // Setup the mock to return a list of objects
+        var listObjectsResponse = new ListObjectsV2Response
+        {
+            CommonPrefixes =
+            [
+                "Pop/Bar1/",
+                "Pop/Bar2/",
+                "Pop/Bar3/",
+            ],
+            IsTruncated = false,
+        };
+
+        mockAmazonS3Client.Setup(x => x.ListObjectsV2Async(
+            It.IsAny<ListObjectsV2Request>(),
+            It.Is<CancellationToken>(y => y == cancellationTokenSource.Token)))
+            .ReturnsAsync(listObjectsResponse);
+
+        // Act
+        var result = await sut.ListObjectsAsync(
+            prefix,
+            delimiter,
+            cancellationTokenSource.Token);
+
+        // Assert
+        Assert.Equal(3, result.Count);
+        Assert.Contains("Bar1", result);
+        Assert.Contains("Bar2", result);
+        Assert.Contains("Bar3", result);
+    }
+
+    [Fact]
     public async Task GivenBucketName_AndCredentials_AndEncryptionKey_AndData_WhenPutObjectAsync_AndGetObjectAsync_AndDeleteObjectAsync_ThenObjectSuccessfullyPut_AndObjectSuccessfullyGot_AndObjectSuccessfullyDeleted()
     {
         // Arrange
