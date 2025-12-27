@@ -28,7 +28,7 @@ public class CognitoService(
         var identityPoolNameWithPrefix = $"{options.ResourcePrefix}.{name}";
         logger.LogInformation("Creating Identity Pool: {identityPoolNameWithPrefix}", identityPoolNameWithPrefix);
 
-        var createIdentityPool = new Amazon.CognitoIdentity.Model.CreateIdentityPoolRequest
+        var createIdentityPool = new CreateIdentityPoolRequest
         {
             IdentityPoolName = identityPoolNameWithPrefix
         };
@@ -68,9 +68,7 @@ public class CognitoService(
         var response = await amazonCognitoIdentityProvider.AdminCreateUserAsync(
             adminCreateUserRequest,
             cancellationToken);
-        return
-            response.HttpStatusCode == System.Net.HttpStatusCode.OK ||
-            response.HttpStatusCode == System.Net.HttpStatusCode.Created;
+        return response.HttpStatusCode == System.Net.HttpStatusCode.OK;
     }
 
     /// <summary>

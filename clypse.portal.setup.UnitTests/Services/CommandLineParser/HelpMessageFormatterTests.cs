@@ -12,15 +12,13 @@ public class HelpMessageFormatterTests
         string expectedMessagePath)
     {
         // Arrange
-        var expected = System.IO.File.ReadAllText(expectedMessagePath);
+        var expected = File.ReadAllText(expectedMessagePath);
         var sut = new HelpMessageFormatter();
 
         // Act
         var result = sut.Format(optionsType);
 
         // Assert
-
-        // Change encoding to Linux, to fix test on Windows
         expected = expected.Replace("\r\n", "\n");
         result = result.Replace("\r\n", "\n");
         Assert.Equal(expected, result);
@@ -30,15 +28,13 @@ public class HelpMessageFormatterTests
     public void GivenOptions_WhenGenericFormat_ThenHelpMessageGenerated()
     {
         // Arrange
-        var expected = System.IO.File.ReadAllText("Data/CommandLineTestOptionsHelpMessage.txt");
+        var expected = File.ReadAllText("Data/CommandLineTestOptionsHelpMessage.txt");
         var sut = new HelpMessageFormatter();
 
         // Act
         var result = sut.Format<CommandLineTestOptions>();
 
         // Assert
-
-        // Change encoding to Linux, to fix test on Windows
         expected = expected.Replace("\r\n", "\n");
         result = result.Replace("\r\n", "\n");
         Assert.Equal(expected, result);

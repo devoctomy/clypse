@@ -183,4 +183,92 @@ public class CognitoServiceTests
             It.IsAny<CancellationToken>()),
             Times.Once);
     }
+
+    [Fact]
+    public async Task GivenIdentityPoolIdAndRoleArn_WhenSetIdentityPoolAuthenticatedRoleAsync_ThenSetsRoleAndReturnsTrue()
+    {
+        // Arrange
+        var mockCognitoIdentity = new Mock<IAmazonCognitoIdentity>();
+        var mockCognitoIdentityProvider = new Mock<IAmazonCognitoIdentityProvider>();
+        var options = new AwsServiceOptions
+        {
+            ResourcePrefix = "test-prefix"
+        };
+        var sut = new CognitoService(
+            mockCognitoIdentity.Object,
+            mockCognitoIdentityProvider.Object,
+            options,
+            Mock.Of<ILogger<CognitoService>>());
+        var identityPoolId = "us-east-1:12345678-1234-1234-1234-123456789012";
+        var roleArn = "arn:aws:iam::123456789012:role/test-role";
+
+        mockCognitoIdentity
+            .Setup(c => c.SetIdentityPoolRolesAsync(
+                It.Is<SetIdentityPoolRolesRequest>(req => 
+                    req.IdentityPoolId == identityPoolId && 
+                    req.Roles.ContainsKey("authenticated") &&
+                    req.Roles["authenticated"] == roleArn),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new SetIdentityPoolRolesResponse
+            {
+                HttpStatusCode = System.Net.HttpStatusCode.OK
+            });
+        
+        // Act
+        var result = await sut.SetIdentityPoolAuthenticatedRoleAsync(identityPoolId, roleArn);
+
+        // Assert
+        Assert.True(result);
+        mockCognitoIdentity.Verify(c => c.SetIdentityPoolRolesAsync(
+            It.Is<SetIdentityPoolRolesRequest>(req => 
+                req.IdentityPoolId == identityPoolId && 
+                req.Roles.ContainsKey("authenticated") &&
+                req.Roles["authenticated"] == roleArn),
+            It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task GivenIdentityPoolIdAndRoleArn_WhenSetIdentityPoolAuthenticatedRoleAsyncFails_ThenReturnsFalse()
+    {
+        // Arrange
+        var mockCognitoIdentity = new Mock<IAmazonCognitoIdentity>();
+        var mockCognitoIdentityProvider = new Mock<IAmazonCognitoIdentityProvider>();
+        var options = new AwsServiceOptions
+        {
+            ResourcePrefix = "test-prefix"
+        };
+        var sut = new CognitoService(
+            mockCognitoIdentity.Object,
+            mockCognitoIdentityProvider.Object,
+            options,
+            Mock.Of<ILogger<CognitoService>>());
+        var identityPoolId = "us-east-1:12345678-1234-1234-1234-123456789012";
+        var roleArn = "arn:aws:iam::123456789012:role/test-role";
+
+        mockCognitoIdentity
+            .Setup(c => c.SetIdentityPoolRolesAsync(
+                It.Is<SetIdentityPoolRolesRequest>(req => 
+                    req.IdentityPoolId == identityPoolId && 
+                    req.Roles.ContainsKey("authenticated") &&
+                    req.Roles["authenticated"] == roleArn),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new SetIdentityPoolRolesResponse
+            {
+                HttpStatusCode = System.Net.HttpStatusCode.BadRequest
+            });
+        
+        // Act
+        var result = await sut.SetIdentityPoolAuthenticatedRoleAsync(identityPoolId, roleArn);
+
+        // Assert
+        Assert.False(result);
+        mockCognitoIdentity.Verify(c => c.SetIdentityPoolRolesAsync(
+            It.Is<SetIdentityPoolRolesRequest>(req => 
+                req.IdentityPoolId == identityPoolId && 
+                req.Roles.ContainsKey("authenticated") &&
+                req.Roles["authenticated"] == roleArn),
+            It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
 }
