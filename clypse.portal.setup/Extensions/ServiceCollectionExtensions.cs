@@ -3,7 +3,9 @@ using Amazon.CognitoIdentityProvider;
 using Amazon.IdentityManagement;
 using Amazon.S3;
 using clypse.portal.setup;
+using clypse.portal.setup.Services;
 using clypse.portal.setup.Services.Cognito;
+using clypse.portal.setup.Services.CommandLineParser;
 using clypse.portal.setup.Services.Iam;
 using clypse.portal.setup.Services.Orchestration;
 using clypse.portal.setup.Services.S3;
@@ -11,7 +13,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
-namespace clypse.core.Extensions;
+namespace clypse.core.setup.Extensions;
 
 /// <summary>
 /// Extension methods for IServiceCollection to add Clypse core services.
@@ -121,6 +123,10 @@ public static class ServiceCollectionExtensions
         services.AddScoped<ICognitoService, CognitoService>();
         services.AddScoped<IIamService, IamService>();
         services.AddScoped<IClypseAwsSetupOrchestration, ClypseAwsSetupOrchestration>();
+        services.AddScoped<ICommandLineArgumentsService, CommandLineArgumentsService>();
+        services.AddScoped<ICommandLineParserService, CommandLineParserService>(_ => { return CommandLineParserService.CreateDefaultInstance(); });
+        services.AddScoped<IHelpMessageFormatter, HelpMessageFormatter>();
+        services.AddSingleton<IProgram, SetupProgram>();
 
         return services;
     }

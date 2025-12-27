@@ -1,33 +1,22 @@
-﻿using clypse.core.Extensions;
-using clypse.portal.setup.Services.Orchestration;
+﻿using clypse.core.setup.Extensions;
+using clypse.portal.setup.Services;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-
+using Microsoft.Extensions.Hosting;
 namespace clypse.portal.setup;
 
 public static class Program
 {
     public static async Task<int> Main(string[] args)
     {
-        var serviceCollection = new ServiceCollection();
-        serviceCollection.AddClypseSetupServices();
-        var serviceProvider = serviceCollection.BuildServiceProvider();
-        var logger = serviceProvider
-            .GetRequiredService<ILoggerFactory>()
-            .CreateLogger("Bootstrap");
+        using IHost host = CreateHostBuilder(args).Build();
 
-        var orchestration = serviceProvider.GetRequiredService<IClypseAwsSetupOrchestration>();
-
-        try
-        {
-            await orchestration.SetupClypseOnAwsAsync(CancellationToken.None);
-
-            return 0;
-        }
-        catch (Exception ex)
-        {
-            logger.LogError(ex, "An error occurred during the setup process.");
-            return -1;
-        }
+        var program = host.Services.GetService<IProgram>();
+        return await program!.Run();
     }
+
+    static IHostBuilder CreateHostBuilder(string[] args) =>
+        Host.CreateDefaultBuilder(args)
+        .ConfigureServices((_, services) =>
+            services
+                .AddClypseSetupServices());
 }
