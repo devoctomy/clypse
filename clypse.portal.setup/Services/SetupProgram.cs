@@ -39,7 +39,7 @@ public class SetupProgram : IProgram
         catch (Exception ex)
         {
             _logger.LogError(ex, "An error occurred during the setup process.");
-            return -1;
+            return 1;
         }
     }
 
