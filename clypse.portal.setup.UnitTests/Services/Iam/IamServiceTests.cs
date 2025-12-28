@@ -38,6 +38,11 @@ public class IamServiceTests
             }
         };
 
+        mockAmazonIam.Setup(iam => iam.GetPolicyAsync(
+                It.IsAny<GetPolicyRequest>(),
+                It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new NoSuchEntityException("Policy does not exist"));
+
         mockAmazonIam
             .Setup(iam => iam.CreatePolicyAsync(
                 It.Is<CreatePolicyRequest>(req => req.PolicyName == expectedPolicyName),

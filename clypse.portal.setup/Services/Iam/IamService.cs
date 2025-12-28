@@ -61,16 +61,36 @@ public class IamService(
         CancellationToken cancellationToken = default)
     {
         var policyNameWithPrefix = $"{options.ResourcePrefix}.{name}";
-        logger.LogInformation("Creating Iam policy: {policyNameWithPrefix}", policyNameWithPrefix);
 
-        var policy = new CreatePolicyRequest
+        try
+        {
+            logger.LogInformation("Checking for existing policy: {policyNameWithPrefix}", policyNameWithPrefix);
+            var getPolicyRequest = new GetPolicyRequest
+            {
+                PolicyArn = $"arn:aws:iam::{options.AwsAccountId}:policy/{policyNameWithPrefix}",
+            };
+
+            var getPolicyResponse = await amazonIdentityManagementService.GetPolicyAsync(getPolicyRequest, cancellationToken);
+
+            if (getPolicyResponse.Policy != null)
+            {
+                logger.LogInformation("Policy already exists: {policyNameWithPrefix}", policyNameWithPrefix);
+                return getPolicyResponse.Policy.Arn;
+            }
+        }
+        catch (NoSuchEntityException ex)
+        {
+            logger.LogInformation("Existing policy does not exist, creating a new one.");
+        }
+
+        logger.LogInformation("Creating Iam policy: {policyNameWithPrefix}", policyNameWithPrefix);
+        var createPolicyRequest = new CreatePolicyRequest
         {
             PolicyName = policyNameWithPrefix,
             PolicyDocument = JsonSerializer.Serialize(policyDocument, _jsonSerializerOptions)
         };
-
-        var response = await amazonIdentityManagementService.CreatePolicyAsync(policy, cancellationToken);
-        return response.Policy.Arn;
+        var createPolicyResponse = await amazonIdentityManagementService.CreatePolicyAsync(createPolicyRequest, cancellationToken);
+        return createPolicyResponse.Policy.Arn;
     }
 
     /// <summary>

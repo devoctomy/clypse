@@ -39,7 +39,10 @@ internal class ClypseAwsSetupOrchestration(
         // S3
         logger.LogInformation("Setting up S3 resources.");
         logger.LogInformation("Creating S3 bucket for portal.");
-        var createdPortalBucket = await s3Service.CreateBucketAsync("clypse.portal", cancellationToken);
+        var portalBucketName = "clypse.portal";
+        var createdPortalBucket = await s3Service.CreateBucketAsync(
+            portalBucketName,
+            cancellationToken);
         if(!createdPortalBucket)
         {
             logger.LogError("Failed to create S3 bucket for portal.");
@@ -48,7 +51,9 @@ internal class ClypseAwsSetupOrchestration(
 
         logger.LogInformation("Creating S3 bucket for data.");
         var dataBucketName = "clypse.data";
-        var createdDataBucket = await s3Service.CreateBucketAsync(dataBucketName, cancellationToken);
+        var createdDataBucket = await s3Service.CreateBucketAsync(
+            dataBucketName,
+            cancellationToken);
         if (!createdDataBucket)
         {
             logger.LogError("Failed to create S3 bucket for data.");
@@ -118,22 +123,32 @@ internal class ClypseAwsSetupOrchestration(
         };
 
         logger.LogInformation("Creating data policy.");
-        var dataPolicyArn = await iamService.CreatePolicyAsync("clypse.data.policy", dataPolicyDocument, cancellationToken);
+        var dataPolicyArn = await iamService.CreatePolicyAsync(
+            "clypse.data.policy",
+            dataPolicyDocument,
+            cancellationToken);
         logger.LogInformation("Data policy '{dataPolicyArn}' created.", dataPolicyArn);
 
         logger.LogInformation("Creating auth policy.");
-        var authPolicyArn = await iamService.CreatePolicyAsync("clypse.auth.policy", authPolicyDocument, cancellationToken);
+        var authPolicyArn = await iamService.CreatePolicyAsync(
+            "clypse.auth.policy",
+            authPolicyDocument,
+            cancellationToken);
         logger.LogInformation("Auth policy '{authPolicyArn}' created.", authPolicyArn);
 
         // Cognito
         logger.LogInformation("Setting up Cognito resources.");
 
         logger.LogInformation("Creating user pool.");
-        var userPoolId = await cognitoService.CreateUserPoolAsync("clypse.user.pool", cancellationToken);
+        var userPoolId = await cognitoService.CreateUserPoolAsync(
+            "clypse.user.pool",
+            cancellationToken);
         logger.LogInformation("User pool '{userPoolId}' created.", userPoolId);
 
         logger.LogInformation("Creating identity pool.");
-        var identityPoolId = await cognitoService.CreateIdentityPoolAsync("clypse.identity.pool", cancellationToken);
+        var identityPoolId = await cognitoService.CreateIdentityPoolAsync(
+            "clypse.identity.pool",
+            cancellationToken);
         logger.LogInformation("Identity pool '{userPoolId}' created.", userPoolId);
 
         logger.LogInformation("Setting identity pool authenticated role.");
@@ -149,6 +164,10 @@ internal class ClypseAwsSetupOrchestration(
 
         // setup cloudfront resources (required for https delivery of portal)
 
-        // deploy portal
+        logger.LogInformation("Deploying portal to portal bucket.");
+        var result = await s3Service.UploadDirectoryToBucket(
+            portalBucketName,
+            options.PortalBuildOutputPath,
+            cancellationToken);
     }
 }
