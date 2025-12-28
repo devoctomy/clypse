@@ -6,11 +6,6 @@
 public class AwsServiceOptions
 {
     /// <summary>
-    /// Gets or sets the AWS account ID where resources will be created.
-    /// </summary>
-    public string AwsAccountId { get; set; } = "000000000000";
-
-    /// <summary>
     /// Gets or sets the base URL for AWS services.
     /// </summary>
     public string BaseUrl { get; set; } = string.Empty;

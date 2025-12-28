@@ -62,26 +62,20 @@ public class IamService(
     {
         var policyNameWithPrefix = $"{options.ResourcePrefix}.{name}";
 
-        try
+        logger.LogInformation("Checking for existing policy: {policyNameWithPrefix}", policyNameWithPrefix);
+        var ListPoliciesRequest = new ListPoliciesRequest
         {
-            logger.LogInformation("Checking for existing policy: {policyNameWithPrefix}", policyNameWithPrefix);
-            var getPolicyRequest = new GetPolicyRequest
-            {
-                PolicyArn = $"arn:aws:iam::{options.AwsAccountId}:policy/{policyNameWithPrefix}",
-            };
-
-            var getPolicyResponse = await amazonIdentityManagementService.GetPolicyAsync(getPolicyRequest, cancellationToken);
-
-            if (getPolicyResponse.Policy != null)
-            {
-                logger.LogInformation("Policy already exists: {policyNameWithPrefix}", policyNameWithPrefix);
-                return getPolicyResponse.Policy.Arn;
-            }
-        }
-        catch (NoSuchEntityException ex)
+            Scope = PolicyScopeType.Local
+        };
+        var listPoliciesResponse = await amazonIdentityManagementService.ListPoliciesAsync(ListPoliciesRequest, cancellationToken);
+        var existingPolicy = listPoliciesResponse.Policies.FirstOrDefault(p => p.PolicyName == policyNameWithPrefix);
+        if (existingPolicy != null)
         {
-            logger.LogInformation("Existing policy does not exist, creating a new one.");
+            logger.LogInformation("Policy already exists: {policyNameWithPrefix}", policyNameWithPrefix);
+            return existingPolicy.Arn;
         }
+
+        logger.LogInformation("Existing policy does not exist, creating a new one.");
 
         logger.LogInformation("Creating Iam policy: {policyNameWithPrefix}", policyNameWithPrefix);
         var createPolicyRequest = new CreatePolicyRequest

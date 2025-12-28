@@ -9,7 +9,7 @@ namespace clypse.portal.setup.UnitTests.Services.Iam;
 public class IamServiceTests
 {
     [Fact]
-    public async Task GivenNameAndPolicyDocument_WhenCreatePolicy_ThenCreatesPolicy()
+    public async Task GivenNameAndPolicyDocument_AndPolicyNotLreadyExists_WhenCreatePolicy_ThenCreatesPolicy()
     {
         // Arrange
         var mockAmazonIam = new Mock<IAmazonIdentityManagementService>();
@@ -38,10 +38,13 @@ public class IamServiceTests
             }
         };
 
-        mockAmazonIam.Setup(iam => iam.GetPolicyAsync(
-                It.IsAny<GetPolicyRequest>(),
+        mockAmazonIam.Setup(iam => iam.ListPoliciesAsync(
+                It.IsAny<ListPoliciesRequest>(),
                 It.IsAny<CancellationToken>()))
-            .ThrowsAsync(new NoSuchEntityException("Policy does not exist"));
+            .ReturnsAsync(new ListPoliciesResponse
+            {
+                Policies = []
+            });
 
         mockAmazonIam
             .Setup(iam => iam.CreatePolicyAsync(
