@@ -12,7 +12,7 @@ public static class StringExtensions
         }
 
         var redactedPortion = new string('*', input.Length - excludeLastNDigits);
-        var visiblePortion = input.Substring(input.Length - excludeLastNDigits);
+        var visiblePortion = input[^excludeLastNDigits..];
         return redactedPortion + visiblePortion;
     }
 }
