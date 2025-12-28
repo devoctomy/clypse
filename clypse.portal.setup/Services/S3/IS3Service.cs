@@ -59,8 +59,27 @@ public interface IS3Service
         string errorDocument = "error.html",
         CancellationToken cancellationToken = default);
 
+    /// <summary>
+    /// Sets the Access Control List (ACL) for the specified S3 bucket.
+    /// </summary>
+    /// <param name="bucketName">Name of the bucket to configure (without the resource prefix).</param>
+    /// <param name="acl">Canned ACL to specify for the bucket.</param>
+    /// <param name="cancellationToken">Cancellation token to cancel the operation.</param>
+    /// <returns>True if the ACL for the bucket was set successfully; otherwise, false.</returns>
     public Task<bool> SetBucketAcl(
         string bucketName,
         S3CannedACL acl,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Uploads all files from a directory recursively to the specified S3 bucket.
+    /// </summary>
+    /// <param name="bucketName">Name of the bucket to upload to (without the resource prefix).</param>
+    /// <param name="directoryPath">The local directory path to upload.</param>
+    /// <param name="cancellationToken">Cancellation token to cancel the operation.</param>
+    /// <returns>True if the directory was uploaded successfully; otherwise, false.</returns>
+    public Task<bool> UploadDirectoryToBucket(
+        string bucketName,
+        string directoryPath,
         CancellationToken cancellationToken = default);
 }

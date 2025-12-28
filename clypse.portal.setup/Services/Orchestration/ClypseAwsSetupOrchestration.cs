@@ -3,6 +3,7 @@ using clypse.portal.setup.Services.Cognito;
 using clypse.portal.setup.Services.Iam;
 using clypse.portal.setup.Services.S3;
 using Microsoft.Extensions.Logging;
+using System.Text;
 
 namespace clypse.portal.setup.Services.Orchestration;
 
@@ -22,8 +23,9 @@ internal class ClypseAwsSetupOrchestration(
         logger.LogDebug("Using Resource Prefix: {resourcePrefix}", options.ResourcePrefix);
         logger.LogDebug("Using IAM Access Id: {accessId}", options.AccessId);
         logger.LogDebug("Using IAM Secret Access Key: {secretAccessKey}", options.SecretAccessKey.Redact(3));
+        logger.LogDebug("Using Portal Build Output Path: {portalBuildOutputPath}", options.PortalBuildOutputPath);
 
-        if(!options.IsValid())
+        if (!options.IsValid())
         {
             throw new Exception("Options are not valid.");
         }

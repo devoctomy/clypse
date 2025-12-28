@@ -1,5 +1,6 @@
 ﻿using Amazon.S3;
 using Amazon.S3.Model;
+using Amazon.S3.Transfer;
 using Microsoft.Extensions.Logging;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -172,5 +173,49 @@ public class S3Service(
             putBucketAclRequest,
             cancellationToken);
         return response.HttpStatusCode == System.Net.HttpStatusCode.OK;
+    }
+
+    /// <summary>
+    /// Uploads all files from a directory recursively to the specified S3 bucket.
+    /// </summary>
+    /// <param name="bucketName">Name of the bucket to upload to (without the resource prefix).</param>
+    /// <param name="directoryPath">The local directory path to upload.</param>
+    /// <param name="cancellationToken">Cancellation token to cancel the operation.</param>
+    /// <returns>True if the directory was uploaded successfully; otherwise, false.</returns>
+    public async Task<bool> UploadDirectoryToBucket(
+        string bucketName,
+        string directoryPath,
+        CancellationToken cancellationToken = default)
+    {
+        var bucketNameWithPrefix = $"{options.ResourcePrefix}.{bucketName}";
+        logger.LogInformation("Uploading directory {DirectoryPath} to bucket: {BucketName}", directoryPath, bucketNameWithPrefix);
+
+        if (!Directory.Exists(directoryPath))
+        {
+            logger.LogError("Directory does not exist: {DirectoryPath}", directoryPath);
+            return false;
+        }
+
+        try
+        {
+            using var transferUtility = new TransferUtility(amazonS3);
+            var uploadDirectoryRequest = new TransferUtilityUploadDirectoryRequest
+            {
+                BucketName = bucketNameWithPrefix,
+                Directory = directoryPath,
+                SearchOption = SearchOption.AllDirectories,
+                SearchPattern = "*",
+                CannedACL = S3CannedACL.PublicRead
+            };
+
+            await transferUtility.UploadDirectoryAsync(uploadDirectoryRequest, cancellationToken);
+            logger.LogInformation("Successfully uploaded directory to bucket: {BucketName}", bucketNameWithPrefix);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Failed to upload directory {DirectoryPath} to bucket {BucketName}", directoryPath, bucketNameWithPrefix);
+            return false;
+        }
     }
 }

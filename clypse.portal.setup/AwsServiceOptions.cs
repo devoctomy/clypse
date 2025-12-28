@@ -30,6 +30,11 @@ public class AwsServiceOptions
     /// </summary>
     public string ResourcePrefix { get; set; } = string.Empty;
 
+    /// <summary>
+    /// Gets or sets the path where the full WASM Release build of the portal has been published.
+    /// </summary>
+    public string PortalBuildOutputPath { get; set; } = string.Empty;
+
     public bool InteractiveMode { get; set; } = true;
 
     public bool IsValid()
