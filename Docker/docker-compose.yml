@@ -17,6 +17,17 @@ services:
       interval: 5s
       timeout: 5s
       retries: 10
+      
+  s3-browser:
+    image: gcatanese/s3-simple-browser
+    ports:
+      - "8081:8081"
+    environment:
+      - AWS_ACCESS_KEY_ID=test
+      - AWS_SECRET_ACCESS_KEY=test
+      - S3_LOCALSTACK_URL=http://localstack:4566
+    depends_on:
+      - localstack     
 
   clypse-setup:
     build:
