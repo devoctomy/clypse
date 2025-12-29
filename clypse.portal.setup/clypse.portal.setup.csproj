@@ -9,6 +9,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="AWSSDK.CloudFront" />
     <PackageReference Include="AWSSDK.CognitoIdentity" />
     <PackageReference Include="AWSSDK.CognitoIdentityProvider" />
     <PackageReference Include="AWSSDK.IdentityManagement" />

@@ -18,6 +18,15 @@ services:
       timeout: 5s
       retries: 10
       
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - localstack     
+      
   s3-browser:
     image: gcatanese/s3-simple-browser
     ports:

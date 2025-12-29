@@ -162,12 +162,40 @@ internal class ClypseAwsSetupOrchestration(
             throw new Exception("Failed to set authenticated role for identity pool.");
         }
 
-        // setup cloudfront resources (required for https delivery of portal)
-
         logger.LogInformation("Deploying portal to portal bucket.");
         var result = await s3Service.UploadDirectoryToBucket(
             portalBucketName,
             options.PortalBuildOutputPath,
             cancellationToken);
+
+        logger.LogInformation("Setting portal bucket website configuration.");
+        var setBucketWebsiteConfig = await s3Service.SetBucketWebsiteConfigurationAsync(
+            portalBucketName,
+            cancellationToken: cancellationToken);
+        if (!setBucketWebsiteConfig)
+        {
+            logger.LogError("Failed to set portal bucket website configuration.");
+            throw new Exception("Failed to set portal bucket website configuration.");
+        }
+
+        var websiteUrl = GetPortalWebsiteConfigUrl(portalBucketName);
+        logger.LogInformation("Portal Website Url : {websiteUrl}", websiteUrl);
+    }
+
+    private string GetPortalWebsiteConfigUrl(string bucketName)
+    {
+        var bucketNameWithPrefix = $"{options.ResourcePrefix}.{bucketName}";
+        bool isLocalstack =
+            options.BaseUrl.Contains("localhost") == true ||
+            options.BaseUrl.Contains("localstack") == true;
+
+        if (isLocalstack)
+        {
+            return $"http://localhost";
+        }
+        else
+        {
+            return $"http://{bucketNameWithPrefix}.s3-website-{options.Region}.amazonaws.com";
+        }
     }
 }
