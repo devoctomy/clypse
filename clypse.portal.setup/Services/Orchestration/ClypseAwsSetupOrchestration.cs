@@ -178,8 +178,25 @@ internal class ClypseAwsSetupOrchestration(
             throw new Exception("Failed to set portal bucket website configuration.");
         }
 
-        var websiteUrl = GetPortalWebsiteConfigUrl(portalBucketName);
-        logger.LogInformation("Portal Website Url : {websiteUrl}", websiteUrl);
+        logger.LogInformation("Portal Bucket Url : {bucketUrl}", GetBucketUrl(portalBucketName));
+        logger.LogInformation("Portal Website Url : {websiteUrl}", GetPortalWebsiteConfigUrl(portalBucketName));
+    }
+
+    private string GetBucketUrl(string bucketName)
+    {
+        var bucketNameWithPrefix = $"{options.ResourcePrefix}.{bucketName}";
+        bool isLocalstack =
+            options.BaseUrl.Contains("localhost") == true ||
+            options.BaseUrl.Contains("localstack") == true;
+
+        if (isLocalstack)
+        {
+            return $"{options.BaseUrl}/{bucketNameWithPrefix}";
+        }
+        else
+        {
+            return $"https://{bucketNameWithPrefix}.s3.{options.Region}.amazonaws.com";
+        }
     }
 
     private string GetPortalWebsiteConfigUrl(string bucketName)
