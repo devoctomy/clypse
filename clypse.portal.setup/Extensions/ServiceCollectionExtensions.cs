@@ -1,9 +1,11 @@
-﻿using Amazon.CognitoIdentity;
+﻿using Amazon.CloudFront;
+using Amazon.CognitoIdentity;
 using Amazon.CognitoIdentityProvider;
 using Amazon.IdentityManagement;
 using Amazon.S3;
 using clypse.portal.setup;
 using clypse.portal.setup.Services;
+using clypse.portal.setup.Services.Cloudfront;
 using clypse.portal.setup.Services.Cognito;
 using clypse.portal.setup.Services.CommandLineParser;
 using clypse.portal.setup.Services.Iam;
@@ -119,9 +121,28 @@ public static class ServiceCollectionExtensions
                 config);
         });
 
+        services.AddScoped<IAmazonCloudFront>((sp) =>
+        {
+            var config = new AmazonCloudFrontConfig
+            {
+                RegionEndpoint = Amazon.RegionEndpoint.GetBySystemName(options.Region)
+            };
+
+            if (!string.IsNullOrWhiteSpace(options.BaseUrl))
+            {
+                config.ServiceURL = options.BaseUrl;
+            }
+
+            return new AmazonCloudFrontClient(
+                options.AccessId,
+                options.SecretAccessKey,
+                config);
+        });
+
         services.AddScoped<IS3Service, S3Service>();
         services.AddScoped<ICognitoService, CognitoService>();
         services.AddScoped<IIamService, IamService>();
+        services.AddScoped<ICloudfrontService, CloudfrontService>();
         services.AddScoped<IClypseAwsSetupOrchestration, ClypseAwsSetupOrchestration>();
         services.AddScoped<ICommandLineArgumentsService, CommandLineArgumentsService>();
         services.AddScoped<ICommandLineParserService, CommandLineParserService>(_ => { return CommandLineParserService.CreateDefaultInstance(); });

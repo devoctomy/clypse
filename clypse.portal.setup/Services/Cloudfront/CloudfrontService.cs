@@ -8,7 +8,7 @@ public class CloudfrontService(
     IAmazonCloudFront amazonCloudFront,
     ILogger<CloudfrontService> logger) : ICloudfrontService
 {
-    public async Task<bool> CreateDistributionAsync(
+    public async Task<string?> CreateDistributionAsync(
         string websiteHost,
         string? alias = null,
         string? certificateArn = null,
@@ -21,7 +21,6 @@ public class CloudfrontService(
             var distributionConfig = new DistributionConfig
             {
                 CallerReference = Guid.NewGuid().ToString(),
-                Comment = "",
                 Enabled = true,
                 Origins = new Origins
                 {
@@ -31,11 +30,12 @@ public class CloudfrontService(
                         new Origin
                         {
                             Id = originId,
-                            DomainName = websiteHost,
+                            DomainName = "localstack", //websiteHost,
+                            OriginPath = "/testing.clypse.portal",
                             CustomOriginConfig = new CustomOriginConfig
                             {
-                                HTTPPort = 80,
-                                HTTPSPort = 443,
+                                //HTTPPort = 4566, //80,
+                                //HTTPSPort = 4566, //443,
                                 OriginProtocolPolicy = OriginProtocolPolicy.HttpOnly
                             }
                         }
@@ -91,12 +91,12 @@ public class CloudfrontService(
                 response.Distribution.Id,
                 response.Distribution.DomainName);
 
-            return true;
+            return response.Distribution.DomainName;
         }
         catch (Exception ex)
         {
             logger.LogError(ex, "Failed to create CloudFront distribution for {WebsiteHost}", websiteHost);
-            return false;
+            return null;
         }
     }
 }

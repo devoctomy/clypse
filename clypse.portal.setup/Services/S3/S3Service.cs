@@ -41,6 +41,7 @@ public class S3Service(
         {
             BucketName = bucketNameWithPrefix
         };
+
         var response = await amazonS3.PutBucketAsync(putBucketRequest, cancellationToken);
         return
             response.HttpStatusCode == System.Net.HttpStatusCode.OK ||

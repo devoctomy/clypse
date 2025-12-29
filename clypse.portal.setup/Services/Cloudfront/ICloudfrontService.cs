@@ -2,7 +2,7 @@
 
 public interface ICloudfrontService
 {
-    public Task<bool> CreateDistributionAsync(
+    public Task<string?> CreateDistributionAsync(
         string websiteHost,
         string? alias = null,
         string? certificateArn = null,

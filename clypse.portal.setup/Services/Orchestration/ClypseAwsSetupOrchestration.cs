@@ -1,4 +1,5 @@
 ﻿using clypse.portal.setup.Extensions;
+using clypse.portal.setup.Services.Cloudfront;
 using clypse.portal.setup.Services.Cognito;
 using clypse.portal.setup.Services.Iam;
 using clypse.portal.setup.Services.S3;
@@ -12,6 +13,7 @@ internal class ClypseAwsSetupOrchestration(
         IIamService iamService,
         IS3Service s3Service,
         ICognitoService cognitoService,
+        ICloudfrontService cloudfrontService,
         ILogger<IamService> logger) : IClypseAwsSetupOrchestration
 {
     public async Task SetupClypseOnAwsAsync(CancellationToken cancellationToken)
@@ -178,18 +180,78 @@ internal class ClypseAwsSetupOrchestration(
             throw new Exception("Failed to set portal bucket website configuration.");
         }
 
-        logger.LogInformation("Portal Bucket Url : {bucketUrl}", GetBucketUrl(portalBucketName));
-        logger.LogInformation("Portal Website Url : {websiteUrl}", GetPortalWebsiteConfigUrl(portalBucketName));
+        var portalBucketUrl = GetBucketUrl(portalBucketName);
+        logger.LogInformation("Portal Bucket Url : {bucketUrl}", portalBucketUrl);
+
+        var portalWebsiteUrl = GetPortalWebsiteConfigUrl(portalBucketName);
+        logger.LogInformation("Portal Website Url : {portalWebsiteUrl}", portalWebsiteUrl);
+
+        logger.LogInformation("Creating CloudFront distribution.");
+        var distributionDomain = await cloudfrontService.CreateDistributionAsync(
+            portalBucketUrl,
+            cancellationToken: cancellationToken);
+        if(string.IsNullOrEmpty(distributionDomain))
+        {
+            logger.LogError("Failed to create CloudFront distribution.");
+            throw new Exception("Failed to create CloudFront distribution.");
+        }
+
+        var origins = (string[])["http://localhost:8080", GetDistributionOrigin(distributionDomain)];
+
+        if (IsLocalstack())
+        {
+            logger.LogInformation("Setting portal bucket CORS configuration with origins ({origins}).", string.Join(',', origins));
+            var setBucketCorsConfig = await s3Service.SetBucketCorsConfigurationAsync(
+                portalBucketName,
+                ["*"],
+                ["GET", "PUT", "POST", "DELETE", "HEAD"],
+                origins.ToList(),
+                cancellationToken);
+            if (!setBucketCorsConfig)
+            {
+                logger.LogError("Failed to set portal bucket CORS configuration.");
+                throw new Exception("Failed to set portal bucket CORS configuration.");
+            }
+        }
+
+        logger.LogInformation("Setting data bucket CORS configuration with origins ({origins}).", string.Join(',', origins));
+        var setDataBucketCorsConfig = await s3Service.SetBucketCorsConfigurationAsync(
+            dataBucketName,
+            [ "*" ],
+            [ "GET", "PUT", "POST", "DELETE", "HEAD"],
+            origins.ToList(),
+            cancellationToken);
+        if(!setDataBucketCorsConfig)
+        {
+            logger.LogError("Failed to set data bucket CORS configuration.");
+            throw new Exception("Failed to set data bucket CORS configuration.");
+        }
+
+    }
+
+    private bool IsLocalstack()
+    {
+        return
+            options.BaseUrl.Contains("localhost") == true ||
+            options.BaseUrl.Contains("localstack") == true;
+    }
+
+    private string GetDistributionOrigin(string distributionDomain)
+    {
+        if (IsLocalstack())
+        {
+            return $"https://{distributionDomain}:8443";
+        }
+        else
+        {
+            return $"https://{distributionDomain}";
+        }
     }
 
     private string GetBucketUrl(string bucketName)
     {
         var bucketNameWithPrefix = $"{options.ResourcePrefix}.{bucketName}";
-        bool isLocalstack =
-            options.BaseUrl.Contains("localhost") == true ||
-            options.BaseUrl.Contains("localstack") == true;
-
-        if (isLocalstack)
+        if (IsLocalstack())
         {
             return $"{options.BaseUrl}/{bucketNameWithPrefix}";
         }
@@ -202,13 +264,9 @@ internal class ClypseAwsSetupOrchestration(
     private string GetPortalWebsiteConfigUrl(string bucketName)
     {
         var bucketNameWithPrefix = $"{options.ResourcePrefix}.{bucketName}";
-        bool isLocalstack =
-            options.BaseUrl.Contains("localhost") == true ||
-            options.BaseUrl.Contains("localstack") == true;
-
-        if (isLocalstack)
+        if (IsLocalstack())
         {
-            return $"http://localhost";
+            return $"http://localhost:8080";
         }
         else
         {
