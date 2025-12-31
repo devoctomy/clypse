@@ -7,7 +7,6 @@ using clypse.portal.setup;
 using clypse.portal.setup.Services;
 using clypse.portal.setup.Services.Cloudfront;
 using clypse.portal.setup.Services.Cognito;
-using clypse.portal.setup.Services.CommandLineParser;
 using clypse.portal.setup.Services.Iam;
 using clypse.portal.setup.Services.Orchestration;
 using clypse.portal.setup.Services.S3;
@@ -144,9 +143,6 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IIamService, IamService>();
         services.AddScoped<ICloudfrontService, CloudfrontService>();
         services.AddScoped<IClypseAwsSetupOrchestration, ClypseAwsSetupOrchestration>();
-        services.AddScoped<ICommandLineArgumentsService, CommandLineArgumentsService>();
-        services.AddScoped<ICommandLineParserService, CommandLineParserService>(_ => { return CommandLineParserService.CreateDefaultInstance(); });
-        services.AddScoped<IHelpMessageFormatter, HelpMessageFormatter>();
         services.AddSingleton<IProgram, SetupProgram>();
 
         return services;

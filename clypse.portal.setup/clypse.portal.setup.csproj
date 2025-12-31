@@ -23,6 +23,7 @@
 	<PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
 	<PackageReference Include="Microsoft.Extensions.Logging.Console" />
 	<PackageReference Include="Microsoft.Extensions.Hosting" />
+	<PackageReference Include="Spectre.Console" />
   </ItemGroup>
 
   <ItemGroup>
