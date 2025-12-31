@@ -2,5 +2,5 @@
 
 public interface IPortalBuildService
 {
-    public Task<bool> Run();
+    public Task<PortalBuildResult> Run();
 }

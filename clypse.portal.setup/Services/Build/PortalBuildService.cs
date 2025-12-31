@@ -3,7 +3,7 @@ namespace clypse.portal.setup.Services.Build
 {
     public class PortalBuildService : IPortalBuildService
     {
-        public async Task<bool> Run()
+        public async Task<PortalBuildResult> Run()
         {
             throw new NotImplementedException();
         }
