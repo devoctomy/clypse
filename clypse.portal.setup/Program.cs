@@ -1,4 +1,4 @@
-﻿using clypse.core.setup.Extensions;
+﻿using clypse.portal.setup.Extensions;
 using clypse.portal.setup.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;

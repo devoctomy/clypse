@@ -14,10 +14,10 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
-namespace clypse.core.setup.Extensions;
+namespace clypse.portal.setup.Extensions;
 
 /// <summary>
-/// Extension methods for IServiceCollection to add Clypse core services.
+/// Extension methods for IServiceCollection to add Clypse portal setup services.
 /// </summary>
 public static class ServiceCollectionExtensions
 {
@@ -153,7 +153,7 @@ public static class ServiceCollectionExtensions
 
     private static void ApplyWindowsUserEnvironmentFallback(AwsServiceOptions options)
     {
-        if (!OperatingSystem.IsWindows())
+        if (!OperatingSystem.IsWindows())   // !!! TODO: This should be abstracted into a service to allow for proper unit testing
         {
             return;
         }

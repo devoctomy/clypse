@@ -2,7 +2,7 @@ using Amazon.CognitoIdentity;
 using Amazon.CognitoIdentityProvider;
 using Amazon.IdentityManagement;
 using Amazon.S3;
-using clypse.core.setup.Extensions;
+using clypse.portal.setup.Extensions;
 using clypse.portal.setup.Services;
 using clypse.portal.setup.Services.Cognito;
 using clypse.portal.setup.Services.Iam;

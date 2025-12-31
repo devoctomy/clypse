@@ -4,7 +4,6 @@ using clypse.portal.setup.Services.Cognito;
 using clypse.portal.setup.Services.Iam;
 using clypse.portal.setup.Services.S3;
 using Microsoft.Extensions.Logging;
-using System.Text;
 
 namespace clypse.portal.setup.Services.Orchestration;
 
@@ -205,7 +204,7 @@ internal class ClypseAwsSetupOrchestration(
                 portalBucketName,
                 ["*"],
                 ["GET", "PUT", "POST", "DELETE", "HEAD"],
-                origins.ToList(),
+                [.. origins],
                 cancellationToken);
             if (!setBucketCorsConfig)
             {
@@ -219,7 +218,7 @@ internal class ClypseAwsSetupOrchestration(
             dataBucketName,
             [ "*" ],
             [ "GET", "PUT", "POST", "DELETE", "HEAD"],
-            origins.ToList(),
+            [.. origins],
             cancellationToken);
         if(!setDataBucketCorsConfig)
         {

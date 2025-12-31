@@ -15,7 +15,7 @@ public class S3Service(
     AwsServiceOptions options,
     ILogger<S3Service> logger) : IS3Service
 {
-    private static JsonSerializerOptions _jsonSerializerOptions = new JsonSerializerOptions
+    private static readonly JsonSerializerOptions _jsonSerializerOptions = new()
     {
         WriteIndented = false,
         Converters =
