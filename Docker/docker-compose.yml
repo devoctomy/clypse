@@ -3,7 +3,7 @@ services:
     image: localstack/localstack-pro:latest
     container_name: localstack
     ports:
-      - "4566:4566" # LocalStack Gateway
+      - "4566:4566"
       - "80:80"
     environment:
       - DEBUG=0

@@ -163,11 +163,18 @@ internal class ClypseAwsSetupOrchestration(
             throw new Exception("Failed to set authenticated role for identity pool.");
         }
 
-        logger.LogInformation("Deploying portal to portal bucket.");
-        var result = await s3Service.UploadDirectoryToBucket(
-            portalBucketName,
-            options.PortalBuildOutputPath,
-            cancellationToken);
+        if(Directory.Exists(options.PortalBuildOutputPath))
+        {
+            logger.LogInformation("Deploying portal to portal bucket.");
+            var result = await s3Service.UploadDirectoryToBucket(
+                portalBucketName,
+                options.PortalBuildOutputPath,
+                cancellationToken);
+        }
+        else
+        {
+            logger.LogWarning("Skipping portal deployment as build output path '{portalBuildOutputPath}' does not exist.", options.PortalBuildOutputPath);
+        }
 
         logger.LogInformation("Setting portal bucket website configuration.");
         var setBucketWebsiteConfig = await s3Service.SetBucketWebsiteConfigurationAsync(

@@ -127,18 +127,6 @@ public class SetupInteractiveMenuService : ISetupInteractiveMenuService
                         break;
                     }
 
-                    if (string.IsNullOrWhiteSpace(options.PortalBuildOutputPath))
-                    {
-                        var proceedWithoutBuild = AnsiConsole.Confirm(
-                            "[yellow]PortalBuildOutputPath is empty.[/] Upload may fail. Continue anyway?",
-                            defaultValue: false);
-
-                        if (!proceedWithoutBuild)
-                        {
-                            break;
-                        }
-                    }
-
                     return true;
 
                 case "Cancel":

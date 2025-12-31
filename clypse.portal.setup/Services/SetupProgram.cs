@@ -25,6 +25,12 @@ public class SetupProgram(
 
             await clypseAwsSetupOrchestration.SetupClypseOnAwsAsync(CancellationToken.None);
 
+            if (options.InteractiveMode)
+            {
+                Console.WriteLine("Press any key to exit.");
+                Console.ReadKey();
+            }
+
             return 0;
         }
         catch (Exception ex)
