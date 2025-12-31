@@ -1,16 +1,24 @@
 ﻿using clypse.portal.setup.Extensions;
+using clypse.portal.setup.Services.Build;
 using Spectre.Console;
 
 namespace clypse.portal.setup.Services.Orchestration;
 
 public class SetupInteractiveMenuService : ISetupInteractiveMenuService
 {
+    private readonly IPortalBuildService _portalBuildService;
+
+    public SetupInteractiveMenuService(IPortalBuildService portalBuildService)
+    {
+        _portalBuildService = portalBuildService;
+    }
+
     public bool Run(AwsServiceOptions options)
     {
         return ConfigureAwsOptionsInteractively(options);
     }
 
-    private static bool ConfigureAwsOptionsInteractively(AwsServiceOptions options)
+    private bool ConfigureAwsOptionsInteractively(AwsServiceOptions options)
     {
         while (true)
         {
@@ -30,6 +38,7 @@ public class SetupInteractiveMenuService : ISetupInteractiveMenuService
                     .Title("[aqua]Select an action[/]")
                     .PageSize(12)
                     .AddChoices(
+                        "Build portal (WASM)",
                         "Edit BaseUrl",
                         "Edit AccessId",
                         "Edit SecretAccessKey",
@@ -42,6 +51,45 @@ public class SetupInteractiveMenuService : ISetupInteractiveMenuService
 
             switch (choice)
             {
+                case "Build portal (WASM)":
+                    {
+                        PortalBuildResult? buildResult = null;
+
+                        AnsiConsole.Status()
+                            .Spinner(Spinner.Known.Dots)
+                            .SpinnerStyle(Style.Parse("aqua"))
+                            .Start("Building portal (WASM)...", _ =>
+                            {
+                                buildResult = _portalBuildService.Run().GetAwaiter().GetResult();
+                            });
+
+                        if (buildResult?.Success == true)
+                        {
+                            options.PortalBuildOutputPath = buildResult.OutputPath;
+
+                            var saved = TrySetPortalBuildOutputPathToUserEnvironment(
+                                options.PortalBuildOutputPath,
+                                out var message);
+
+                            if (saved)
+                            {
+                                AnsiConsole.MarkupLine($"[green]{Markup.Escape(message)}[/]");
+                            }
+                            else
+                            {
+                                AnsiConsole.MarkupLine($"[yellow]{Markup.Escape(message)}[/]");
+                            }
+                        }
+                        else
+                        {
+                            AnsiConsole.MarkupLine("[red]Portal build failed.[/]");
+                        }
+
+                        AnsiConsole.MarkupLine("[grey]Press any key to continue...[/]");
+                        Console.ReadKey(true);
+                        break;
+                    }
+
                 case "Edit BaseUrl":
                     options.BaseUrl = AnsiConsole.Prompt(
                         new TextPrompt<string>("[green]BaseUrl[/] (optional)")
@@ -184,5 +232,28 @@ public class SetupInteractiveMenuService : ISetupInteractiveMenuService
     {
         var normalized = string.IsNullOrWhiteSpace(value) ? null : value;
         Environment.SetEnvironmentVariable(key, normalized, target);
+    }
+
+    private static bool TrySetPortalBuildOutputPathToUserEnvironment(string? portalBuildOutputPath, out string message)
+    {
+        try
+        {
+            var target = OperatingSystem.IsWindows()
+                ? EnvironmentVariableTarget.User
+                : EnvironmentVariableTarget.Process;
+
+            SetEnv("CLYPSE_SETUP__PortalBuildOutputPath", portalBuildOutputPath, target);
+
+            message = OperatingSystem.IsWindows()
+                ? $"PortalBuildOutputPath set to '{portalBuildOutputPath}' (saved to user environment)."
+                : $"PortalBuildOutputPath set to '{portalBuildOutputPath}' (current process only).";
+
+            return true;
+        }
+        catch (Exception ex)
+        {
+            message = $"Portal build succeeded, but failed to persist env var: {ex.Message}";
+            return false;
+        }
     }
 }

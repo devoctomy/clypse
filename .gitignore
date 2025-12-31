@@ -421,3 +421,4 @@ FodyWeavers.xsd
 appsettings.Development.json
 quick-start.settings.json
 quick-start.aws-resources.json
+/portal-output
