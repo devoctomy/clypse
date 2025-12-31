@@ -5,6 +5,7 @@ using Amazon.IdentityManagement;
 using Amazon.S3;
 using clypse.portal.setup;
 using clypse.portal.setup.Services;
+using clypse.portal.setup.Services.Build;
 using clypse.portal.setup.Services.Cloudfront;
 using clypse.portal.setup.Services.Cognito;
 using clypse.portal.setup.Services.Iam;
@@ -144,6 +145,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<ICognitoService, CognitoService>();
         services.AddScoped<IIamService, IamService>();
         services.AddScoped<ICloudfrontService, CloudfrontService>();
+        services.AddScoped<IPortalBuildService, PortalBuildService>();
         services.AddScoped<ISetupInteractiveMenuService, SetupInteractiveMenuService>();
         services.AddScoped<IClypseAwsSetupOrchestration, ClypseAwsSetupOrchestration>();
         services.AddSingleton<IProgram, SetupProgram>();

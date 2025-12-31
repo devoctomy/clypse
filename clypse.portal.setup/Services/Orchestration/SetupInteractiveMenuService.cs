@@ -149,10 +149,6 @@ public class SetupInteractiveMenuService : ISetupInteractiveMenuService
         table.AddRow("[blue]Region[/]", Markup.Escape(options.Region ?? string.Empty));
         table.AddRow("[blue]ResourcePrefix[/]", Markup.Escape(options.ResourcePrefix ?? string.Empty));
         table.AddRow("[blue]PortalBuildOutputPath[/]", Markup.Escape(options.PortalBuildOutputPath ?? string.Empty));
-        table.AddEmptyRow();
-        table.AddRow(
-            "[grey]InteractiveMode[/]",
-            options.InteractiveMode ? "[green]true[/]" : "[red]false[/]");
 
         return table;
     }
