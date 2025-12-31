@@ -6,20 +6,20 @@ namespace clypse.portal.setup.Services;
 public class SetupProgram : IProgram
 {
     private readonly AwsServiceOptions _options;
+    private readonly ISetupInteractiveMenuService _setupInteractiveMenuService;
     private readonly IClypseAwsSetupOrchestration _clypseAwsSetupOrchestration;
     private readonly ILogger<SetupProgram> _logger;
 
-    public Func<string> GetCommandLine { get; set; }
-
     public SetupProgram(
         AwsServiceOptions options,
+        ISetupInteractiveMenuService setupInteractiveMenuService,
         IClypseAwsSetupOrchestration clypseAwsSetupOrchestration,
         ILogger<SetupProgram> logger)
     {
         _options = options;
+        _setupInteractiveMenuService = setupInteractiveMenuService;
         _clypseAwsSetupOrchestration = clypseAwsSetupOrchestration;
         _logger = logger;
-        GetCommandLine = DefaultGetCommandLine;
     }
 
     public async Task<int> Run()
@@ -28,7 +28,12 @@ public class SetupProgram : IProgram
         {
             if(_options.InteractiveMode)
             {
-                // use spectre menu here to setup parameters before continuing
+                var continueSetup = _setupInteractiveMenuService.Run(_options);
+                if (!continueSetup)
+                {
+                    _logger.LogInformation("Setup cancelled by user.");
+                    return 0;
+                }
             }
 
             await _clypseAwsSetupOrchestration.SetupClypseOnAwsAsync(CancellationToken.None);
@@ -40,10 +45,5 @@ public class SetupProgram : IProgram
             _logger.LogError(ex, "An error occurred during the setup process.");
             return 1;
         }
-    }
-
-    private string DefaultGetCommandLine()
-    {
-        return Environment.CommandLine;
     }
 }

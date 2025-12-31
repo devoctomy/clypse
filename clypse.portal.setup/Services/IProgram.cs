@@ -2,6 +2,5 @@
 
 public interface IProgram
 {
-    Func<string> GetCommandLine { get; set; }
     Task<int> Run();
 }

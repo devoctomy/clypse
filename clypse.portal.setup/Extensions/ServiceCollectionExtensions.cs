@@ -39,6 +39,8 @@ public static class ServiceCollectionExtensions
         configuration
             .GetSection("CLYPSE_SETUP")
             .Bind(options);
+
+        ApplyWindowsUserEnvironmentFallback(options);
         services.AddSingleton(options);
 
         services.AddLogging(logging =>
@@ -142,9 +144,44 @@ public static class ServiceCollectionExtensions
         services.AddScoped<ICognitoService, CognitoService>();
         services.AddScoped<IIamService, IamService>();
         services.AddScoped<ICloudfrontService, CloudfrontService>();
+        services.AddScoped<ISetupInteractiveMenuService, SetupInteractiveMenuService>();
         services.AddScoped<IClypseAwsSetupOrchestration, ClypseAwsSetupOrchestration>();
         services.AddSingleton<IProgram, SetupProgram>();
 
         return services;
+    }
+
+    private static void ApplyWindowsUserEnvironmentFallback(AwsServiceOptions options)
+    {
+        if (!OperatingSystem.IsWindows())
+        {
+            return;
+        }
+
+        options.BaseUrl = PreferExisting(
+            options.BaseUrl,
+            Environment.GetEnvironmentVariable("CLYPSE_SETUP__BaseUrl", EnvironmentVariableTarget.User));
+        options.AccessId = PreferExisting(
+            options.AccessId,
+            Environment.GetEnvironmentVariable("CLYPSE_SETUP__AccessId", EnvironmentVariableTarget.User));
+        options.SecretAccessKey = PreferExisting(
+            options.SecretAccessKey,
+            Environment.GetEnvironmentVariable("CLYPSE_SETUP__SecretAccessKey", EnvironmentVariableTarget.User));
+        options.Region = PreferExisting(
+            options.Region,
+            Environment.GetEnvironmentVariable("CLYPSE_SETUP__Region", EnvironmentVariableTarget.User));
+        options.ResourcePrefix = PreferExisting(
+            options.ResourcePrefix,
+            Environment.GetEnvironmentVariable("CLYPSE_SETUP__ResourcePrefix", EnvironmentVariableTarget.User));
+        options.PortalBuildOutputPath = PreferExisting(
+            options.PortalBuildOutputPath,
+            Environment.GetEnvironmentVariable("CLYPSE_SETUP__PortalBuildOutputPath", EnvironmentVariableTarget.User));
+    }
+
+    private static string PreferExisting(string currentValue, string? fallbackValue)
+    {
+        return string.IsNullOrWhiteSpace(currentValue)
+            ? (fallbackValue ?? string.Empty)
+            : currentValue;
     }
 }

@@ -5,7 +5,6 @@ using Amazon.S3;
 using clypse.core.setup.Extensions;
 using clypse.portal.setup.Services;
 using clypse.portal.setup.Services.Cognito;
-using clypse.portal.setup.Services.CommandLineParser;
 using clypse.portal.setup.Services.Iam;
 using clypse.portal.setup.Services.Orchestration;
 using clypse.portal.setup.Services.S3;
@@ -62,15 +61,6 @@ public class ServiceCollectionExtensionsTests
 
             var orchestration = serviceProvider.GetService<IClypseAwsSetupOrchestration>();
             Assert.NotNull(orchestration);
-
-            var commandLineArgs = serviceProvider.GetService<ICommandLineArgumentsService>();
-            Assert.NotNull(commandLineArgs);
-
-            var commandLineParser = serviceProvider.GetService<ICommandLineParserService>();
-            Assert.NotNull(commandLineParser);
-
-            var helpFormatter = serviceProvider.GetService<IHelpMessageFormatter>();
-            Assert.NotNull(helpFormatter);
 
             var program = serviceProvider.GetService<IProgram>();
             Assert.NotNull(program);
