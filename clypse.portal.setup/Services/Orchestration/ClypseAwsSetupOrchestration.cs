@@ -4,6 +4,7 @@ using clypse.portal.setup.Services.Cognito;
 using clypse.portal.setup.Services.Iam;
 using clypse.portal.setup.Services.S3;
 using Microsoft.Extensions.Logging;
+using System.Reflection;
 
 namespace clypse.portal.setup.Services.Orchestration;
 
@@ -37,6 +38,12 @@ internal class ClypseAwsSetupOrchestration(
             Console.ReadKey();
         }
 
+        var tags = new Dictionary<string, string>
+            {
+                { "clypse:setup-timestamp", DateTime.UtcNow.ToString("o") },
+                { "clypse:setup-version", Assembly.GetExecutingAssembly().GetName().Version!.ToString() }
+            };
+
         // S3
         logger.LogInformation("Setting up S3 resources.");
         logger.LogInformation("Creating S3 bucket for portal.");
@@ -48,6 +55,17 @@ internal class ClypseAwsSetupOrchestration(
         {
             logger.LogError("Failed to create S3 bucket for portal.");
             throw new Exception("Failed to create S3 bucket for portal.");
+        }
+
+        logger.LogInformation("Tagging portal bucket.");
+        var taggedPortalBucket = await s3Service.SetBucketTags(
+            portalBucketName,
+            tags,
+            cancellationToken);
+        if (!taggedPortalBucket)
+        {
+            logger.LogError("Failed to set tags for portal bucket.");
+            throw new Exception("Failed to set tags for portal bucket.");
         }
 
         logger.LogInformation("Creating S3 bucket for data.");

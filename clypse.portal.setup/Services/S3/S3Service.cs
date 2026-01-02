@@ -42,10 +42,30 @@ public class S3Service(
             BucketName = bucketNameWithPrefix
         };
 
-        var response = await amazonS3.PutBucketAsync(putBucketRequest, cancellationToken);
-        return
-            response.HttpStatusCode == System.Net.HttpStatusCode.OK ||
-            response.HttpStatusCode == System.Net.HttpStatusCode.Created;
+        var putBucketResponse = await amazonS3.PutBucketAsync(putBucketRequest, cancellationToken);
+
+        return putBucketResponse.HttpStatusCode == System.Net.HttpStatusCode.OK;
+    }
+
+    public async Task<bool> SetBucketTags(
+        string bucketName,
+        Dictionary<string, string> tags,
+        CancellationToken cancellationToken = default)
+    {
+        var bucketNameWithPrefix = $"{options.ResourcePrefix}.{bucketName}";
+        logger.LogInformation("Setting tags for S3 bucket: {BucketName}", bucketNameWithPrefix);
+
+        var tagSet = tags
+            .Select(kv => new Tag { Key = kv.Key, Value = kv.Value })
+            .ToList();
+        var putBucketTaggingRequest = new PutBucketTaggingRequest
+        {
+            BucketName = bucketNameWithPrefix,
+            TagSet = tagSet
+        };
+
+        var putBucketTaggingResponse = await amazonS3.PutBucketTaggingAsync(putBucketTaggingRequest, cancellationToken);
+        return putBucketTaggingResponse.HttpStatusCode == System.Net.HttpStatusCode.OK;
     }
 
     /// <summary>

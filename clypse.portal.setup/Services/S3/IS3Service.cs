@@ -17,6 +17,11 @@ public interface IS3Service
         string bucketName,
         CancellationToken cancellationToken = default);
 
+    public Task<bool> SetBucketTags(
+        string bucketName,
+        Dictionary<string, string> tags,
+        CancellationToken cancellationToken = default);
+
     /// <summary>
     /// Sets the CORS configuration for the specified S3 bucket.
     /// </summary>
