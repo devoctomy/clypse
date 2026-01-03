@@ -36,9 +36,9 @@ public class KeyDerivationServiceDefaultOptions
 #else
         options.Parameters[KeyDerivationParameterKeys.Algorithm] = KeyDerivationAlgorithm.Argon2id.ToString();
         options.Parameters[KeyDerivationParameterKeys.Argon2id_KeyLength] = 32;
-        options.Parameters[KeyDerivationParameterKeys.Argon2id_Parallelism] = 1;
-        options.Parameters[KeyDerivationParameterKeys.Argon2id_MemorySizeKb] = 262144;
-        options.Parameters[KeyDerivationParameterKeys.Argon2id_Iterations] = 1;
+        options.Parameters[KeyDerivationParameterKeys.Argon2id_Parallelism] = 1; // Bitwarden uses 4
+        options.Parameters[KeyDerivationParameterKeys.Argon2id_MemorySizeKb] = 262144; // Bitwarden uses 64mb
+        options.Parameters[KeyDerivationParameterKeys.Argon2id_Iterations] = 1; // Bitwarden uses 3
 #endif
         return options;
     }
