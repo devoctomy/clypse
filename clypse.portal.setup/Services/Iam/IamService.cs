@@ -53,11 +53,13 @@ public class IamService(
     /// </summary>
     /// <param name="name">The name of the policy to create (without the resource prefix).</param>
     /// <param name="policyDocument">The policy document as an object to be serialized to JSON.</param>
+    /// <param name="tags">Tags to associate with the policy.</param>
     /// <param name="cancellationToken">Cancellation token to cancel the operation.</param>
     /// <returns>The ARN of the created policy.</returns>
     public async Task<string> CreatePolicyAsync(
         string name,
         object policyDocument,
+        Dictionary<string, string> tags,
         CancellationToken cancellationToken = default)
     {
         var policyNameWithPrefix = $"{options.ResourcePrefix}.{name}";
@@ -77,11 +79,16 @@ public class IamService(
 
         logger.LogInformation("Existing policy does not exist, creating a new one.");
 
+        var tagSet = tags
+            .Select(kv => new Tag { Key = kv.Key, Value = kv.Value })
+            .ToList();
+
         logger.LogInformation("Creating Iam policy: {policyNameWithPrefix}", policyNameWithPrefix);
         var createPolicyRequest = new CreatePolicyRequest
         {
             PolicyName = policyNameWithPrefix,
-            PolicyDocument = JsonSerializer.Serialize(policyDocument, _jsonSerializerOptions)
+            PolicyDocument = JsonSerializer.Serialize(policyDocument, _jsonSerializerOptions),
+            Tags = tagSet
         };
         var createPolicyResponse = await amazonIdentityManagementService.CreatePolicyAsync(createPolicyRequest, cancellationToken);
         return createPolicyResponse.Policy.Arn;
@@ -91,18 +98,25 @@ public class IamService(
     /// Creates a new IAM role with the specified name.
     /// </summary>
     /// <param name="name">The name of the role to create (without the resource prefix).</param>
+    /// <param name="tags">Tags to associate with the policy.</param>
     /// <param name="cancellationToken">Cancellation token to cancel the operation.</param>
     /// <returns>The name of the created role.</returns>
     public async Task<string> CreateRoleAsync(
         string name,
+        Dictionary<string, string> tags,
         CancellationToken cancellationToken = default)
     {
         var roleNameWithPrefix = $"{options.ResourcePrefix}.{name}";
-        logger.LogInformation("Creating Iam role: {roleNameWithPrefix}", roleNameWithPrefix);
 
+        var tagSet = tags
+            .Select(kv => new Tag { Key = kv.Key, Value = kv.Value })
+            .ToList();
+
+        logger.LogInformation("Creating Iam role: {roleNameWithPrefix}", roleNameWithPrefix);
         var createRoleRequest = new CreateRoleRequest
         {
             RoleName = roleNameWithPrefix,
+            Tags = tagSet
         };
 
         var response = await amazonIdentityManagementService.CreateRoleAsync(createRoleRequest, cancellationToken);

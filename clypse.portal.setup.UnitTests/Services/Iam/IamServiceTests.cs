@@ -38,6 +38,12 @@ public class IamServiceTests
             }
         };
 
+        var tags = new Dictionary<string, string>
+        {
+            { "Hello", "World" },
+            { "Foo", "Bar" }
+        };
+
         mockAmazonIam.Setup(iam => iam.ListPoliciesAsync(
                 It.IsAny<ListPoliciesRequest>(),
                 It.IsAny<CancellationToken>()))
@@ -48,7 +54,9 @@ public class IamServiceTests
 
         mockAmazonIam
             .Setup(iam => iam.CreatePolicyAsync(
-                It.Is<CreatePolicyRequest>(req => req.PolicyName == expectedPolicyName),
+                It.Is<CreatePolicyRequest>(req =>
+                    req.PolicyName == expectedPolicyName &&
+                    TagsMatch(req.Tags, tags)),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(new CreatePolicyResponse
             {
@@ -59,7 +67,7 @@ public class IamServiceTests
             });
         
         // Act
-        var policyArn = await sut.CreatePolicyAsync(policyName, policyDocument);
+        var policyArn = await sut.CreatePolicyAsync(policyName, policyDocument, tags);
 
         // Assert
         Assert.Equal(expectedPolicyArn, policyArn);
@@ -85,10 +93,17 @@ public class IamServiceTests
         var roleName = "test-role";
         var expectedRoleName = "test-prefix.test-role";
 
+        var tags = new Dictionary<string, string>
+        {
+            { "Hello", "World" },
+            { "Foo", "Bar" }
+        };
+
         mockAmazonIam
             .Setup(iam => iam.CreateRoleAsync(
-                It.Is<CreateRoleRequest>(req => req.RoleName == expectedRoleName),
-                It.IsAny<CancellationToken>()))
+                It.Is<CreateRoleRequest>(req =>
+                    req.RoleName == expectedRoleName &&
+                    TagsMatch(req.Tags, tags))))
             .ReturnsAsync(new CreateRoleResponse
             {
                 Role = new Role
@@ -98,7 +113,7 @@ public class IamServiceTests
             });
         
         // Act
-        var returnedRoleName = await sut.CreateRoleAsync(roleName);
+        var returnedRoleName = await sut.CreateRoleAsync(roleName, tags);
 
         // Assert
         Assert.Equal(expectedRoleName, returnedRoleName);
@@ -147,5 +162,22 @@ public class IamServiceTests
                 req.PolicyArn == policyArn),
             It.IsAny<CancellationToken>()),
             Times.Once);
+    }
+
+    private bool TagsMatch(
+        List<Tag> awsTags,
+        Dictionary<string, string> expectedTags)
+    {
+        if (awsTags.Count != expectedTags.Count)
+            return false;
+        foreach (var tag in awsTags)
+        {
+            if (!expectedTags.TryGetValue(tag.Key, out var expectedValue) ||
+                tag.Value != expectedValue)
+            {
+                return false;
+            }
+        }
+        return true;
     }
 }

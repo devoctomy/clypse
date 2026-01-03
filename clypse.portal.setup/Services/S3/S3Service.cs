@@ -24,6 +24,20 @@ public class S3Service(
         }
     };
 
+
+    public async Task<bool> DoesBucketExistAsync(
+        string bucketName,
+        CancellationToken cancellationToken = default)
+    {
+        var bucketNameWithPrefix = $"{options.ResourcePrefix}.{bucketName}";
+        logger.LogInformation("Checking if bucket exists: {BucketName}", bucketNameWithPrefix);
+
+        var listBucketsResponse = await amazonS3.ListBucketsAsync(cancellationToken);
+        var bucket = listBucketsResponse.Buckets.FirstOrDefault(b => b.BucketName.Equals(bucketNameWithPrefix, StringComparison.OrdinalIgnoreCase));
+
+        return bucket != null;
+    }
+
     /// <summary>
     /// Creates a new S3 bucket with the specified name.
     /// </summary>
@@ -65,7 +79,7 @@ public class S3Service(
         };
 
         var putBucketTaggingResponse = await amazonS3.PutBucketTaggingAsync(putBucketTaggingRequest, cancellationToken);
-        return putBucketTaggingResponse.HttpStatusCode == System.Net.HttpStatusCode.OK;
+        return putBucketTaggingResponse.HttpStatusCode == System.Net.HttpStatusCode.NoContent;
     }
 
     /// <summary>

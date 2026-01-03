@@ -25,6 +25,10 @@ public class SetupProgramTests
             mockClypseAwsSetupOrchestration.Object,
             Mock.Of<ILogger<SetupProgram>>());
 
+        mockClypseAwsSetupOrchestration.Setup(x => x.PrepareSetup(
+            It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+
         // Act
         var result = await sut.Run();
 
@@ -53,6 +57,10 @@ public class SetupProgramTests
             mockSetupInteractiveMenuService.Object,
             mockClypseAwsSetupOrchestration.Object,
             Mock.Of<ILogger<SetupProgram>>());
+
+        mockClypseAwsSetupOrchestration.Setup(x => x.PrepareSetup(
+            It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
 
         mockClypseAwsSetupOrchestration.Setup(x => x.SetupClypseOnAwsAsync(
             It.IsAny<CancellationToken>()))

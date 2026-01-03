@@ -2,5 +2,7 @@
 
 public interface IClypseAwsSetupOrchestration
 {
-    public Task SetupClypseOnAwsAsync(CancellationToken cancellationToken);
+    public Task<bool> PrepareSetup(CancellationToken cancellationToken);
+
+    public Task<bool> SetupClypseOnAwsAsync(CancellationToken cancellationToken);
 }

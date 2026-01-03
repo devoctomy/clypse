@@ -5,6 +5,7 @@ using clypse.portal.setup.Services.Iam;
 using clypse.portal.setup.Services.S3;
 using Microsoft.Extensions.Logging;
 using System.Reflection;
+using System.Text;
 
 namespace clypse.portal.setup.Services.Orchestration;
 
@@ -16,7 +17,50 @@ internal class ClypseAwsSetupOrchestration(
         ICloudfrontService cloudfrontService,
         ILogger<IamService> logger) : IClypseAwsSetupOrchestration
 {
-    public async Task SetupClypseOnAwsAsync(CancellationToken cancellationToken)
+    public async Task<bool> PrepareSetup(CancellationToken cancellationToken)
+    {
+        logger.LogInformation("Preparing Clypse AWS setup orchestration.");
+
+        logger.LogDebug("Using AWS Base Url: {baseUrl}", options.BaseUrl);
+        logger.LogDebug("Using AWS Region: {region}", options.Region);
+        logger.LogDebug("Using Resource Prefix: {resourcePrefix}", options.ResourcePrefix);
+        logger.LogDebug("Using IAM Access Id: {accessId}", options.AccessId);
+        logger.LogDebug("Using IAM Secret Access Key: {secretAccessKey}", options.SecretAccessKey.Redact(3));
+        logger.LogDebug("Using Portal Build Output Path: {portalBuildOutputPath}", options.PortalBuildOutputPath);
+
+        if (!options.IsValid())
+        {
+            throw new Exception("Options are not valid.");
+        }
+
+        // S3
+        logger.LogInformation("Checking S3 resources.");
+        var portalBucketName = "clypse.portal";
+        logger.LogInformation("Checking to see if portal bucket already exists.");
+        var portalBucketExists = await s3Service.DoesBucketExistAsync(
+            portalBucketName,
+            cancellationToken);
+        if (portalBucketExists)
+        {
+            logger.LogError("S3 bucket for portal already exists.");
+            return false;
+        }
+
+        var dataBucketName = "clypse.data";
+        logger.LogInformation("Checking to see if portal bucket already exists.");
+        var dataBucketExists = await s3Service.DoesBucketExistAsync(
+            dataBucketName,
+            cancellationToken);
+        if (dataBucketExists)
+        {
+            logger.LogError("S3 bucket for data already exists.");
+            return false;
+        }
+
+        return true;
+    }
+
+    public async Task<bool> SetupClypseOnAwsAsync(CancellationToken cancellationToken)
     {
         logger.LogInformation("Starting Clypse AWS setup orchestration.");
 
@@ -32,17 +76,25 @@ internal class ClypseAwsSetupOrchestration(
             throw new Exception("Options are not valid.");
         }
 
+        var setupId = Guid.NewGuid().ToString();
+        var tags = new Dictionary<string, string>
+            {
+                { "clypse:setup-id", setupId },
+                { "clypse:setup-version", Assembly.GetExecutingAssembly().GetName().Version!.ToString() }
+            };
+
+        var tagsList = new StringBuilder();
+        foreach (var tag in tags)
+        {
+            tagsList.AppendLine($"{tag.Key} = {tag.Value}");
+        }
+        logger.LogInformation("Using the following tags for all created resources: \r\n{tagsList}", tagsList.ToString().TrimEnd());
+
         if (options.InteractiveMode)
         {
             logger.LogInformation("Press any key to begin.");
             Console.ReadKey();
         }
-
-        var tags = new Dictionary<string, string>
-            {
-                { "clypse:setup-timestamp", DateTime.UtcNow.ToString("o") },
-                { "clypse:setup-version", Assembly.GetExecutingAssembly().GetName().Version!.ToString() }
-            };
 
         // S3
         logger.LogInformation("Setting up S3 resources.");
@@ -77,6 +129,17 @@ internal class ClypseAwsSetupOrchestration(
         {
             logger.LogError("Failed to create S3 bucket for data.");
             throw new Exception("Failed to create S3 bucket for data.");
+        }
+
+        logger.LogInformation("Tagging data bucket.");
+        var taggedDataBucket = await s3Service.SetBucketTags(
+            dataBucketName,
+            tags,
+            cancellationToken);
+        if (!taggedDataBucket)
+        {
+            logger.LogError("Failed to set tags for data bucket.");
+            throw new Exception("Failed to set tags for data bucket.");
         }
 
         // IAM
@@ -145,6 +208,7 @@ internal class ClypseAwsSetupOrchestration(
         var dataPolicyArn = await iamService.CreatePolicyAsync(
             "clypse.data.policy",
             dataPolicyDocument,
+            tags,
             cancellationToken);
         logger.LogInformation("Data policy '{dataPolicyArn}' created.", dataPolicyArn);
 
@@ -152,6 +216,7 @@ internal class ClypseAwsSetupOrchestration(
         var authPolicyArn = await iamService.CreatePolicyAsync(
             "clypse.auth.policy",
             authPolicyDocument,
+            tags,
             cancellationToken);
         logger.LogInformation("Auth policy '{authPolicyArn}' created.", authPolicyArn);
 
@@ -251,6 +316,7 @@ internal class ClypseAwsSetupOrchestration(
             throw new Exception("Failed to set data bucket CORS configuration.");
         }
 
+        return true;
     }
 
     private bool IsLocalstack()

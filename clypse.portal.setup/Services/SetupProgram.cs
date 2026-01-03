@@ -23,6 +23,13 @@ public class SetupProgram(
                 }
             }
 
+            var prepared = await clypseAwsSetupOrchestration.PrepareSetup(CancellationToken.None);
+            if(!prepared)
+            {
+                logger.LogError("Setup preparation failed. Exiting.");
+                return 1;
+            }
+
             await clypseAwsSetupOrchestration.SetupClypseOnAwsAsync(CancellationToken.None);
 
             if (options.InteractiveMode)

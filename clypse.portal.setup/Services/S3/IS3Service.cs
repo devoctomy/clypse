@@ -7,6 +7,10 @@ namespace clypse.portal.setup.Services.S3;
 /// </summary>
 public interface IS3Service
 {
+    public Task<bool> DoesBucketExistAsync(
+        string bucketName,
+        CancellationToken cancellationToken = default);
+
     /// <summary>
     /// Creates a new S3 bucket with the specified name.
     /// </summary>
