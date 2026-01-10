@@ -12,7 +12,7 @@ namespace clypse.portal.setup.Services.Cognito;
 public class CognitoService(
     IAmazonCognitoIdentity amazonCognitoIdentity,
     IAmazonCognitoIdentityProvider amazonCognitoIdentityProvider,
-    AwsServiceOptions options,
+    SetupOptions options,
     ILogger<CognitoService> logger) : ICognitoService
 {
     /// <summary>

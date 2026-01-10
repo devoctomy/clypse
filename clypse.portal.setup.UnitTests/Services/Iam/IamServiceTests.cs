@@ -13,7 +13,7 @@ public class IamServiceTests
     {
         // Arrange
         var mockAmazonIam = new Mock<IAmazonIdentityManagementService>();
-        var options = new AwsServiceOptions
+        var options = new SetupOptions
         {
             ResourcePrefix = "test-prefix"
         };
@@ -82,7 +82,7 @@ public class IamServiceTests
     {
         // Arrange
         var mockAmazonIam = new Mock<IAmazonIdentityManagementService>();
-        var options = new AwsServiceOptions
+        var options = new SetupOptions
         {
             ResourcePrefix = "test-prefix"
         };
@@ -128,7 +128,7 @@ public class IamServiceTests
     {
         // Arrange
         var mockAmazonIam = new Mock<IAmazonIdentityManagementService>();
-        var options = new AwsServiceOptions
+        var options = new SetupOptions
         {
             ResourcePrefix = "test-prefix"
         };

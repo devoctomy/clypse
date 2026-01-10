@@ -11,7 +11,7 @@ using System.Text;
 namespace clypse.portal.setup.Services.Orchestration;
 
 internal class ClypseAwsSetupOrchestration(
-        AwsServiceOptions options,
+        SetupOptions options,
         ISecurityTokenService securityTokenService,
         IIamService iamService,
         IS3Service s3Service,

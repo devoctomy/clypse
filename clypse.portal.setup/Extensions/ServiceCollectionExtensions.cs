@@ -38,7 +38,7 @@ public static class ServiceCollectionExtensions
             .AddEnvironmentVariables()
             .Build();
 
-        var options = new AwsServiceOptions();
+        var options = new SetupOptions();
         configuration
             .GetSection("CLYPSE_SETUP")
             .Bind(options);
@@ -174,7 +174,7 @@ public static class ServiceCollectionExtensions
         return services;
     }
 
-    private static void ApplyWindowsUserEnvironmentFallback(AwsServiceOptions options)
+    private static void ApplyWindowsUserEnvironmentFallback(SetupOptions options)
     {
         if (!OperatingSystem.IsWindows())   // !!! TODO: This should be abstracted into a service to allow for proper unit testing
         {

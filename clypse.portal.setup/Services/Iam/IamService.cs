@@ -11,7 +11,7 @@ namespace clypse.portal.setup.Services.Iam;
 /// </summary>
 public class IamService(
     IAmazonIdentityManagementService amazonIdentityManagementService,
-    AwsServiceOptions options,
+    SetupOptions options,
     ILogger<IamService> logger) : IIamService
 {
     private static JsonSerializerOptions _jsonSerializerOptions = new JsonSerializerOptions

@@ -17,7 +17,7 @@ public class CognitoServiceTests
         // Arrange
         var mockCognitoIdentity = new Mock<IAmazonCognitoIdentity>();
         var mockCognitoIdentityProvider = new Mock<IAmazonCognitoIdentityProvider>();
-        var options = new AwsServiceOptions
+        var options = new SetupOptions
         {
             ResourcePrefix = "test-prefix"
         };
@@ -66,7 +66,7 @@ public class CognitoServiceTests
         // Arrange
         var mockCognitoIdentity = new Mock<IAmazonCognitoIdentity>();
         var mockCognitoIdentityProvider = new Mock<IAmazonCognitoIdentityProvider>();
-        var options = new AwsServiceOptions
+        var options = new SetupOptions
         {
             ResourcePrefix = "test-prefix"
         };
@@ -118,7 +118,7 @@ public class CognitoServiceTests
         // Arrange
         var mockCognitoIdentity = new Mock<IAmazonCognitoIdentity>();
         var mockCognitoIdentityProvider = new Mock<IAmazonCognitoIdentityProvider>();
-        var options = new AwsServiceOptions
+        var options = new SetupOptions
         {
             ResourcePrefix = "test-prefix"
         };
@@ -191,7 +191,7 @@ public class CognitoServiceTests
         // Arrange
         var mockCognitoIdentity = new Mock<IAmazonCognitoIdentity>();
         var mockCognitoIdentityProvider = new Mock<IAmazonCognitoIdentityProvider>();
-        var options = new AwsServiceOptions
+        var options = new SetupOptions
         {
             ResourcePrefix = "test-prefix"
         };
@@ -241,7 +241,7 @@ public class CognitoServiceTests
         // Arrange
         var mockCognitoIdentity = new Mock<IAmazonCognitoIdentity>();
         var mockCognitoIdentityProvider = new Mock<IAmazonCognitoIdentityProvider>();
-        var options = new AwsServiceOptions
+        var options = new SetupOptions
         {
             ResourcePrefix = "test-prefix"
         };
@@ -315,7 +315,7 @@ public class CognitoServiceTests
         // Arrange
         var mockCognitoIdentity = new Mock<IAmazonCognitoIdentity>();
         var mockCognitoIdentityProvider = new Mock<IAmazonCognitoIdentityProvider>();
-        var options = new AwsServiceOptions
+        var options = new SetupOptions
         {
             ResourcePrefix = "test-prefix"
         };
@@ -368,7 +368,7 @@ public class CognitoServiceTests
         // Arrange
         var mockCognitoIdentity = new Mock<IAmazonCognitoIdentity>();
         var mockCognitoIdentityProvider = new Mock<IAmazonCognitoIdentityProvider>();
-        var options = new AwsServiceOptions
+        var options = new SetupOptions
         {
             ResourcePrefix = "test-prefix"
         };
@@ -412,7 +412,7 @@ public class CognitoServiceTests
         // Arrange
         var mockCognitoIdentity = new Mock<IAmazonCognitoIdentity>();
         var mockCognitoIdentityProvider = new Mock<IAmazonCognitoIdentityProvider>();
-        var options = new AwsServiceOptions
+        var options = new SetupOptions
         {
             ResourcePrefix = "test-prefix"
         };

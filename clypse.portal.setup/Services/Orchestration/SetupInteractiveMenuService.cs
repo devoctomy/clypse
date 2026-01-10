@@ -13,12 +13,12 @@ public class SetupInteractiveMenuService : ISetupInteractiveMenuService
         _portalBuildService = portalBuildService;
     }
 
-    public bool Run(AwsServiceOptions options)
+    public bool Run(SetupOptions options)
     {
         return ConfigureAwsOptionsInteractively(options);
     }
 
-    private bool ConfigureAwsOptionsInteractively(AwsServiceOptions options)
+    private bool ConfigureAwsOptionsInteractively(SetupOptions options)
     {
         while (true)
         {
@@ -191,7 +191,7 @@ public class SetupInteractiveMenuService : ISetupInteractiveMenuService
         }
     }
 
-    private static Table BuildOptionsTable(AwsServiceOptions options)
+    private static Table BuildOptionsTable(SetupOptions options)
     {
         var table = new Table()
             .Border(TableBorder.Rounded)
@@ -210,7 +210,7 @@ public class SetupInteractiveMenuService : ISetupInteractiveMenuService
         return table;
     }
 
-    private static bool TrySaveOptionsToUserEnvironment(AwsServiceOptions options, out string message)
+    private static bool TrySaveOptionsToUserEnvironment(SetupOptions options, out string message)
     {
         try
         {

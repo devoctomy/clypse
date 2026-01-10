@@ -1,6 +1,6 @@
 ﻿namespace clypse.portal.setup.UnitTests;
 
-public class AwsServiceOptionsTests
+public class SetupOptionsTests
 {
     [Theory]
     [InlineData("base-url", "access-id", "secret-access-key", "region", "resource-prefix", "bob@hoskins.com", true)]
@@ -20,7 +20,7 @@ public class AwsServiceOptionsTests
         bool expectedIsValid)
     {
         // Arrange
-        var sut = new AwsServiceOptions
+        var sut = new SetupOptions
         {
             BaseUrl = baseUrl,
             AccessId = accessId,

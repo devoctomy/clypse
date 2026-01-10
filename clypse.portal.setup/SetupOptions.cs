@@ -1,9 +1,9 @@
 ﻿namespace clypse.portal.setup;
 
 /// <summary>
-/// Configuration options for AWS services used in the portal setup.
+/// Configuration options for portal setup.
 /// </summary>
-public class AwsServiceOptions
+public class SetupOptions
 {
     /// <summary>
     /// Gets or sets the base URL for AWS services.

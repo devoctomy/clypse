@@ -2,5 +2,5 @@
 
 public interface ISetupInteractiveMenuService
 {
-    public bool Run(AwsServiceOptions options);
+    public bool Run(SetupOptions options);
 }

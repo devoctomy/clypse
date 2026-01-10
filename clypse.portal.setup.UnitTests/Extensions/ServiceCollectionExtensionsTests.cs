@@ -65,8 +65,8 @@ public class ServiceCollectionExtensionsTests
             var program = serviceProvider.GetService<IProgram>();
             Assert.NotNull(program);
 
-            // Verify AwsServiceOptions
-            var options = serviceProvider.GetService<AwsServiceOptions>();
+            // Verify SetupOptions
+            var options = serviceProvider.GetService<SetupOptions>();
             Assert.NotNull(options);
             Assert.Equal("us-east-1", options.Region);
             Assert.Equal("test-access-id", options.AccessId);
@@ -140,7 +140,7 @@ public class ServiceCollectionExtensionsTests
             var serviceProvider = services.BuildServiceProvider();
 
             // Assert
-            var options = serviceProvider.GetService<AwsServiceOptions>();
+            var options = serviceProvider.GetService<SetupOptions>();
             Assert.NotNull(options);
             Assert.Equal("http://localhost:4566", options.BaseUrl);
 

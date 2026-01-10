@@ -12,7 +12,7 @@ namespace clypse.portal.setup.Services.S3;
 /// </summary>
 public class S3Service(
     IAmazonS3 amazonS3,
-    AwsServiceOptions options,
+    SetupOptions options,
     ILogger<S3Service> logger) : IS3Service
 {
     private static readonly JsonSerializerOptions _jsonSerializerOptions = new()

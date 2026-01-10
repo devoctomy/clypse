@@ -4,7 +4,7 @@ using Microsoft.Extensions.Logging;
 namespace clypse.portal.setup.Services;
 
 public class SetupProgram(
-    AwsServiceOptions options,
+    SetupOptions options,
     ISetupInteractiveMenuService setupInteractiveMenuService,
     IClypseAwsSetupOrchestration clypseAwsSetupOrchestration,
     ILogger<SetupProgram> logger) : IProgram

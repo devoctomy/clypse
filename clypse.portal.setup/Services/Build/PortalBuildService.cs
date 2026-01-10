@@ -4,7 +4,7 @@ using Microsoft.Extensions.Logging;
 namespace clypse.portal.setup.Services.Build;
 
 public class PortalBuildService(
-    AwsServiceOptions options,
+    SetupOptions options,
     ILogger<PortalBuildService> logger) : IPortalBuildService
 {
     public async Task<PortalBuildResult> Run()

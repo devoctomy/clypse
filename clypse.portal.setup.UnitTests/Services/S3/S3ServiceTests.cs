@@ -13,7 +13,7 @@ public class S3ServiceTests
     {
         // Arrange
         var mockAmazonS3 = new Mock<IAmazonS3>();
-        var options = new AwsServiceOptions
+        var options = new SetupOptions
         {
             ResourcePrefix = "test-prefix"
         };
@@ -49,7 +49,7 @@ public class S3ServiceTests
     {
         // Arrange
         var mockAmazonS3 = new Mock<IAmazonS3>();
-        var options = new AwsServiceOptions
+        var options = new SetupOptions
         {
             ResourcePrefix = "test-prefix"
         };
@@ -100,7 +100,7 @@ public class S3ServiceTests
     {
         // Arrange
         var mockAmazonS3 = new Mock<IAmazonS3>();
-        var options = new AwsServiceOptions
+        var options = new SetupOptions
         {
             ResourcePrefix = "test-prefix"
         };
@@ -139,7 +139,7 @@ public class S3ServiceTests
     {
         // Arrange
         var mockAmazonS3 = new Mock<IAmazonS3>();
-        var options = new AwsServiceOptions
+        var options = new SetupOptions
         {
             ResourcePrefix = "test-prefix"
         };
@@ -194,7 +194,7 @@ public class S3ServiceTests
     {
         // Arrange
         var mockAmazonS3 = new Mock<IAmazonS3>();
-        var options = new AwsServiceOptions
+        var options = new SetupOptions
         {
             ResourcePrefix = "test-prefix"
         };
@@ -228,7 +228,7 @@ public class S3ServiceTests
     {
         // Arrange
         var mockAmazonS3 = new Mock<IAmazonS3>();
-        var options = new AwsServiceOptions
+        var options = new SetupOptions
         {
             ResourcePrefix = "test-prefix"
         };
@@ -272,7 +272,7 @@ public class S3ServiceTests
     {
         // Arrange
         var mockAmazonS3 = new Mock<IAmazonS3>();
-        var options = new AwsServiceOptions
+        var options = new SetupOptions
         {
             ResourcePrefix = "test-prefix"
         };
@@ -303,7 +303,7 @@ public class S3ServiceTests
     {
         // Arrange
         var mockAmazonS3 = new Mock<IAmazonS3>();
-        var options = new AwsServiceOptions
+        var options = new SetupOptions
         {
             ResourcePrefix = "test-prefix"
         };
@@ -344,7 +344,7 @@ public class S3ServiceTests
     {
         // Arrange
         var mockAmazonS3 = new Mock<IAmazonS3>();
-        var options = new AwsServiceOptions
+        var options = new SetupOptions
         {
             ResourcePrefix = "test-prefix"
         };

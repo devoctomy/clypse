@@ -11,7 +11,7 @@ public class SetupProgramTests
     public async Task GivenProgram_WhenRun_AndNoExceptions_ThenOrchstrationIsCalled_And0Returned()
     {
         // Arrange
-        var options = new AwsServiceOptions
+        var options = new SetupOptions
         {
             BaseUrl = "https://example.com",
             AccessId = "test-access-id",
@@ -44,7 +44,7 @@ public class SetupProgramTests
     public async Task GivenProgram_WhenRun_AndExceptionOccurs_ThenOrchstrationIsCalled_AndErrorCodeReturned()
     {
         // Arrange
-        var options = new AwsServiceOptions
+        var options = new SetupOptions
         {
             BaseUrl = "https://example.com",
             AccessId = "test-access-id",
