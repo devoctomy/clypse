@@ -33,8 +33,13 @@ public class S3Service(
         logger.LogInformation("Checking if bucket exists: {BucketName}", bucketNameWithPrefix);
 
         var listBucketsResponse = await amazonS3.ListBucketsAsync(cancellationToken);
-        var bucket = listBucketsResponse.Buckets.FirstOrDefault(b => b.BucketName.Equals(bucketNameWithPrefix, StringComparison.OrdinalIgnoreCase));
+        if(listBucketsResponse.HttpStatusCode != System.Net.HttpStatusCode.OK)
+        {
+            logger.LogError("Failed to list S3 buckets. HTTP Status Code: {StatusCode}", listBucketsResponse.HttpStatusCode);
+            return false;
+        }
 
+        var bucket = listBucketsResponse.Buckets?.FirstOrDefault(b => b.BucketName.Equals(bucketNameWithPrefix, StringComparison.OrdinalIgnoreCase));
         return bucket != null;
     }
 

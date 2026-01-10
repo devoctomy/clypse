@@ -3,6 +3,7 @@ using clypse.portal.setup.Services.Cloudfront;
 using clypse.portal.setup.Services.Cognito;
 using clypse.portal.setup.Services.Iam;
 using clypse.portal.setup.Services.S3;
+using clypse.portal.setup.Services.Security;
 using Microsoft.Extensions.Logging;
 using System.Reflection;
 using System.Text;
@@ -11,6 +12,7 @@ namespace clypse.portal.setup.Services.Orchestration;
 
 internal class ClypseAwsSetupOrchestration(
         AwsServiceOptions options,
+        ISecurityTokenService securityTokenService,
         IIamService iamService,
         IS3Service s3Service,
         ICognitoService cognitoService,
@@ -95,6 +97,11 @@ internal class ClypseAwsSetupOrchestration(
             logger.LogInformation("Press any key to begin.");
             Console.ReadKey();
         }
+
+        // Account Info
+        logger.LogInformation("Getting AWS Account Id.");
+        var accountId = await securityTokenService.GetAccountIdAsync(cancellationToken);
+        logger.LogInformation("Got AWS Account Id '{accountId}'.", accountId);
 
         // S3
         logger.LogInformation("Setting up S3 resources.");
@@ -226,12 +233,14 @@ internal class ClypseAwsSetupOrchestration(
         logger.LogInformation("Creating user pool.");
         var userPoolId = await cognitoService.CreateUserPoolAsync(
             "clypse.user.pool",
+            tags,
             cancellationToken);
         logger.LogInformation("User pool '{userPoolId}' created.", userPoolId);
 
         logger.LogInformation("Creating identity pool.");
         var identityPoolId = await cognitoService.CreateIdentityPoolAsync(
             "clypse.identity.pool",
+            tags,
             cancellationToken);
         logger.LogInformation("Identity pool '{userPoolId}' created.", userPoolId);
 
@@ -246,7 +255,20 @@ internal class ClypseAwsSetupOrchestration(
             throw new Exception("Failed to set authenticated role for identity pool.");
         }
 
-        if(Directory.Exists(options.PortalBuildOutputPath))
+        logger.LogInformation("Creating user pool client.");
+        var userPoolClientId = await cognitoService.CreateUserPoolClientAsync(
+            accountId,
+            "clypse.identity.pool.client",
+            userPoolId,
+            tags,
+            cancellationToken);
+        if (string.IsNullOrEmpty(userPoolClientId))
+        {
+            logger.LogError("Failed to create user pool client.");
+            throw new Exception("Failed to create user pool client.");
+        }
+
+        if (Directory.Exists(options.PortalBuildOutputPath))
         {
             logger.LogInformation("Deploying portal to portal bucket.");
             var result = await s3Service.UploadDirectoryToBucket(

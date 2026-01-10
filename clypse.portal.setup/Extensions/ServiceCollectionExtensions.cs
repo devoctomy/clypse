@@ -3,6 +3,7 @@ using Amazon.CognitoIdentity;
 using Amazon.CognitoIdentityProvider;
 using Amazon.IdentityManagement;
 using Amazon.S3;
+using Amazon.SecurityToken;
 using clypse.portal.setup;
 using clypse.portal.setup.Services;
 using clypse.portal.setup.Services.Build;
@@ -11,6 +12,7 @@ using clypse.portal.setup.Services.Cognito;
 using clypse.portal.setup.Services.Iam;
 using clypse.portal.setup.Services.Orchestration;
 using clypse.portal.setup.Services.S3;
+using clypse.portal.setup.Services.Security;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -48,6 +50,24 @@ public static class ServiceCollectionExtensions
         {
             logging.AddConsole();
             logging.SetMinimumLevel(logLevel);
+        });
+
+        services.AddScoped<IAmazonSecurityTokenService>((sp) =>
+        {
+            var config = new AmazonSecurityTokenServiceConfig
+            {
+                RegionEndpoint = Amazon.RegionEndpoint.GetBySystemName(options.Region)
+            };
+
+            if (!string.IsNullOrWhiteSpace(options.BaseUrl))
+            {
+                config.ServiceURL = options.BaseUrl;
+            }
+
+            return new AmazonSecurityTokenServiceClient(
+                options.AccessId,
+                options.SecretAccessKey,
+                config);
         });
 
         services.AddScoped<IAmazonS3>((sp) =>
@@ -141,6 +161,7 @@ public static class ServiceCollectionExtensions
                 config);
         });
 
+        services.AddScoped<ISecurityTokenService, SecurityTokenService>();
         services.AddScoped<IS3Service, S3Service>();
         services.AddScoped<ICognitoService, CognitoService>();
         services.AddScoped<IIamService, IamService>();

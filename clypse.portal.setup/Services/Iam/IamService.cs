@@ -70,7 +70,7 @@ public class IamService(
             Scope = PolicyScopeType.Local
         };
         var listPoliciesResponse = await amazonIdentityManagementService.ListPoliciesAsync(ListPoliciesRequest, cancellationToken);
-        var existingPolicy = listPoliciesResponse.Policies.FirstOrDefault(p => p.PolicyName == policyNameWithPrefix);
+        var existingPolicy = listPoliciesResponse.Policies?.FirstOrDefault(p => p.PolicyName == policyNameWithPrefix);
         if (existingPolicy != null)
         {
             logger.LogInformation("Policy already exists: {policyNameWithPrefix}", policyNameWithPrefix);
