@@ -44,6 +44,7 @@ public class SetupInteractiveMenuService : ISetupInteractiveMenuService
                         "Edit SecretAccessKey",
                         "Edit Region",
                         "Edit ResourcePrefix",
+                        "Edit InitialUserEmail",
                         "Edit PortalBuildOutputPath",
                         "Save options",
                         "Continue",
@@ -133,6 +134,13 @@ public class SetupInteractiveMenuService : ISetupInteractiveMenuService
                             .AllowEmpty());
                     break;
 
+                case "Edit InitialUserEmail":
+                    options.InitialUserEmail = AnsiConsole.Prompt(
+                        new TextPrompt<string>("[green]InitialUserEmail[/]")
+                            .DefaultValue(options.InitialUserEmail ?? string.Empty)
+                            .AllowEmpty());
+                    break;
+
                 case "Edit PortalBuildOutputPath":
                     options.PortalBuildOutputPath = AnsiConsole.Prompt(
                         new TextPrompt<string>("[green]PortalBuildOutputPath[/]")
@@ -169,7 +177,7 @@ public class SetupInteractiveMenuService : ISetupInteractiveMenuService
                 case "Continue":
                     if (!options.IsValid())
                     {
-                        AnsiConsole.MarkupLine("[red]Options are not valid.[/] Please set [yellow]AccessId[/], [yellow]SecretAccessKey[/], [yellow]Region[/], and [yellow]ResourcePrefix[/].");
+                        AnsiConsole.MarkupLine("[red]Options are not valid.[/] Please set [yellow]AccessId[/], [yellow]SecretAccessKey[/], [yellow]Region[/], [yellow]ResourcePrefix[/], and [yellow]InitialUserEmail[/].");
                         AnsiConsole.MarkupLine("[grey]Press any key to continue...[/]");
                         Console.ReadKey(true);
                         break;
@@ -196,6 +204,7 @@ public class SetupInteractiveMenuService : ISetupInteractiveMenuService
         table.AddRow("[blue]SecretAccessKey[/]", Markup.Escape((options.SecretAccessKey ?? string.Empty).Redact(3)));
         table.AddRow("[blue]Region[/]", Markup.Escape(options.Region ?? string.Empty));
         table.AddRow("[blue]ResourcePrefix[/]", Markup.Escape(options.ResourcePrefix ?? string.Empty));
+        table.AddRow("[blue]InitialUserEmail[/]", Markup.Escape(options.InitialUserEmail ?? string.Empty));
         table.AddRow("[blue]PortalBuildOutputPath[/]", Markup.Escape(options.PortalBuildOutputPath ?? string.Empty));
 
         return table;
@@ -214,6 +223,7 @@ public class SetupInteractiveMenuService : ISetupInteractiveMenuService
             SetEnv("CLYPSE_SETUP__SecretAccessKey", options.SecretAccessKey, target);
             SetEnv("CLYPSE_SETUP__Region", options.Region, target);
             SetEnv("CLYPSE_SETUP__ResourcePrefix", options.ResourcePrefix, target);
+            SetEnv("CLYPSE_SETUP__InitialUserEmail", options.InitialUserEmail, target);
             SetEnv("CLYPSE_SETUP__PortalBuildOutputPath", options.PortalBuildOutputPath, target);
 
             message = OperatingSystem.IsWindows()

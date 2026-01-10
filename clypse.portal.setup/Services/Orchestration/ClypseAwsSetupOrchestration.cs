@@ -29,6 +29,7 @@ internal class ClypseAwsSetupOrchestration(
         logger.LogDebug("Using IAM Access Id: {accessId}", options.AccessId);
         logger.LogDebug("Using IAM Secret Access Key: {secretAccessKey}", options.SecretAccessKey.Redact(3));
         logger.LogDebug("Using Portal Build Output Path: {portalBuildOutputPath}", options.PortalBuildOutputPath);
+        logger.LogDebug("Using Initial User Email: {initialUserEmail}", options.InitialUserEmail);
 
         if (!options.IsValid())
         {
@@ -336,6 +337,18 @@ internal class ClypseAwsSetupOrchestration(
         {
             logger.LogError("Failed to set data bucket CORS configuration.");
             throw new Exception("Failed to set data bucket CORS configuration.");
+        }
+
+        logger.LogInformation("Creating initial user '{initialUserEmail}'.", options.InitialUserEmail);
+        var createInitialUser = await cognitoService.CreateUserAsync(
+            options.InitialUserEmail,
+            userPoolId,
+            tags,
+            cancellationToken);
+        if (!setDataBucketCorsConfig)
+        {
+            logger.LogError("Failed to create initial user.");
+            throw new Exception("Failed to create initial user.");
         }
 
         return true;

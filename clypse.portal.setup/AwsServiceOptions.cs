@@ -35,6 +35,11 @@ public class AwsServiceOptions
     /// </summary>
     public string PortalBuildOutputPath { get; set; } = string.Empty;
 
+    /// <summary>
+    /// Gets or sets the initial user's email to be created during setup
+    /// </summary>
+    public string InitialUserEmail { get; set; } = string.Empty;
+
     public bool InteractiveMode { get; set; } = true;
 
     public bool IsValid()
@@ -42,6 +47,7 @@ public class AwsServiceOptions
         return !string.IsNullOrWhiteSpace(AccessId)
             && !string.IsNullOrWhiteSpace(SecretAccessKey)
             && !string.IsNullOrWhiteSpace(Region)
-            && !string.IsNullOrWhiteSpace(ResourcePrefix);
+            && !string.IsNullOrWhiteSpace(ResourcePrefix)
+            && !string.IsNullOrWhiteSpace(InitialUserEmail);
     }
 }

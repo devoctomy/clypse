@@ -196,6 +196,9 @@ public static class ServiceCollectionExtensions
         options.ResourcePrefix = PreferExisting(
             options.ResourcePrefix,
             Environment.GetEnvironmentVariable("CLYPSE_SETUP__ResourcePrefix", EnvironmentVariableTarget.User));
+        options.InitialUserEmail = PreferExisting(
+            options.InitialUserEmail,
+            Environment.GetEnvironmentVariable("CLYPSE_SETUP__InitialUserEmail", EnvironmentVariableTarget.User));
         options.PortalBuildOutputPath = PreferExisting(
             options.PortalBuildOutputPath,
             Environment.GetEnvironmentVariable("CLYPSE_SETUP__PortalBuildOutputPath", EnvironmentVariableTarget.User));
