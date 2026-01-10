@@ -32,6 +32,7 @@ public static class ServiceCollectionExtensions
     /// <returns>The updated service collection.</returns>
     public static IServiceCollection AddClypseSetupServices(
         this IServiceCollection services,
+        string environmentVariablePrefix = "CLYPSE_SETUP",
         Microsoft.Extensions.Logging.LogLevel logLevel = Microsoft.Extensions.Logging.LogLevel.Debug)
     {
         var configuration = new ConfigurationBuilder()
@@ -40,7 +41,7 @@ public static class ServiceCollectionExtensions
 
         var options = new SetupOptions();
         configuration
-            .GetSection("CLYPSE_SETUP")
+            .GetSection(environmentVariablePrefix)
             .Bind(options);
 
         ApplyWindowsUserEnvironmentFallback(options);
