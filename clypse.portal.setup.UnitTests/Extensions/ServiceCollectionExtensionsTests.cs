@@ -20,10 +20,12 @@ public class ServiceCollectionExtensionsTests
     {
         // Arrange
         var services = new ServiceCollection();
+        Environment.SetEnvironmentVariable("CLYPSE_SETUP__BaseUrl", "http://localhost");
         Environment.SetEnvironmentVariable("CLYPSE_SETUP__Region", "us-east-1");
         Environment.SetEnvironmentVariable("CLYPSE_SETUP__AccessId", "test-access-id");
         Environment.SetEnvironmentVariable("CLYPSE_SETUP__SecretAccessKey", "test-secret-key");
         Environment.SetEnvironmentVariable("CLYPSE_SETUP__ResourcePrefix", "test-prefix");
+        Environment.SetEnvironmentVariable("CLYPSE_SETUP__InitialUserEmail", "foo@bar.com");
 
         try
         {
@@ -68,10 +70,12 @@ public class ServiceCollectionExtensionsTests
             // Verify SetupOptions
             var options = serviceProvider.GetService<SetupOptions>();
             Assert.NotNull(options);
+            Assert.Equal("http://localhost", options.BaseUrl);
             Assert.Equal("us-east-1", options.Region);
             Assert.Equal("test-access-id", options.AccessId);
             Assert.Equal("test-secret-key", options.SecretAccessKey);
             Assert.Equal("test-prefix", options.ResourcePrefix);
+            Assert.Equal("foo@bar.com", options.InitialUserEmail);
 
             // Verify logging
             var loggerFactory = serviceProvider.GetService<ILoggerFactory>();
