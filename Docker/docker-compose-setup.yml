@@ -15,6 +15,7 @@ services:
       - CLYPSE_SETUP__Region=us-east-1
       - CLYPSE_SETUP__InteractiveMode=false
       - CLYPSE_SETUP__ResourcePrefix=testing
+      - CLYPSE_SETUP__InitialUserEmail=foo@bar.com
     restart: "no"
 
 volumes:
