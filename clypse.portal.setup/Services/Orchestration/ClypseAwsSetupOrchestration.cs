@@ -12,7 +12,7 @@ using System.Text.Json;
 
 namespace clypse.portal.setup.Services.Orchestration;
 
-internal class ClypseAwsSetupOrchestration(
+public class ClypseAwsSetupOrchestration(
         SetupOptions options,
         ISecurityTokenService securityTokenService,
         IIamService iamService,

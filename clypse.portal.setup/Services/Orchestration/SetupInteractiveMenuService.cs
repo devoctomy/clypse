@@ -1,9 +1,11 @@
 ﻿using clypse.portal.setup.Extensions;
 using clypse.portal.setup.Services.Build;
 using Spectre.Console;
+using System.Diagnostics.CodeAnalysis;
 
 namespace clypse.portal.setup.Services.Orchestration;
 
+[ExcludeFromCodeCoverage(Justification = "Interactive console UI - no logic to test")]
 public class SetupInteractiveMenuService(IPortalBuildService portalBuildService) : ISetupInteractiveMenuService
 {
     public bool Run(SetupOptions options)
