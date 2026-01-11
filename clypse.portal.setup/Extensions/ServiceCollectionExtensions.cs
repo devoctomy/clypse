@@ -165,7 +165,7 @@ public static class ServiceCollectionExtensions
 
         services.AddScoped<ISecurityTokenService, SecurityTokenService>();
         services.AddScoped<IS3Service, S3Service>();
-        services.AddScoped<IDirectoryUploadService, DirectoryUploadService>();
+        services.AddScoped<IDirectoryUploadService, AmazonS3TransferUtilityDirectoryUploadService>();
         services.AddScoped<ICognitoService, CognitoService>();
         services.AddScoped<IIamService, IamService>();
         services.AddScoped<ICloudfrontService, CloudfrontService>();

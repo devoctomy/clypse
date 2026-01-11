@@ -1,9 +1,11 @@
 ﻿using Amazon.S3;
 using Amazon.S3.Transfer;
+using System.Diagnostics.CodeAnalysis;
 
 namespace clypse.portal.setup.Services.Upload;
 
-public class DirectoryUploadService(IAmazonS3 amazonS3) : IDirectoryUploadService
+[ExcludeFromCodeCoverage(Justification = "AWS SDK wrapper - no logic to test")]
+public class AmazonS3TransferUtilityDirectoryUploadService(IAmazonS3 amazonS3) : IDirectoryUploadService
 {
     public async Task UploadDirectoryAsync(
         string bucketName,
