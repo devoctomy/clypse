@@ -13,6 +13,7 @@ using clypse.portal.setup.Services.Iam;
 using clypse.portal.setup.Services.Orchestration;
 using clypse.portal.setup.Services.S3;
 using clypse.portal.setup.Services.Security;
+using clypse.portal.setup.Services.Upload;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -164,6 +165,7 @@ public static class ServiceCollectionExtensions
 
         services.AddScoped<ISecurityTokenService, SecurityTokenService>();
         services.AddScoped<IS3Service, S3Service>();
+        services.AddScoped<IDirectoryUploadService, DirectoryUploadService>();
         services.AddScoped<ICognitoService, CognitoService>();
         services.AddScoped<IIamService, IamService>();
         services.AddScoped<ICloudfrontService, CloudfrontService>();

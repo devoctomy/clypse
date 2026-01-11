@@ -1,6 +1,7 @@
 ﻿using Amazon.S3;
 using Amazon.S3.Model;
 using Amazon.S3.Transfer;
+using clypse.portal.setup.Services.Upload;
 using Microsoft.Extensions.Logging;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -12,6 +13,7 @@ namespace clypse.portal.setup.Services.S3;
 /// </summary>
 public class S3Service(
     IAmazonS3 amazonS3,
+    IDirectoryUploadService directoryUploadService,
     SetupOptions options,
     ILogger<S3Service> logger) : IS3Service
 {
@@ -260,16 +262,10 @@ public class S3Service(
 
         try
         {
-            using var transferUtility = new TransferUtility(amazonS3);
-            var uploadDirectoryRequest = new TransferUtilityUploadDirectoryRequest
-            {
-                BucketName = bucketNameWithPrefix,
-                Directory = directoryPath,
-                SearchOption = SearchOption.AllDirectories,
-                SearchPattern = "*"
-            };
-
-            await transferUtility.UploadDirectoryAsync(uploadDirectoryRequest, cancellationToken);
+            await directoryUploadService.UploadDirectoryAsync(
+                bucketNameWithPrefix,
+                directoryPath,
+                cancellationToken);
             logger.LogInformation("Successfully uploaded directory to bucket: {BucketName}", bucketNameWithPrefix);
             return true;
         }

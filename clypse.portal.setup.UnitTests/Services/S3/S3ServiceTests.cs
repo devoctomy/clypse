@@ -1,6 +1,7 @@
 ﻿using Amazon.S3;
 using Amazon.S3.Model;
 using clypse.portal.setup.Services.S3;
+using clypse.portal.setup.Services.Upload;
 using Microsoft.Extensions.Logging;
 using Moq;
 
@@ -13,12 +14,14 @@ public class S3ServiceTests
     {
         // Arrange
         var mockAmazonS3 = new Mock<IAmazonS3>();
+        var mockDirectoryUploadService = new Mock<IDirectoryUploadService>();
         var options = new SetupOptions
         {
             ResourcePrefix = "test-prefix"
         };
         var sut = new S3Service(
             mockAmazonS3.Object,
+            mockDirectoryUploadService.Object,
             options,
             Mock.Of<ILogger<S3Service>>());
         var bucketName = "my-bucket";
@@ -49,12 +52,14 @@ public class S3ServiceTests
     {
         // Arrange
         var mockAmazonS3 = new Mock<IAmazonS3>();
+        var mockDirectoryUploadService = new Mock<IDirectoryUploadService>();
         var options = new SetupOptions
         {
             ResourcePrefix = "test-prefix"
         };
         var sut = new S3Service(
             mockAmazonS3.Object,
+            mockDirectoryUploadService.Object,
             options,
             Mock.Of<ILogger<S3Service>>());
         var bucketName = "my-bucket";
@@ -98,12 +103,14 @@ public class S3ServiceTests
     {
         // Arrange
         var mockAmazonS3 = new Mock<IAmazonS3>();
+        var mockDirectoryUploadService = new Mock<IDirectoryUploadService>();
         var options = new SetupOptions
         {
             ResourcePrefix = "test-prefix"
         };
         var sut = new S3Service(
             mockAmazonS3.Object,
+            mockDirectoryUploadService.Object,
             options,
             Mock.Of<ILogger<S3Service>>());
         var bucketName = "my-bucket";
@@ -150,12 +157,14 @@ public class S3ServiceTests
     {
         // Arrange
         var mockAmazonS3 = new Mock<IAmazonS3>();
+        var mockDirectoryUploadService = new Mock<IDirectoryUploadService>();
         var options = new SetupOptions
         {
             ResourcePrefix = "test-prefix"
         };
         var sut = new S3Service(
             mockAmazonS3.Object,
+            mockDirectoryUploadService.Object,
             options,
             Mock.Of<ILogger<S3Service>>());
         var bucketName = "my-bucket";
@@ -189,12 +198,14 @@ public class S3ServiceTests
     {
         // Arrange
         var mockAmazonS3 = new Mock<IAmazonS3>();
+        var mockDirectoryUploadService = new Mock<IDirectoryUploadService>();
         var options = new SetupOptions
         {
             ResourcePrefix = "test-prefix"
         };
         var sut = new S3Service(
             mockAmazonS3.Object,
+            mockDirectoryUploadService.Object,
             options,
             Mock.Of<ILogger<S3Service>>());
         var bucketName = "my-bucket";
@@ -244,12 +255,14 @@ public class S3ServiceTests
     {
         // Arrange
         var mockAmazonS3 = new Mock<IAmazonS3>();
+        var mockDirectoryUploadService = new Mock<IDirectoryUploadService>();
         var options = new SetupOptions
         {
             ResourcePrefix = "test-prefix"
         };
         var sut = new S3Service(
             mockAmazonS3.Object,
+            mockDirectoryUploadService.Object,
             options,
             Mock.Of<ILogger<S3Service>>());
         var bucketName = "my-bucket";
@@ -278,12 +291,14 @@ public class S3ServiceTests
     {
         // Arrange
         var mockAmazonS3 = new Mock<IAmazonS3>();
+        var mockDirectoryUploadService = new Mock<IDirectoryUploadService>();
         var options = new SetupOptions
         {
             ResourcePrefix = "test-prefix"
         };
         var sut = new S3Service(
             mockAmazonS3.Object,
+            mockDirectoryUploadService.Object,
             options,
             Mock.Of<ILogger<S3Service>>());
         var bucketName = "my-bucket";
@@ -322,12 +337,14 @@ public class S3ServiceTests
     {
         // Arrange
         var mockAmazonS3 = new Mock<IAmazonS3>();
+        var mockDirectoryUploadService = new Mock<IDirectoryUploadService>();
         var options = new SetupOptions
         {
             ResourcePrefix = "test-prefix"
         };
         var sut = new S3Service(
             mockAmazonS3.Object,
+            mockDirectoryUploadService.Object,
             options,
             Mock.Of<ILogger<S3Service>>());
         var bucketName = "my-bucket";
@@ -353,12 +370,14 @@ public class S3ServiceTests
     {
         // Arrange
         var mockAmazonS3 = new Mock<IAmazonS3>();
+        var mockDirectoryUploadService = new Mock<IDirectoryUploadService>();
         var options = new SetupOptions
         {
             ResourcePrefix = "test-prefix"
         };
         var sut = new S3Service(
             mockAmazonS3.Object,
+            mockDirectoryUploadService.Object,
             options,
             Mock.Of<ILogger<S3Service>>());
         var bucketName = "my-bucket";
@@ -394,12 +413,14 @@ public class S3ServiceTests
     {
         // Arrange
         var mockAmazonS3 = new Mock<IAmazonS3>();
+        var mockDirectoryUploadService = new Mock<IDirectoryUploadService>();
         var options = new SetupOptions
         {
             ResourcePrefix = "test-prefix"
         };
         var sut = new S3Service(
             mockAmazonS3.Object,
+            mockDirectoryUploadService.Object,
             options,
             Mock.Of<ILogger<S3Service>>());
         var bucketName = "my-bucket";
@@ -426,12 +447,14 @@ public class S3ServiceTests
     {
         // Arrange
         var mockAmazonS3 = new Mock<IAmazonS3>();
+        var mockDirectoryUploadService = new Mock<IDirectoryUploadService>();
         var options = new SetupOptions
         {
             ResourcePrefix = "test-prefix"
         };
         var sut = new S3Service(
             mockAmazonS3.Object,
+            mockDirectoryUploadService.Object,
             options,
             Mock.Of<ILogger<S3Service>>());
         var bucketName = "my-bucket";
@@ -464,12 +487,14 @@ public class S3ServiceTests
     {
         // Arrange
         var mockAmazonS3 = new Mock<IAmazonS3>();
+        var mockDirectoryUploadService = new Mock<IDirectoryUploadService>();
         var options = new SetupOptions
         {
             ResourcePrefix = "test-prefix"
         };
         var sut = new S3Service(
             mockAmazonS3.Object,
+            mockDirectoryUploadService.Object,
             options,
             Mock.Of<ILogger<S3Service>>());
         var bucketName = "my-bucket";
@@ -501,12 +526,14 @@ public class S3ServiceTests
     {
         // Arrange
         var mockAmazonS3 = new Mock<IAmazonS3>();
+        var mockDirectoryUploadService = new Mock<IDirectoryUploadService>();
         var options = new SetupOptions
         {
             ResourcePrefix = "test-prefix"
         };
         var sut = new S3Service(
             mockAmazonS3.Object,
+            mockDirectoryUploadService.Object,
             options,
             Mock.Of<ILogger<S3Service>>());
         var bucketName = "my-bucket";
@@ -533,12 +560,14 @@ public class S3ServiceTests
     {
         // Arrange
         var mockAmazonS3 = new Mock<IAmazonS3>();
+        var mockDirectoryUploadService = new Mock<IDirectoryUploadService>();
         var options = new SetupOptions
         {
             ResourcePrefix = "test-prefix"
         };
         var sut = new S3Service(
             mockAmazonS3.Object,
+            mockDirectoryUploadService.Object,
             options,
             Mock.Of<ILogger<S3Service>>());
         var bucketName = "my-bucket";
@@ -566,12 +595,14 @@ public class S3ServiceTests
     {
         // Arrange
         var mockAmazonS3 = new Mock<IAmazonS3>();
+        var mockDirectoryUploadService = new Mock<IDirectoryUploadService>();
         var options = new SetupOptions
         {
             ResourcePrefix = "test-prefix"
         };
         var sut = new S3Service(
             mockAmazonS3.Object,
+            mockDirectoryUploadService.Object,
             options,
             Mock.Of<ILogger<S3Service>>());
         var bucketName = "my-bucket";
@@ -613,12 +644,14 @@ public class S3ServiceTests
     {
         // Arrange
         var mockAmazonS3 = new Mock<IAmazonS3>();
+        var mockDirectoryUploadService = new Mock<IDirectoryUploadService>();
         var options = new SetupOptions
         {
             ResourcePrefix = "test-prefix"
         };
         var sut = new S3Service(
             mockAmazonS3.Object,
+            mockDirectoryUploadService.Object,
             options,
             Mock.Of<ILogger<S3Service>>());
         var bucketName = "my-bucket";
@@ -648,12 +681,14 @@ public class S3ServiceTests
     {
         // Arrange
         var mockAmazonS3 = new Mock<IAmazonS3>();
+        var mockDirectoryUploadService = new Mock<IDirectoryUploadService>();
         var options = new SetupOptions
         {
             ResourcePrefix = "test-prefix"
         };
         var sut = new S3Service(
             mockAmazonS3.Object,
+            mockDirectoryUploadService.Object,
             options,
             Mock.Of<ILogger<S3Service>>());
         var bucketName = "my-bucket";
@@ -683,12 +718,14 @@ public class S3ServiceTests
     {
         // Arrange
         var mockAmazonS3 = new Mock<IAmazonS3>();
+        var mockDirectoryUploadService = new Mock<IDirectoryUploadService>();
         var options = new SetupOptions
         {
             ResourcePrefix = "test-prefix"
         };
         var sut = new S3Service(
             mockAmazonS3.Object,
+            mockDirectoryUploadService.Object,
             options,
             Mock.Of<ILogger<S3Service>>());
         var bucketName = "my-bucket";
@@ -702,5 +739,77 @@ public class S3ServiceTests
         mockAmazonS3.Verify(s3 => s3.ListBucketsAsync(
             It.IsAny<CancellationToken>()),
             Times.Never);
+    }
+
+    [Fact]
+    public async Task GivenDirectoryExist_WhenUploadDirectoryToBucket_ThenReturnsTrue()
+    {
+        // Arrange
+        var mockAmazonS3 = new Mock<IAmazonS3>();
+        var mockDirectoryUploadService = new Mock<IDirectoryUploadService>();
+        var options = new SetupOptions
+        {
+            ResourcePrefix = "test-prefix"
+        };
+        var sut = new S3Service(
+            mockAmazonS3.Object,
+            mockDirectoryUploadService.Object,
+            options,
+            Mock.Of<ILogger<S3Service>>());
+        var bucketName = "my-bucket";
+        var directoryPath = @"/";
+
+        // Act
+        var success = await sut.UploadDirectoryToBucket(bucketName, directoryPath);
+
+        // Assert
+        Assert.True(success);
+        mockAmazonS3.Verify(s3 => s3.ListBucketsAsync(
+            It.IsAny<CancellationToken>()),
+            Times.Never);
+        mockDirectoryUploadService.Verify(x => x.UploadDirectoryAsync(
+            It.Is<string>(b => b == "test-prefix.my-bucket"),
+            It.Is<string>(d => d == directoryPath),
+            It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task GivenDirectoryExist_WhenUploadDirectoryToBucket_AndUploadFails_ThenReturnsFalse()
+    {
+        // Arrange
+        var mockAmazonS3 = new Mock<IAmazonS3>();
+        var mockDirectoryUploadService = new Mock<IDirectoryUploadService>();
+        var options = new SetupOptions
+        {
+            ResourcePrefix = "test-prefix"
+        };
+        var sut = new S3Service(
+            mockAmazonS3.Object,
+            mockDirectoryUploadService.Object,
+            options,
+            Mock.Of<ILogger<S3Service>>());
+        var bucketName = "my-bucket";
+        var directoryPath = @"/";
+
+        mockDirectoryUploadService.Setup(x => x.UploadDirectoryAsync(
+            It.Is<string>(b => b == "test-prefix.my-bucket"),
+            It.Is<string>(d => d == directoryPath),
+            It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new Exception("Upload failed"));
+
+        // Act
+        var success = await sut.UploadDirectoryToBucket(bucketName, directoryPath);
+
+        // Assert
+        Assert.False(success);
+        mockAmazonS3.Verify(s3 => s3.ListBucketsAsync(
+            It.IsAny<CancellationToken>()),
+            Times.Never);
+        mockDirectoryUploadService.Verify(x => x.UploadDirectoryAsync(
+            It.Is<string>(b => b == "test-prefix.my-bucket"),
+            It.Is<string>(d => d == directoryPath),
+            It.IsAny<CancellationToken>()),
+            Times.Once);
     }
 }
