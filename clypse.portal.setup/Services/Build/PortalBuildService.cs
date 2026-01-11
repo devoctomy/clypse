@@ -17,7 +17,7 @@ public class PortalBuildService(
             FindRepoRoot(ioService.GetCurrentDirectory()) ??
             ioService.GetCurrentDirectory();
 
-        var portalProjectPath = Path.Combine(repoRoot, "clypse.portal", "clypse.portal.csproj");
+        var portalProjectPath = ioService.CombinePath(repoRoot, "clypse.portal", "clypse.portal.csproj");
         if (!ioService.FileExists(portalProjectPath))
         {
             logger.LogError(
@@ -39,7 +39,7 @@ public class PortalBuildService(
         var startInfo = new ProcessStartInfo
         {
             FileName = "dotnet",
-            WorkingDirectory = Path.GetDirectoryName(portalProjectPath)!,
+            WorkingDirectory = ioService.GetDirectoryName(portalProjectPath)!,
             RedirectStandardOutput = true,
             RedirectStandardError = true,
             UseShellExecute = false,
@@ -89,8 +89,8 @@ public class PortalBuildService(
     {
         if (string.IsNullOrWhiteSpace(configuredPortalBuildOutputPath))
         {
-            var publishOutputPath = Path.Combine(repoRoot, "portal-output");
-            return (publishOutputPath, Path.Combine(publishOutputPath, "wwwroot"));
+            var publishOutputPath = ioService.CombinePath(repoRoot, "portal-output");
+            return (publishOutputPath, ioService.CombinePath(publishOutputPath, "wwwroot"));
         }
 
         var trimmed = configuredPortalBuildOutputPath.Trim();
@@ -107,24 +107,24 @@ public class PortalBuildService(
             return (publishOutputPath, trimmed);
         }
 
-        return (trimmed, Path.Combine(trimmed, "wwwroot"));
+        return (trimmed, ioService.CombinePath(trimmed, "wwwroot"));
     }
 
     private string? FindRepoRoot(string startDirectory)
     {
-        var directoryInfo = new DirectoryInfo(startDirectory);
+        var currentDirectory = startDirectory;
 
-        for (var i = 0; i < 10 && directoryInfo is not null; i++)
+        for (var i = 0; i < 10 && currentDirectory is not null; i++)
         {
-            var solutionPath = Path.Combine(directoryInfo.FullName, "clypse.sln");
-            var portalProjectPath = Path.Combine(directoryInfo.FullName, "clypse.portal", "clypse.portal.csproj");
+            var solutionPath = ioService.CombinePath(currentDirectory, "clypse.sln");
+            var portalProjectPath = ioService.CombinePath(currentDirectory, "clypse.portal", "clypse.portal.csproj");
 
             if (ioService.FileExists(solutionPath) || ioService.FileExists(portalProjectPath))
             {
-                return directoryInfo.FullName;
+                return currentDirectory;
             }
 
-            directoryInfo = directoryInfo.Parent;
+            currentDirectory = ioService.GetParentDirectory(currentDirectory);
         }
 
         return null;

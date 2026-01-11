@@ -40,6 +40,16 @@ public class IoService : IIoService
         return Directory.GetParent(path)?.FullName;
     }
 
+    public string? GetDirectoryName(string path)
+    {
+        return Path.GetDirectoryName(path);
+    }
+
+    public string CombinePath(params string[] paths)
+    {
+        return Path.Combine(paths);
+    }
+
     public async Task<string> ReadAllTextAsync(
         string path,
         CancellationToken cancellationToken = default)

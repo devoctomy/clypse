@@ -14,6 +14,10 @@ public interface IIoService
 
     public string? GetParentDirectory(string path);
 
+    public string? GetDirectoryName(string path);
+
+    public string CombinePath(params string[] paths);
+
     public Task<string> ReadAllTextAsync(string path, CancellationToken cancellationToken = default);
 
     public Stream OpenWrite(string path);
