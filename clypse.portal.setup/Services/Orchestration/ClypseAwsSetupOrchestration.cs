@@ -1,4 +1,5 @@
 ﻿using clypse.portal.setup.Extensions;
+using clypse.portal.setup.Services.Build;
 using clypse.portal.setup.Services.Cloudfront;
 using clypse.portal.setup.Services.Cognito;
 using clypse.portal.setup.Services.Iam;
@@ -17,6 +18,7 @@ internal class ClypseAwsSetupOrchestration(
         IS3Service s3Service,
         ICognitoService cognitoService,
         ICloudfrontService cloudfrontService,
+        IPortalConfigService portalConfigService,
         ILogger<IamService> logger) : IClypseAwsSetupOrchestration
 {
     public async Task<bool> PrepareSetup(CancellationToken cancellationToken)
@@ -271,6 +273,30 @@ internal class ClypseAwsSetupOrchestration(
 
         if (Directory.Exists(options.PortalBuildOutputPath))
         {
+            var oldSettings = Directory.GetFiles(options.PortalBuildOutputPath, "appsettings*.json");
+            foreach(var oldSetting in oldSettings)
+            {
+                logger.LogInformation("Removing old portal setting file '{oldSetting}'.", oldSetting);
+                File.Delete(oldSetting);
+            }
+
+            logger.LogInformation("Reconfiguring portal.");
+            using var configStream = await portalConfigService.ConfigureAsync(
+                "Data/appsettings.json",
+                dataBucketName,
+                options.Region,
+                userPoolId,
+                userPoolClientId,
+                options.Region,
+                identityPoolId,
+                cancellationToken);
+
+            var configFilePath = Path.Combine(options.PortalBuildOutputPath, "appsettings.json");
+            using var outputStream = File.OpenWrite(configFilePath);
+            await configStream.CopyToAsync(outputStream, cancellationToken);
+            await outputStream.FlushAsync(cancellationToken);
+            outputStream.Close();
+
             logger.LogInformation("Deploying portal to portal bucket.");
             var result = await s3Service.UploadDirectoryToBucket(
                 portalBucketName,

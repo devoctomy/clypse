@@ -170,6 +170,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IPortalBuildService, PortalBuildService>();
         services.AddScoped<ISetupInteractiveMenuService, SetupInteractiveMenuService>();
         services.AddScoped<IClypseAwsSetupOrchestration, ClypseAwsSetupOrchestration>();
+        services.AddScoped<IPortalConfigService, PortalConfigService>();
         services.AddSingleton<IProgram, SetupProgram>();
 
         return services;

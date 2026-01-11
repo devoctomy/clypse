@@ -14,6 +14,14 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+	  <Content Include="Data\appsettings.json">
+	    <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+	    <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </Content>
+	</ItemGroup>
+
+	<ItemGroup>
 		<PackageReference Include="AWSSDK.CloudFront" />
 		<PackageReference Include="AWSSDK.CognitoIdentity" />
 		<PackageReference Include="AWSSDK.CognitoIdentityProvider" />
