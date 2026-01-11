@@ -1,11 +1,13 @@
 ﻿using System.Diagnostics;
 using clypse.portal.setup.Services.IO;
+using clypse.portal.setup.Services.Process;
 using Microsoft.Extensions.Logging;
 
 namespace clypse.portal.setup.Services.Build;
 
 public class PortalBuildService(
     SetupOptions options,
+    IProcessRunnerService processRunnerService,
     IIoService ioService,
     ILogger<PortalBuildService> logger) : IPortalBuildService
 {
@@ -54,36 +56,14 @@ public class PortalBuildService(
         startInfo.ArgumentList.Add("-o");
         startInfo.ArgumentList.Add(publishOutputPath);
 
-        using var process = new Process { StartInfo = startInfo };
-        try
-        {
-            if (!process.Start())
-            {
-                logger.LogError("Failed to start dotnet publish process.");
-                return new PortalBuildResult(false, string.Empty);
-            }
-        }
-        catch (Exception ex)
-        {
-            logger.LogError(ex, "Failed to start dotnet publish process.");
-            return new PortalBuildResult(false, string.Empty);
-        }
-
-        var standardOutputTask = process.StandardOutput.ReadToEndAsync();
-        var standardErrorTask = process.StandardError.ReadToEndAsync();
-
-        await process.WaitForExitAsync().ConfigureAwait(false);
-
-        var standardOutput = await standardOutputTask.ConfigureAwait(false);
-        var standardError = await standardErrorTask.ConfigureAwait(false);
-
-        if (process.ExitCode != 0)
+        var processResult = await processRunnerService.Run(startInfo);
+        if (!processResult.Success)
         {
             logger.LogError(
                 "dotnet publish failed with exit code {exitCode}.\nSTDOUT:\n{stdout}\nSTDERR:\n{stderr}",
-                process.ExitCode,
-                standardOutput,
-                standardError);
+                processResult.ExitCode,
+                processResult.OutputStreamText,
+                processResult.ErrorStreamText);
 
             return new PortalBuildResult(false, string.Empty);
         }
@@ -93,8 +73,8 @@ public class PortalBuildService(
             logger.LogError(
                 "dotnet publish succeeded but wwwroot output path '{wwwroot}' does not exist.\nSTDOUT:\n{stdout}\nSTDERR:\n{stderr}",
                 wwwrootOutputPath,
-                standardOutput,
-                standardError);
+                processResult.OutputStreamText,
+                processResult.ErrorStreamText);
 
             return new PortalBuildResult(false, string.Empty);
         }
