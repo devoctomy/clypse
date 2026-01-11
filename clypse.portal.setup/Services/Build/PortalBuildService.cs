@@ -1,29 +1,32 @@
 ﻿using System.Diagnostics;
+using clypse.portal.setup.Services.IO;
 using Microsoft.Extensions.Logging;
 
 namespace clypse.portal.setup.Services.Build;
 
 public class PortalBuildService(
     SetupOptions options,
+    IIoService ioService,
     ILogger<PortalBuildService> logger) : IPortalBuildService
 {
     public async Task<PortalBuildResult> Run()
     {
-        var repoRoot = FindRepoRoot(Directory.GetCurrentDirectory())
-            ?? Directory.GetCurrentDirectory();
+        var repoRoot =
+            FindRepoRoot(ioService.GetCurrentDirectory()) ??
+            ioService.GetCurrentDirectory();
 
         var portalProjectPath = Path.Combine(repoRoot, "clypse.portal", "clypse.portal.csproj");
-        if (!File.Exists(portalProjectPath))
+        if (!ioService.FileExists(portalProjectPath))
         {
             logger.LogError(
                 "Unable to locate portal project at '{portalProjectPath}'. CurrentDirectory='{currentDirectory}'.",
                 portalProjectPath,
-                Directory.GetCurrentDirectory());
+                ioService.GetCurrentDirectory());
             return new PortalBuildResult(false, string.Empty);
         }
 
         var (publishOutputPath, wwwrootOutputPath) = ResolvePublishPaths(repoRoot, options.PortalBuildOutputPath);
-        Directory.CreateDirectory(publishOutputPath);
+        ioService.CreateDirectory(publishOutputPath);
 
         logger.LogInformation(
             "Building portal WASM via dotnet publish. Project='{project}', PublishOutput='{publishOutput}', Wwwroot='{wwwroot}'.",
@@ -85,7 +88,7 @@ public class PortalBuildService(
             return new PortalBuildResult(false, string.Empty);
         }
 
-        if (!Directory.Exists(wwwrootOutputPath))
+        if (!ioService.DirectoryExists(wwwrootOutputPath))
         {
             logger.LogError(
                 "dotnet publish succeeded but wwwroot output path '{wwwroot}' does not exist.\nSTDOUT:\n{stdout}\nSTDERR:\n{stderr}",
@@ -100,7 +103,7 @@ public class PortalBuildService(
         return new PortalBuildResult(true, wwwrootOutputPath);
     }
 
-    private static (string publishOutputPath, string wwwrootOutputPath) ResolvePublishPaths(
+    private (string publishOutputPath, string wwwrootOutputPath) ResolvePublishPaths(
         string repoRoot,
         string? configuredPortalBuildOutputPath)
     {
@@ -118,7 +121,7 @@ public class PortalBuildService(
 
         if (endsWithWwwroot)
         {
-            var publishOutputPath = Directory.GetParent(trimmed)?.FullName
+            var publishOutputPath = ioService.GetParentDirectory(trimmed)
                 ?? Path.GetDirectoryName(trimmed)
                 ?? trimmed;
             return (publishOutputPath, trimmed);
@@ -127,7 +130,7 @@ public class PortalBuildService(
         return (trimmed, Path.Combine(trimmed, "wwwroot"));
     }
 
-    private static string? FindRepoRoot(string startDirectory)
+    private string? FindRepoRoot(string startDirectory)
     {
         var directoryInfo = new DirectoryInfo(startDirectory);
 
@@ -136,7 +139,7 @@ public class PortalBuildService(
             var solutionPath = Path.Combine(directoryInfo.FullName, "clypse.sln");
             var portalProjectPath = Path.Combine(directoryInfo.FullName, "clypse.portal", "clypse.portal.csproj");
 
-            if (File.Exists(solutionPath) || File.Exists(portalProjectPath))
+            if (ioService.FileExists(solutionPath) || ioService.FileExists(portalProjectPath))
             {
                 return directoryInfo.FullName;
             }

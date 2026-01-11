@@ -1,9 +1,10 @@
-﻿using System.Text.Json;
+﻿using clypse.portal.setup.Services.IO;
+using System.Text.Json;
 using System.Text.Json.Nodes;
 
 namespace clypse.portal.setup.Services.Build;
 
-public class PortalConfigService : IPortalConfigService
+public class PortalConfigService(IIoService ioService) : IPortalConfigService
 {
     public async Task<MemoryStream> ConfigureAsync(
         string templatePath,
@@ -15,7 +16,7 @@ public class PortalConfigService : IPortalConfigService
         string cognitoIdentityPoolId,
         CancellationToken cancellationToken = default)
     {
-        var templateRaw = await File.ReadAllTextAsync(templatePath, cancellationToken);
+        var templateRaw = await ioService.ReadAllTextAsync(templatePath, cancellationToken);
         var templateJson =
             JsonNode.Parse(templateRaw) ??
             throw new Exception("Failed to parse template JSON.");
