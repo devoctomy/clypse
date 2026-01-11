@@ -47,10 +47,12 @@ public class S3Service(
     /// Creates a new S3 bucket with the specified name.
     /// </summary>
     /// <param name="bucketName">The name of the bucket to create (without the resource prefix).</param>
+    /// <param name="disableBlockPublicAccess">If true, disables block public access settings for the bucket.</param>
     /// <param name="cancellationToken">Cancellation token to cancel the operation.</param>
     /// <returns>True if the bucket was created successfully; otherwise, false.</returns>
     public async Task<bool> CreateBucketAsync(
         string bucketName,
+        bool disableBlockPublicAccess,
         CancellationToken cancellationToken = default)
     {
         var bucketNameWithPrefix = $"{options.ResourcePrefix}.{bucketName}";
@@ -62,6 +64,26 @@ public class S3Service(
         };
 
         var putBucketResponse = await amazonS3.PutBucketAsync(putBucketRequest, cancellationToken);
+
+        if(disableBlockPublicAccess)
+        {
+            logger.LogInformation("Enabling public access for bucket.");
+            var putPublicAccessBlockRespose = await amazonS3.PutPublicAccessBlockAsync(
+                new PutPublicAccessBlockRequest
+                {
+                    BucketName = bucketNameWithPrefix,
+                    PublicAccessBlockConfiguration = new PublicAccessBlockConfiguration
+                    {
+                        BlockPublicAcls = false,
+                        IgnorePublicAcls = false,
+                        BlockPublicPolicy = false,
+                        RestrictPublicBuckets = false
+                    }
+                },
+                cancellationToken);
+
+            return putPublicAccessBlockRespose.HttpStatusCode == System.Net.HttpStatusCode.OK;
+        }
 
         return putBucketResponse.HttpStatusCode == System.Net.HttpStatusCode.OK;
     }
@@ -152,7 +174,7 @@ public class S3Service(
         var response = await amazonS3.PutBucketPolicyAsync(
             putBucketPolicyRequest,
             cancellationToken);
-        return response.HttpStatusCode == System.Net.HttpStatusCode.OK;
+        return response.HttpStatusCode == System.Net.HttpStatusCode.NoContent;
     }
 
     /// <summary>
@@ -244,8 +266,7 @@ public class S3Service(
                 BucketName = bucketNameWithPrefix,
                 Directory = directoryPath,
                 SearchOption = SearchOption.AllDirectories,
-                SearchPattern = "*",
-                CannedACL = S3CannedACL.PublicRead
+                SearchPattern = "*"
             };
 
             await transferUtility.UploadDirectoryAsync(uploadDirectoryRequest, cancellationToken);

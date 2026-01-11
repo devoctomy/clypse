@@ -19,10 +19,14 @@ public class CognitoService(
     /// Creates a new Cognito identity pool with the specified name.
     /// </summary>
     /// <param name="name">The name of the identity pool to create (without the resource prefix).</param>
+    /// <param name="userPoolId">The ID of the user pool to associate with the identity pool.</param>
+    /// <param name="userPoolClientId">The user pool client ID to associate with the identity pool.</param>
     /// <param name="cancellationToken">Cancellation token to cancel the operation.</param>
     /// <returns>The ID of the created identity pool.</returns>
     public async Task<string> CreateIdentityPoolAsync(
         string name,
+        string userPoolId,
+        string userPoolClientId,
         Dictionary<string, string> tags,
         CancellationToken cancellationToken = default)
     {
@@ -32,7 +36,16 @@ public class CognitoService(
         var createIdentityPool = new CreateIdentityPoolRequest
         {
             IdentityPoolName = identityPoolNameWithPrefix,
-            IdentityPoolTags = tags
+            IdentityPoolTags = tags,
+            CognitoIdentityProviders = new List<CognitoIdentityProviderInfo>
+            {
+                new CognitoIdentityProviderInfo
+                {
+                    ProviderName = $"cognito-idp.{options.Region}.amazonaws.com/{userPoolId}",
+                    ClientId = userPoolClientId,
+                    ServerSideTokenCheck = false
+                }
+            },
         };
         var response = await amazonCognitoIdentity.CreateIdentityPoolAsync(createIdentityPool, cancellationToken);
         return response.IdentityPoolId;
@@ -82,13 +95,17 @@ public class CognitoService(
             return false;
         }
 
-        var tagUserResponse = await amazonCognitoIdentityProvider.TagResourceAsync(new Amazon.CognitoIdentityProvider.Model.TagResourceRequest
-        {
-            ResourceArn = response.User.Username,
-            Tags = tags
-        }, cancellationToken);
+        // TODO: Need to fix this
+        ////var tagUserResponse = await amazonCognitoIdentityProvider.TagResourceAsync(new Amazon.CognitoIdentityProvider.Model.TagResourceRequest
+        ////{
+        ////    ResourceArn = response.User.Username,
+        ////    Tags = tags
+        ////}, cancellationToken);
 
-        return tagUserResponse.HttpStatusCode == System.Net.HttpStatusCode.OK;
+        ////return tagUserResponse.HttpStatusCode == System.Net.HttpStatusCode.OK;
+        ///
+
+        return true;
     }
 
     /// <summary>
@@ -111,6 +128,7 @@ public class CognitoService(
             UserPoolTags = tags
         };
         var response = await amazonCognitoIdentityProvider.CreateUserPoolAsync(createUserPoolRequest, cancellationToken);
+        
         return response.UserPool.Id;
     }
 
@@ -149,22 +167,23 @@ public class CognitoService(
             return null;
         }
 
-        var clientArn = $"arn:aws:cognito-idp:{options.Region}:{accountId}:userpool/{userPoolId}/client/{createUserPoolClientResponse.UserPoolClient.ClientId}";
-        var tagUserResponse = await amazonCognitoIdentityProvider.TagResourceAsync(new Amazon.CognitoIdentityProvider.Model.TagResourceRequest
-        {
-            ResourceArn = clientArn,
-            Tags = tags
-        }, cancellationToken);
+        // TODO: Need to fix this
+        ////var clientArn = $"arn:aws:cognito-idp:{options.Region}:{accountId}:userpool/{userPoolId}/client/{createUserPoolClientResponse.UserPoolClient.ClientId}";
+        ////var tagUserResponse = await amazonCognitoIdentityProvider.TagResourceAsync(new Amazon.CognitoIdentityProvider.Model.TagResourceRequest
+        ////{
+        ////    ResourceArn = clientArn,
+        ////    Tags = tags
+        ////}, cancellationToken);
 
-        if (tagUserResponse.HttpStatusCode != System.Net.HttpStatusCode.OK)
-        {
-            logger.LogError(
-                "Failed to tag user pool client {clientArn} in user pool {userPoolId}. HTTP Status Code: {statusCode}",
-                clientArn,
-                userPoolId,
-                tagUserResponse.HttpStatusCode);
-            return null;
-        }
+        ////if (tagUserResponse.HttpStatusCode != System.Net.HttpStatusCode.OK)
+        ////{
+        ////    logger.LogError(
+        ////        "Failed to tag user pool client {clientArn} in user pool {userPoolId}. HTTP Status Code: {statusCode}",
+        ////        clientArn,
+        ////        userPoolId,
+        ////        tagUserResponse.HttpStatusCode);
+        ////    return null;
+        ////}
 
         return createUserPoolClientResponse.UserPoolClient.ClientId;
     }

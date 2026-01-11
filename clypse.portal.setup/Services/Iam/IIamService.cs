@@ -25,11 +25,13 @@ public interface IIamService
     /// Creates a new IAM role with the specified name.
     /// </summary>
     /// <param name="name">The name of the role to create (without the resource prefix).</param>
+    /// <param name="assumeRolePolicyDocument">The assume role policy document as a JSON string.</param>
     /// <param name="tags">Tags to associate with the role.</param>
     /// <param name="cancellationToken">Cancellation token to cancel the operation.</param>
     /// <returns>The name of the created role.</returns>
     public Task<string> CreateRoleAsync(
         string name,
+        string assumeRolePolicyDocument,
         Dictionary<string, string> tags,
         CancellationToken cancellationToken = default);
 

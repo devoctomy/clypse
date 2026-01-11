@@ -9,10 +9,14 @@ public interface ICognitoService
     /// Creates a new Cognito identity pool with the specified name.
     /// </summary>
     /// <param name="name">The name of the identity pool to create (without the resource prefix).</param>
+    /// <param name="userPoolId">The ID of the user pool to associate with the identity pool.</param>
+    /// <param name="userPoolClientId">The user pool client ID to associate with the identity pool.</param>
     /// <param name="cancellationToken">Cancellation token to cancel the operation.</param>
     /// <returns>The ID of the created identity pool.</returns>
     public Task<string> CreateIdentityPoolAsync(
         string name,
+        string userPoolId,
+        string userPoolClientId,
         Dictionary<string, string> tags,
         CancellationToken cancellationToken = default);
 

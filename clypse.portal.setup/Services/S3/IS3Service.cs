@@ -15,10 +15,12 @@ public interface IS3Service
     /// Creates a new S3 bucket with the specified name.
     /// </summary>
     /// <param name="bucketName">The name of the bucket to create (without the resource prefix).</param>
+    /// <param name="disableBlockPublicAccess">If true, disables block public access settings for the bucket.</param>
     /// <param name="cancellationToken">Cancellation token to cancel the operation.</param>
     /// <returns>True if the bucket was created successfully; otherwise, false.</returns>
     public Task<bool> CreateBucketAsync(
         string bucketName,
+        bool disableBlockPublicAccess,
         CancellationToken cancellationToken = default);
 
     public Task<bool> SetBucketTags(

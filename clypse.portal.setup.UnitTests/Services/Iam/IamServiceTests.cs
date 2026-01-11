@@ -113,7 +113,7 @@ public class IamServiceTests
             });
         
         // Act
-        var returnedRoleName = await sut.CreateRoleAsync(roleName, tags);
+        var returnedRoleName = await sut.CreateRoleAsync(roleName, "{}", tags);
 
         // Assert
         Assert.Equal(expectedRoleName, returnedRoleName);

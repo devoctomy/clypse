@@ -1,4 +1,5 @@
-﻿using clypse.portal.setup.Extensions;
+﻿using Amazon.S3;
+using clypse.portal.setup.Extensions;
 using clypse.portal.setup.Services.Build;
 using clypse.portal.setup.Services.Cloudfront;
 using clypse.portal.setup.Services.Cognito;
@@ -8,6 +9,7 @@ using clypse.portal.setup.Services.Security;
 using Microsoft.Extensions.Logging;
 using System.Reflection;
 using System.Text;
+using System.Text.Json;
 
 namespace clypse.portal.setup.Services.Orchestration;
 
@@ -112,6 +114,7 @@ internal class ClypseAwsSetupOrchestration(
         var portalBucketName = "clypse.portal";
         var createdPortalBucket = await s3Service.CreateBucketAsync(
             portalBucketName,
+            true,
             cancellationToken);
         if(!createdPortalBucket)
         {
@@ -130,10 +133,38 @@ internal class ClypseAwsSetupOrchestration(
             throw new Exception("Failed to set tags for portal bucket.");
         }
 
+        var publicReadPolicy = new
+        {
+            Version = "2012-10-17",
+            Statement = new[]
+            {
+                new
+                {
+                    Sid = "PublicReadGetObject",
+                    Effect = "Allow",
+                    Principal = "*",
+                    Action = "s3:GetObject",
+                    Resource = $"arn:aws:s3:::{options.ResourcePrefix}.{portalBucketName}/*"
+                }
+            }
+        };
+
+        logger.LogInformation("Setting portal bucket policy.");
+        var setPortalBucketPolicy = await s3Service.SetBucketPolicyAsync(
+            portalBucketName,
+            publicReadPolicy,
+            cancellationToken);
+        if(!setPortalBucketPolicy)
+        {
+            logger.LogError("Failed to set portal bucket policy.");
+            throw new Exception("Failed to set portal bucket policy.");
+        }
+
         logger.LogInformation("Creating S3 bucket for data.");
         var dataBucketName = "clypse.data";
         var createdDataBucket = await s3Service.CreateBucketAsync(
             dataBucketName,
+            false,
             cancellationToken);
         if (!createdDataBucket)
         {
@@ -197,6 +228,14 @@ internal class ClypseAwsSetupOrchestration(
             }
         };
 
+        logger.LogInformation("Creating data policy.");
+        var dataPolicyArn = await iamService.CreatePolicyAsync(
+            "clypse.data.policy",
+            dataPolicyDocument,
+            tags,
+            cancellationToken);
+        logger.LogInformation("Data policy '{dataPolicyArn}' created.", dataPolicyArn);
+
         var authPolicyDocument = new
         {
             Version = "2012-10-17",
@@ -209,18 +248,13 @@ internal class ClypseAwsSetupOrchestration(
                     {
                         "cognito-identity:GetCredentialsForIdentity",
                     },
-                    Resource = "*"
+                    Resource = new[]
+                    {
+                        "*",
+                    },
                 }
             }
         };
-
-        logger.LogInformation("Creating data policy.");
-        var dataPolicyArn = await iamService.CreatePolicyAsync(
-            "clypse.data.policy",
-            dataPolicyDocument,
-            tags,
-            cancellationToken);
-        logger.LogInformation("Data policy '{dataPolicyArn}' created.", dataPolicyArn);
 
         logger.LogInformation("Creating auth policy.");
         var authPolicyArn = await iamService.CreatePolicyAsync(
@@ -240,24 +274,6 @@ internal class ClypseAwsSetupOrchestration(
             cancellationToken);
         logger.LogInformation("User pool '{userPoolId}' created.", userPoolId);
 
-        logger.LogInformation("Creating identity pool.");
-        var identityPoolId = await cognitoService.CreateIdentityPoolAsync(
-            "clypse.identity.pool",
-            tags,
-            cancellationToken);
-        logger.LogInformation("Identity pool '{userPoolId}' created.", userPoolId);
-
-        logger.LogInformation("Setting identity pool authenticated role.");
-        var setAuthenticatedRole = await cognitoService.SetIdentityPoolAuthenticatedRoleAsync(
-            identityPoolId,
-            dataPolicyArn,
-            cancellationToken);
-        if (!setAuthenticatedRole)
-        {
-            logger.LogError("Failed to set authenticated role for identity pool.");
-            throw new Exception("Failed to set authenticated role for identity pool.");
-        }
-
         logger.LogInformation("Creating user pool client.");
         var userPoolClientId = await cognitoService.CreateUserPoolClientAsync(
             accountId,
@@ -271,10 +287,61 @@ internal class ClypseAwsSetupOrchestration(
             throw new Exception("Failed to create user pool client.");
         }
 
+        logger.LogInformation("Creating identity pool.");
+        var identityPoolId = await cognitoService.CreateIdentityPoolAsync(
+            "clypse.identity.pool",
+            userPoolId,
+            userPoolClientId,
+            tags,
+            cancellationToken);
+        logger.LogInformation("Identity pool '{userPoolId}' created.", userPoolId);
+
+        // IAM Role for Authenticated Users, needs to be created after identity pool
+        logger.LogInformation("Creating auth role.");
+        var authRoleArn = await iamService.CreateRoleAsync(
+           "clypse.auth.role",
+           GetTrustPolicyJson(accountId, identityPoolId),
+           tags,
+           cancellationToken);
+        logger.LogInformation("Auth role '{authRoleArn}' created.", authRoleArn);
+
+        logger.LogInformation("Attaching data policy to auth role.");
+        var attachDataPolicyToAuthRole = await iamService.AttachPolicyToRoleAsync(
+            "clypse.auth.role",
+            dataPolicyArn,
+            cancellationToken);
+        if (!attachDataPolicyToAuthRole)
+        {
+            logger.LogError("Failed to attach data policy to auth role.");
+            throw new Exception("Failed to attach data policy to auth role.");
+        }
+
+        logger.LogInformation("Attaching auth policy to auth role.");
+        var attachAuthPolicyToAuthRole = await iamService.AttachPolicyToRoleAsync(
+            "clypse.auth.role",
+            authPolicyArn,
+            cancellationToken);
+        if (!attachAuthPolicyToAuthRole)
+        {
+            logger.LogError("Failed to attach auth policy to auth role.");
+            throw new Exception("Failed to attach auth policy to auth role.");
+        }
+
+        logger.LogInformation("Setting identity pool authenticated role as '{authRoleArn}'.", authRoleArn);
+        var setAuthenticatedRole = await cognitoService.SetIdentityPoolAuthenticatedRoleAsync(
+            identityPoolId,
+            authRoleArn,
+            cancellationToken);
+        if (!setAuthenticatedRole)
+        {
+            logger.LogError("Failed to set authenticated role for identity pool.");
+            throw new Exception("Failed to set authenticated role for identity pool.");
+        }
+
         if (Directory.Exists(options.PortalBuildOutputPath))
         {
             logger.LogInformation("Removing unwanted settings from build output.");
-            var oldSettings = Directory.GetFiles(options.PortalBuildOutputPath, "appsettings*.json");
+            var oldSettings = Directory.GetFiles(options.PortalBuildOutputPath, "appsettings*");
             foreach (var oldSetting in oldSettings)
             {
                 logger.LogInformation("Removing portal setting file '{oldSetting}'.", oldSetting);
@@ -284,7 +351,7 @@ internal class ClypseAwsSetupOrchestration(
             logger.LogInformation("Reconfiguring portal.");
             using var configStream = await portalConfigService.ConfigureAsync(
                 "Data/appsettings.json",
-                dataBucketName,
+                $"{options.ResourcePrefix}.{dataBucketName}",
                 options.Region,
                 userPoolId,
                 userPoolClientId,
@@ -327,7 +394,7 @@ internal class ClypseAwsSetupOrchestration(
 
         logger.LogInformation("Creating CloudFront distribution.");
         var distributionDomain = await cloudfrontService.CreateDistributionAsync(
-            portalBucketUrl,
+            portalWebsiteUrl.Replace("http://", string.Empty),
             cancellationToken: cancellationToken);
         if(string.IsNullOrEmpty(distributionDomain))
         {
@@ -424,5 +491,40 @@ internal class ClypseAwsSetupOrchestration(
         {
             return $"http://{bucketNameWithPrefix}.s3-website-{options.Region}.amazonaws.com";
         }
+    }
+
+    private static string GetTrustPolicyJson(
+        string accountId,
+        string identityPoolId)
+    {
+        var trustPolicy = new
+        {
+            Version = "2012-10-17",
+            Statement = new[]
+            {
+            new
+            {
+                Effect = "Allow",
+                Principal = new
+                {
+                    Federated = "cognito-identity.amazonaws.com"
+                },
+                Action = "sts:AssumeRoleWithWebIdentity",
+                Condition = new Dictionary<string, object>
+                {
+                    ["StringEquals"] = new Dictionary<string, string>
+                    {
+                        ["cognito-identity.amazonaws.com:aud"] = identityPoolId
+                    },
+                    ["ForAnyValue:StringLike"] = new Dictionary<string, string>
+                    {
+                        ["cognito-identity.amazonaws.com:amr"] = "authenticated"
+                    }
+                }
+            }
+        }
+        };
+
+        return JsonSerializer.Serialize(trustPolicy);
     }
 }

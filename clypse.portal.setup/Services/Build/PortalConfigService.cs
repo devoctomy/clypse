@@ -27,12 +27,11 @@ public class PortalConfigService : IPortalConfigService
         templateJson["AwsCognito"]!["Region"] = cognitoRegion;
         templateJson["AwsCognito"]!["IdentityPoolId"] = cognitoIdentityPoolId;
 
-        await using var outputStream = new MemoryStream();
+        var outputStream = new MemoryStream();
         await using var outputJsonWriter = new Utf8JsonWriter(outputStream, new JsonWriterOptions
         {
-            Indented = true
+            Indented = true,
         });
-
 
         templateJson.WriteTo(outputJsonWriter);
         await outputJsonWriter.FlushAsync(cancellationToken);

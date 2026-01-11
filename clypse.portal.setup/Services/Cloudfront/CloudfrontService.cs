@@ -20,6 +20,7 @@ public class CloudfrontService(
 
             var distributionConfig = new DistributionConfig
             {
+                Comment = "Clypse Portal Cloudfront Distribution created by Clypse Portal Setup.",
                 CallerReference = Guid.NewGuid().ToString(),
                 Enabled = true,
                 Origins = new Origins
@@ -30,12 +31,11 @@ public class CloudfrontService(
                         new Origin
                         {
                             Id = originId,
-                            DomainName = "localstack", //websiteHost,
-                            OriginPath = "/testing.clypse.portal",
+                            DomainName = websiteHost,
                             CustomOriginConfig = new CustomOriginConfig
                             {
-                                //HTTPPort = 4566, //80,
-                                //HTTPSPort = 4566, //443,
+                                HTTPPort = 80,
+                                HTTPSPort = 443,
                                 OriginProtocolPolicy = OriginProtocolPolicy.HttpOnly
                             }
                         }
