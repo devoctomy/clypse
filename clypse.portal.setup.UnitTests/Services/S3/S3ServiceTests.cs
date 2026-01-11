@@ -9,7 +9,7 @@ namespace clypse.portal.setup.UnitTests.Services.S3;
 public class S3ServiceTests
 {
     [Fact]
-    public async Task GivenBucketName_WhenCreateBucket_ThenCreatesBucket()
+    public async Task GivenBucketName_AndNotDisableBlockPublicAccess_WhenCreateBucket_ThenCreatesBucket()
     {
         // Arrange
         var mockAmazonS3 = new Mock<IAmazonS3>();
@@ -34,7 +34,7 @@ public class S3ServiceTests
             });
         
         // Act
-        var success = await sut.CreateBucketAsync(bucketName);
+        var success = await sut.CreateBucketAsync(bucketName, false);
 
         // Assert
         Assert.True(success);
@@ -42,6 +42,55 @@ public class S3ServiceTests
             It.Is<PutBucketRequest>(req => req.BucketName == expectedBucketName),
             It.IsAny<CancellationToken>()),
             Times.Once);
+    }
+
+    [Fact]
+    public async Task GivenBucketName_AndDisableBlockPublicAccess_WhenCreateBucket_ThenCreatesBucket()
+    {
+        // Arrange
+        var mockAmazonS3 = new Mock<IAmazonS3>();
+        var options = new SetupOptions
+        {
+            ResourcePrefix = "test-prefix"
+        };
+        var sut = new S3Service(
+            mockAmazonS3.Object,
+            options,
+            Mock.Of<ILogger<S3Service>>());
+        var bucketName = "my-bucket";
+        var expectedBucketName = "test-prefix.my-bucket";
+
+        mockAmazonS3
+            .Setup(s3 => s3.PutBucketAsync(
+                It.Is<PutBucketRequest>(req => req.BucketName == expectedBucketName),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new PutBucketResponse
+            {
+                HttpStatusCode = System.Net.HttpStatusCode.OK
+            });
+
+        mockAmazonS3
+            .Setup(s3 => s3.PutPublicAccessBlockAsync(
+                It.Is<PutPublicAccessBlockRequest>(req => req.BucketName == expectedBucketName),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new PutPublicAccessBlockResponse
+            {
+                HttpStatusCode = System.Net.HttpStatusCode.OK
+            });
+
+        // Act
+        var success = await sut.CreateBucketAsync(bucketName, true);
+
+        // Assert
+        Assert.True(success);
+        mockAmazonS3.Verify(s3 => s3.PutBucketAsync(
+            It.Is<PutBucketRequest>(req => req.BucketName == expectedBucketName),
+            It.IsAny<CancellationToken>()),
+            Times.Once);
+        mockAmazonS3.Verify(s3 => s3.PutPublicAccessBlockAsync(
+                It.Is<PutPublicAccessBlockRequest>(req => req.BucketName == expectedBucketName),
+                It.IsAny<CancellationToken>()),
+                Times.Once);
     }
 
     [Fact]
@@ -173,7 +222,7 @@ public class S3ServiceTests
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(new PutBucketPolicyResponse
             {
-                HttpStatusCode = System.Net.HttpStatusCode.OK
+                HttpStatusCode = System.Net.HttpStatusCode.NoContent
             });
 
         // Act

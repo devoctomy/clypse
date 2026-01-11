@@ -92,6 +92,7 @@ public class IamServiceTests
             Mock.Of<ILogger<IamService>>());
         var roleName = "test-role";
         var expectedRoleName = "test-prefix.test-role";
+        var expectedRoleArn = Guid.NewGuid().ToString();
 
         var tags = new Dictionary<string, string>
         {
@@ -108,15 +109,16 @@ public class IamServiceTests
             {
                 Role = new Role
                 {
-                    RoleName = expectedRoleName
+                    RoleName = expectedRoleName,
+                    Arn = expectedRoleArn
                 }
             });
         
         // Act
-        var returnedRoleName = await sut.CreateRoleAsync(roleName, "{}", tags);
+        var returnedRoleArn = await sut.CreateRoleAsync(roleName, "{}", tags);
 
         // Assert
-        Assert.Equal(expectedRoleName, returnedRoleName);
+        Assert.Equal(expectedRoleArn, returnedRoleArn);
         mockAmazonIam.Verify(iam => iam.CreateRoleAsync(
             It.Is<CreateRoleRequest>(req => req.RoleName == expectedRoleName),
             It.IsAny<CancellationToken>()),
