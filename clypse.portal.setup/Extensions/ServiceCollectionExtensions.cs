@@ -10,6 +10,7 @@ using clypse.portal.setup.Services.Build;
 using clypse.portal.setup.Services.Cloudfront;
 using clypse.portal.setup.Services.Cognito;
 using clypse.portal.setup.Services.Iam;
+using clypse.portal.setup.Services.IO;
 using clypse.portal.setup.Services.Orchestration;
 using clypse.portal.setup.Services.S3;
 using clypse.portal.setup.Services.Security;
@@ -163,6 +164,7 @@ public static class ServiceCollectionExtensions
                 config);
         });
 
+        services.AddScoped<IIoService, IoService>();
         services.AddScoped<ISecurityTokenService, SecurityTokenService>();
         services.AddScoped<IS3Service, S3Service>();
         services.AddScoped<IDirectoryUploadService, AmazonS3TransferUtilityDirectoryUploadService>();

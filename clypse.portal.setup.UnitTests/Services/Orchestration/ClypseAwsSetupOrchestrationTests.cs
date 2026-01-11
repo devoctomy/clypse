@@ -2,6 +2,7 @@ using clypse.portal.setup.Services.Build;
 using clypse.portal.setup.Services.Cloudfront;
 using clypse.portal.setup.Services.Cognito;
 using clypse.portal.setup.Services.Iam;
+using clypse.portal.setup.Services.IO;
 using clypse.portal.setup.Services.Orchestration;
 using clypse.portal.setup.Services.S3;
 using clypse.portal.setup.Services.Security;
@@ -18,6 +19,7 @@ public class ClypseAwsSetupOrchestrationTests
     private readonly Mock<ICognitoService> _mockCognitoService;
     private readonly Mock<ICloudfrontService> _mockCloudfrontService;
     private readonly Mock<IPortalConfigService> _mockPortalConfigService;
+    private readonly Mock<IIoService> _mockIoService;
     private readonly Mock<ILogger<IamService>> _mockLogger;
     private readonly SetupOptions _options;
 
@@ -29,6 +31,7 @@ public class ClypseAwsSetupOrchestrationTests
         _mockCognitoService = new Mock<ICognitoService>();
         _mockCloudfrontService = new Mock<ICloudfrontService>();
         _mockPortalConfigService = new Mock<IPortalConfigService>();
+        _mockIoService = new Mock<IIoService>();
         _mockLogger = new Mock<ILogger<IamService>>();
         _options = new SetupOptions
         {
@@ -43,16 +46,17 @@ public class ClypseAwsSetupOrchestrationTests
         };
     }
 
-    private ClypseAwsSetupOrchestration CreateSut()
+    private ClypseAwsSetupOrchestration CreateSut(SetupOptions options)
     {
         return new ClypseAwsSetupOrchestration(
-            _options,
+            options,
             _mockSecurityTokenService.Object,
             _mockIamService.Object,
             _mockS3Service.Object,
             _mockCognitoService.Object,
             _mockCloudfrontService.Object,
             _mockPortalConfigService.Object,
+            _mockIoService.Object,
             _mockLogger.Object);
     }
 
@@ -60,7 +64,7 @@ public class ClypseAwsSetupOrchestrationTests
     public async Task GivenValidOptions_AndBucketsDoNotExist_WhenPrepareSetup_ThenReturnsTrue()
     {
         // Arrange
-        var sut = CreateSut();
+        var sut = CreateSut(_options);
         _mockS3Service
             .Setup(s => s.DoesBucketExistAsync("clypse.portal", It.IsAny<CancellationToken>()))
             .ReturnsAsync(false);
@@ -81,7 +85,7 @@ public class ClypseAwsSetupOrchestrationTests
     public async Task GivenValidOptions_AndPortalBucketExists_WhenPrepareSetup_ThenReturnsFalse()
     {
         // Arrange
-        var sut = CreateSut();
+        var sut = CreateSut(_options);
         _mockS3Service
             .Setup(s => s.DoesBucketExistAsync("clypse.portal", It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
@@ -102,7 +106,7 @@ public class ClypseAwsSetupOrchestrationTests
     public async Task GivenValidOptions_AndDataBucketExists_WhenPrepareSetup_ThenReturnsFalse()
     {
         // Arrange
-        var sut = CreateSut();
+        var sut = CreateSut(_options);
         _mockS3Service
             .Setup(s => s.DoesBucketExistAsync("clypse.portal", It.IsAny<CancellationToken>()))
             .ReturnsAsync(false);
@@ -132,6 +136,7 @@ public class ClypseAwsSetupOrchestrationTests
             _mockCognitoService.Object,
             _mockCloudfrontService.Object,
             _mockPortalConfigService.Object,
+            _mockIoService.Object,
             _mockLogger.Object);
 
         // Act & Assert
@@ -151,6 +156,7 @@ public class ClypseAwsSetupOrchestrationTests
             _mockCognitoService.Object,
             _mockCloudfrontService.Object,
             _mockPortalConfigService.Object,
+            _mockIoService.Object,
             _mockLogger.Object);
 
         // Act & Assert
@@ -161,7 +167,7 @@ public class ClypseAwsSetupOrchestrationTests
     public async Task GivenValidOptions_AndPortalBucketCreationFails_WhenSetupClypseOnAwsAsync_ThenThrowsException()
     {
         // Arrange
-        var sut = CreateSut();
+        var sut = CreateSut(_options);
         _mockSecurityTokenService
             .Setup(s => s.GetAccountIdAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync("123456789012");
@@ -178,7 +184,7 @@ public class ClypseAwsSetupOrchestrationTests
     public async Task GivenValidOptions_AndPortalBucketTaggingFails_WhenSetupClypseOnAwsAsync_ThenThrowsException()
     {
         // Arrange
-        var sut = CreateSut();
+        var sut = CreateSut(_options);
         _mockSecurityTokenService
             .Setup(s => s.GetAccountIdAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync("123456789012");
@@ -198,7 +204,7 @@ public class ClypseAwsSetupOrchestrationTests
     public async Task GivenValidOptions_AndPortalBucketPolicyFails_WhenSetupClypseOnAwsAsync_ThenThrowsException()
     {
         // Arrange
-        var sut = CreateSut();
+        var sut = CreateSut(_options);
         _mockSecurityTokenService
             .Setup(s => s.GetAccountIdAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync("123456789012");
@@ -221,7 +227,7 @@ public class ClypseAwsSetupOrchestrationTests
     public async Task GivenValidOptions_AndDataBucketCreationFails_WhenSetupClypseOnAwsAsync_ThenThrowsException()
     {
         // Arrange
-        var sut = CreateSut();
+        var sut = CreateSut(_options);
         _mockSecurityTokenService
             .Setup(s => s.GetAccountIdAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync("123456789012");
@@ -247,7 +253,7 @@ public class ClypseAwsSetupOrchestrationTests
     public async Task GivenValidOptions_AndDataBucketTaggingFails_WhenSetupClypseOnAwsAsync_ThenThrowsException()
     {
         // Arrange
-        var sut = CreateSut();
+        var sut = CreateSut(_options);
         _mockSecurityTokenService
             .Setup(s => s.GetAccountIdAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync("123456789012");
@@ -276,7 +282,7 @@ public class ClypseAwsSetupOrchestrationTests
     public async Task GivenValidOptions_AndUserPoolClientCreationFails_WhenSetupClypseOnAwsAsync_ThenThrowsException()
     {
         // Arrange
-        var sut = CreateSut();
+        var sut = CreateSut(_options);
         SetupSuccessfulS3Operations();
         SetupSuccessfulIamOperations();
         SetupSuccessfulCognitoUserPoolCreation();
@@ -299,7 +305,7 @@ public class ClypseAwsSetupOrchestrationTests
     public async Task GivenValidOptions_AndAttachDataPolicyFails_WhenSetupClypseOnAwsAsync_ThenThrowsException()
     {
         // Arrange
-        var sut = CreateSut();
+        var sut = CreateSut(_options);
         SetupSuccessfulS3Operations();
         SetupSuccessfulIamPolicyCreation();
         SetupSuccessfulCognitoOperations();
@@ -327,7 +333,7 @@ public class ClypseAwsSetupOrchestrationTests
     public async Task GivenValidOptions_AndAttachAuthPolicyFails_WhenSetupClypseOnAwsAsync_ThenThrowsException()
     {
         // Arrange
-        var sut = CreateSut();
+        var sut = CreateSut(_options);
         SetupSuccessfulS3Operations();
         SetupSuccessfulIamPolicyCreation();
         SetupSuccessfulCognitoOperations();
@@ -364,7 +370,7 @@ public class ClypseAwsSetupOrchestrationTests
     public async Task GivenValidOptions_AndSetAuthenticatedRoleFails_WhenSetupClypseOnAwsAsync_ThenThrowsException()
     {
         // Arrange
-        var sut = CreateSut();
+        var sut = CreateSut(_options);
         SetupSuccessfulS3Operations();
         SetupSuccessfulIamOperations();
         SetupSuccessfulCognitoOperations();
@@ -385,7 +391,7 @@ public class ClypseAwsSetupOrchestrationTests
     public async Task GivenValidOptions_AndSetBucketWebsiteConfigFails_WhenSetupClypseOnAwsAsync_ThenThrowsException()
     {
         // Arrange
-        var sut = CreateSut();
+        var sut = CreateSut(_options);
         SetupSuccessfulS3Operations();
         SetupSuccessfulIamOperations();
         SetupSuccessfulCognitoOperations();
@@ -407,7 +413,7 @@ public class ClypseAwsSetupOrchestrationTests
     public async Task GivenValidOptions_AndCloudfrontCreationFails_WhenSetupClypseOnAwsAsync_ThenThrowsException()
     {
         // Arrange
-        var sut = CreateSut();
+        var sut = CreateSut(_options);
         SetupSuccessfulS3Operations();
         SetupSuccessfulIamOperations();
         SetupSuccessfulCognitoOperations();
@@ -436,7 +442,7 @@ public class ClypseAwsSetupOrchestrationTests
     public async Task GivenValidOptions_AndSetDataBucketCorsFails_WhenSetupClypseOnAwsAsync_ThenThrowsException()
     {
         // Arrange
-        var sut = CreateSut();
+        var sut = CreateSut(_options);
         SetupSuccessfulS3Operations();
         SetupSuccessfulIamOperations();
         SetupSuccessfulCognitoOperations();
@@ -460,7 +466,7 @@ public class ClypseAwsSetupOrchestrationTests
     public async Task GivenValidOptions_AndCreateInitialUserFails_WhenSetupClypseOnAwsAsync_ThenThrowsException()
     {
         // Arrange
-        var sut = CreateSut();
+        var sut = CreateSut(_options);
         SetupSuccessfulS3Operations();
         SetupSuccessfulIamOperations();
         SetupSuccessfulCognitoOperations();
@@ -484,7 +490,7 @@ public class ClypseAwsSetupOrchestrationTests
     public async Task GivenValidOptions_AndAllOperationsSucceed_WhenSetupClypseOnAwsAsync_ThenReturnsTrue()
     {
         // Arrange
-        var sut = CreateSut();
+        var sut = CreateSut(_options);
         SetupSuccessfulS3Operations();
         SetupSuccessfulIamOperations();
         SetupSuccessfulCognitoOperations();
@@ -505,6 +511,63 @@ public class ClypseAwsSetupOrchestrationTests
         // Assert
         Assert.True(result);
         VerifyAllServicesWereCalled();
+    }
+
+    [Fact]
+    public async Task GivenValidOptions_AndBuildOutputPathSet_AndAllOperationsSucceed_WhenSetupClypseOnAwsAsync_ThenReturnsTrue_AndPortalSiteDeployed()
+    {
+        // Arrange
+        var options = new SetupOptions
+        {
+            BaseUrl = "http://localhost:4566",
+            Region = "us-east-1",
+            ResourcePrefix = "test-prefix",
+            AccessId = "test-access-id",
+            SecretAccessKey = "test-secret-key",
+            PortalBuildOutputPath = "/",
+            InitialUserEmail = "test@example.com",
+            InteractiveMode = false
+        };
+        var sut = CreateSut(options);
+        SetupSuccessfulS3Operations();
+        SetupSuccessfulIamOperations();
+        SetupSuccessfulCognitoOperations();
+        SetupSuccessfulCloudfrontOperations();
+        SetupSuccessfulCorsConfiguration();
+
+        _mockCognitoService
+            .Setup(s => s.CreateUserAsync(
+                _options.InitialUserEmail,
+                It.IsAny<string>(),
+                It.IsAny<Dictionary<string, string>>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+
+        _mockPortalConfigService.Setup(s => s.ConfigureAsync(
+                It.IsAny<string>(),
+                It.IsAny<string>(),
+                It.IsAny<string>(),
+                It.IsAny<string>(),
+                It.IsAny<string>(),
+                It.IsAny<string>(),
+                It.IsAny<string>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new MemoryStream());
+
+        _mockIoService.Setup(x => x.OpenWrite(
+            It.IsAny<string>()))
+            .Returns(new MemoryStream());
+
+        // Act
+        var result = await sut.SetupClypseOnAwsAsync(CancellationToken.None);
+
+        // Assert
+        Assert.True(result);
+        VerifyAllServicesWereCalled();
+        _mockS3Service.Verify(s => s.UploadDirectoryToBucket(
+            "clypse.portal",
+            "/",
+            It.IsAny<CancellationToken>()), Times.Once);
     }
 
     private void SetupSuccessfulS3Operations()

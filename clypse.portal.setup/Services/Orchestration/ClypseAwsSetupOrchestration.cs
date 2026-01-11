@@ -3,6 +3,7 @@ using clypse.portal.setup.Services.Build;
 using clypse.portal.setup.Services.Cloudfront;
 using clypse.portal.setup.Services.Cognito;
 using clypse.portal.setup.Services.Iam;
+using clypse.portal.setup.Services.IO;
 using clypse.portal.setup.Services.S3;
 using clypse.portal.setup.Services.Security;
 using Microsoft.Extensions.Logging;
@@ -20,6 +21,7 @@ public class ClypseAwsSetupOrchestration(
         ICognitoService cognitoService,
         ICloudfrontService cloudfrontService,
         IPortalConfigService portalConfigService,
+        IIoService ioService,
         ILogger<IamService> logger) : IClypseAwsSetupOrchestration
 {
     public async Task<bool> PrepareSetup(CancellationToken cancellationToken)
@@ -344,7 +346,7 @@ public class ClypseAwsSetupOrchestration(
             foreach (var oldSetting in oldSettings)
             {
                 logger.LogInformation("Removing portal setting file '{oldSetting}'.", oldSetting);
-                File.Delete(oldSetting);
+                ioService.Delete(oldSetting);
             }
 
             logger.LogInformation("Reconfiguring portal.");
@@ -359,7 +361,7 @@ public class ClypseAwsSetupOrchestration(
                 cancellationToken);
 
             var configFilePath = Path.Combine(options.PortalBuildOutputPath, "appsettings.json");
-            using var outputStream = File.OpenWrite(configFilePath);
+            using var outputStream = ioService.OpenWrite(configFilePath);
             await configStream.CopyToAsync(outputStream, cancellationToken);
             await outputStream.FlushAsync(cancellationToken);
             outputStream.Close();
