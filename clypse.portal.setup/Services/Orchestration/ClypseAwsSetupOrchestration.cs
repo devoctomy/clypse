@@ -273,10 +273,11 @@ internal class ClypseAwsSetupOrchestration(
 
         if (Directory.Exists(options.PortalBuildOutputPath))
         {
+            logger.LogInformation("Removing unwanted settings from build output.");
             var oldSettings = Directory.GetFiles(options.PortalBuildOutputPath, "appsettings*.json");
-            foreach(var oldSetting in oldSettings)
+            foreach (var oldSetting in oldSettings)
             {
-                logger.LogInformation("Removing old portal setting file '{oldSetting}'.", oldSetting);
+                logger.LogInformation("Removing portal setting file '{oldSetting}'.", oldSetting);
                 File.Delete(oldSetting);
             }
 
