@@ -38,7 +38,46 @@ public class SetupProgramTests
         mockClypseAwsSetupOrchestration.Verify(x => x.SetupClypseOnAwsAsync(
             It.IsAny<CancellationToken>()),
             Times.Once);
+        mockClypseAwsSetupOrchestration.Verify(x => x.PrepareSetup(
+            It.IsAny<CancellationToken>()),
+            Times.Once);
     }
+
+[Fact]
+    public async Task GivenProgram_WhenRun_AndPrepareFailss_ThenErrorCodeReturned()
+    {
+        // Arrange
+        var options = new SetupOptions
+        {
+            BaseUrl = "https://example.com",
+            AccessId = "test-access-id",
+            InteractiveMode = false
+        };
+        var mockSetupInteractiveMenuService = new Mock<ISetupInteractiveMenuService>();
+        var mockClypseAwsSetupOrchestration = new Mock<IClypseAwsSetupOrchestration>();
+        var sut = new SetupProgram(
+            options,
+            mockSetupInteractiveMenuService.Object,
+            mockClypseAwsSetupOrchestration.Object,
+            Mock.Of<ILogger<SetupProgram>>());
+
+        mockClypseAwsSetupOrchestration.Setup(x => x.PrepareSetup(
+            It.IsAny<CancellationToken>()))
+            .ReturnsAsync(false);
+
+        mockClypseAwsSetupOrchestration.Setup(x => x.SetupClypseOnAwsAsync(
+            It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new Exception("Test exception"));
+
+        // Act
+        var result = await sut.Run();
+
+        // Assert
+        Assert.Equal(1, result);
+        mockClypseAwsSetupOrchestration.Verify(x => x.PrepareSetup(
+            It.IsAny<CancellationToken>()),
+            Times.Once);
+    }    
 
     [Fact]
     public async Task GivenProgram_WhenRun_AndExceptionOccurs_ThenOrchstrationIsCalled_AndErrorCodeReturned()
@@ -73,6 +112,9 @@ public class SetupProgramTests
         Assert.Equal(1, result);
 
         mockClypseAwsSetupOrchestration.Verify(x => x.SetupClypseOnAwsAsync(
+            It.IsAny<CancellationToken>()),
+            Times.Once);
+        mockClypseAwsSetupOrchestration.Verify(x => x.PrepareSetup(
             It.IsAny<CancellationToken>()),
             Times.Once);
     }
