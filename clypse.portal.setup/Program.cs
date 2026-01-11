@@ -2,8 +2,10 @@
 using clypse.portal.setup.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using System.Diagnostics.CodeAnalysis;
 namespace clypse.portal.setup;
 
+[ExcludeFromCodeCoverage]
 public static class Program
 {
     public static async Task<int> Main(string[] args)
