@@ -166,7 +166,7 @@ public class IamServiceTests
             Times.Once);
     }
 
-    private bool TagsMatch(
+    private static bool TagsMatch(
         List<Tag> awsTags,
         Dictionary<string, string> expectedTags)
     {

@@ -111,6 +111,7 @@ public class S3ServiceTests
         var allowedHeaders = new List<string> { "*" };
         var allowedMethods = new List<string> { "GET", "POST", "PUT", "DELETE", "HEAD" };
         var allowedOrigins = new List<string> { "https://example.com" };
+        var expectedExposedHeaders = new[] { "ETag" };
 
         mockAmazonS3
             .Setup(s3 => s3.PutCORSConfigurationAsync(
@@ -120,7 +121,7 @@ public class S3ServiceTests
                     config.Rules[0].AllowedHeaders.SequenceEqual(allowedHeaders) &&
                     config.Rules[0].AllowedMethods.SequenceEqual(allowedMethods) &&
                     config.Rules[0].AllowedOrigins.SequenceEqual(allowedOrigins) &&
-                    config.Rules[0].ExposeHeaders.SequenceEqual(new[] { "ETag" }) &&
+                    config.Rules[0].ExposeHeaders.SequenceEqual(expectedExposedHeaders) &&
                     config.Rules[0].MaxAgeSeconds == 3000),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(new PutCORSConfigurationResponse

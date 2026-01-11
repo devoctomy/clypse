@@ -14,7 +14,7 @@ public class IamService(
     SetupOptions options,
     ILogger<IamService> logger) : IIamService
 {
-    private static JsonSerializerOptions _jsonSerializerOptions = new JsonSerializerOptions
+    private readonly static JsonSerializerOptions _jsonSerializerOptions = new()
     {
         WriteIndented = false,
         Converters =

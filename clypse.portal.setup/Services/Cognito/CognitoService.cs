@@ -37,15 +37,15 @@ public class CognitoService(
         {
             IdentityPoolName = identityPoolNameWithPrefix,
             IdentityPoolTags = tags,
-            CognitoIdentityProviders = new List<CognitoIdentityProviderInfo>
-            {
+            CognitoIdentityProviders =
+            [
                 new CognitoIdentityProviderInfo
                 {
                     ProviderName = $"cognito-idp.{options.Region}.amazonaws.com/{userPoolId}",
                     ClientId = userPoolClientId,
                     ServerSideTokenCheck = false
                 }
-            },
+            ],
         };
         var response = await amazonCognitoIdentity.CreateIdentityPoolAsync(createIdentityPool, cancellationToken);
         return response.IdentityPoolId;

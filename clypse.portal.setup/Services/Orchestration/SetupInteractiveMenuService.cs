@@ -4,15 +4,8 @@ using Spectre.Console;
 
 namespace clypse.portal.setup.Services.Orchestration;
 
-public class SetupInteractiveMenuService : ISetupInteractiveMenuService
+public class SetupInteractiveMenuService(IPortalBuildService portalBuildService) : ISetupInteractiveMenuService
 {
-    private readonly IPortalBuildService _portalBuildService;
-
-    public SetupInteractiveMenuService(IPortalBuildService portalBuildService)
-    {
-        _portalBuildService = portalBuildService;
-    }
-
     public bool Run(SetupOptions options)
     {
         return ConfigureAwsOptionsInteractively(options);
@@ -61,7 +54,7 @@ public class SetupInteractiveMenuService : ISetupInteractiveMenuService
                             .SpinnerStyle(Style.Parse("aqua"))
                             .Start("Building portal (WASM)...", _ =>
                             {
-                                buildResult = _portalBuildService.Run().GetAwaiter().GetResult();
+                                buildResult = portalBuildService.Run().GetAwaiter().GetResult();
                             });
 
                         if (buildResult?.Success == true)

@@ -1,5 +1,4 @@
-﻿using Amazon.S3;
-using clypse.portal.setup.Extensions;
+﻿using clypse.portal.setup.Extensions;
 using clypse.portal.setup.Services.Build;
 using clypse.portal.setup.Services.Cloudfront;
 using clypse.portal.setup.Services.Cognito;
@@ -300,7 +299,7 @@ internal class ClypseAwsSetupOrchestration(
         logger.LogInformation("Creating auth role.");
         var authRoleArn = await iamService.CreateRoleAsync(
            "clypse.auth.role",
-           GetTrustPolicyJson(accountId, identityPoolId),
+           GetTrustPolicyJson(identityPoolId),
            tags,
            cancellationToken);
         logger.LogInformation("Auth role '{authRoleArn}' created.", authRoleArn);
@@ -439,7 +438,7 @@ internal class ClypseAwsSetupOrchestration(
             userPoolId,
             tags,
             cancellationToken);
-        if (!setDataBucketCorsConfig)
+        if (!createInitialUser)
         {
             logger.LogError("Failed to create initial user.");
             throw new Exception("Failed to create initial user.");
@@ -493,9 +492,7 @@ internal class ClypseAwsSetupOrchestration(
         }
     }
 
-    private static string GetTrustPolicyJson(
-        string accountId,
-        string identityPoolId)
+    private static string GetTrustPolicyJson(string identityPoolId)
     {
         var trustPolicy = new
         {
