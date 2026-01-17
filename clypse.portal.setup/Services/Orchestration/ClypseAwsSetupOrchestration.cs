@@ -500,9 +500,20 @@ public class ClypseAwsSetupOrchestration(
     /// <inheritdoc />
     public async Task<bool> UpgradePortalAsync(CancellationToken cancellationToken)
     {
+        var portalBucketName = "clypse.portal";
+        logger.LogInformation("Checking to see if portal bucket exists.");
+        var portalBucketExists = await s3Service.DoesBucketExistAsync(
+            portalBucketName,
+            cancellationToken);
+        if (!portalBucketExists)
+        {
+            logger.LogError("S3 bucket for portal does not exist, upgrade aborted.");
+            return false;
+        }
+
         // download current app settings from bucket and extract values
         // deploy portal with new settings
-        var portalBucketName = "clypse.portal";
+        logger.LogInformation("Downloading existing configuration.");
         var appSettings = await s3Service.DownloadObjectDataAsync(
             portalBucketName,
             "appsettings.json",
