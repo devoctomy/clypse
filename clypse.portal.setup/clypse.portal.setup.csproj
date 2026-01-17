@@ -14,11 +14,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-	  <Content Include="Data\appsettings.json">
-	    <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
-	    <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
-	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-	  </Content>
+	  <Content Include="..\clypse.portal\wwwroot\appsettings.json" Link="Data\appsettings.json" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -52,6 +48,10 @@
 			<Generator>ResXFileCodeGenerator</Generator>
 			<LastGenOutput>Resources.Designer.cs</LastGenOutput>
 		</EmbeddedResource>
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Folder Include="Data\" />
 	</ItemGroup>
 
 </Project>

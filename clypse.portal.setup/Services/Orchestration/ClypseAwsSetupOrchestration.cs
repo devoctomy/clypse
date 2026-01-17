@@ -407,6 +407,9 @@ public class ClypseAwsSetupOrchestration(
             userPoolId,
             userPoolClientId,
             identityPoolId,
+            true,
+            true,
+            null,
             cancellationToken);
 
         logger.LogInformation("Setting portal bucket website configuration.");
@@ -499,43 +502,106 @@ public class ClypseAwsSetupOrchestration(
     {
         // download current app settings from bucket and extract values
         // deploy portal with new settings
-        throw new NotImplementedException();
+        var portalBucketName = "clypse.portal";
+        var appSettings = await s3Service.DownloadObjectDataAsync(
+            portalBucketName,
+            "appsettings.json",
+            cancellationToken);
+
+        // shall we munch old settings with latest template? or just reuse the old settings?
+
+        await DeployPortal(
+            portalBucketName,
+            reconfigure: true,
+            reconfiguredSettings: appSettings,
+            cancellationToken: cancellationToken);
+
+        return true;
     }
 
     private async Task DeployPortal(
         string portalBucketName,
-        string dataBucketName,
-        string userPoolId,
-        string userPoolClientId,
-        string identityPoolId,
-        CancellationToken cancellationToken)
+        string? dataBucketName = null,
+        string? userPoolId = null,
+        string? userPoolClientId = null,
+        string? identityPoolId = null,
+        bool deleteSettings = true,
+        bool reconfigure = true,
+        byte[]? reconfiguredSettings = null,
+        CancellationToken cancellationToken = default)
     {
         if (Directory.Exists(options.PortalBuildOutputPath))
         {
-            logger.LogInformation("Removing unwanted settings from build output.");
-            var oldSettings = ioService.GetFiles(options.PortalBuildOutputPath, "appsettings*");
-            foreach (var oldSetting in oldSettings)
+            var dataBucketNameWithPrefix =
+                dataBucketName == null ?
+                null :
+                $"{options.ResourcePrefix}.{dataBucketName}";
+
+            if (deleteSettings)
             {
-                logger.LogInformation("Removing portal setting file '{oldSetting}'.", oldSetting);
-                ioService.Delete(oldSetting);
+                logger.LogInformation("Removing existing settings from build output.");
+                var oldSettings = ioService.GetFiles(options.PortalBuildOutputPath, "appsettings*");
+                foreach (var oldSetting in oldSettings)
+                {
+                    logger.LogInformation("Removing portal setting file '{oldSetting}'.", oldSetting);
+                    ioService.Delete(oldSetting);
+                }
             }
 
-            logger.LogInformation("Reconfiguring portal.");
-            using var configStream = await portalConfigService.ConfigureAsync(
-                "Data/appsettings.json",
-                $"{options.ResourcePrefix}.{dataBucketName}",
-                options.Region,
-                userPoolId,
-                userPoolClientId,
-                options.Region,
-                identityPoolId,
-                cancellationToken);
+            if(reconfigure)
+            {
+                logger.LogInformation("Reconfiguring portal.");
+                MemoryStream? configStream = null;
 
-            var configFilePath = ioService.CombinePath(options.PortalBuildOutputPath, "appsettings.json");
-            using var outputStream = ioService.OpenWrite(configFilePath);
-            await configStream.CopyToAsync(outputStream, cancellationToken);
-            await outputStream.FlushAsync(cancellationToken);
-            outputStream.Close();
+                if(reconfiguredSettings != null)
+                {
+                    configStream = new MemoryStream(reconfiguredSettings);
+                }
+                else
+                {
+                    if (dataBucketNameWithPrefix == null)
+                    {
+                        logger.LogError("dataBucketName required when reconfiguring portal settings without existing data.");
+                        throw new Exception("dataBucketName required when reconfiguring portal settings without existing data.");
+                    }
+
+                    if (userPoolId == null)
+                    {
+                        logger.LogError("UserPoolId required when reconfiguring portal settings without existing data.");
+                        throw new Exception("UserPoolId required when reconfiguring portal settings without existing data.");
+                    }
+
+                    if (userPoolClientId == null)
+                    {
+                        logger.LogError("userPoolClientId required when reconfiguring portal settings without existing data.");
+                        throw new Exception("userPoolClientId required when reconfiguring portal settings without existing data.");
+                    }
+
+                    if (identityPoolId == null)
+                    {
+                        logger.LogError("identityPoolId required when reconfiguring portal settings without existing data.");
+                        throw new Exception("identityPoolId required when reconfiguring portal settings without existing data.");
+                    }
+
+                    configStream = await portalConfigService.ConfigureAsync(
+                        "Data/appsettings.json",
+                        dataBucketNameWithPrefix,
+                        options.Region,
+                        userPoolId,
+                        userPoolClientId,
+                        options.Region,
+                        identityPoolId,
+                        cancellationToken);
+                }
+
+                var configFilePath = ioService.CombinePath(options.PortalBuildOutputPath, "appsettings.json");
+                using var outputStream = ioService.OpenWrite(configFilePath);
+                await configStream.CopyToAsync(outputStream, cancellationToken);
+                await outputStream.FlushAsync(cancellationToken);
+                outputStream.Close();
+
+                configStream.Dispose();
+            }
 
             logger.LogInformation("Deploying portal to portal bucket.");
             var result = await s3Service.UploadDirectoryToBucket(
