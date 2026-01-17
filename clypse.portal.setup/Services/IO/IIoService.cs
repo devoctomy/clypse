@@ -21,4 +21,6 @@ public interface IIoService
     public Task<string> ReadAllTextAsync(string path, CancellationToken cancellationToken = default);
 
     public Stream OpenWrite(string path);
+
+    public string[] GetFiles(string path, string searchPattern);
 }

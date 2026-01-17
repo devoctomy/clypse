@@ -8,6 +8,8 @@ using clypse.portal.setup.Services.S3;
 using clypse.portal.setup.Services.Security;
 using Microsoft.Extensions.Logging;
 using Moq;
+using System;
+using System.IO;
 
 namespace clypse.portal.setup.UnitTests.Services.Orchestration;
 
@@ -568,6 +570,289 @@ public class ClypseAwsSetupOrchestrationTests
             "clypse.portal",
             "/",
             It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task GivenBuildOutputPathExists_WhenOldSettingsFound_ShouldDeleteAllOldSettings()
+    {
+        // Arrange
+        var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+        Directory.CreateDirectory(tempDir);
+
+        var options = new SetupOptions
+        {
+            BaseUrl = "http://localhost:4566",
+            Region = "us-east-1",
+            ResourcePrefix = "test-prefix",
+            AccessId = "test-access-id",
+            SecretAccessKey = "test-secret-key",
+            PortalBuildOutputPath = tempDir,
+            InitialUserEmail = "test@example.com",
+            InteractiveMode = false
+        };
+
+        var sut = CreateSut(options);
+        SetupSuccessfulS3Operations();
+        SetupSuccessfulIamOperations();
+        SetupSuccessfulCognitoOperations();
+        SetupSuccessfulCloudfrontOperations();
+        SetupSuccessfulCorsConfiguration();
+
+        var oldSettings = new[]
+        {
+            Path.Combine(tempDir, "appsettings.json"),
+            Path.Combine(tempDir, "appsettings.Development.json"),
+        };
+
+        _mockIoService.Setup(x => x.GetFiles(tempDir, "appsettings*")).Returns(oldSettings);
+        _mockIoService.Setup(x => x.Delete(It.IsAny<string>()));
+        _mockIoService.Setup(x => x.OpenWrite(It.IsAny<string>())).Returns(new MemoryStream());
+        _mockPortalConfigService.Setup(x => x.ConfigureAsync(
+                It.IsAny<string>(),
+                It.IsAny<string>(),
+                It.IsAny<string>(),
+                It.IsAny<string>(),
+                It.IsAny<string>(),
+                It.IsAny<string>(),
+                It.IsAny<string>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new MemoryStream());
+
+        _mockCognitoService
+            .Setup(s => s.CreateUserAsync(
+                options.InitialUserEmail,
+                It.IsAny<string>(),
+                It.IsAny<Dictionary<string, string>>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+
+        try
+        {
+            // Act
+            var result = await sut.SetupClypseOnAwsAsync(CancellationToken.None);
+
+            // Assert
+            Assert.True(result);
+            _mockIoService.Verify(x => x.GetFiles(tempDir, "appsettings*"), Times.Once);
+            _mockIoService.Verify(x => x.Delete(oldSettings[0]), Times.Once);
+            _mockIoService.Verify(x => x.Delete(oldSettings[1]), Times.Once);
+        }
+        finally
+        {
+            Directory.Delete(tempDir, true);
+        }
+    }
+
+    [Fact]
+    public async Task GivenBuildOutputPathExists_WhenNoOldSettingsFound_ShouldNotDeleteOldSettings()
+    {
+        // Arrange
+        var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+        Directory.CreateDirectory(tempDir);
+
+        var options = new SetupOptions
+        {
+            BaseUrl = "http://localhost:4566",
+            Region = "us-east-1",
+            ResourcePrefix = "test-prefix",
+            AccessId = "test-access-id",
+            SecretAccessKey = "test-secret-key",
+            PortalBuildOutputPath = tempDir,
+            InitialUserEmail = "test@example.com",
+            InteractiveMode = false
+        };
+
+        var sut = CreateSut(options);
+        SetupSuccessfulS3Operations();
+        SetupSuccessfulIamOperations();
+        SetupSuccessfulCognitoOperations();
+        SetupSuccessfulCloudfrontOperations();
+        SetupSuccessfulCorsConfiguration();
+
+        _mockIoService.Setup(x => x.GetFiles(tempDir, "appsettings*")).Returns(Array.Empty<string>());
+        _mockIoService.Setup(x => x.OpenWrite(It.IsAny<string>())).Returns(new MemoryStream());
+        _mockPortalConfigService.Setup(x => x.ConfigureAsync(
+                It.IsAny<string>(),
+                It.IsAny<string>(),
+                It.IsAny<string>(),
+                It.IsAny<string>(),
+                It.IsAny<string>(),
+                It.IsAny<string>(),
+                It.IsAny<string>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new MemoryStream());
+
+        _mockCognitoService
+            .Setup(s => s.CreateUserAsync(
+                options.InitialUserEmail,
+                It.IsAny<string>(),
+                It.IsAny<Dictionary<string, string>>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+
+        try
+        {
+            // Act
+            var result = await sut.SetupClypseOnAwsAsync(CancellationToken.None);
+
+            // Assert
+            Assert.True(result);
+            _mockIoService.Verify(x => x.GetFiles(tempDir, "appsettings*"), Times.Once);
+            _mockIoService.Verify(x => x.Delete(It.IsAny<string>()), Times.Never);
+        }
+        finally
+        {
+            Directory.Delete(tempDir, true);
+        }
+    }
+
+    [Fact]
+    public async Task GivenAliasAndCertificateProvided_WhenSetupClypseOnAwsAsync_ThenUsesAliasAndCertificate()
+    {
+        // Arrange
+        var options = new SetupOptions
+        {
+            BaseUrl = "http://localhost:4566",
+            Region = "us-east-1",
+            ResourcePrefix = "test-prefix",
+            AccessId = "test-access-id",
+            SecretAccessKey = "test-secret-key",
+            PortalBuildOutputPath = "/",
+            InitialUserEmail = "test@example.com",
+            InteractiveMode = false,
+            Alias = "cdn.example.com",
+            CertificateArn = "arn:aws:acm:us-east-1:123456789012:certificate/abc"
+        };
+
+        var sut = CreateSut(options);
+        SetupSuccessfulS3Operations();
+        SetupSuccessfulIamOperations();
+        SetupSuccessfulCognitoOperations();
+        SetupSuccessfulCorsConfiguration();
+
+        string? capturedHost = null;
+        string? capturedAlias = null;
+        string? capturedCertificate = null;
+
+        _mockCloudfrontService
+            .Setup(s => s.CreateDistributionAsync(
+                It.IsAny<string>(),
+                It.IsAny<string?>(),
+                It.IsAny<string?>(),
+                It.IsAny<CancellationToken>()))
+            .Callback((string host, string? alias, string? cert, CancellationToken _) =>
+            {
+                capturedHost = host;
+                capturedAlias = alias;
+                capturedCertificate = cert;
+            })
+            .ReturnsAsync("d1234567890abc.cloudfront.net");
+
+        _mockCognitoService
+            .Setup(s => s.CreateUserAsync(
+                options.InitialUserEmail,
+                It.IsAny<string>(),
+                It.IsAny<Dictionary<string, string>>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+
+        _mockPortalConfigService.Setup(s => s.ConfigureAsync(
+                It.IsAny<string>(),
+                It.IsAny<string>(),
+                It.IsAny<string>(),
+                It.IsAny<string>(),
+                It.IsAny<string>(),
+                It.IsAny<string>(),
+                It.IsAny<string>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new MemoryStream());
+
+        _mockIoService.Setup(x => x.OpenWrite(
+            It.IsAny<string>()))
+            .Returns(new MemoryStream());
+
+        var expectedHost = "test-prefix.clypse.portal.s3-website-us-east-1.amazonaws.com";
+
+        // Act
+        var result = await sut.SetupClypseOnAwsAsync(CancellationToken.None);
+
+        // Assert
+        Assert.True(result);
+        Assert.Equal(expectedHost, capturedHost);
+        Assert.Equal(options.Alias, capturedAlias);
+        Assert.Equal(options.CertificateArn, capturedCertificate);
+    }
+
+    [Fact]
+    public async Task GivenOnlyAliasProvided_WhenSetupClypseOnAwsAsync_ThenDoesNotUseAliasOrCertificate()
+    {
+        // Arrange
+        var options = new SetupOptions
+        {
+            BaseUrl = "http://localhost:4566",
+            Region = "us-east-1",
+            ResourcePrefix = "test-prefix",
+            AccessId = "test-access-id",
+            SecretAccessKey = "test-secret-key",
+            PortalBuildOutputPath = "/",
+            InitialUserEmail = "test@example.com",
+            InteractiveMode = false,
+            Alias = "cdn.example.com",
+            CertificateArn = string.Empty
+        };
+
+        var sut = CreateSut(options);
+        SetupSuccessfulS3Operations();
+        SetupSuccessfulIamOperations();
+        SetupSuccessfulCognitoOperations();
+        SetupSuccessfulCorsConfiguration();
+
+        string? capturedAlias = null;
+        string? capturedCertificate = null;
+
+        _mockCloudfrontService
+            .Setup(s => s.CreateDistributionAsync(
+                It.IsAny<string>(),
+                It.IsAny<string?>(),
+                It.IsAny<string?>(),
+                It.IsAny<CancellationToken>()))
+            .Callback((string _, string? alias, string? cert, CancellationToken _) =>
+            {
+                capturedAlias = alias;
+                capturedCertificate = cert;
+            })
+            .ReturnsAsync("d1234567890abc.cloudfront.net");
+
+        _mockCognitoService
+            .Setup(s => s.CreateUserAsync(
+                options.InitialUserEmail,
+                It.IsAny<string>(),
+                It.IsAny<Dictionary<string, string>>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+
+        _mockPortalConfigService.Setup(s => s.ConfigureAsync(
+                It.IsAny<string>(),
+                It.IsAny<string>(),
+                It.IsAny<string>(),
+                It.IsAny<string>(),
+                It.IsAny<string>(),
+                It.IsAny<string>(),
+                It.IsAny<string>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new MemoryStream());
+
+        _mockIoService.Setup(x => x.OpenWrite(
+            It.IsAny<string>()))
+            .Returns(new MemoryStream());
+
+        // Act
+        var result = await sut.SetupClypseOnAwsAsync(CancellationToken.None);
+
+        // Assert
+        Assert.True(result);
+        Assert.Null(capturedAlias);
+        Assert.Null(capturedCertificate);
     }
 
     private void SetupSuccessfulS3Operations()

@@ -31,6 +31,16 @@ public class SetupOptions
     public string ResourcePrefix { get; set; } = string.Empty;
 
     /// <summary>
+    /// Gets or sets an optional CloudFront alias (CNAME).
+    /// </summary>
+    public string Alias { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Gets or sets an optional ACM certificate ARN to use with the CloudFront alias.
+    /// </summary>
+    public string CertificateArn { get; set; } = string.Empty;
+
+    /// <summary>
     /// Gets or sets the path where the full WASM Release build of the portal has been published.
     /// </summary>
     public string PortalBuildOutputPath { get; set; } = string.Empty;

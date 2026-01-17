@@ -342,7 +342,7 @@ public class ClypseAwsSetupOrchestration(
         if (Directory.Exists(options.PortalBuildOutputPath))
         {
             logger.LogInformation("Removing unwanted settings from build output.");
-            var oldSettings = Directory.GetFiles(options.PortalBuildOutputPath, "appsettings*");
+            var oldSettings = ioService.GetFiles(options.PortalBuildOutputPath, "appsettings*");
             foreach (var oldSetting in oldSettings)
             {
                 logger.LogInformation("Removing portal setting file '{oldSetting}'.", oldSetting);
@@ -360,7 +360,7 @@ public class ClypseAwsSetupOrchestration(
                 identityPoolId,
                 cancellationToken);
 
-            var configFilePath = Path.Combine(options.PortalBuildOutputPath, "appsettings.json");
+            var configFilePath = ioService.CombinePath(options.PortalBuildOutputPath, "appsettings.json");
             using var outputStream = ioService.OpenWrite(configFilePath);
             await configStream.CopyToAsync(outputStream, cancellationToken);
             await outputStream.FlushAsync(cancellationToken);
@@ -394,8 +394,27 @@ public class ClypseAwsSetupOrchestration(
         logger.LogInformation("Portal Website Url : {portalWebsiteUrl}", portalWebsiteUrl);
 
         logger.LogInformation("Creating CloudFront distribution.");
+        var aliasProvided = !string.IsNullOrWhiteSpace(options.Alias);
+        var certificateProvided = !string.IsNullOrWhiteSpace(options.CertificateArn);
+        var useCustomDomain = aliasProvided && certificateProvided;
+
+        if (useCustomDomain)
+        {
+            logger.LogInformation("CloudFront alias '{alias}' and certificate ARN '{certificateArn}' provided; these will be used. HTTP endpoints are strongly discouraged—use the CloudFront address over HTTPS.", options.Alias, options.CertificateArn);
+        }
+        else if (aliasProvided || certificateProvided)
+        {
+            logger.LogWarning("Only one of CloudFront alias ('{alias}') or certificate ARN ('{certificateArn}') was provided; neither will be used. HTTP endpoints are strongly discouraged—use the CloudFront distribution address over HTTPS if you don't have a certificate.", options.Alias, options.CertificateArn);
+        }
+        else
+        {
+            logger.LogInformation("No CloudFront alias or certificate provided; using the default CloudFront domain. HTTP endpoints are strongly discouraged—use the CloudFront distribution address over HTTPS if you don't have a certificate.");
+        }
+
         var distributionDomain = await cloudfrontService.CreateDistributionAsync(
             portalWebsiteUrl.Replace("http://", string.Empty),
+            useCustomDomain ? options.Alias : null,
+            useCustomDomain ? options.CertificateArn : null,
             cancellationToken: cancellationToken);
         if(string.IsNullOrEmpty(distributionDomain))
         {

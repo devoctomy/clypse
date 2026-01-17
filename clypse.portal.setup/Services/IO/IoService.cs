@@ -57,4 +57,11 @@ public class IoService : IIoService
         var text = await File.ReadAllTextAsync(path, cancellationToken);
         return text;
     }
+
+    public string[] GetFiles(
+        string path,
+        string searchPattern)
+    {
+        return Directory.GetFiles(path, searchPattern);
+    }
 }

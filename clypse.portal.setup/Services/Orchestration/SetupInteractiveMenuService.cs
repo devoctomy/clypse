@@ -31,7 +31,7 @@ public class SetupInteractiveMenuService(IPortalBuildService portalBuildService)
             var choice = AnsiConsole.Prompt(
                 new SelectionPrompt<string>()
                     .Title("[aqua]Select an action[/]")
-                    .PageSize(12)
+                    .PageSize(14)
                     .AddChoices(
                         "Build portal (WASM)",
                         "Edit BaseUrl",
@@ -39,6 +39,8 @@ public class SetupInteractiveMenuService(IPortalBuildService portalBuildService)
                         "Edit SecretAccessKey",
                         "Edit Region",
                         "Edit ResourcePrefix",
+                        "Edit Alias",
+                        "Edit CertificateArn",
                         "Edit InitialUserEmail",
                         "Edit PortalBuildOutputPath",
                         "Save options",
@@ -129,6 +131,20 @@ public class SetupInteractiveMenuService(IPortalBuildService portalBuildService)
                             .AllowEmpty());
                     break;
 
+                case "Edit Alias":
+                    options.Alias = AnsiConsole.Prompt(
+                        new TextPrompt<string>("[green]Alias[/] (optional CNAME)")
+                            .DefaultValue(options.Alias ?? string.Empty)
+                            .AllowEmpty());
+                    break;
+
+                case "Edit CertificateArn":
+                    options.CertificateArn = AnsiConsole.Prompt(
+                        new TextPrompt<string>("[green]CertificateArn[/] (optional ACM ARN)")
+                            .DefaultValue(options.CertificateArn ?? string.Empty)
+                            .AllowEmpty());
+                    break;
+
                 case "Edit InitialUserEmail":
                     options.InitialUserEmail = AnsiConsole.Prompt(
                         new TextPrompt<string>("[green]InitialUserEmail[/]")
@@ -199,6 +215,8 @@ public class SetupInteractiveMenuService(IPortalBuildService portalBuildService)
         table.AddRow("[blue]SecretAccessKey[/]", Markup.Escape((options.SecretAccessKey ?? string.Empty).Redact(3)));
         table.AddRow("[blue]Region[/]", Markup.Escape(options.Region ?? string.Empty));
         table.AddRow("[blue]ResourcePrefix[/]", Markup.Escape(options.ResourcePrefix ?? string.Empty));
+        table.AddRow("[blue]Alias[/]", Markup.Escape(options.Alias ?? string.Empty));
+        table.AddRow("[blue]CertificateArn[/]", Markup.Escape(options.CertificateArn ?? string.Empty));
         table.AddRow("[blue]InitialUserEmail[/]", Markup.Escape(options.InitialUserEmail ?? string.Empty));
         table.AddRow("[blue]PortalBuildOutputPath[/]", Markup.Escape(options.PortalBuildOutputPath ?? string.Empty));
 
@@ -218,6 +236,8 @@ public class SetupInteractiveMenuService(IPortalBuildService portalBuildService)
             SetEnv("CLYPSE_SETUP__SecretAccessKey", options.SecretAccessKey, target);
             SetEnv("CLYPSE_SETUP__Region", options.Region, target);
             SetEnv("CLYPSE_SETUP__ResourcePrefix", options.ResourcePrefix, target);
+            SetEnv("CLYPSE_SETUP__Alias", options.Alias, target);
+            SetEnv("CLYPSE_SETUP__CertificateArn", options.CertificateArn, target);
             SetEnv("CLYPSE_SETUP__InitialUserEmail", options.InitialUserEmail, target);
             SetEnv("CLYPSE_SETUP__PortalBuildOutputPath", options.PortalBuildOutputPath, target);
 
