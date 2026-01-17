@@ -4,10 +4,18 @@ using Amazon.IdentityManagement;
 using Amazon.S3;
 using clypse.portal.setup.Extensions;
 using clypse.portal.setup.Services;
+using clypse.portal.setup.Services.Build;
+using clypse.portal.setup.Services.Cloudfront;
 using clypse.portal.setup.Services.Cognito;
 using clypse.portal.setup.Services.Iam;
+using clypse.portal.setup.Services.Inventory;
+using clypse.portal.setup.Services.IO;
+using clypse.portal.setup.Services.Json;
 using clypse.portal.setup.Services.Orchestration;
+using clypse.portal.setup.Services.Process;
 using clypse.portal.setup.Services.S3;
+using clypse.portal.setup.Services.Security;
+using clypse.portal.setup.Services.Upload;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
@@ -41,33 +49,27 @@ public class ServiceCollectionExtensionsTests
             var serviceProvider = services.BuildServiceProvider();
 
             // Verify AWS services
-            var s3Client = serviceProvider.GetService<IAmazonS3>();
-            Assert.NotNull(s3Client);
-
-            var cognitoIdentityClient = serviceProvider.GetService<IAmazonCognitoIdentity>();
-            Assert.NotNull(cognitoIdentityClient);
-
-            var cognitoProviderClient = serviceProvider.GetService<IAmazonCognitoIdentityProvider>();
-            Assert.NotNull(cognitoProviderClient);
-
-            var iamClient = serviceProvider.GetService<IAmazonIdentityManagementService>();
-            Assert.NotNull(iamClient);
+            AssertServiceRegistered<IAmazonS3>(serviceProvider);
+            AssertServiceRegistered<IAmazonCognitoIdentity>(serviceProvider);
+            AssertServiceRegistered<IAmazonCognitoIdentityProvider>(serviceProvider);
+            AssertServiceRegistered<IAmazonIdentityManagementService>(serviceProvider);
 
             // Verify Clypse services
-            var s3Service = serviceProvider.GetService<IS3Service>();
-            Assert.NotNull(s3Service);
-
-            var cognitoService = serviceProvider.GetService<ICognitoService>();
-            Assert.NotNull(cognitoService);
-
-            var iamService = serviceProvider.GetService<IIamService>();
-            Assert.NotNull(iamService);
-
-            var orchestration = serviceProvider.GetService<IClypseAwsSetupOrchestration>();
-            Assert.NotNull(orchestration);
-
-            var program = serviceProvider.GetService<IProgram>();
-            Assert.NotNull(program);
+            AssertServiceRegistered<IIoService>(serviceProvider);
+            AssertServiceRegistered<IProcessRunnerService>(serviceProvider);
+            AssertServiceRegistered<ISecurityTokenService>(serviceProvider);
+            AssertServiceRegistered<IS3Service>(serviceProvider);
+            AssertServiceRegistered<IDirectoryUploadService>(serviceProvider);
+            AssertServiceRegistered<ICognitoService>(serviceProvider);
+            AssertServiceRegistered<IIamService>(serviceProvider);
+            AssertServiceRegistered<ICloudfrontService>(serviceProvider);
+            AssertServiceRegistered<IPortalBuildService>(serviceProvider);
+            AssertServiceRegistered<ISetupInteractiveMenuService>(serviceProvider);
+            AssertServiceRegistered<IClypseAwsSetupOrchestration>(serviceProvider);
+            AssertServiceRegistered<IPortalConfigService>(serviceProvider);
+            AssertServiceRegistered<IInventoryService>(serviceProvider);
+            AssertServiceRegistered<IJsonMergerService>(serviceProvider);
+            AssertServiceRegistered<IProgram>(serviceProvider);
 
             // Verify SetupOptions
             var options = serviceProvider.GetService<SetupOptions>();
@@ -166,5 +168,11 @@ public class ServiceCollectionExtensionsTests
             Environment.SetEnvironmentVariable("CLYPSE_SETUP_UNITTEST__ResourcePrefix", null);
             Environment.SetEnvironmentVariable("CLYPSE_SETUP_UNITTEST__BaseUrl", null);
         }
+    }
+
+    private static void AssertServiceRegistered<TService>(IServiceProvider serviceProvider)
+    {
+        var service = serviceProvider.GetService<TService>();
+        Assert.NotNull(service);
     }
 }

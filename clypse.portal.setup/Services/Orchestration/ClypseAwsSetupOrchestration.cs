@@ -6,6 +6,7 @@ using clypse.portal.setup.Services.Cognito;
 using clypse.portal.setup.Services.Iam;
 using clypse.portal.setup.Services.Inventory;
 using clypse.portal.setup.Services.IO;
+using clypse.portal.setup.Services.Json;
 using clypse.portal.setup.Services.S3;
 using clypse.portal.setup.Services.Security;
 using Microsoft.Extensions.Logging;
@@ -26,6 +27,7 @@ public class ClypseAwsSetupOrchestration(
         IPortalConfigService portalConfigService,
         IIoService ioService,
         IInventoryService inventoryService,
+        IJsonMergerService jsonMergerService,
         ILogger<IamService> logger) : IClypseAwsSetupOrchestration
 {
     /// <inheritdoc />
@@ -511,20 +513,22 @@ public class ClypseAwsSetupOrchestration(
             return false;
         }
 
-        // download current app settings from bucket and extract values
-        // deploy portal with new settings
         logger.LogInformation("Downloading existing configuration.");
         var appSettings = await s3Service.DownloadObjectDataAsync(
             portalBucketName,
             "appsettings.json",
             cancellationToken);
 
-        // shall we munch old settings with latest template? or just reuse the old settings?
+        logger.LogInformation("Merging existing configuration with latest template.");
+        var templateSettings = await ioService.ReadAllTextAsync("Data/appsettings.json");
+        var merged = jsonMergerService.MergeJsonStrings(
+            templateSettings,
+            Encoding.UTF8.GetString(appSettings));
 
         await DeployPortal(
             portalBucketName,
             reconfigure: true,
-            reconfiguredSettings: appSettings,
+            reconfiguredSettings: Encoding.UTF8.GetBytes(merged),
             cancellationToken: cancellationToken);
 
         return true;

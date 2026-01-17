@@ -4,6 +4,7 @@ using clypse.portal.setup.Services.Cognito;
 using clypse.portal.setup.Services.Iam;
 using clypse.portal.setup.Services.Inventory;
 using clypse.portal.setup.Services.IO;
+using clypse.portal.setup.Services.Json;
 using clypse.portal.setup.Services.Orchestration;
 using clypse.portal.setup.Services.S3;
 using clypse.portal.setup.Services.Security;
@@ -24,6 +25,7 @@ public class ClypseAwsSetupOrchestrationTests
     private readonly Mock<IPortalConfigService> _mockPortalConfigService;
     private readonly Mock<IIoService> _mockIoService;
     private readonly Mock<IInventoryService> _mockInventoryService;
+    private readonly Mock<IJsonMergerService> _mockJsonMergerService;
     private readonly Mock<ILogger<IamService>> _mockLogger;
     private readonly SetupOptions _options;
 
@@ -37,6 +39,7 @@ public class ClypseAwsSetupOrchestrationTests
         _mockPortalConfigService = new Mock<IPortalConfigService>();
         _mockIoService = new Mock<IIoService>();
         _mockInventoryService = new Mock<IInventoryService>();
+        _mockJsonMergerService = new Mock<IJsonMergerService>();
         _mockLogger = new Mock<ILogger<IamService>>();
         _options = new SetupOptions
         {
@@ -63,6 +66,7 @@ public class ClypseAwsSetupOrchestrationTests
             _mockPortalConfigService.Object,
             _mockIoService.Object,
             _mockInventoryService.Object,
+            _mockJsonMergerService.Object,
             _mockLogger.Object);
     }
 
@@ -144,6 +148,7 @@ public class ClypseAwsSetupOrchestrationTests
             _mockPortalConfigService.Object,
             _mockIoService.Object,
             _mockInventoryService.Object,
+            _mockJsonMergerService.Object,
             _mockLogger.Object);
 
         // Act & Assert
@@ -165,6 +170,7 @@ public class ClypseAwsSetupOrchestrationTests
             _mockPortalConfigService.Object,
             _mockIoService.Object,
             _mockInventoryService.Object,
+            _mockJsonMergerService.Object,
             _mockLogger.Object);
 
         // Act & Assert

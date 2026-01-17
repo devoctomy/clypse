@@ -11,6 +11,7 @@ using clypse.portal.setup.Services.Cognito;
 using clypse.portal.setup.Services.Iam;
 using clypse.portal.setup.Services.Inventory;
 using clypse.portal.setup.Services.IO;
+using clypse.portal.setup.Services.Json;
 using clypse.portal.setup.Services.Orchestration;
 using clypse.portal.setup.Services.Process;
 using clypse.portal.setup.Services.S3;
@@ -179,6 +180,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IClypseAwsSetupOrchestration, ClypseAwsSetupOrchestration>();
         services.AddScoped<IPortalConfigService, PortalConfigService>();
         services.AddScoped<IInventoryService, InventoryService>();
+        services.AddScoped<IJsonMergerService, NewtonsoftJsonMergerService>();
         services.AddSingleton<IProgram, SetupProgram>();
 
         return services;

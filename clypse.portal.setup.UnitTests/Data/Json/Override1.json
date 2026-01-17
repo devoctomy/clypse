@@ -1,0 +1,12 @@
+﻿{
+  "Field1": "DefaultField1",
+  "Field4": {
+    "Field5": "Hello World!",
+    "Field6": 100,
+    "Field7": [
+      "Jumper",
+      "Socks",
+      "Pants"
+    ]
+  }
+}

@@ -1,0 +1,13 @@
+﻿{
+  "Field1": "DefaultField1",
+  "Field3": 3.3,
+  "Field4": {
+    "Field5": "DefaultField5",
+    "Field6": 6,
+    "Field7": [
+      "Apple",
+      "Orange",
+      "Banana"
+    ]
+  }
+}

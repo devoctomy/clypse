@@ -10,6 +10,7 @@
   <ItemGroup>
     <None Remove="Data\CommandLineTestOptions3HelpMessage.txt" />
     <None Remove="Data\CommandLineTestOptionsHelpMessage.txt" />
+    <None Remove="Data\Json\Base1.json" />
   </ItemGroup>
 
   <ItemGroup>
@@ -17,6 +18,15 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="Data\CommandLineTestOptionsHelpMessage.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Data\Json\Expected1.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Data\Json\Override1.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Data\Json\Base1.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
