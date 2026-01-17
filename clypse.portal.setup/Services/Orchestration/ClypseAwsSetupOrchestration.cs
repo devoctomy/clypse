@@ -1,8 +1,10 @@
-﻿using clypse.portal.setup.Extensions;
+﻿using clypse.portal.setup.Enums;
+using clypse.portal.setup.Extensions;
 using clypse.portal.setup.Services.Build;
 using clypse.portal.setup.Services.Cloudfront;
 using clypse.portal.setup.Services.Cognito;
 using clypse.portal.setup.Services.Iam;
+using clypse.portal.setup.Services.Inventory;
 using clypse.portal.setup.Services.IO;
 using clypse.portal.setup.Services.S3;
 using clypse.portal.setup.Services.Security;
@@ -22,6 +24,7 @@ public class ClypseAwsSetupOrchestration(
         ICloudfrontService cloudfrontService,
         IPortalConfigService portalConfigService,
         IIoService ioService,
+        IInventoryService inventoryService,
         ILogger<IamService> logger) : IClypseAwsSetupOrchestration
 {
     public async Task<bool> PrepareSetup(CancellationToken cancellationToken)
@@ -123,6 +126,13 @@ public class ClypseAwsSetupOrchestration(
             throw new Exception("Failed to create S3 bucket for portal.");
         }
 
+        inventoryService.RecordResource(new()
+        {
+            Description = "S3 Bucket for portal website.",
+            ResourceType = ResourceType.S3Bucket,
+            ResourceId = $"{options.ResourcePrefix}.{portalBucketName}"
+        });
+
         logger.LogInformation("Tagging portal bucket.");
         var taggedPortalBucket = await s3Service.SetBucketTags(
             portalBucketName,
@@ -172,6 +182,13 @@ public class ClypseAwsSetupOrchestration(
             logger.LogError("Failed to create S3 bucket for data.");
             throw new Exception("Failed to create S3 bucket for data.");
         }
+
+        inventoryService.RecordResource(new()
+        {
+            Description = "S3 Bucket for user data.",
+            ResourceType = ResourceType.S3Bucket,
+            ResourceId = $"{options.ResourcePrefix}.{dataBucketName}"
+        });
 
         logger.LogInformation("Tagging data bucket.");
         var taggedDataBucket = await s3Service.SetBucketTags(
@@ -237,6 +254,13 @@ public class ClypseAwsSetupOrchestration(
             cancellationToken);
         logger.LogInformation("Data policy '{dataPolicyArn}' created.", dataPolicyArn);
 
+        inventoryService.RecordResource(new()
+        {
+            Description = "IAM Policy for user data.",
+            ResourceType = ResourceType.IamPolicy,
+            ResourceId = dataPolicyArn
+        });
+
         var authPolicyDocument = new
         {
             Version = "2012-10-17",
@@ -265,6 +289,13 @@ public class ClypseAwsSetupOrchestration(
             cancellationToken);
         logger.LogInformation("Auth policy '{authPolicyArn}' created.", authPolicyArn);
 
+        inventoryService.RecordResource(new()
+        {
+            Description = "IAM Policy for cognito auth.",
+            ResourceType = ResourceType.IamPolicy,
+            ResourceId = authPolicyArn
+        });
+
         // Cognito
         logger.LogInformation("Setting up Cognito resources.");
 
@@ -274,6 +305,13 @@ public class ClypseAwsSetupOrchestration(
             tags,
             cancellationToken);
         logger.LogInformation("User pool '{userPoolId}' created.", userPoolId);
+
+        inventoryService.RecordResource(new()
+        {
+            Description = "Cognito user pool.",
+            ResourceType = ResourceType.CognitoUserPool,
+            ResourceId = userPoolId
+        });
 
         logger.LogInformation("Creating user pool client.");
         var userPoolClientId = await cognitoService.CreateUserPoolClientAsync(
@@ -288,6 +326,13 @@ public class ClypseAwsSetupOrchestration(
             throw new Exception("Failed to create user pool client.");
         }
 
+        inventoryService.RecordResource(new()
+        {
+            Description = "Cognito user pool client.",
+            ResourceType = ResourceType.CognitoUserPoolClient,
+            ResourceId = userPoolClientId
+        });
+
         logger.LogInformation("Creating identity pool.");
         var identityPoolId = await cognitoService.CreateIdentityPoolAsync(
             "clypse.identity.pool",
@@ -297,6 +342,13 @@ public class ClypseAwsSetupOrchestration(
             cancellationToken);
         logger.LogInformation("Identity pool '{userPoolId}' created.", userPoolId);
 
+        inventoryService.RecordResource(new()
+        {
+            Description = "Cognito identity pool.",
+            ResourceType = ResourceType.CognitoIdentityPool,
+            ResourceId = identityPoolId
+        });
+
         // IAM Role for Authenticated Users, needs to be created after identity pool
         logger.LogInformation("Creating auth role.");
         var authRoleArn = await iamService.CreateRoleAsync(
@@ -305,6 +357,13 @@ public class ClypseAwsSetupOrchestration(
            tags,
            cancellationToken);
         logger.LogInformation("Auth role '{authRoleArn}' created.", authRoleArn);
+
+        inventoryService.RecordResource(new()
+        {
+            Description = "IAM role for authenticated cognito users.",
+            ResourceType = ResourceType.IamPolicy,
+            ResourceId = identityPoolId
+        });
 
         logger.LogInformation("Attaching data policy to auth role.");
         var attachDataPolicyToAuthRole = await iamService.AttachPolicyToRoleAsync(
@@ -422,6 +481,13 @@ public class ClypseAwsSetupOrchestration(
             throw new Exception("Failed to create CloudFront distribution.");
         }
 
+        inventoryService.RecordResource(new()
+        {
+            Description = "Cloudfront distribution for HTTPS support.",
+            ResourceType = ResourceType.CloudFrontDistribution,
+            ResourceId = distributionDomain
+        });
+
         var origins = (string[])["http://localhost:8080", $"https://{distributionDomain}"];
 
         logger.LogInformation("Setting data bucket CORS configuration with origins ({origins}).", string.Join(',', origins));
@@ -448,6 +514,9 @@ public class ClypseAwsSetupOrchestration(
             logger.LogError("Failed to create initial user.");
             throw new Exception("Failed to create initial user.");
         }
+
+        var inventoryFilePath = $"{setupId}-inventory.json";
+        inventoryService.Save(inventoryFilePath);
 
         return true;
     }

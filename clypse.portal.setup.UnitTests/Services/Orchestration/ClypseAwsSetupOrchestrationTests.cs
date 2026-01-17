@@ -2,6 +2,7 @@ using clypse.portal.setup.Services.Build;
 using clypse.portal.setup.Services.Cloudfront;
 using clypse.portal.setup.Services.Cognito;
 using clypse.portal.setup.Services.Iam;
+using clypse.portal.setup.Services.Inventory;
 using clypse.portal.setup.Services.IO;
 using clypse.portal.setup.Services.Orchestration;
 using clypse.portal.setup.Services.S3;
@@ -22,6 +23,7 @@ public class ClypseAwsSetupOrchestrationTests
     private readonly Mock<ICloudfrontService> _mockCloudfrontService;
     private readonly Mock<IPortalConfigService> _mockPortalConfigService;
     private readonly Mock<IIoService> _mockIoService;
+    private readonly Mock<IInventoryService> _mockInventoryService;
     private readonly Mock<ILogger<IamService>> _mockLogger;
     private readonly SetupOptions _options;
 
@@ -34,6 +36,7 @@ public class ClypseAwsSetupOrchestrationTests
         _mockCloudfrontService = new Mock<ICloudfrontService>();
         _mockPortalConfigService = new Mock<IPortalConfigService>();
         _mockIoService = new Mock<IIoService>();
+        _mockInventoryService = new Mock<IInventoryService>();
         _mockLogger = new Mock<ILogger<IamService>>();
         _options = new SetupOptions
         {
@@ -59,6 +62,7 @@ public class ClypseAwsSetupOrchestrationTests
             _mockCloudfrontService.Object,
             _mockPortalConfigService.Object,
             _mockIoService.Object,
+            _mockInventoryService.Object,
             _mockLogger.Object);
     }
 
@@ -139,6 +143,7 @@ public class ClypseAwsSetupOrchestrationTests
             _mockCloudfrontService.Object,
             _mockPortalConfigService.Object,
             _mockIoService.Object,
+            _mockInventoryService.Object,
             _mockLogger.Object);
 
         // Act & Assert
@@ -159,6 +164,7 @@ public class ClypseAwsSetupOrchestrationTests
             _mockCloudfrontService.Object,
             _mockPortalConfigService.Object,
             _mockIoService.Object,
+            _mockInventoryService.Object,
             _mockLogger.Object);
 
         // Act & Assert
@@ -513,6 +519,34 @@ public class ClypseAwsSetupOrchestrationTests
         // Assert
         Assert.True(result);
         VerifyAllServicesWereCalled();
+    }
+
+    [Fact]
+    public async Task GivenValidOptions_WhenSetupClypseOnAwsAsync_ThenRecordsInventoryAndSaves()
+    {
+        // Arrange
+        var sut = CreateSut(_options);
+        SetupSuccessfulS3Operations();
+        SetupSuccessfulIamOperations();
+        SetupSuccessfulCognitoOperations();
+        SetupSuccessfulCloudfrontOperations();
+        SetupSuccessfulCorsConfiguration();
+
+        _mockCognitoService
+            .Setup(s => s.CreateUserAsync(
+                _options.InitialUserEmail,
+                It.IsAny<string>(),
+                It.IsAny<Dictionary<string, string>>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+
+        // Act
+        var result = await sut.SetupClypseOnAwsAsync(CancellationToken.None);
+
+        // Assert
+        Assert.True(result);
+        _mockInventoryService.Verify(s => s.RecordResource(It.IsAny<InventoryItem>()), Times.Exactly(9));
+        _mockInventoryService.Verify(s => s.Save(It.Is<string>(p => p.EndsWith("-inventory.json"))), Times.Once);
     }
 
     [Fact]
@@ -1020,5 +1054,9 @@ public class ClypseAwsSetupOrchestrationTests
 
         // Verify CloudfrontService
         _mockCloudfrontService.Verify(s => s.CreateDistributionAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Once);
+
+        // Verify InventoryService
+        _mockInventoryService.Verify(s => s.RecordResource(It.IsAny<InventoryItem>()), Times.Exactly(9));
+        _mockInventoryService.Verify(s => s.Save(It.Is<string>(p => p.EndsWith("-inventory.json"))), Times.Once);
     }
 }

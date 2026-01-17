@@ -4,12 +4,12 @@ using Amazon.CognitoIdentityProvider;
 using Amazon.IdentityManagement;
 using Amazon.S3;
 using Amazon.SecurityToken;
-using clypse.portal.setup;
 using clypse.portal.setup.Services;
 using clypse.portal.setup.Services.Build;
 using clypse.portal.setup.Services.Cloudfront;
 using clypse.portal.setup.Services.Cognito;
 using clypse.portal.setup.Services.Iam;
+using clypse.portal.setup.Services.Inventory;
 using clypse.portal.setup.Services.IO;
 using clypse.portal.setup.Services.Orchestration;
 using clypse.portal.setup.Services.Process;
@@ -177,6 +177,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<ISetupInteractiveMenuService, SetupInteractiveMenuService>();
         services.AddScoped<IClypseAwsSetupOrchestration, ClypseAwsSetupOrchestration>();
         services.AddScoped<IPortalConfigService, PortalConfigService>();
+        services.AddScoped<IInventoryService, InventoryService>();
         services.AddSingleton<IProgram, SetupProgram>();
 
         return services;

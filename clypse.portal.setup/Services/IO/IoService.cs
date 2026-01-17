@@ -25,6 +25,11 @@ public class IoService : IIoService
         return File.OpenWrite(path);
     }
 
+    public void WriteAllText(string path, string contents)
+    {
+        File.WriteAllText(path, contents);
+    }
+
     public void CreateDirectory(string path)
     {
         Directory.CreateDirectory(path);
@@ -56,6 +61,11 @@ public class IoService : IIoService
     {
         var text = await File.ReadAllTextAsync(path, cancellationToken);
         return text;
+    }
+
+    public string ReadAllText(string path)
+    {
+        return File.ReadAllText(path);
     }
 
     public string[] GetFiles(

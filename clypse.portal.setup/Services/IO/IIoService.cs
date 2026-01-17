@@ -20,7 +20,11 @@ public interface IIoService
 
     public Task<string> ReadAllTextAsync(string path, CancellationToken cancellationToken = default);
 
+    public string ReadAllText(string path);
+
     public Stream OpenWrite(string path);
+
+    public void WriteAllText(string path, string contents);
 
     public string[] GetFiles(string path, string searchPattern);
 }
