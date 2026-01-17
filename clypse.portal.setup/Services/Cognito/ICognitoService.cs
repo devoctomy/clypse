@@ -59,6 +59,13 @@ public interface ICognitoService
         Dictionary<string, string> tags,
         CancellationToken cancellationToken = default);
 
+    /// <summary>
+    /// Assigns the authenticated role for a Cognito identity pool.
+    /// </summary>
+    /// <param name="identityPoolId">The identity pool identifier.</param>
+    /// <param name="roleArn">The role ARN to assign to authenticated identities.</param>
+    /// <param name="cancellationToken">Token to cancel the operation.</param>
+    /// <returns><see langword="true"/> when the role is set; otherwise, <see langword="false"/>.</returns>
     public Task<bool> SetIdentityPoolAuthenticatedRoleAsync(
         string identityPoolId,
         string roleArn,

@@ -4,6 +4,7 @@ using clypse.portal.setup.Services.IO;
 
 namespace clypse.portal.setup.Services.Inventory;
 
+/// <inheritdoc cref="IInventoryService" />
 public class InventoryService : IInventoryService
 {
     private readonly IIoService _ioService;
@@ -14,16 +15,19 @@ public class InventoryService : IInventoryService
         _ioService = ioService;
     }
 
+    /// <inheritdoc />
     public IEnumerable<InventoryItem> GetResourcesByType(ResourceType resourceType)
     {
         return _inventory.Where(item => item.ResourceType == resourceType);
     }
 
+    /// <inheritdoc />
     public void RecordResource(InventoryItem item)
     {
         _inventory.Add(item);
     }
 
+    /// <inheritdoc />
     public void Save(string path)
     {
         var directory = _ioService.GetDirectoryName(path);
@@ -36,6 +40,7 @@ public class InventoryService : IInventoryService
         _ioService.WriteAllText(path, serialized);
     }
 
+    /// <inheritdoc />
     public void Load(string path)
     {
         _inventory.Clear();

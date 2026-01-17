@@ -5,9 +5,11 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace clypse.portal.setup.Services.Orchestration;
 
+/// <inheritdoc cref="ISetupInteractiveMenuService" />
 [ExcludeFromCodeCoverage(Justification = "Interactive console UI - no logic to test")]
 public class SetupInteractiveMenuService(IPortalBuildService portalBuildService) : ISetupInteractiveMenuService
 {
+    /// <inheritdoc />
     public bool Run(SetupOptions options)
     {
         return ConfigureAwsOptionsInteractively(options);

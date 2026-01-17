@@ -1,5 +1,8 @@
 ﻿namespace clypse.portal.setup.Enums;
 
+/// <summary>
+/// Types of resources provisioned during setup.
+/// </summary>
 public enum ResourceType
 {
     None = 0,

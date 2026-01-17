@@ -4,10 +4,12 @@ using Microsoft.Extensions.Logging;
 
 namespace clypse.portal.setup.Services.Cloudfront;
 
+/// <inheritdoc cref="ICloudfrontService" />
 public class CloudfrontService(
     IAmazonCloudFront amazonCloudFront,
     ILogger<CloudfrontService> logger) : ICloudfrontService
 {
+    /// <inheritdoc />
     public async Task<string?> CreateDistributionAsync(
         string websiteHost,
         string? alias = null,

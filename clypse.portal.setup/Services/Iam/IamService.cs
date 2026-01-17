@@ -6,9 +6,7 @@ using System.Text.Json.Serialization;
 
 namespace clypse.portal.setup.Services.Iam;
 
-/// <summary>
-/// Provides functionality for managing AWS IAM policies and roles.
-/// </summary>
+/// <inheritdoc cref="IIamService" />
 public class IamService(
     IAmazonIdentityManagementService amazonIdentityManagementService,
     SetupOptions options,
@@ -23,13 +21,7 @@ public class IamService(
         }
     };
 
-    /// <summary>
-    /// Attaches an IAM policy to an IAM role.
-    /// </summary>
-    /// <param name="roleName">The name of the role to attach the policy to.</param>
-    /// <param name="policyArn">The ARN of the policy to attach.</param>
-    /// <param name="cancellationToken">Cancellation token to cancel the operation.</param>
-    /// <returns>True if the policy was attached successfully; otherwise, false.</returns>
+    /// <inheritdoc />
     public async Task<bool> AttachPolicyToRoleAsync(
         string roleName,
         string policyArn,
@@ -48,14 +40,7 @@ public class IamService(
         return response.HttpStatusCode == System.Net.HttpStatusCode.OK;
     }
 
-    /// <summary>
-    /// Creates a new IAM policy with the specified name and policy document.
-    /// </summary>
-    /// <param name="name">The name of the policy to create (without the resource prefix).</param>
-    /// <param name="policyDocument">The policy document as an object to be serialized to JSON.</param>
-    /// <param name="tags">Tags to associate with the policy.</param>
-    /// <param name="cancellationToken">Cancellation token to cancel the operation.</param>
-    /// <returns>The ARN of the created policy.</returns>
+    /// <inheritdoc />
     public async Task<string> CreatePolicyAsync(
         string name,
         object policyDocument,
@@ -94,14 +79,7 @@ public class IamService(
         return createPolicyResponse.Policy.Arn;
     }
 
-    /// <summary>
-    /// Creates a new IAM role with the specified name.
-    /// </summary>
-    /// <param name="name">The name of the role to create (without the resource prefix).</param>
-    /// <param name="assumeRolePolicyDocument">The assume role policy document as a JSON string.</param>
-    /// <param name="tags">Tags to associate with the policy.</param>
-    /// <param name="cancellationToken">Cancellation token to cancel the operation.</param>
-    /// <returns>The name of the created role.</returns>
+    /// <inheritdoc />
     public async Task<string> CreateRoleAsync(
         string name,
         string assumeRolePolicyDocument,

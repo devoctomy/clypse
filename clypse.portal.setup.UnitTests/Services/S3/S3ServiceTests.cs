@@ -4,6 +4,7 @@ using clypse.portal.setup.Services.S3;
 using clypse.portal.setup.Services.Upload;
 using Microsoft.Extensions.Logging;
 using Moq;
+using System.IO;
 
 namespace clypse.portal.setup.UnitTests.Services.S3;
 
@@ -810,6 +811,88 @@ public class S3ServiceTests
             It.Is<string>(b => b == "test-prefix.my-bucket"),
             It.Is<string>(d => d == directoryPath),
             It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task GivenBucketAndObjectKey_WhenDownloadObjectDataAsync_ThenReturnsDataAndCallsS3WithPrefix()
+    {
+        // Arrange
+        var mockAmazonS3 = new Mock<IAmazonS3>();
+        var mockDirectoryUploadService = new Mock<IDirectoryUploadService>();
+        var options = new SetupOptions
+        {
+            ResourcePrefix = "test-prefix"
+        };
+        var sut = new S3Service(
+            mockAmazonS3.Object,
+            mockDirectoryUploadService.Object,
+            options,
+            Mock.Of<ILogger<S3Service>>());
+        var bucketName = "my-bucket";
+        var objectKey = "path/to/object.txt";
+        var expectedBucketName = "test-prefix.my-bucket";
+        var expectedData = new byte[] { 1, 2, 3, 4 };
+
+        mockAmazonS3
+            .Setup(s3 => s3.GetObjectStreamAsync(
+                It.Is<string>(b => b == expectedBucketName),
+                It.Is<string>(k => k == objectKey),
+                It.Is<Dictionary<string, object>>(d => d != null && d.Count == 0),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new MemoryStream(expectedData));
+
+        // Act
+        var result = await sut.DownloadObjectDataAsync(bucketName, objectKey);
+
+        // Assert
+        Assert.Equal(expectedData, result);
+        mockAmazonS3.Verify(s3 => s3.GetObjectStreamAsync(
+            It.Is<string>(b => b == expectedBucketName),
+            It.Is<string>(k => k == objectKey),
+            It.Is<Dictionary<string, object>>(d => d != null && d.Count == 0),
+            It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task GivenCancellationToken_WhenDownloadObjectDataAsync_ThenPassesToken()
+    {
+        // Arrange
+        var mockAmazonS3 = new Mock<IAmazonS3>();
+        var mockDirectoryUploadService = new Mock<IDirectoryUploadService>();
+        var options = new SetupOptions
+        {
+            ResourcePrefix = "test-prefix"
+        };
+        var sut = new S3Service(
+            mockAmazonS3.Object,
+            mockDirectoryUploadService.Object,
+            options,
+            Mock.Of<ILogger<S3Service>>());
+        var bucketName = "my-bucket";
+        var objectKey = "object.txt";
+        var expectedData = new byte[] { 5, 6 };
+        var cts = new CancellationTokenSource();
+
+        mockAmazonS3
+            .Setup(s3 => s3.GetObjectStreamAsync(
+                It.IsAny<string>(),
+                It.IsAny<string>(),
+                It.IsAny<Dictionary<string, object>>(),
+                It.Is<CancellationToken>(ct => ct == cts.Token)))
+            .ReturnsAsync(new MemoryStream(expectedData));
+
+        // Act
+        var result = await sut.DownloadObjectDataAsync(bucketName, objectKey, cts.Token);
+
+        // Assert
+        Assert.Equal(expectedData, result);
+        mockAmazonS3.Verify(s3 => s3.GetObjectStreamAsync(
+            It.Is<string>(b => b == "test-prefix.my-bucket"),
+            It.Is<string>(k => k == objectKey),
+            It.Is<Dictionary<string, object>>(d => d != null && d.Count == 0),
+            It.Is<CancellationToken>(ct => ct == cts.Token)),
             Times.Once);
     }
 }

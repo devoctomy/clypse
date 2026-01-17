@@ -50,8 +50,15 @@ public class SetupOptions
     /// </summary>
     public string InitialUserEmail { get; set; } = string.Empty;
 
+    /// <summary>
+    /// Gets or sets a value indicating whether to prompt the user interactively during setup.
+    /// </summary>
     public bool InteractiveMode { get; set; } = true;
 
+    /// <summary>
+    /// Determines whether the options contain the required values.
+    /// </summary>
+    /// <returns><see langword="true"/> when required values are present; otherwise, <see langword="false"/>.</returns>
     public bool IsValid()
     {
         return !string.IsNullOrWhiteSpace(AccessId)

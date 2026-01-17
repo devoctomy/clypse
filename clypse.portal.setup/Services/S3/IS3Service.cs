@@ -7,6 +7,12 @@ namespace clypse.portal.setup.Services.S3;
 /// </summary>
 public interface IS3Service
 {
+    /// <summary>
+    /// Determines whether a bucket exists for the configured resource prefix and bucket name.
+    /// </summary>
+    /// <param name="bucketName">The bucket name without the resource prefix.</param>
+    /// <param name="cancellationToken">Token to cancel the operation.</param>
+    /// <returns><see langword="true"/> when the bucket exists; otherwise, <see langword="false"/>.</returns>
     public Task<bool> DoesBucketExistAsync(
         string bucketName,
         CancellationToken cancellationToken = default);
@@ -23,6 +29,13 @@ public interface IS3Service
         bool disableBlockPublicAccess,
         CancellationToken cancellationToken = default);
 
+    /// <summary>
+    /// Applies tags to the specified bucket.
+    /// </summary>
+    /// <param name="bucketName">The bucket name without the resource prefix.</param>
+    /// <param name="tags">Key/value pairs to assign.</param>
+    /// <param name="cancellationToken">Token to cancel the operation.</param>
+    /// <returns><see langword="true"/> when the tags are applied; otherwise, <see langword="false"/>.</returns>
     public Task<bool> SetBucketTags(
         string bucketName,
         Dictionary<string, string> tags,
@@ -92,5 +105,17 @@ public interface IS3Service
     public Task<bool> UploadDirectoryToBucket(
         string bucketName,
         string directoryPath,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Downloads an object's data as a byte array.
+    /// </summary>
+    /// <param name="bucketName">The bucket name without the resource prefix.</param>
+    /// <param name="objectKey">The object key within the bucket.</param>
+    /// <param name="cancellationToken">Token to cancel the operation.</param>
+    /// <returns>The object's contents as a byte array.</returns>
+    public Task<byte[]> DownloadObjectDataAsync(
+        string bucketName,
+        string objectKey,
         CancellationToken cancellationToken = default);
 }

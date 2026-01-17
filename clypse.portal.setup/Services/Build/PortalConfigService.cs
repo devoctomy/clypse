@@ -4,8 +4,10 @@ using System.Text.Json.Nodes;
 
 namespace clypse.portal.setup.Services.Build;
 
+/// <inheritdoc cref="IPortalConfigService" />
 public class PortalConfigService(IIoService ioService) : IPortalConfigService
 {
+    /// <inheritdoc />
     public async Task<MemoryStream> ConfigureAsync(
         string templatePath,
         string s3DataBucketName,

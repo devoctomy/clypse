@@ -31,6 +31,7 @@ public static class ServiceCollectionExtensions
     /// Adds Clypse setup services to the service collection.
     /// </summary>
     /// <param name="services">The service collection to add services to.</param>
+    /// <param name="environmentVariablePrefix">Environment variable prefix used to bind <see cref="SetupOptions"/>.</param>
     /// <param name="logLevel">The log level to configure for setup orchestration.</param>
     /// <returns>The updated service collection.</returns>
     public static IServiceCollection AddClypseSetupServices(

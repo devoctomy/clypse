@@ -3,12 +3,14 @@ using Microsoft.Extensions.Logging;
 
 namespace clypse.portal.setup.Services;
 
+/// <inheritdoc cref="IProgram" />
 public class SetupProgram(
     SetupOptions options,
     ISetupInteractiveMenuService setupInteractiveMenuService,
     IClypseAwsSetupOrchestration clypseAwsSetupOrchestration,
     ILogger<SetupProgram> logger) : IProgram
 {
+    /// <inheritdoc />
     public async Task<int> Run()
     {
         try

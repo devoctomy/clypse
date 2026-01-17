@@ -4,9 +4,11 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace clypse.portal.setup.Services.Process;
 
+/// <inheritdoc cref="IProcessRunnerService" />
 [ExcludeFromCodeCoverage]
 public class ProcessRunnerService(ILogger<ProcessRunnerService> logger) : IProcessRunnerService
 {
+    /// <inheritdoc />
     public async Task<(bool Success, int ExitCode, string OutputStreamText, string ErrorStreamText)> Run(
         ProcessStartInfo startInfo,
         CancellationToken cancellationToken = default)

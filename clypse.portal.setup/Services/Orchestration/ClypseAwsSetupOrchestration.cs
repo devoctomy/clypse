@@ -15,6 +15,7 @@ using System.Text.Json;
 
 namespace clypse.portal.setup.Services.Orchestration;
 
+/// <inheritdoc cref="IClypseAwsSetupOrchestration" />
 public class ClypseAwsSetupOrchestration(
         SetupOptions options,
         ISecurityTokenService securityTokenService,
@@ -27,6 +28,7 @@ public class ClypseAwsSetupOrchestration(
         IInventoryService inventoryService,
         ILogger<IamService> logger) : IClypseAwsSetupOrchestration
 {
+    /// <inheritdoc />
     public async Task<bool> PrepareSetup(CancellationToken cancellationToken)
     {
         logger.LogInformation("Preparing Clypse AWS setup orchestration.");
@@ -71,6 +73,7 @@ public class ClypseAwsSetupOrchestration(
         return true;
     }
 
+    /// <inheritdoc />
     public async Task<bool> SetupClypseOnAwsAsync(CancellationToken cancellationToken)
     {
         logger.LogInformation("Starting Clypse AWS setup orchestration.");
@@ -120,7 +123,7 @@ public class ClypseAwsSetupOrchestration(
             portalBucketName,
             true,
             cancellationToken);
-        if(!createdPortalBucket)
+        if (!createdPortalBucket)
         {
             logger.LogError("Failed to create S3 bucket for portal.");
             throw new Exception("Failed to create S3 bucket for portal.");
@@ -165,7 +168,7 @@ public class ClypseAwsSetupOrchestration(
             portalBucketName,
             publicReadPolicy,
             cancellationToken);
-        if(!setPortalBucketPolicy)
+        if (!setPortalBucketPolicy)
         {
             logger.LogError("Failed to set portal bucket policy.");
             throw new Exception("Failed to set portal bucket policy.");
@@ -398,43 +401,13 @@ public class ClypseAwsSetupOrchestration(
             throw new Exception("Failed to set authenticated role for identity pool.");
         }
 
-        if (Directory.Exists(options.PortalBuildOutputPath))
-        {
-            logger.LogInformation("Removing unwanted settings from build output.");
-            var oldSettings = ioService.GetFiles(options.PortalBuildOutputPath, "appsettings*");
-            foreach (var oldSetting in oldSettings)
-            {
-                logger.LogInformation("Removing portal setting file '{oldSetting}'.", oldSetting);
-                ioService.Delete(oldSetting);
-            }
-
-            logger.LogInformation("Reconfiguring portal.");
-            using var configStream = await portalConfigService.ConfigureAsync(
-                "Data/appsettings.json",
-                $"{options.ResourcePrefix}.{dataBucketName}",
-                options.Region,
-                userPoolId,
-                userPoolClientId,
-                options.Region,
-                identityPoolId,
-                cancellationToken);
-
-            var configFilePath = ioService.CombinePath(options.PortalBuildOutputPath, "appsettings.json");
-            using var outputStream = ioService.OpenWrite(configFilePath);
-            await configStream.CopyToAsync(outputStream, cancellationToken);
-            await outputStream.FlushAsync(cancellationToken);
-            outputStream.Close();
-
-            logger.LogInformation("Deploying portal to portal bucket.");
-            var result = await s3Service.UploadDirectoryToBucket(
-                portalBucketName,
-                options.PortalBuildOutputPath,
-                cancellationToken);
-        }
-        else
-        {
-            logger.LogWarning("Skipping portal deployment as build output path '{portalBuildOutputPath}' does not exist.", options.PortalBuildOutputPath);
-        }
+        await DeployPortal(
+            portalBucketName,
+            dataBucketName,
+            userPoolId,
+            userPoolClientId,
+            identityPoolId,
+            cancellationToken);
 
         logger.LogInformation("Setting portal bucket website configuration.");
         var setBucketWebsiteConfig = await s3Service.SetBucketWebsiteConfigurationAsync(
@@ -475,7 +448,7 @@ public class ClypseAwsSetupOrchestration(
             useCustomDomain ? options.Alias : null,
             useCustomDomain ? options.CertificateArn : null,
             cancellationToken: cancellationToken);
-        if(string.IsNullOrEmpty(distributionDomain))
+        if (string.IsNullOrEmpty(distributionDomain))
         {
             logger.LogError("Failed to create CloudFront distribution.");
             throw new Exception("Failed to create CloudFront distribution.");
@@ -493,11 +466,11 @@ public class ClypseAwsSetupOrchestration(
         logger.LogInformation("Setting data bucket CORS configuration with origins ({origins}).", string.Join(',', origins));
         var setDataBucketCorsConfig = await s3Service.SetBucketCorsConfigurationAsync(
             dataBucketName,
-            [ "*" ],
-            [ "GET", "PUT", "POST", "DELETE", "HEAD"],
+            ["*"],
+            ["GET", "PUT", "POST", "DELETE", "HEAD"],
             [.. origins],
             cancellationToken);
-        if(!setDataBucketCorsConfig)
+        if (!setDataBucketCorsConfig)
         {
             logger.LogError("Failed to set data bucket CORS configuration.");
             throw new Exception("Failed to set data bucket CORS configuration.");
@@ -519,6 +492,61 @@ public class ClypseAwsSetupOrchestration(
         inventoryService.Save(inventoryFilePath);
 
         return true;
+    }
+
+    /// <inheritdoc />
+    public async Task<bool> UpgradePortalAsync(CancellationToken cancellationToken)
+    {
+        // download current app settings from bucket and extract values
+        // deploy portal with new settings
+        throw new NotImplementedException();
+    }
+
+    private async Task DeployPortal(
+        string portalBucketName,
+        string dataBucketName,
+        string userPoolId,
+        string userPoolClientId,
+        string identityPoolId,
+        CancellationToken cancellationToken)
+    {
+        if (Directory.Exists(options.PortalBuildOutputPath))
+        {
+            logger.LogInformation("Removing unwanted settings from build output.");
+            var oldSettings = ioService.GetFiles(options.PortalBuildOutputPath, "appsettings*");
+            foreach (var oldSetting in oldSettings)
+            {
+                logger.LogInformation("Removing portal setting file '{oldSetting}'.", oldSetting);
+                ioService.Delete(oldSetting);
+            }
+
+            logger.LogInformation("Reconfiguring portal.");
+            using var configStream = await portalConfigService.ConfigureAsync(
+                "Data/appsettings.json",
+                $"{options.ResourcePrefix}.{dataBucketName}",
+                options.Region,
+                userPoolId,
+                userPoolClientId,
+                options.Region,
+                identityPoolId,
+                cancellationToken);
+
+            var configFilePath = ioService.CombinePath(options.PortalBuildOutputPath, "appsettings.json");
+            using var outputStream = ioService.OpenWrite(configFilePath);
+            await configStream.CopyToAsync(outputStream, cancellationToken);
+            await outputStream.FlushAsync(cancellationToken);
+            outputStream.Close();
+
+            logger.LogInformation("Deploying portal to portal bucket.");
+            var result = await s3Service.UploadDirectoryToBucket(
+                portalBucketName,
+                options.PortalBuildOutputPath,
+                cancellationToken);
+        }
+        else
+        {
+            logger.LogWarning("Skipping portal deployment as build output path '{portalBuildOutputPath}' does not exist.", options.PortalBuildOutputPath);
+        }
     }
 
     private static string GetTrustPolicyJson(string identityPoolId)

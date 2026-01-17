@@ -5,12 +5,14 @@ using Microsoft.Extensions.Logging;
 
 namespace clypse.portal.setup.Services.Build;
 
+/// <inheritdoc cref="IPortalBuildService" />
 public class PortalBuildService(
     SetupOptions options,
     IProcessRunnerService processRunnerService,
     IIoService ioService,
     ILogger<PortalBuildService> logger) : IPortalBuildService
 {
+    /// <inheritdoc />
     public async Task<PortalBuildResult> Run()
     {
         var repoRoot =

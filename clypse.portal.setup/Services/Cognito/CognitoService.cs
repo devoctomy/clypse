@@ -6,23 +6,14 @@ using Microsoft.Extensions.Logging;
 
 namespace clypse.portal.setup.Services.Cognito;
 
-/// <summary>
-/// Provides functionality for managing AWS Cognito identity pools, user pools, and users.
-/// </summary>
+/// <inheritdoc cref="ICognitoService" />
 public class CognitoService(
     IAmazonCognitoIdentity amazonCognitoIdentity,
     IAmazonCognitoIdentityProvider amazonCognitoIdentityProvider,
     SetupOptions options,
     ILogger<CognitoService> logger) : ICognitoService
 {
-    /// <summary>
-    /// Creates a new Cognito identity pool with the specified name.
-    /// </summary>
-    /// <param name="name">The name of the identity pool to create (without the resource prefix).</param>
-    /// <param name="userPoolId">The ID of the user pool to associate with the identity pool.</param>
-    /// <param name="userPoolClientId">The user pool client ID to associate with the identity pool.</param>
-    /// <param name="cancellationToken">Cancellation token to cancel the operation.</param>
-    /// <returns>The ID of the created identity pool.</returns>
+    /// <inheritdoc />
     public async Task<string> CreateIdentityPoolAsync(
         string name,
         string userPoolId,
@@ -51,13 +42,7 @@ public class CognitoService(
         return response.IdentityPoolId;
     }
 
-    /// <summary>
-    /// Creates a new user in the specified Cognito user pool.
-    /// </summary>
-    /// <param name="email">The email address of the user to create.</param>
-    /// <param name="userPoolId">The ID of the user pool where the user will be created.</param>
-    /// <param name="cancellationToken">Cancellation token to cancel the operation.</param>
-    /// <returns>True if the user was created successfully; otherwise, false.</returns>
+    /// <inheritdoc />
     public async Task<bool> CreateUserAsync(
         string email,
         string userPoolId,
@@ -108,12 +93,7 @@ public class CognitoService(
         return true;
     }
 
-    /// <summary>
-    /// Creates a new Cognito user pool with the specified name.
-    /// </summary>
-    /// <param name="name">The name of the user pool to create (without the resource prefix).</param>
-    /// <param name="cancellationToken">Cancellation token to cancel the operation.</param>
-    /// <returns>The ID of the created user pool.</returns>
+    /// <inheritdoc />
     public async Task<string> CreateUserPoolAsync(
         string name,
         Dictionary<string, string> tags,
@@ -132,14 +112,7 @@ public class CognitoService(
         return response.UserPool.Id;
     }
 
-    /// <summary>
-    /// Creates a new client for the specified Cognito user pool.
-    /// </summary>
-    /// <param name="accountId">The AWS account ID.</param>
-    /// <param name="name">The name of the user pool client to create (without the resource prefix).</param>
-    /// <param name="userPoolId">The ID of the user pool where the client will be created.</param>
-    /// <param name="cancellationToken">Cancellation token to cancel the operation.</param>
-    /// <returns>The client ID of the created user pool client.</returns>
+    /// <inheritdoc />
     public async Task<string?> CreateUserPoolClientAsync(
         string accountId,
         string name,
@@ -188,6 +161,7 @@ public class CognitoService(
         return createUserPoolClientResponse.UserPoolClient.ClientId;
     }
 
+    /// <inheritdoc />
     public async Task<bool> SetIdentityPoolAuthenticatedRoleAsync(
         string identityPoolId,
         string roleArn,

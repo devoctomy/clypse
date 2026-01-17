@@ -1,5 +1,6 @@
 ﻿using Amazon.S3;
 using Amazon.S3.Model;
+using Amazon.S3.Model.Internal.MarshallTransformations;
 using Amazon.S3.Transfer;
 using clypse.portal.setup.Services.Upload;
 using Microsoft.Extensions.Logging;
@@ -8,9 +9,7 @@ using System.Text.Json.Serialization;
 
 namespace clypse.portal.setup.Services.S3;
 
-/// <summary>
-/// Provides functionality for managing Amazon S3 buckets and their configurations.
-/// </summary>
+/// <inheritdoc cref="IS3Service" />
 public class S3Service(
     IAmazonS3 amazonS3,
     IDirectoryUploadService directoryUploadService,
@@ -26,7 +25,7 @@ public class S3Service(
         }
     };
 
-
+    /// <inheritdoc />
     public async Task<bool> DoesBucketExistAsync(
         string bucketName,
         CancellationToken cancellationToken = default)
@@ -45,13 +44,7 @@ public class S3Service(
         return bucket != null;
     }
 
-    /// <summary>
-    /// Creates a new S3 bucket with the specified name.
-    /// </summary>
-    /// <param name="bucketName">The name of the bucket to create (without the resource prefix).</param>
-    /// <param name="disableBlockPublicAccess">If true, disables block public access settings for the bucket.</param>
-    /// <param name="cancellationToken">Cancellation token to cancel the operation.</param>
-    /// <returns>True if the bucket was created successfully; otherwise, false.</returns>
+    /// <inheritdoc />
     public async Task<bool> CreateBucketAsync(
         string bucketName,
         bool disableBlockPublicAccess,
@@ -90,6 +83,7 @@ public class S3Service(
         return putBucketResponse.HttpStatusCode == System.Net.HttpStatusCode.OK;
     }
 
+    /// <inheritdoc />
     public async Task<bool> SetBucketTags(
         string bucketName,
         Dictionary<string, string> tags,
@@ -152,13 +146,7 @@ public class S3Service(
         return response.HttpStatusCode == System.Net.HttpStatusCode.OK;
     }
 
-    /// <summary>
-    /// Sets the bucket policy for the specified S3 bucket.
-    /// </summary>
-    /// <param name="bucketName">Name of the bucket to configure (without the resource prefix).</param>
-    /// <param name="policyDocument">The policy document as an object to be serialized to JSON.</param>
-    /// <param name="cancellationToken">Cancellation token to cancel the operation.</param>
-    /// <returns>True if the bucket policy was set successfully; otherwise, false.</returns>
+    /// <inheritdoc />
     public async Task<bool> SetBucketPolicyAsync(
         string bucketName,
         object policyDocument,
@@ -179,14 +167,7 @@ public class S3Service(
         return response.HttpStatusCode == System.Net.HttpStatusCode.NoContent;
     }
 
-    /// <summary>
-    /// Configures the specified S3 bucket to host a static website.
-    /// </summary>
-    /// <param name="bucketName">Name of the bucket to configure (without the resource prefix).</param>
-    /// <param name="indexDocumentSuffix">The suffix for the index document. Default is "index.html".</param>
-    /// <param name="errorDocument">The error document to use. Default is "error.html".</param>
-    /// <param name="cancellationToken">Cancellation token to cancel the operation.</param>
-    /// <returns>True if the website configuration was set successfully; otherwise, false.</returns>
+    /// <inheritdoc />
     public async Task<bool> SetBucketWebsiteConfigurationAsync(
         string bucketName,
         string indexDocumentSuffix = "index.html",
@@ -212,13 +193,7 @@ public class S3Service(
         return response.HttpStatusCode == System.Net.HttpStatusCode.OK;
     }
 
-    /// <summary>
-    /// Sets the Access Control List (ACL) for the specified S3 bucket.
-    /// </summary>
-    /// <param name="bucketName">Name of the bucket to configure (without the resource prefix).</param>
-    /// <param name="acl">The canned ACL to apply to the bucket (e.g., PublicRead, Private).</param>
-    /// <param name="cancellationToken">Cancellation token to cancel the operation.</param>
-    /// <returns>True if the ACL was set successfully; otherwise, false.</returns>
+    /// <inheritdoc />
     public async Task<bool> SetBucketAcl(
         string bucketName,
         S3CannedACL acl,
@@ -239,13 +214,7 @@ public class S3Service(
         return response.HttpStatusCode == System.Net.HttpStatusCode.OK;
     }
 
-    /// <summary>
-    /// Uploads all files from a directory recursively to the specified S3 bucket.
-    /// </summary>
-    /// <param name="bucketName">Name of the bucket to upload to (without the resource prefix).</param>
-    /// <param name="directoryPath">The local directory path to upload.</param>
-    /// <param name="cancellationToken">Cancellation token to cancel the operation.</param>
-    /// <returns>True if the directory was uploaded successfully; otherwise, false.</returns>
+    /// <inheritdoc />
     public async Task<bool> UploadDirectoryToBucket(
         string bucketName,
         string directoryPath,
@@ -274,5 +243,27 @@ public class S3Service(
             logger.LogError(ex, "Failed to upload directory {DirectoryPath} to bucket {BucketName}", directoryPath, bucketNameWithPrefix);
             return false;
         }
+    }
+
+    /// <inheritdoc />
+    public async Task<byte[]> DownloadObjectDataAsync(
+        string bucketName,
+        string objectKey,
+        CancellationToken cancellationToken = default)
+    {
+        var bucketNameWithPrefix = $"{options.ResourcePrefix}.{bucketName}";
+        logger.LogInformation("Downloading {objectKey} from bucket {bucketName}", objectKey, bucketNameWithPrefix);
+
+        using var responseStream = await amazonS3.GetObjectStreamAsync(
+            bucketNameWithPrefix,
+            objectKey,
+            new Dictionary<string, object>(),
+            cancellationToken);
+
+        using var dataStream = new MemoryStream();
+        await responseStream.CopyToAsync(dataStream, cancellationToken);
+        await dataStream.FlushAsync(cancellationToken);
+
+        return dataStream.ToArray();
     }
 }
