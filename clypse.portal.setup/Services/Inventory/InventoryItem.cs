@@ -21,9 +21,4 @@ public class InventoryItem
     /// Identifier of the resource (ARN, name, etc.).
     /// </summary>
     public string ResourceId { get; set; } = string.Empty;
-
-    /// <summary>
-    /// Optional metadata associated with the resource.
-    /// </summary>
-    public Dictionary<string, string> Metadata { get; set; } = new();
 }
