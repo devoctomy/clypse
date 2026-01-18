@@ -513,6 +513,23 @@ public class ClypseAwsSetupOrchestration(
             return false;
         }
 
+        logger.LogInformation("Getting deployed version.");
+        var deployedVersionBytes = await s3Service.DownloadObjectDataAsync(
+            portalBucketName,
+            "version.txt",
+            cancellationToken);
+        var deployedVersion = Version.Parse(Encoding.UTF8.GetString(deployedVersionBytes).Trim());
+
+        var buildVersionPath = ioService.CombinePath(options.PortalBuildOutputPath, "version.txt");
+        var buildVersionString = await ioService.ReadAllTextAsync(buildVersionPath);
+        var buildVersion = Version.Parse(buildVersionString.Trim());
+
+        if(buildVersion <= deployedVersion)
+        {
+            logger.LogInformation("No upgrade required, deployed version '{deployedVersion}' is up to date. Build version is '{buildVersion}'.", deployedVersion, buildVersion);
+            return true;
+        }
+
         logger.LogInformation("Downloading existing configuration.");
         var appSettings = await s3Service.DownloadObjectDataAsync(
             portalBucketName,
