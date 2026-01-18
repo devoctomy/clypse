@@ -10,8 +10,6 @@ using clypse.portal.setup.Services.S3;
 using clypse.portal.setup.Services.Security;
 using Microsoft.Extensions.Logging;
 using Moq;
-using System;
-using System.IO;
 
 namespace clypse.portal.setup.UnitTests.Services.Orchestration;
 
@@ -439,7 +437,7 @@ public class ClypseAwsSetupOrchestrationTests
 
         // Assert
         Assert.True(result);
-        VerifyAllServicesWereCalled();
+        VerifyAllServicesWereCalled(9);
     }
 
     [Fact]
@@ -492,6 +490,16 @@ public class ClypseAwsSetupOrchestrationTests
         SetupSuccessfulCloudfrontOperations();
         SetupSuccessfulCorsConfiguration();
 
+        _mockIoService.Setup(x => x.CombinePath(
+            It.IsAny<string>(),
+            It.Is<string>(y => y == "version.txt")))
+            .Returns("version.txt");
+
+        _mockIoService.Setup(x => x.ReadAllTextAsync(
+            It.Is<string>(y => y.EndsWith("version.txt")),
+            It.IsAny<CancellationToken>()))
+            .ReturnsAsync("1.0.0.0");
+
         _mockCognitoService
             .Setup(s => s.CreateUserAsync(
                 _options.InitialUserEmail,
@@ -520,7 +528,7 @@ public class ClypseAwsSetupOrchestrationTests
 
         // Assert
         Assert.True(result);
-        VerifyAllServicesWereCalled();
+        VerifyAllServicesWereCalled(10);
         _mockS3Service.Verify(s => s.UploadDirectoryToBucket(
             "clypse.portal",
             "/",
@@ -545,7 +553,11 @@ public class ClypseAwsSetupOrchestrationTests
             InitialUserEmail = "test@example.com",
             InteractiveMode = false
         };
-
+        var oldSettings = new[]
+{
+            Path.Combine(tempDir, "appsettings.json"),
+            Path.Combine(tempDir, "appsettings.Development.json"),
+        };
         var sut = CreateSut(options);
         SetupSuccessfulS3Operations();
         SetupSuccessfulIamOperations();
@@ -553,11 +565,15 @@ public class ClypseAwsSetupOrchestrationTests
         SetupSuccessfulCloudfrontOperations();
         SetupSuccessfulCorsConfiguration();
 
-        var oldSettings = new[]
-        {
-            Path.Combine(tempDir, "appsettings.json"),
-            Path.Combine(tempDir, "appsettings.Development.json"),
-        };
+        _mockIoService.Setup(x => x.CombinePath(
+            It.IsAny<string>(),
+            It.Is<string>(y => y == "version.txt")))
+            .Returns("version.txt");
+
+        _mockIoService.Setup(x => x.ReadAllTextAsync(
+            It.Is<string>(y => y.EndsWith("version.txt")),
+            It.IsAny<CancellationToken>()))
+            .ReturnsAsync("1.0.0.0");
 
         _mockIoService.Setup(x => x.GetFiles(tempDir, "appsettings*")).Returns(oldSettings);
         _mockIoService.Setup(x => x.Delete(It.IsAny<string>()));
@@ -624,6 +640,16 @@ public class ClypseAwsSetupOrchestrationTests
         SetupSuccessfulCloudfrontOperations();
         SetupSuccessfulCorsConfiguration();
 
+        _mockIoService.Setup(x => x.CombinePath(
+            It.IsAny<string>(),
+            It.Is<string>(y => y == "version.txt")))
+            .Returns("version.txt");
+
+        _mockIoService.Setup(x => x.ReadAllTextAsync(
+            It.Is<string>(y => y.EndsWith("version.txt")),
+            It.IsAny<CancellationToken>()))
+            .ReturnsAsync("1.0.0.0");
+
         _mockIoService.Setup(x => x.GetFiles(tempDir, "appsettings*")).Returns(Array.Empty<string>());
         _mockIoService.Setup(x => x.OpenWrite(It.IsAny<string>())).Returns(new MemoryStream());
         _mockPortalConfigService.Setup(x => x.ConfigureAsync(
@@ -688,6 +714,16 @@ public class ClypseAwsSetupOrchestrationTests
         string? capturedHost = null;
         string? capturedAlias = null;
         string? capturedCertificate = null;
+
+        _mockIoService.Setup(x => x.CombinePath(
+            It.IsAny<string>(),
+            It.Is<string>(y => y == "version.txt")))
+            .Returns("version.txt");
+
+        _mockIoService.Setup(x => x.ReadAllTextAsync(
+            It.Is<string>(y => y.EndsWith("version.txt")),
+            It.IsAny<CancellationToken>()))
+            .ReturnsAsync("1.0.0.0");
 
         _mockCloudfrontService
             .Setup(s => s.CreateDistributionAsync(
@@ -764,6 +800,16 @@ public class ClypseAwsSetupOrchestrationTests
 
         string? capturedAlias = null;
         string? capturedCertificate = null;
+
+        _mockIoService.Setup(x => x.CombinePath(
+            It.IsAny<string>(),
+            It.Is<string>(y => y == "version.txt")))
+            .Returns("version.txt");
+
+        _mockIoService.Setup(x => x.ReadAllTextAsync(
+            It.Is<string>(y => y.EndsWith("version.txt")),
+            It.IsAny<CancellationToken>()))
+            .ReturnsAsync("1.0.0.0");
 
         _mockCloudfrontService
             .Setup(s => s.CreateDistributionAsync(
@@ -948,7 +994,7 @@ public class ClypseAwsSetupOrchestrationTests
             .ReturnsAsync(true);
     }
 
-    private void VerifyAllServicesWereCalled()
+    private void VerifyAllServicesWereCalled(int inventoryCount)
     {
         // Verify SecurityTokenService
         _mockSecurityTokenService.Verify(s => s.GetAccountIdAsync(It.IsAny<CancellationToken>()), Times.Once);
@@ -977,7 +1023,7 @@ public class ClypseAwsSetupOrchestrationTests
         _mockCloudfrontService.Verify(s => s.CreateDistributionAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Once);
 
         // Verify InventoryService
-        _mockInventoryService.Verify(s => s.RecordResource(It.IsAny<InventoryItem>()), Times.Exactly(9));
+        _mockInventoryService.Verify(s => s.RecordResource(It.IsAny<InventoryItem>()), Times.Exactly(inventoryCount));
         _mockInventoryService.Verify(s => s.Save(It.Is<string>(p => p.EndsWith("-inventory.json"))), Times.Once);
     }
 }

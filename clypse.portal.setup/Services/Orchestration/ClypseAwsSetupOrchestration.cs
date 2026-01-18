@@ -475,11 +475,9 @@ public class ClypseAwsSetupOrchestration(
             cancellationToken);
         var deployedVersion = Version.Parse(Encoding.UTF8.GetString(deployedVersionBytes).Trim());
 
-        var buildVersionPath = ioService.CombinePath(options.PortalBuildOutputPath, "version.txt");
-        var buildVersionString = await ioService.ReadAllTextAsync(buildVersionPath);
-        var buildVersion = Version.Parse(buildVersionString.Trim());
+        Version buildVersion = await GetBuildVersionAsync(cancellationToken);
 
-        if(buildVersion <= deployedVersion)
+        if (buildVersion <= deployedVersion)
         {
             logger.LogInformation("No upgrade required, deployed version '{deployedVersion}' is up to date. Build version is '{buildVersion}'.", deployedVersion, buildVersion);
             return true;
@@ -506,7 +504,15 @@ public class ClypseAwsSetupOrchestration(
         return true;
     }
 
-    private async Task DeployPortal(
+    private async Task<Version> GetBuildVersionAsync(CancellationToken cancellationToken)
+    {
+        var buildVersionPath = ioService.CombinePath(options.PortalBuildOutputPath, "version.txt");
+        var buildVersionString = await ioService.ReadAllTextAsync(buildVersionPath, cancellationToken);
+        var buildVersion = Version.Parse(buildVersionString.Trim());
+        return buildVersion;
+    }
+
+    private async Task<bool> DeployPortal(
         string portalBucketName,
         string? dataBucketName = null,
         string? userPoolId = null,
@@ -595,10 +601,25 @@ public class ClypseAwsSetupOrchestration(
                 portalBucketName,
                 options.PortalBuildOutputPath,
                 cancellationToken);
+
+            if(result)
+            {
+                Version buildVersion = await GetBuildVersionAsync(cancellationToken);
+
+                inventoryService.RecordResource(new()
+                {
+                    Description = "Portal deployment to S3 bucket.",
+                    ResourceType = ResourceType.PortalDeployment,
+                    ResourceId = buildVersion.ToString()
+                });
+            }
+
+            return result;
         }
         else
         {
             logger.LogWarning("Skipping portal deployment as build output path '{portalBuildOutputPath}' does not exist.", options.PortalBuildOutputPath);
+            return false;
         }
     }
 

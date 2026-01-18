@@ -13,4 +13,5 @@ public enum ResourceType
     CognitoIdentityPool = 5,
     IamRole = 6,
     IamPolicy = 7,
+    PortalDeployment = 8,
 }
