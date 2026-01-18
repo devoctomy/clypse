@@ -457,6 +457,28 @@ public class ClypseAwsSetupOrchestration(
     /// <inheritdoc />
     public async Task<bool> UpgradePortalAsync(CancellationToken cancellationToken)
     {
+        logger.LogInformation("Starting Clypse AWS portal update.");
+
+        logger.LogDebug("Using AWS Base Url: {baseUrl}", options.BaseUrl);
+        logger.LogDebug("Using AWS Region: {region}", options.Region);
+        logger.LogDebug("Using Resource Prefix: {resourcePrefix}", options.ResourcePrefix);
+        logger.LogDebug("Using IAM Access Id: {accessId}", options.AccessId);
+        logger.LogDebug("Using IAM Secret Access Key: {secretAccessKey}", options.SecretAccessKey.Redact(3));
+        logger.LogDebug("Using Portal Build Output Path: {portalBuildOutputPath}", options.PortalBuildOutputPath);
+
+        if (!options.IsValid())
+        {
+            throw new Exception("Options are not valid.");
+        }
+
+        var setupId = Guid.NewGuid().ToString();
+
+        if (options.InteractiveMode)
+        {
+            logger.LogInformation("Press any key to begin.");
+            Console.ReadKey();
+        }
+
         var portalBucketName = "clypse.portal";
         logger.LogInformation("Checking to see if portal bucket exists.");
         var portalBucketExists = await s3Service.DoesBucketExistAsync(
@@ -500,6 +522,9 @@ public class ClypseAwsSetupOrchestration(
             reconfigure: true,
             reconfiguredSettings: Encoding.UTF8.GetBytes(merged),
             cancellationToken: cancellationToken);
+
+        var inventoryFilePath = $"{setupId}-update-inventory.json";
+        inventoryService.Save(inventoryFilePath);
 
         return true;
     }
