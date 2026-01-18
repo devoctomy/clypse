@@ -29,9 +29,18 @@
 		<Content Update="wwwroot\appsettings.Development.json">
 			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
 		</Content>
+		<Content Update="wwwroot\version.txt">
+		  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</Content>
 	</ItemGroup>
 	<PropertyGroup>
 		<!-- Stop compiler from complaining about version number wildcard. This auto increments the revision number and is working as expected. -->
 		<NoWarn>$(NoWarn);CS7035</NoWarn>
 	</PropertyGroup>
+	<Target Name="AfterBuild_WriteAssemblyVersion" AfterTargets="Build" Condition="'$(IsCrossTargetingBuild)' != 'true' and Exists('$(TargetPath)')">
+		<GetAssemblyIdentity AssemblyFiles="$(TargetPath)">
+			<Output TaskParameter="Assemblies" ItemName="BuiltAssemblyIdentity" />
+		</GetAssemblyIdentity>
+		<WriteLinesToFile File="$(MSBuildProjectDirectory)\wwwroot\version.txt" Lines="%(BuiltAssemblyIdentity.Version)" Overwrite="true" />
+	</Target>
 </Project>
