@@ -1,4 +1,6 @@
-﻿namespace clypse.portal.setup.Services.Orchestration;
+﻿using clypse.portal.setup.Enums;
+
+namespace clypse.portal.setup.Services.Orchestration;
 
 /// <summary>
 /// Provides an interactive console menu for configuring setup options.
@@ -9,6 +11,6 @@ public interface ISetupInteractiveMenuService
     /// Runs the interactive menu to edit setup options.
     /// </summary>
     /// <param name="options">Options instance to populate.</param>
-    /// <returns><see langword="true"/> when the user chooses to continue with setup; otherwise, <see langword="false"/>.</returns>
-    public bool Run(SetupOptions options);
+    /// <returns>The selected <see cref="SetupMode"/>; returns <see cref="SetupMode.None"/> when the user cancels.</returns>
+    public SetupMode Run(SetupOptions options);
 }

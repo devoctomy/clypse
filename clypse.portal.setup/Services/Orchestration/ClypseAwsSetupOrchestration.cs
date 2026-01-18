@@ -31,51 +31,6 @@ public class ClypseAwsSetupOrchestration(
         ILogger<IamService> logger) : IClypseAwsSetupOrchestration
 {
     /// <inheritdoc />
-    public async Task<bool> PrepareSetup(CancellationToken cancellationToken)
-    {
-        logger.LogInformation("Preparing Clypse AWS setup orchestration.");
-
-        logger.LogDebug("Using AWS Base Url: {baseUrl}", options.BaseUrl);
-        logger.LogDebug("Using AWS Region: {region}", options.Region);
-        logger.LogDebug("Using Resource Prefix: {resourcePrefix}", options.ResourcePrefix);
-        logger.LogDebug("Using IAM Access Id: {accessId}", options.AccessId);
-        logger.LogDebug("Using IAM Secret Access Key: {secretAccessKey}", options.SecretAccessKey.Redact(3));
-        logger.LogDebug("Using Portal Build Output Path: {portalBuildOutputPath}", options.PortalBuildOutputPath);
-        logger.LogDebug("Using Initial User Email: {initialUserEmail}", options.InitialUserEmail);
-
-        if (!options.IsValid())
-        {
-            throw new Exception("Options are not valid.");
-        }
-
-        // S3
-        logger.LogInformation("Checking S3 resources.");
-        var portalBucketName = "clypse.portal";
-        logger.LogInformation("Checking to see if portal bucket already exists.");
-        var portalBucketExists = await s3Service.DoesBucketExistAsync(
-            portalBucketName,
-            cancellationToken);
-        if (portalBucketExists)
-        {
-            logger.LogError("S3 bucket for portal already exists.");
-            return false;
-        }
-
-        var dataBucketName = "clypse.data";
-        logger.LogInformation("Checking to see if portal bucket already exists.");
-        var dataBucketExists = await s3Service.DoesBucketExistAsync(
-            dataBucketName,
-            cancellationToken);
-        if (dataBucketExists)
-        {
-            logger.LogError("S3 bucket for data already exists.");
-            return false;
-        }
-
-        return true;
-    }
-
-    /// <inheritdoc />
     public async Task<bool> SetupClypseOnAwsAsync(CancellationToken cancellationToken)
     {
         logger.LogInformation("Starting Clypse AWS setup orchestration.");

@@ -1,4 +1,5 @@
-﻿using clypse.portal.setup.Extensions;
+﻿using clypse.portal.setup.Enums;
+using clypse.portal.setup.Extensions;
 using clypse.portal.setup.Services.Build;
 using Spectre.Console;
 using System.Diagnostics.CodeAnalysis;
@@ -10,12 +11,12 @@ namespace clypse.portal.setup.Services.Orchestration;
 public class SetupInteractiveMenuService(IPortalBuildService portalBuildService) : ISetupInteractiveMenuService
 {
     /// <inheritdoc />
-    public bool Run(SetupOptions options)
+    public SetupMode Run(SetupOptions options)
     {
         return ConfigureAwsOptionsInteractively(options);
     }
 
-    private bool ConfigureAwsOptionsInteractively(SetupOptions options)
+    private SetupMode ConfigureAwsOptionsInteractively(SetupOptions options)
     {
         while (true)
         {
@@ -47,6 +48,7 @@ public class SetupInteractiveMenuService(IPortalBuildService portalBuildService)
                         "Edit PortalBuildOutputPath",
                         "Save options",
                         "Continue",
+                        "Upgrade",
                         "Cancel"));
 
             switch (choice)
@@ -196,10 +198,21 @@ public class SetupInteractiveMenuService(IPortalBuildService portalBuildService)
                         break;
                     }
 
-                    return true;
+                    return SetupMode.FullCreate;
+
+                case "Upgrade":
+                    if (!options.IsValid())
+                    {
+                        AnsiConsole.MarkupLine("[red]Options are not valid.[/] Please set [yellow]AccessId[/], [yellow]SecretAccessKey[/], [yellow]Region[/], [yellow]ResourcePrefix[/], and [yellow]InitialUserEmail[/].");
+                        AnsiConsole.MarkupLine("[grey]Press any key to continue...[/]");
+                        Console.ReadKey(true);
+                        break;
+                    }
+
+                    return SetupMode.Upgrade;
 
                 case "Cancel":
-                    return false;
+                    return SetupMode.None;
             }
         }
     }

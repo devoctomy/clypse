@@ -1,4 +1,5 @@
-﻿using clypse.portal.setup.Services;
+﻿using clypse.portal.setup.Enums;
+using clypse.portal.setup.Services;
 using clypse.portal.setup.Services.Orchestration;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -8,14 +9,15 @@ namespace clypse.portal.setup.UnitTests.Services;
 public class SetupProgramTests
 {
     [Fact]
-    public async Task GivenProgram_WhenRun_AndNoExceptions_ThenOrchstrationIsCalled_And0Returned()
+    public async Task GivenProgram_WhenRunAsync_AndNoExceptions_ThenOrchstrationIsCalled_And0Returned()
     {
         // Arrange
         var options = new SetupOptions
         {
             BaseUrl = "https://example.com",
             AccessId = "test-access-id",
-            InteractiveMode = false
+            InteractiveMode = false,
+            EnableUpgradeMode = false
         };
         var mockSetupInteractiveMenuService = new Mock<ISetupInteractiveMenuService>();
         var mockClypseAwsSetupOrchestration = new Mock<IClypseAwsSetupOrchestration>();
@@ -25,12 +27,8 @@ public class SetupProgramTests
             mockClypseAwsSetupOrchestration.Object,
             Mock.Of<ILogger<SetupProgram>>());
 
-        mockClypseAwsSetupOrchestration.Setup(x => x.PrepareSetup(
-            It.IsAny<CancellationToken>()))
-            .ReturnsAsync(true);
-
         // Act
-        var result = await sut.Run();
+        var result = await sut.RunAsync();
 
         // Assert
         Assert.Equal(0, result);
@@ -38,13 +36,10 @@ public class SetupProgramTests
         mockClypseAwsSetupOrchestration.Verify(x => x.SetupClypseOnAwsAsync(
             It.IsAny<CancellationToken>()),
             Times.Once);
-        mockClypseAwsSetupOrchestration.Verify(x => x.PrepareSetup(
-            It.IsAny<CancellationToken>()),
-            Times.Once);
     }
 
 [Fact]
-    public async Task GivenProgram_WhenRun_AndPrepareFailss_ThenErrorCodeReturned()
+    public async Task GivenProgram_WhenRunAsync_AndPrepareFailss_ThenErrorCodeReturned()
     {
         // Arrange
         var options = new SetupOptions
@@ -61,26 +56,19 @@ public class SetupProgramTests
             mockClypseAwsSetupOrchestration.Object,
             Mock.Of<ILogger<SetupProgram>>());
 
-        mockClypseAwsSetupOrchestration.Setup(x => x.PrepareSetup(
-            It.IsAny<CancellationToken>()))
-            .ReturnsAsync(false);
-
         mockClypseAwsSetupOrchestration.Setup(x => x.SetupClypseOnAwsAsync(
             It.IsAny<CancellationToken>()))
             .ThrowsAsync(new Exception("Test exception"));
 
         // Act
-        var result = await sut.Run();
+        var result = await sut.RunAsync();
 
         // Assert
         Assert.Equal(1, result);
-        mockClypseAwsSetupOrchestration.Verify(x => x.PrepareSetup(
-            It.IsAny<CancellationToken>()),
-            Times.Once);
     }    
 
     [Fact]
-    public async Task GivenProgram_WhenRun_AndExceptionOccurs_ThenOrchstrationIsCalled_AndErrorCodeReturned()
+    public async Task GivenProgram_WhenRunAsync_AndExceptionOccurs_ThenOrchstrationIsCalled_AndErrorCodeReturned()
     {
         // Arrange
         var options = new SetupOptions
@@ -97,24 +85,17 @@ public class SetupProgramTests
             mockClypseAwsSetupOrchestration.Object,
             Mock.Of<ILogger<SetupProgram>>());
 
-        mockClypseAwsSetupOrchestration.Setup(x => x.PrepareSetup(
-            It.IsAny<CancellationToken>()))
-            .ReturnsAsync(true);
-
         mockClypseAwsSetupOrchestration.Setup(x => x.SetupClypseOnAwsAsync(
             It.IsAny<CancellationToken>()))
             .ThrowsAsync(new Exception("Test exception"));
 
         // Act
-        var result = await sut.Run();
+        var result = await sut.RunAsync();
 
         // Assert
         Assert.Equal(1, result);
 
         mockClypseAwsSetupOrchestration.Verify(x => x.SetupClypseOnAwsAsync(
-            It.IsAny<CancellationToken>()),
-            Times.Once);
-        mockClypseAwsSetupOrchestration.Verify(x => x.PrepareSetup(
             It.IsAny<CancellationToken>()),
             Times.Once);
     }

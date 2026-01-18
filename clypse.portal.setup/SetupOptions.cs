@@ -56,6 +56,11 @@ public class SetupOptions
     public bool InteractiveMode { get; set; } = true;
 
     /// <summary>
+    /// Gets or sets a value indicating whether to enable upgrade mode.
+    /// </summary>
+    public bool EnableUpgradeMode { get; set; } = false;
+
+    /// <summary>
     /// Determines whether the options contain the required values.
     /// </summary>
     /// <returns><see langword="true"/> when required values are present; otherwise, <see langword="false"/>.</returns>

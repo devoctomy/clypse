@@ -13,7 +13,7 @@ public static class Program
         using IHost host = CreateHostBuilder(args).Build();
 
         var program = host.Services.GetService<IProgram>();
-        return await program!.Run();
+        return await program!.RunAsync(CancellationToken.None);
     }
 
     static IHostBuilder CreateHostBuilder(string[] args) =>

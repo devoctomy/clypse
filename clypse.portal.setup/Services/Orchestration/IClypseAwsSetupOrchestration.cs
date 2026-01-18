@@ -6,13 +6,6 @@
 public interface IClypseAwsSetupOrchestration
 {
     /// <summary>
-    /// Validates setup inputs and ensures required AWS resources are available before running setup.
-    /// </summary>
-    /// <param name="cancellationToken">Token to cancel the operation.</param>
-    /// <returns><see langword="true"/> when the setup can proceed; otherwise, <see langword="false"/>.</returns>
-    public Task<bool> PrepareSetup(CancellationToken cancellationToken);
-
-    /// <summary>
     /// Executes the full AWS provisioning workflow for the Clypse portal.
     /// </summary>
     /// <param name="cancellationToken">Token to cancel the operation.</param>
