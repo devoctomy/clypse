@@ -55,4 +55,13 @@
 	  <Folder Include="Data\" />
 	</ItemGroup>
 
+	<Target Name="AfterBuild_WriteAssemblyVersion" AfterTargets="Build" Condition="'$(IsCrossTargetingBuild)' != 'true' and Exists('$(TargetPath)')">
+		<GetAssemblyIdentity AssemblyFiles="$(TargetPath)">
+			<Output TaskParameter="Assemblies" ItemName="BuiltAssemblyIdentity" />
+		</GetAssemblyIdentity>
+		<WriteLinesToFile
+			File="$(TargetDir)version.txt"
+			Lines="%(BuiltAssemblyIdentity.Version)"
+			Overwrite="true" />
+	</Target>
 </Project>
