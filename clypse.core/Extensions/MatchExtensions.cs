@@ -23,6 +23,34 @@ public static class MatchExtensions
         Match swapMatch,
         string matchString)
     {
+        ValidateArguments(match, swapMatch, matchString);
+
+        var (primaryIndex, primaryLength, primaryEnd) = (match.Index, match.Length, match.Index + match.Length);
+        var (secondaryIndex, secondaryLength, secondaryEnd) = (swapMatch.Index, swapMatch.Length, swapMatch.Index + swapMatch.Length);
+
+        ValidateRanges(matchString, primaryIndex, primaryLength, primaryEnd, secondaryIndex, secondaryLength, secondaryEnd);
+        ValidateSegments(matchString, match, swapMatch, primaryIndex, primaryLength, secondaryIndex, secondaryLength);
+        ValidateNonOverlap(primaryEnd, secondaryIndex, secondaryEnd, primaryIndex);
+
+        var first = (primaryIndex <= secondaryIndex) ? match : swapMatch;
+        var second = (primaryIndex <= secondaryIndex) ? swapMatch : match;
+
+        int firstIndex = first.Index, firstLength = first.Length, firstEnd = firstIndex + firstLength;
+        int secondIndex = second.Index, secondLength = second.Length, secondEnd = secondIndex + secondLength;
+
+        return string.Concat(
+            matchString.AsSpan(0, firstIndex).ToString(),
+            matchString.AsSpan(secondIndex, secondLength).ToString(),
+            matchString.AsSpan(firstEnd, secondIndex - firstEnd).ToString(),
+            matchString.AsSpan(firstIndex, firstLength).ToString(),
+            matchString.AsSpan(secondEnd, matchString.Length - secondEnd).ToString());
+    }
+
+    private static void ValidateArguments(
+        Match match,
+        Match swapMatch,
+        string matchString)
+    {
         ArgumentNullException.ThrowIfNull(match);
         ArgumentNullException.ThrowIfNull(swapMatch);
         ArgumentNullException.ThrowIfNull(matchString);
@@ -36,51 +64,53 @@ public static class MatchExtensions
         {
             throw new ArgumentException("swapMatch is not successful.", nameof(swapMatch));
         }
+    }
 
-        var i1 = match.Index;
-        var l1 = match.Length;
-        var e1 = i1 + l1;
-        var outOfRange1 = i1 < 0 || l1 < 0 || e1 > matchString.Length;
-
-        var i2 = swapMatch.Index;
-        var l2 = swapMatch.Length;
-        var e2 = i2 + l2;
-        var outOfRange2 = i2 < 0 || l2 < 0 || e2 > matchString.Length;
-
-        var outOfRange = outOfRange1 || outOfRange2;
-
-        if (outOfRange)
+    private static void ValidateRanges(
+        string matchString,
+        int primaryIndex,
+        int primaryLength,
+        int primaryEnd,
+        int secondaryIndex,
+        int secondaryLength,
+        int secondaryEnd)
+    {
+        if (primaryIndex < 0 || primaryLength < 0 || primaryEnd > matchString.Length
+            || secondaryIndex < 0 || secondaryLength < 0 || secondaryEnd > matchString.Length)
         {
             throw new ArgumentOutOfRangeException(nameof(matchString), "Match indices are out of range for matchString.");
         }
+    }
 
-        var matchStringSegment1 = matchString.AsSpan(i1, l1).ToString();
-        var matchStringSegment2 = matchString.AsSpan(i2, l2).ToString();
-        var segment1Matches = string.Equals(matchStringSegment1, match.Value.ToString(), StringComparison.Ordinal);
-        var segment2Matches = string.Equals(matchStringSegment2, swapMatch.Value.ToString(), StringComparison.Ordinal);
-        var segmentMatches = segment1Matches && segment2Matches;
+    private static void ValidateSegments(
+        string matchString,
+        Match match,
+        Match swapMatch,
+        int primaryIndex,
+        int primaryLength,
+        int secondaryIndex,
+        int secondaryLength)
+    {
+        var matchStringSegment1 = matchString.AsSpan(primaryIndex, primaryLength).ToString();
+        var matchStringSegment2 = matchString.AsSpan(secondaryIndex, secondaryLength).ToString();
+        var segmentMatches = string.Equals(matchStringSegment1, match.Value, StringComparison.Ordinal)
+                             && string.Equals(matchStringSegment2, swapMatch.Value, StringComparison.Ordinal);
 
         if (!segmentMatches)
         {
             throw new ArgumentException("Provided matches do not correspond to matchString at their indices.");
         }
+    }
 
-        if (!(e1 <= i2 || e2 <= i1))
+    private static void ValidateNonOverlap(
+        int primaryEnd,
+        int secondaryIndex,
+        int secondaryEnd,
+        int primaryIndex)
+    {
+        if (!(primaryEnd <= secondaryIndex || secondaryEnd <= primaryIndex))
         {
             throw new InvalidOperationException("Matches overlap; cannot swap.");
         }
-
-        var first = (i1 <= i2) ? match : swapMatch;
-        var second = (i1 <= i2) ? swapMatch : match;
-
-        int fI = first.Index, fL = first.Length, fE = fI + fL;
-        int sI = second.Index, sL = second.Length, sE = sI + sL;
-
-        return string.Concat(
-            matchString.AsSpan(0, fI).ToString(),
-            matchString.AsSpan(sI, sL).ToString(),
-            matchString.AsSpan(fE, sI - fE).ToString(),
-            matchString.AsSpan(fI, fL).ToString(),
-            matchString.AsSpan(sE, matchString.Length - sE).ToString());
     }
 }
