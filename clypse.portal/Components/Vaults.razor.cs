@@ -23,13 +23,13 @@ public partial class Vaults : ComponentBase
     private List<VaultMetadata> vaults = new();
     private List<VaultListing> vaultListings = new(); // Store the original listings with manifests
     private bool isLoading = true;
-    private bool showPassphrasePanel = false;
-    private bool showVaultDetailsPanel = false; // New property for vault details modal
-    private bool isUnlocking = false;
-    private VaultMetadata? selectedVault = null;
-    private VaultListing? selectedVaultListing = null; // Store selected vault listing for details
-    private string? errorMessage = null;
-    private IVaultManagerBootstrapperService? bootstrapperService = null;
+    private bool showPassphrasePanel;
+    private bool showVaultDetailsPanel; // New property for vault details modal
+    private bool isUnlocking;
+    private VaultMetadata? selectedVault;
+    private VaultListing? selectedVaultListing; // Store selected vault listing for details
+    private string? errorMessage;
+    private IVaultManagerBootstrapperService? bootstrapperService;
 
     [Parameter] public EventCallback<(VaultMetadata vault, string key, IVaultManager manager)> OnVaultUnlocked { get; set; }
 

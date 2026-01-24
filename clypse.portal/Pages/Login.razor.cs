@@ -23,24 +23,24 @@ public partial class Login : ComponentBase
     
     // User management properties
     private List<SavedUser> savedUsers = [];
-    private bool showUsersList = false;
+    private bool showUsersList;
     private bool showRememberMe = true;
-    private bool rememberMe = false;
-    private bool isUsernameReadonly = false;
-    private bool passwordResetRequired = false;
-    private bool rememberMeWhenResetStarted = false;
+    private bool rememberMe;
+    private bool isUsernameReadonly;
+    private bool passwordResetRequired;
+    private bool rememberMeWhenResetStarted;
     private string newPassword = string.Empty;
     private string confirmPassword = string.Empty;
     
     // Forgot password properties
-    private bool forgotPasswordMode = false;
-    private bool forgotPasswordCodeSent = false;
+    private bool forgotPasswordMode;
+    private bool forgotPasswordCodeSent;
     private string forgotPasswordUsername = string.Empty;
     private string verificationCode = string.Empty;
     
     // WebAuthn properties
-    private bool showWebAuthnPrompt = false;
-    private bool isWebAuthnProcessing = false;
+    private bool showWebAuthnPrompt;
+    private bool isWebAuthnProcessing;
     private string? webAuthnErrorMessage;
 
     private class LoginModel

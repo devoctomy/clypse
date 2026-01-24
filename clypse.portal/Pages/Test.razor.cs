@@ -19,11 +19,11 @@ public partial class Test : ComponentBase
     [Inject] public NavigationManager Navigation { get; set; } = default!;
 
     private readonly LoginModel loginModel = new();
-    private bool isLoading = false;
-    private bool isAuthenticated = false;
-    private bool isTestingClypse = false;
-    private bool isTestingKeyDerivation = false;
-    private bool showKeyDerivationResults = false;
+    private bool isLoading;
+    private bool isAuthenticated;
+    private bool isTestingClypse;
+    private bool isTestingKeyDerivation;
+    private bool showKeyDerivationResults;
     private string? errorMessage;
     private string? accessToken;
     private string? idToken;
@@ -34,7 +34,7 @@ public partial class Test : ComponentBase
     
     // WebAuthn testing fields
     private string webAuthnUsername = "demo-user";
-    private bool isWebAuthnProcessing = false;
+    private bool isWebAuthnProcessing;
     private string webAuthnCurrentAction = "";
     private string webAuthnStatus = "Ready";
     private string webAuthnLog = "";

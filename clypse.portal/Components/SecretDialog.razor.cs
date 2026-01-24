@@ -18,7 +18,7 @@ public partial class SecretDialog : ComponentBase
 
     private Secret? EditableSecret { get; set; }
     private Dictionary<PropertyInfo, SecretFieldAttribute>? secretFields;
-    private bool isSaving = false;
+    private bool isSaving;
 
     public enum SecretDialogMode
     {

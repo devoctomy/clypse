@@ -19,7 +19,7 @@ public partial class VaultCreateDialog : ComponentBase
     private string vaultPassphrase = string.Empty;
     private string vaultPassphraseConfirm = string.Empty;
     private ElementReference nameInput;
-    private bool previousShowState = false;
+    private bool previousShowState;
 
     protected override async Task OnParametersSetAsync()
     {

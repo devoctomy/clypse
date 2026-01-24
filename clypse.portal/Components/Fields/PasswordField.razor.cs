@@ -12,15 +12,15 @@ public partial class PasswordField : ComponentBase, IDisposable
     [Parameter] public string Placeholder { get; set; } = "Enter password";
     [Parameter] public string? Value { get; set; }
     [Parameter] public EventCallback<string?> ValueChanged { get; set; }
-    [Parameter] public bool IsReadOnly { get; set; } = false;
+    [Parameter] public bool IsReadOnly { get; set; }
     [Parameter] public bool ShowRevealButton { get; set; } = true;
     [Parameter] public bool ShowGeneratorButton { get; set; } = true;
     [Parameter] public bool ShowStrengthIndicator { get; set; } = true;
 
     [Inject] private IPasswordComplexityEstimatorService? PasswordComplexityEstimator { get; set; }
 
-    private bool showPassword = false;
-    private bool showPasswordGenerator = false;
+    private bool showPassword;
+    private bool showPasswordGenerator;
     private PasswordComplexityEstimatorResults? passwordComplexityResults;
     private string? lastAnalyzedPassword;
     private System.Timers.Timer? passwordUpdateTimer;

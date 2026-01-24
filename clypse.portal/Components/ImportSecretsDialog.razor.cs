@@ -15,7 +15,7 @@ public partial class ImportSecretsDialog : ComponentBase
     private string? selectedFileName;
     private string? csvContent;
     private CsvImportDataFormat selectedFormat = CsvImportDataFormat.KeePassCsv1_x;
-    private bool IsImporting = false;
+    private bool IsImporting;
     private string? ErrorMessage;
     private List<string>? headers;
     private List<Dictionary<string, string>>? previewData;

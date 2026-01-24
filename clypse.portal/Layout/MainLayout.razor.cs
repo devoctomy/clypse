@@ -13,8 +13,8 @@ public partial class MainLayout : LayoutComponentBase, IAsyncDisposable
     [Inject] private IJSRuntime JSRuntime { get; set; } = default!;
     [Inject] private ILogger<MainLayout> Logger { get; set; } = default!;
 
-    private bool updateAvailable = false;
-    private bool isUpdating = false;
+    private bool updateAvailable;
+    private bool isUpdating;
     
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {

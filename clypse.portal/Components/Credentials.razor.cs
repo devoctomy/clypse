@@ -18,17 +18,17 @@ public partial class Credentials : ComponentBase
     [Parameter] public EventCallback OnCreateCredential { get; set; }
     [Parameter] public IVaultManager? VaultManager { get; set; }
     
-    private bool showImportDialog = false;
-    private bool isLoadingSecret = false;
-    private bool isSavingSecret = false;
-    private bool showDeleteConfirmation = false;
-    private bool isDeletingSecret = false;
+    private bool showImportDialog;
+    private bool isLoadingSecret;
+    private bool isSavingSecret;
+    private bool showDeleteConfirmation;
+    private bool isDeletingSecret;
     private string secretIdToDelete = string.Empty;
     private string deleteConfirmationMessage = string.Empty;
 
     // SecretDialog properties
-    private bool showSecretDialog = false;
-    private Secret? currentSecret = null;
+    private bool showSecretDialog;
+    private Secret? currentSecret;
     private SecretDialog.SecretDialogMode secretDialogMode = SecretDialog.SecretDialogMode.Create;
     private string searchTerm = string.Empty;
     private List<VaultIndexEntry> filteredEntries = [];

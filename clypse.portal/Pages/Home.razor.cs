@@ -21,23 +21,23 @@ public partial class Home : ComponentBase
     [Inject] public AwsS3Config AwsS3Config { get; set; } = default!;
     [Inject] public IKeyDerivationService KeyDerivationService { get; set; } = default!;
 
-    private bool isLoggedIn = false;
+    private bool isLoggedIn;
     private string currentPage = "vaults"; // Default to vaults page
-    private IVaultManager? vaultManager = null;
+    private IVaultManager? vaultManager;
     private Components.Vaults? vaultsComponent;
     private Components.Credentials? credentialsComponent;
-    private VaultMetadata? currentVault = null;
-    private string? currentVaultKey = null;
-    private IVault? loadedVault = null;
-    private bool showVerifyDialog = false;
-    private VaultVerifyResults? verifyResults = null;
-    private bool showDeleteVaultDialog = false;
-    private VaultMetadata? vaultToDelete = null;
-    private bool isDeletingVault = false;
-    private string? deleteVaultErrorMessage = null;
-    private bool showCreateVaultDialog = false;
-    private bool isCreatingVault = false;
-    private string? createVaultErrorMessage = null;
+    private VaultMetadata? currentVault;
+    private string? currentVaultKey;
+    private IVault? loadedVault;
+    private bool showVerifyDialog;
+    private VaultVerifyResults? verifyResults;
+    private bool showDeleteVaultDialog;
+    private VaultMetadata? vaultToDelete;
+    private bool isDeletingVault;
+    private string? deleteVaultErrorMessage;
+    private bool showCreateVaultDialog;
+    private bool isCreatingVault;
+    private string? createVaultErrorMessage;
 
     [CascadingParameter] public Layout.HomeLayout? Layout { get; set; }
 
