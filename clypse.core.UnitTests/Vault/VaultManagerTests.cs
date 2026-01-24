@@ -25,7 +25,7 @@ public class VaultManagerTests
         },
     };
 
-    private readonly Mock<IKeyDerivationService> mockKeyDerivationService;
+    //private readonly Mock<IKeyDerivationService> mockKeyDerivationService;
     private readonly Mock<ICompressionService> mockCompressionService;
     private readonly Mock<ICloudStorageProvider> mockInnerCloudStorageProvider;
     private readonly Mock<IEncryptedCloudStorageProvider> mockEncryptedCloudStorageProvider;
@@ -33,12 +33,12 @@ public class VaultManagerTests
 
     public VaultManagerTests()
     {
-        this.mockKeyDerivationService = new Mock<IKeyDerivationService>();
+        var mockKeyDerivationService = new Mock<IKeyDerivationService>();
         this.mockCompressionService = new Mock<ICompressionService>();
         this.mockInnerCloudStorageProvider = new Mock<ICloudStorageProvider>();
         this.mockEncryptedCloudStorageProvider = new Mock<IEncryptedCloudStorageProvider>();
 
-        this.mockKeyDerivationService.SetupGet(
+        mockKeyDerivationService.SetupGet(
             x => x.Options)
             .Returns(new core.Cryptography.KeyDerivationServiceOptions());
 
@@ -48,7 +48,7 @@ public class VaultManagerTests
 
         this.sut = new VaultManager(
             "foobar",
-            this.mockKeyDerivationService.Object,
+            mockKeyDerivationService.Object,
             this.mockCompressionService.Object,
             this.mockEncryptedCloudStorageProvider.Object);
     }
@@ -232,7 +232,7 @@ public class VaultManagerTests
             x => x.GetObjectAsync(
                 It.Is<string>(y => y == $"foobar/{info.Id}/manifest.json"),
                 It.Is<CancellationToken>(y => y == cancellationTokenSource.Token)))
-            .Returns(async (string key, CancellationToken ct) =>
+            .Returns(async (string _, CancellationToken ct) =>
             {
                 var output = new MemoryStream();
                 await JsonSerializer.SerializeAsync(output, manifest, this.jsonSerializerOptions, ct);
@@ -245,7 +245,7 @@ public class VaultManagerTests
             It.Is<string>(y => y == $"foobar/{info.Id}/info.json"),
             It.Is<string>(y => y == base64Key),
             It.Is<CancellationToken>(y => y == cancellationTokenSource.Token)))
-            .Returns(async (string key, string base64EncryptionKey, CancellationToken ct) =>
+            .Returns(async (string _, string _, CancellationToken ct) =>
             {
                 var output = new MemoryStream();
                 await JsonSerializer.SerializeAsync(output, info, this.jsonSerializerOptions, ct);
@@ -308,22 +308,6 @@ public class VaultManagerTests
         var base64Key = "super secret base64 encoded encryption key";
         var manifest = new VaultManifest();
         var info = new VaultInfo(name, description);
-        var index = new VaultIndex
-        {
-            Entries =
-                [
-                    new VaultIndexEntry(
-                        "1",
-                        "Foo",
-                        "Bar",
-                        string.Empty),
-                    new VaultIndexEntry(
-                        "2",
-                        "Foo",
-                        "Bar",
-                        string.Empty),
-                ],
-        };
         var cancellationTokenSource = new CancellationTokenSource();
 
         this.mockInnerCloudStorageProvider.Setup(
@@ -336,16 +320,6 @@ public class VaultManagerTests
                 await JsonSerializer.SerializeAsync(output, manifest, this.jsonSerializerOptions, ct);
                 output.Seek(0, SeekOrigin.Begin);
                 return output;
-            });
-
-        this.mockEncryptedCloudStorageProvider.Setup(x => x.GetEncryptedObjectAsync(
-            It.Is<string>(y => y == $"{info.Id}/info.json"),
-            It.Is<string>(y => y == base64Key),
-            It.Is<CancellationToken>(y => y == cancellationTokenSource.Token)))
-            .Returns(async () =>
-            {
-                await Task.Yield();
-                return null;
             });
 
         // Act & Assert

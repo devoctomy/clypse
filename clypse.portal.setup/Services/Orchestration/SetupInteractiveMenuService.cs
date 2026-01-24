@@ -213,6 +213,9 @@ public class SetupInteractiveMenuService(IPortalBuildService portalBuildService)
 
                 case "Cancel":
                     return SetupMode.None;
+
+                default:
+                    return SetupMode.None;
             }
         }
     }

@@ -321,7 +321,6 @@ public class CognitoServiceTests
             mockCognitoIdentityProvider.Object,
             options,
             Mock.Of<ILogger<CognitoService>>());
-        var userId = Guid.NewGuid().ToString();
         var email = "test@example.com";
         var userPoolId = "us-east-1_ABC123DEF";
 
