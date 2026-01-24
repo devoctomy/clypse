@@ -37,17 +37,30 @@ public static class MatchExtensions
             throw new ArgumentException("swapMatch is not successful.", nameof(swapMatch));
         }
 
-        int i1 = match.Index, l1 = match.Length, e1 = i1 + l1;
-        int i2 = swapMatch.Index, l2 = swapMatch.Length, e2 = i2 + l2;
+        var i1 = match.Index;
+        var l1 = match.Length;
+        var e1 = i1 + l1;
+        var outOfRange1 = i1 < 0 || l1 < 0 || e1 > matchString.Length;
 
-        if (i1 < 0 || l1 < 0 || e1 > matchString.Length ||
-            i2 < 0 || l2 < 0 || e2 > matchString.Length)
+        var i2 = swapMatch.Index;
+        var l2 = swapMatch.Length;
+        var e2 = i2 + l2;
+        var outOfRange2 = i2 < 0 || l2 < 0 || e2 > matchString.Length;
+
+        var outOfRange = outOfRange1 || outOfRange2;
+
+        if (outOfRange)
         {
             throw new ArgumentOutOfRangeException(nameof(matchString), "Match indices are out of range for matchString.");
         }
 
-        if (!string.Equals(matchString.AsSpan(i1, l1).ToString(), match.Value.ToString(), StringComparison.Ordinal) ||
-            !string.Equals(matchString.AsSpan(i2, l2).ToString(), swapMatch.Value.ToString(), StringComparison.Ordinal))
+        var matchStringSegment1 = matchString.AsSpan(i1, l1).ToString();
+        var matchStringSegment2 = matchString.AsSpan(i2, l2).ToString();
+        var segment1Matches = string.Equals(matchStringSegment1, match.Value.ToString(), StringComparison.Ordinal);
+        var segment2Matches = string.Equals(matchStringSegment2, swapMatch.Value.ToString(), StringComparison.Ordinal);
+        var segmentMatches = segment1Matches && segment2Matches;
+
+        if (!segmentMatches)
         {
             throw new ArgumentException("Provided matches do not correspond to matchString at their indices.");
         }
