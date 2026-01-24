@@ -5,20 +5,6 @@ on:
   workflow_dispatch:
 
 jobs:
-  # codacy-analysis:
-  #   runs-on: ubuntu-latest
-
-  #   steps:
-  #     - name: Checkout code
-  #       uses: actions/checkout@v4
-
-  #     - name: Run Codacy Analysis
-  #       uses: codacy/codacy-analysis-cli-action@v4
-  #       with:
-  #         project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
-  #         verbose: true
-
-
   unit-tests:
     runs-on: ubuntu-latest
     container:

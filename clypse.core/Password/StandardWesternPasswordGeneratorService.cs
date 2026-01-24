@@ -148,6 +148,18 @@ public partial class StandardWesternPasswordGeneratorService : IPasswordGenerato
     [GeneratedRegex(@"\{[^}]+\}")]
     private static partial Regex TokenExtractionRegex();
 
+    private static string ReplaceAt(
+        string input,
+        int index,
+        int length,
+        string replacement)
+    {
+        return string.Concat(
+            input.AsSpan(0, index),
+            replacement,
+            input.AsSpan(index + length));
+    }
+
     private void AddCharacterGroups(
         CharacterGroup groups,
         bool atLeastOneOfEachGroup,
@@ -189,18 +201,6 @@ public partial class StandardWesternPasswordGeneratorService : IPasswordGenerato
                 atLeastOneOfEachGroup,
                 password);
         }
-    }
-
-    private static string ReplaceAt(
-        string input,
-        int index,
-        int length,
-        string replacement)
-    {
-        return string.Concat(
-            input.AsSpan(0, index),
-            replacement,
-            input.AsSpan(index + length));
     }
 
     private void AddCharGroupChars(

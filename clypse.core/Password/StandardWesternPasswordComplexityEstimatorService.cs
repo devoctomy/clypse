@@ -1,5 +1,4 @@
-﻿using System.Reflection;
-using clypse.core.Data;
+﻿using clypse.core.Data;
 using clypse.core.Enums;
 
 namespace clypse.core.Password;
@@ -13,7 +12,7 @@ public class StandardWesternPasswordComplexityEstimatorService(
     : IPasswordComplexityEstimatorService
 #pragma warning restore CS9113 // Parameter is unread.
 {
-    private static async Task<bool> IsWeakKnownPasswordAsync(
+    private async Task<bool> IsWeakKnownPasswordAsync(
         string password,
         CancellationToken cancellationToken)
     {
