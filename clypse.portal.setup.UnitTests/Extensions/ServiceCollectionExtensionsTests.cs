@@ -1,0 +1,178 @@
+using Amazon.CognitoIdentity;
+using Amazon.CognitoIdentityProvider;
+using Amazon.IdentityManagement;
+using Amazon.S3;
+using clypse.portal.setup.Extensions;
+using clypse.portal.setup.Services;
+using clypse.portal.setup.Services.Build;
+using clypse.portal.setup.Services.Cloudfront;
+using clypse.portal.setup.Services.Cognito;
+using clypse.portal.setup.Services.Iam;
+using clypse.portal.setup.Services.Inventory;
+using clypse.portal.setup.Services.IO;
+using clypse.portal.setup.Services.Json;
+using clypse.portal.setup.Services.Orchestration;
+using clypse.portal.setup.Services.Process;
+using clypse.portal.setup.Services.S3;
+using clypse.portal.setup.Services.Security;
+using clypse.portal.setup.Services.Upload;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+
+namespace clypse.portal.setup.UnitTests.Extensions;
+
+public class ServiceCollectionExtensionsTests
+{
+    [Fact]
+    public void GivenServiceCollection_WhenAddClypseSetupServices_ThenAllServicesAreRegistered()
+    {
+        // Arrange
+        var services = new ServiceCollection();
+        Environment.SetEnvironmentVariable("CLYPSE_SETUP_UNITTEST__BaseUrl", "http://localhost");
+        Environment.SetEnvironmentVariable("CLYPSE_SETUP_UNITTEST__Region", "us-east-1");
+        Environment.SetEnvironmentVariable("CLYPSE_SETUP_UNITTEST__AccessId", "test-access-id");
+        Environment.SetEnvironmentVariable("CLYPSE_SETUP_UNITTEST__SecretAccessKey", "test-secret-key");
+        Environment.SetEnvironmentVariable("CLYPSE_SETUP_UNITTEST__ResourcePrefix", "test-prefix");
+        Environment.SetEnvironmentVariable("CLYPSE_SETUP_UNITTEST__InitialUserEmail", "foo@bar.com");
+
+        try
+        {
+            // Act
+            var result = services.AddClypseSetupServices(
+                "CLYPSE_SETUP_UNITTEST",
+                Microsoft.Extensions.Logging.LogLevel.Information);
+
+            // Assert
+            Assert.NotNull(result);
+            Assert.Same(services, result);
+
+            var serviceProvider = services.BuildServiceProvider();
+
+            // Verify AWS services
+            AssertServiceRegistered<IAmazonS3>(serviceProvider);
+            AssertServiceRegistered<IAmazonCognitoIdentity>(serviceProvider);
+            AssertServiceRegistered<IAmazonCognitoIdentityProvider>(serviceProvider);
+            AssertServiceRegistered<IAmazonIdentityManagementService>(serviceProvider);
+
+            // Verify Clypse services
+            AssertServiceRegistered<IIoService>(serviceProvider);
+            AssertServiceRegistered<IProcessRunnerService>(serviceProvider);
+            AssertServiceRegistered<ISecurityTokenService>(serviceProvider);
+            AssertServiceRegistered<IS3Service>(serviceProvider);
+            AssertServiceRegistered<IDirectoryUploadService>(serviceProvider);
+            AssertServiceRegistered<ICognitoService>(serviceProvider);
+            AssertServiceRegistered<IIamService>(serviceProvider);
+            AssertServiceRegistered<ICloudfrontService>(serviceProvider);
+            AssertServiceRegistered<IPortalBuildService>(serviceProvider);
+            AssertServiceRegistered<ISetupInteractiveMenuService>(serviceProvider);
+            AssertServiceRegistered<IClypseAwsSetupOrchestration>(serviceProvider);
+            AssertServiceRegistered<IPortalConfigService>(serviceProvider);
+            AssertServiceRegistered<IInventoryService>(serviceProvider);
+            AssertServiceRegistered<IJsonMergerService>(serviceProvider);
+            AssertServiceRegistered<IProgram>(serviceProvider);
+
+            // Verify SetupOptions
+            var options = serviceProvider.GetService<SetupOptions>();
+            Assert.NotNull(options);
+            Assert.Equal("http://localhost", options.BaseUrl);
+            Assert.Equal("us-east-1", options.Region);
+            Assert.Equal("test-access-id", options.AccessId);
+            Assert.Equal("test-secret-key", options.SecretAccessKey);
+            Assert.Equal("test-prefix", options.ResourcePrefix);
+            Assert.Equal("foo@bar.com", options.InitialUserEmail);
+
+            // Verify logging
+            var loggerFactory = serviceProvider.GetService<ILoggerFactory>();
+            Assert.NotNull(loggerFactory);
+        }
+        finally
+        {
+            // Cleanup
+            Environment.SetEnvironmentVariable("CLYPSE_SETUP_UNITTEST__Region", null);
+            Environment.SetEnvironmentVariable("CLYPSE_SETUP_UNITTEST__AccessId", null);
+            Environment.SetEnvironmentVariable("CLYPSE_SETUP_UNITTEST__SecretAccessKey", null);
+            Environment.SetEnvironmentVariable("CLYPSE_SETUP_UNITTEST__ResourcePrefix", null);
+        }
+    }
+
+    [Fact]
+    public void GivenServiceCollection_WhenAddClypseSetupServicesWithDefaultLogLevel_ThenServicesAreRegisteredWithDebugLogging()
+    {
+        // Arrange
+        var services = new ServiceCollection();
+        Environment.SetEnvironmentVariable("CLYPSE_SETUP_UNITTEST__Region", "eu-west-1");
+        Environment.SetEnvironmentVariable("CLYPSE_SETUP_UNITTEST__AccessId", "test-access-id");
+        Environment.SetEnvironmentVariable("CLYPSE_SETUP_UNITTEST__SecretAccessKey", "test-secret-key");
+        Environment.SetEnvironmentVariable("CLYPSE_SETUP_UNITTEST__ResourcePrefix", "test-prefix");
+
+        try
+        {
+            // Act
+            var result = services.AddClypseSetupServices("CLYPSE_SETUP_UNITTEST");
+
+            // Assert
+            Assert.NotNull(result);
+            var serviceProvider = services.BuildServiceProvider();
+
+            var loggerFactory = serviceProvider.GetService<ILoggerFactory>();
+            Assert.NotNull(loggerFactory);
+
+            var logger = loggerFactory.CreateLogger("Test");
+            Assert.NotNull(logger);
+        }
+        finally
+        {
+            // Cleanup
+            Environment.SetEnvironmentVariable("CLYPSE_SETUP_UNITTEST__Region", null);
+            Environment.SetEnvironmentVariable("CLYPSE_SETUP_UNITTEST__AccessId", null);
+            Environment.SetEnvironmentVariable("CLYPSE_SETUP_UNITTEST__SecretAccessKey", null);
+            Environment.SetEnvironmentVariable("CLYPSE_SETUP_UNITTEST__ResourcePrefix", null);
+        }
+    }
+
+    [Fact]
+    public void GivenServiceCollectionWithBaseUrl_WhenAddClypseSetupServices_ThenAwsServicesUseCustomEndpoint()
+    {
+        // Arrange
+        var services = new ServiceCollection();
+        Environment.SetEnvironmentVariable("CLYPSE_SETUP_UNITTEST__Region", "us-west-2");
+        Environment.SetEnvironmentVariable("CLYPSE_SETUP_UNITTEST__AccessId", "test-access-id");
+        Environment.SetEnvironmentVariable("CLYPSE_SETUP_UNITTEST__SecretAccessKey", "test-secret-key");
+        Environment.SetEnvironmentVariable("CLYPSE_SETUP_UNITTEST__ResourcePrefix", "test-prefix");
+        Environment.SetEnvironmentVariable("CLYPSE_SETUP_UNITTEST__BaseUrl", "http://localhost:4566");
+
+        try
+        {
+            // Act
+            services.AddClypseSetupServices("CLYPSE_SETUP_UNITTEST");
+            var serviceProvider = services.BuildServiceProvider();
+
+            // Assert
+            var options = serviceProvider.GetService<SetupOptions>();
+            Assert.NotNull(options);
+            Assert.Equal("http://localhost:4566", options.BaseUrl);
+
+            // Verify services can still be resolved
+            var s3Client = serviceProvider.GetService<IAmazonS3>();
+            Assert.NotNull(s3Client);
+
+            var cognitoIdentityClient = serviceProvider.GetService<IAmazonCognitoIdentity>();
+            Assert.NotNull(cognitoIdentityClient);
+        }
+        finally
+        {
+            // Cleanup
+            Environment.SetEnvironmentVariable("CLYPSE_SETUP_UNITTEST__Region", null);
+            Environment.SetEnvironmentVariable("CLYPSE_SETUP_UNITTEST__AccessId", null);
+            Environment.SetEnvironmentVariable("CLYPSE_SETUP_UNITTEST__SecretAccessKey", null);
+            Environment.SetEnvironmentVariable("CLYPSE_SETUP_UNITTEST__ResourcePrefix", null);
+            Environment.SetEnvironmentVariable("CLYPSE_SETUP_UNITTEST__BaseUrl", null);
+        }
+    }
+
+    private static void AssertServiceRegistered<TService>(IServiceProvider serviceProvider)
+    {
+        var service = serviceProvider.GetService<TService>();
+        Assert.NotNull(service);
+    }
+}

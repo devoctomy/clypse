@@ -24,7 +24,7 @@ public class TestAwsCloudStorageProvider : ICloudStorageProvider, IAwsEncryptedC
         return this.awsEncryptedCloudStorageProviderTransformer.Object.CreateE2eProvider(cryptoService);
     }
 
-    public AwsS3SseCCloudStorageProvider CreateSseProvider()
+    public AwsS3SseCloudStorageProvider CreateSseProvider()
     {
         return this.awsEncryptedCloudStorageProviderTransformer.Object.CreateSseProvider();
     }

@@ -3,6 +3,7 @@ using Amazon.S3.Model;
 using clypse.core.Cloud;
 using clypse.core.Cloud.Aws.S3;
 using clypse.core.Cloud.Exceptions;
+using clypse.core.Cryptography.Interfaces;
 using Moq;
 
 namespace clypse.core.UnitTests.Cloud;
@@ -290,6 +291,38 @@ public class AwsCloudStorageProviderBaseTests
         Assert.Contains("Bar1", result);
         Assert.Contains("Bar2", result);
         Assert.Contains("Bar3", result);
+    }
+
+    [Fact]
+    public void GivenCryptoService_WhenCreateE2eProvider_ThenAwsS3E2eCloudStorageProviderReturned()
+    {
+        // Arrange
+        var bucketName = "Foo";
+        var mockAmazonS3Client = new Mock<IAmazonS3Client>();
+        var sut = new AwsCloudStorageProviderBase(bucketName, mockAmazonS3Client.Object);
+
+        // Act
+        var provider = sut.CreateE2eProvider(new Mock<ICryptoService>().Object);
+
+        // Assert
+        Assert.NotNull(provider);
+        Assert.IsType<AwsS3E2eCloudStorageProvider>(provider);
+    }
+
+    [Fact]
+    public void GivenCryptoService_WhenCreateSseProvider_ThenAwsS3SseCCloudStorageProviderReturned()
+    {
+        // Arrange
+        var bucketName = "Foo";
+        var mockAmazonS3Client = new Mock<IAmazonS3Client>();
+        var sut = new AwsCloudStorageProviderBase(bucketName, mockAmazonS3Client.Object);
+
+        // Act
+        var provider = sut.CreateSseProvider();
+
+        // Assert
+        Assert.NotNull(provider);
+        Assert.IsType<AwsS3SseCloudStorageProvider>(provider);
     }
 
     [Fact]

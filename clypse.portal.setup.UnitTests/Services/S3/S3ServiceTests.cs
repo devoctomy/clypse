@@ -1,0 +1,898 @@
+﻿using Amazon.S3;
+using Amazon.S3.Model;
+using clypse.portal.setup.Services.S3;
+using clypse.portal.setup.Services.Upload;
+using Microsoft.Extensions.Logging;
+using Moq;
+using System.IO;
+
+namespace clypse.portal.setup.UnitTests.Services.S3;
+
+public class S3ServiceTests
+{
+    [Fact]
+    public async Task GivenBucketName_AndNotDisableBlockPublicAccess_WhenCreateBucket_ThenCreatesBucket()
+    {
+        // Arrange
+        var mockAmazonS3 = new Mock<IAmazonS3>();
+        var mockDirectoryUploadService = new Mock<IDirectoryUploadService>();
+        var options = new SetupOptions
+        {
+            ResourcePrefix = "test-prefix"
+        };
+        var sut = new S3Service(
+            mockAmazonS3.Object,
+            mockDirectoryUploadService.Object,
+            options,
+            Mock.Of<ILogger<S3Service>>());
+        var bucketName = "my-bucket";
+        var expectedBucketName = "test-prefix.my-bucket";
+
+        mockAmazonS3
+            .Setup(s3 => s3.PutBucketAsync(
+                It.Is<PutBucketRequest>(req => req.BucketName == expectedBucketName),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new PutBucketResponse
+            {
+                HttpStatusCode = System.Net.HttpStatusCode.OK
+            });
+        
+        // Act
+        var success = await sut.CreateBucketAsync(bucketName, false);
+
+        // Assert
+        Assert.True(success);
+        mockAmazonS3.Verify(s3 => s3.PutBucketAsync(
+            It.Is<PutBucketRequest>(req => req.BucketName == expectedBucketName),
+            It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task GivenBucketName_AndDisableBlockPublicAccess_WhenCreateBucket_ThenCreatesBucket()
+    {
+        // Arrange
+        var mockAmazonS3 = new Mock<IAmazonS3>();
+        var mockDirectoryUploadService = new Mock<IDirectoryUploadService>();
+        var options = new SetupOptions
+        {
+            ResourcePrefix = "test-prefix"
+        };
+        var sut = new S3Service(
+            mockAmazonS3.Object,
+            mockDirectoryUploadService.Object,
+            options,
+            Mock.Of<ILogger<S3Service>>());
+        var bucketName = "my-bucket";
+        var expectedBucketName = "test-prefix.my-bucket";
+
+        mockAmazonS3
+            .Setup(s3 => s3.PutBucketAsync(
+                It.Is<PutBucketRequest>(req => req.BucketName == expectedBucketName),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new PutBucketResponse
+            {
+                HttpStatusCode = System.Net.HttpStatusCode.OK
+            });
+
+        mockAmazonS3
+            .Setup(s3 => s3.PutPublicAccessBlockAsync(
+                It.Is<PutPublicAccessBlockRequest>(req => req.BucketName == expectedBucketName),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new PutPublicAccessBlockResponse
+            {
+                HttpStatusCode = System.Net.HttpStatusCode.OK
+            });
+
+        // Act
+        var success = await sut.CreateBucketAsync(bucketName, true);
+
+        // Assert
+        Assert.True(success);
+        mockAmazonS3.Verify(s3 => s3.PutBucketAsync(
+            It.Is<PutBucketRequest>(req => req.BucketName == expectedBucketName),
+            It.IsAny<CancellationToken>()),
+            Times.Once);
+        mockAmazonS3.Verify(s3 => s3.PutPublicAccessBlockAsync(
+                It.Is<PutPublicAccessBlockRequest>(req => req.BucketName == expectedBucketName),
+                It.IsAny<CancellationToken>()),
+                Times.Once);
+    }
+
+    [Fact]
+    public async Task GivenCorsConfiguration_WhenSetBucketCorsConfigurationAsync_ThenSetsCorsConfiguration()
+    {
+        // Arrange
+        var mockAmazonS3 = new Mock<IAmazonS3>();
+        var mockDirectoryUploadService = new Mock<IDirectoryUploadService>();
+        var options = new SetupOptions
+        {
+            ResourcePrefix = "test-prefix"
+        };
+        var sut = new S3Service(
+            mockAmazonS3.Object,
+            mockDirectoryUploadService.Object,
+            options,
+            Mock.Of<ILogger<S3Service>>());
+        var bucketName = "my-bucket";
+        var expectedBucketName = "test-prefix.my-bucket";
+        var allowedHeaders = new List<string> { "*" };
+        var allowedMethods = new List<string> { "GET", "POST", "PUT", "DELETE", "HEAD" };
+        var allowedOrigins = new List<string> { "https://example.com" };
+        var expectedExposedHeaders = new[] { "ETag" };
+
+        mockAmazonS3
+            .Setup(s3 => s3.PutCORSConfigurationAsync(
+                expectedBucketName,
+                It.Is<CORSConfiguration>(config =>
+                    config.Rules.Count == 1 &&
+                    config.Rules[0].AllowedHeaders.SequenceEqual(allowedHeaders) &&
+                    config.Rules[0].AllowedMethods.SequenceEqual(allowedMethods) &&
+                    config.Rules[0].AllowedOrigins.SequenceEqual(allowedOrigins) &&
+                    config.Rules[0].ExposeHeaders.SequenceEqual(expectedExposedHeaders) &&
+                    config.Rules[0].MaxAgeSeconds == 3000),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new PutCORSConfigurationResponse
+            {
+                HttpStatusCode = System.Net.HttpStatusCode.OK
+            });
+
+        // Act
+        var success = await sut.SetBucketCorsConfigurationAsync(
+            bucketName,
+            allowedHeaders,
+            allowedMethods,
+            allowedOrigins);
+
+        // Assert
+        Assert.True(success);
+        mockAmazonS3.Verify(s3 => s3.PutCORSConfigurationAsync(
+            expectedBucketName,
+            It.IsAny<CORSConfiguration>(),
+            It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task GivenCorsConfiguration_WhenSetBucketCorsConfigurationAsyncFails_ThenReturnsFalse()
+    {
+        // Arrange
+        var mockAmazonS3 = new Mock<IAmazonS3>();
+        var mockDirectoryUploadService = new Mock<IDirectoryUploadService>();
+        var options = new SetupOptions
+        {
+            ResourcePrefix = "test-prefix"
+        };
+        var sut = new S3Service(
+            mockAmazonS3.Object,
+            mockDirectoryUploadService.Object,
+            options,
+            Mock.Of<ILogger<S3Service>>());
+        var bucketName = "my-bucket";
+        var allowedHeaders = new List<string> { "*" };
+        var allowedMethods = new List<string> { "GET" };
+        var allowedOrigins = new List<string> { "*" };
+
+        mockAmazonS3
+            .Setup(s3 => s3.PutCORSConfigurationAsync(
+                It.IsAny<string>(),
+                It.IsAny<CORSConfiguration>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new PutCORSConfigurationResponse
+            {
+                HttpStatusCode = System.Net.HttpStatusCode.BadRequest
+            });
+
+        // Act
+        var success = await sut.SetBucketCorsConfigurationAsync(
+            bucketName,
+            allowedHeaders,
+            allowedMethods,
+            allowedOrigins);
+
+        // Assert
+        Assert.False(success);
+    }
+
+    [Fact]
+    public async Task GivenBucketPolicy_WhenSetBucketPolicyAsync_ThenSetsBucketPolicy()
+    {
+        // Arrange
+        var mockAmazonS3 = new Mock<IAmazonS3>();
+        var mockDirectoryUploadService = new Mock<IDirectoryUploadService>();
+        var options = new SetupOptions
+        {
+            ResourcePrefix = "test-prefix"
+        };
+        var sut = new S3Service(
+            mockAmazonS3.Object,
+            mockDirectoryUploadService.Object,
+            options,
+            Mock.Of<ILogger<S3Service>>());
+        var bucketName = "my-bucket";
+        var expectedBucketName = "test-prefix.my-bucket";
+        var policyDocument = new
+        {
+            Version = "2012-10-17",
+            Statement = new[]
+            {
+                new
+                {
+                    Effect = "Allow",
+                    Principal = "*",
+                    Action = "s3:GetObject",
+                    Resource = $"arn:aws:s3:::{expectedBucketName}/*"
+                }
+            }
+        };
+
+        mockAmazonS3
+            .Setup(s3 => s3.PutBucketPolicyAsync(
+                It.Is<PutBucketPolicyRequest>(req =>
+                    req.BucketName == expectedBucketName &&
+                    req.Policy.Contains("2012-10-17") &&
+                    req.Policy.Contains("s3:GetObject")),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new PutBucketPolicyResponse
+            {
+                HttpStatusCode = System.Net.HttpStatusCode.NoContent
+            });
+
+        // Act
+        var success = await sut.SetBucketPolicyAsync(
+            bucketName,
+            policyDocument);
+
+        // Assert
+        Assert.True(success);
+        mockAmazonS3.Verify(s3 => s3.PutBucketPolicyAsync(
+            It.Is<PutBucketPolicyRequest>(req => req.BucketName == expectedBucketName),
+            It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task GivenBucketPolicy_WhenSetBucketPolicyAsyncFails_ThenReturnsFalse()
+    {
+        // Arrange
+        var mockAmazonS3 = new Mock<IAmazonS3>();
+        var mockDirectoryUploadService = new Mock<IDirectoryUploadService>();
+        var options = new SetupOptions
+        {
+            ResourcePrefix = "test-prefix"
+        };
+        var sut = new S3Service(
+            mockAmazonS3.Object,
+            mockDirectoryUploadService.Object,
+            options,
+            Mock.Of<ILogger<S3Service>>());
+        var bucketName = "my-bucket";
+        var policyDocument = new { Version = "2012-10-17" };
+
+        mockAmazonS3
+            .Setup(s3 => s3.PutBucketPolicyAsync(
+                It.IsAny<PutBucketPolicyRequest>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new PutBucketPolicyResponse
+            {
+                HttpStatusCode = System.Net.HttpStatusCode.Forbidden
+            });
+
+        // Act
+        var success = await sut.SetBucketPolicyAsync(
+            bucketName,
+            policyDocument);
+
+        // Assert
+        Assert.False(success);
+    }
+
+    [Fact]
+    public async Task GivenWebsiteConfiguration_WhenSetBucketWebsiteConfigurationAsync_ThenSetsWebsiteConfiguration()
+    {
+        // Arrange
+        var mockAmazonS3 = new Mock<IAmazonS3>();
+        var mockDirectoryUploadService = new Mock<IDirectoryUploadService>();
+        var options = new SetupOptions
+        {
+            ResourcePrefix = "test-prefix"
+        };
+        var sut = new S3Service(
+            mockAmazonS3.Object,
+            mockDirectoryUploadService.Object,
+            options,
+            Mock.Of<ILogger<S3Service>>());
+        var bucketName = "my-bucket";
+        var expectedBucketName = "test-prefix.my-bucket";
+        var indexDocumentSuffix = "index.html";
+        var errorDocument = "error.html";
+
+        mockAmazonS3
+            .Setup(s3 => s3.PutBucketWebsiteAsync(
+                It.Is<PutBucketWebsiteRequest>(req =>
+                    req.BucketName == expectedBucketName &&
+                    req.WebsiteConfiguration.IndexDocumentSuffix == indexDocumentSuffix &&
+                    req.WebsiteConfiguration.ErrorDocument == errorDocument),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new PutBucketWebsiteResponse
+            {
+                HttpStatusCode = System.Net.HttpStatusCode.OK
+            });
+
+        // Act
+        var success = await sut.SetBucketWebsiteConfigurationAsync(
+            bucketName,
+            indexDocumentSuffix,
+            errorDocument);
+
+        // Assert
+        Assert.True(success);
+        mockAmazonS3.Verify(s3 => s3.PutBucketWebsiteAsync(
+            It.Is<PutBucketWebsiteRequest>(req => req.BucketName == expectedBucketName),
+            It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task GivenWebsiteConfiguration_WhenSetBucketWebsiteConfigurationAsyncFails_ThenReturnsFalse()
+    {
+        // Arrange
+        var mockAmazonS3 = new Mock<IAmazonS3>();
+        var mockDirectoryUploadService = new Mock<IDirectoryUploadService>();
+        var options = new SetupOptions
+        {
+            ResourcePrefix = "test-prefix"
+        };
+        var sut = new S3Service(
+            mockAmazonS3.Object,
+            mockDirectoryUploadService.Object,
+            options,
+            Mock.Of<ILogger<S3Service>>());
+        var bucketName = "my-bucket";
+
+        mockAmazonS3
+            .Setup(s3 => s3.PutBucketWebsiteAsync(
+                It.IsAny<PutBucketWebsiteRequest>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new PutBucketWebsiteResponse
+            {
+                HttpStatusCode = System.Net.HttpStatusCode.Forbidden
+            });
+
+        // Act
+        var success = await sut.SetBucketWebsiteConfigurationAsync(bucketName);
+
+        // Assert
+        Assert.False(success);
+    }
+
+    [Fact]
+    public async Task GivenBucketAcl_WhenSetBucketAcl_ThenSetsBucketAcl()
+    {
+        // Arrange
+        var mockAmazonS3 = new Mock<IAmazonS3>();
+        var mockDirectoryUploadService = new Mock<IDirectoryUploadService>();
+        var options = new SetupOptions
+        {
+            ResourcePrefix = "test-prefix"
+        };
+        var sut = new S3Service(
+            mockAmazonS3.Object,
+            mockDirectoryUploadService.Object,
+            options,
+            Mock.Of<ILogger<S3Service>>());
+        var bucketName = "my-bucket";
+        var expectedBucketName = "test-prefix.my-bucket";
+        var acl = S3CannedACL.PublicRead;
+
+        mockAmazonS3
+            .Setup(s3 => s3.PutBucketAclAsync(
+                It.Is<PutBucketAclRequest>(req =>
+                    req.BucketName == expectedBucketName &&
+                    req.ACL == acl),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new PutBucketAclResponse
+            {
+                HttpStatusCode = System.Net.HttpStatusCode.OK
+            });
+
+        // Act
+        var success = await sut.SetBucketAcl(bucketName, acl);
+
+        // Assert
+        Assert.True(success);
+        mockAmazonS3.Verify(s3 => s3.PutBucketAclAsync(
+            It.Is<PutBucketAclRequest>(req =>
+                req.BucketName == expectedBucketName &&
+                req.ACL == acl),
+            It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task GivenBucketAcl_WhenSetBucketAclFails_ThenReturnsFalse()
+    {
+        // Arrange
+        var mockAmazonS3 = new Mock<IAmazonS3>();
+        var mockDirectoryUploadService = new Mock<IDirectoryUploadService>();
+        var options = new SetupOptions
+        {
+            ResourcePrefix = "test-prefix"
+        };
+        var sut = new S3Service(
+            mockAmazonS3.Object,
+            mockDirectoryUploadService.Object,
+            options,
+            Mock.Of<ILogger<S3Service>>());
+        var bucketName = "my-bucket";
+        var acl = S3CannedACL.Private;
+
+        mockAmazonS3
+            .Setup(s3 => s3.PutBucketAclAsync(
+                It.IsAny<PutBucketAclRequest>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new PutBucketAclResponse
+            {
+                HttpStatusCode = System.Net.HttpStatusCode.Forbidden
+            });
+
+        // Act
+        var success = await sut.SetBucketAcl(bucketName, acl);
+
+        // Assert
+        Assert.False(success);
+    }
+
+    [Fact]
+    public async Task GivenBucketExists_WhenDoesBucketExistAsync_ThenReturnsTrue()
+    {
+        // Arrange
+        var mockAmazonS3 = new Mock<IAmazonS3>();
+        var mockDirectoryUploadService = new Mock<IDirectoryUploadService>();
+        var options = new SetupOptions
+        {
+            ResourcePrefix = "test-prefix"
+        };
+        var sut = new S3Service(
+            mockAmazonS3.Object,
+            mockDirectoryUploadService.Object,
+            options,
+            Mock.Of<ILogger<S3Service>>());
+        var bucketName = "my-bucket";
+        var expectedBucketName = "test-prefix.my-bucket";
+
+        mockAmazonS3
+            .Setup(s3 => s3.ListBucketsAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new ListBucketsResponse
+            {
+                HttpStatusCode = System.Net.HttpStatusCode.OK,
+                Buckets =
+                [
+                    new S3Bucket { BucketName = expectedBucketName },
+                    new S3Bucket { BucketName = "other-bucket" }
+                ]
+            });
+
+        // Act
+        var exists = await sut.DoesBucketExistAsync(bucketName);
+
+        // Assert
+        Assert.True(exists);
+        mockAmazonS3.Verify(s3 => s3.ListBucketsAsync(
+            It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task GivenBucketDoesNotExist_WhenDoesBucketExistAsync_ThenReturnsFalse()
+    {
+        // Arrange
+        var mockAmazonS3 = new Mock<IAmazonS3>();
+        var mockDirectoryUploadService = new Mock<IDirectoryUploadService>();
+        var options = new SetupOptions
+        {
+            ResourcePrefix = "test-prefix"
+        };
+        var sut = new S3Service(
+            mockAmazonS3.Object,
+            mockDirectoryUploadService.Object,
+            options,
+            Mock.Of<ILogger<S3Service>>());
+        var bucketName = "my-bucket";
+
+        mockAmazonS3
+            .Setup(s3 => s3.ListBucketsAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new ListBucketsResponse
+            {
+                HttpStatusCode = System.Net.HttpStatusCode.OK,
+                Buckets =
+                [
+                    new S3Bucket { BucketName = "different-bucket" },
+                    new S3Bucket { BucketName = "another-bucket" }
+                ]
+            });
+
+        // Act
+        var exists = await sut.DoesBucketExistAsync(bucketName);
+
+        // Assert
+        Assert.False(exists);
+        mockAmazonS3.Verify(s3 => s3.ListBucketsAsync(
+            It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task GivenListBucketsFails_WhenDoesBucketExistAsync_ThenReturnsFalse()
+    {
+        // Arrange
+        var mockAmazonS3 = new Mock<IAmazonS3>();
+        var mockDirectoryUploadService = new Mock<IDirectoryUploadService>();
+        var options = new SetupOptions
+        {
+            ResourcePrefix = "test-prefix"
+        };
+        var sut = new S3Service(
+            mockAmazonS3.Object,
+            mockDirectoryUploadService.Object,
+            options,
+            Mock.Of<ILogger<S3Service>>());
+        var bucketName = "my-bucket";
+
+        mockAmazonS3
+            .Setup(s3 => s3.ListBucketsAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new ListBucketsResponse
+            {
+                HttpStatusCode = System.Net.HttpStatusCode.InternalServerError
+            });
+
+        // Act
+        var exists = await sut.DoesBucketExistAsync(bucketName);
+
+        // Assert
+        Assert.False(exists);
+        mockAmazonS3.Verify(s3 => s3.ListBucketsAsync(
+            It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task GivenBucketExistsCaseInsensitive_WhenDoesBucketExistAsync_ThenReturnsTrue()
+    {
+        // Arrange
+        var mockAmazonS3 = new Mock<IAmazonS3>();
+        var mockDirectoryUploadService = new Mock<IDirectoryUploadService>();
+        var options = new SetupOptions
+        {
+            ResourcePrefix = "test-prefix"
+        };
+        var sut = new S3Service(
+            mockAmazonS3.Object,
+            mockDirectoryUploadService.Object,
+            options,
+            Mock.Of<ILogger<S3Service>>());
+        var bucketName = "my-bucket";
+
+        mockAmazonS3
+            .Setup(s3 => s3.ListBucketsAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new ListBucketsResponse
+            {
+                HttpStatusCode = System.Net.HttpStatusCode.OK,
+                Buckets =
+                [
+                    new S3Bucket { BucketName = "TEST-PREFIX.MY-BUCKET" }
+                ]
+            });
+
+        // Act
+        var exists = await sut.DoesBucketExistAsync(bucketName);
+
+        // Assert
+        Assert.True(exists);
+    }
+
+    [Fact]
+    public async Task GivenTags_WhenSetBucketTags_ThenSetsTags()
+    {
+        // Arrange
+        var mockAmazonS3 = new Mock<IAmazonS3>();
+        var mockDirectoryUploadService = new Mock<IDirectoryUploadService>();
+        var options = new SetupOptions
+        {
+            ResourcePrefix = "test-prefix"
+        };
+        var sut = new S3Service(
+            mockAmazonS3.Object,
+            mockDirectoryUploadService.Object,
+            options,
+            Mock.Of<ILogger<S3Service>>());
+        var bucketName = "my-bucket";
+        var expectedBucketName = "test-prefix.my-bucket";
+        var tags = new Dictionary<string, string>
+        {
+            { "Environment", "Production" },
+            { "Application", "Clypse" },
+            { "Owner", "DevTeam" }
+        };
+
+        mockAmazonS3
+            .Setup(s3 => s3.PutBucketTaggingAsync(
+                It.Is<PutBucketTaggingRequest>(req =>
+                    req.BucketName == expectedBucketName &&
+                    req.TagSet.Count == 3 &&
+                    req.TagSet.Any(t => t.Key == "Environment" && t.Value == "Production") &&
+                    req.TagSet.Any(t => t.Key == "Application" && t.Value == "Clypse") &&
+                    req.TagSet.Any(t => t.Key == "Owner" && t.Value == "DevTeam")),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new PutBucketTaggingResponse
+            {
+                HttpStatusCode = System.Net.HttpStatusCode.NoContent
+            });
+
+        // Act
+        var success = await sut.SetBucketTags(bucketName, tags);
+
+        // Assert
+        Assert.True(success);
+        mockAmazonS3.Verify(s3 => s3.PutBucketTaggingAsync(
+            It.Is<PutBucketTaggingRequest>(req => req.BucketName == expectedBucketName),
+            It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task GivenEmptyTags_WhenSetBucketTags_ThenSetsTags()
+    {
+        // Arrange
+        var mockAmazonS3 = new Mock<IAmazonS3>();
+        var mockDirectoryUploadService = new Mock<IDirectoryUploadService>();
+        var options = new SetupOptions
+        {
+            ResourcePrefix = "test-prefix"
+        };
+        var sut = new S3Service(
+            mockAmazonS3.Object,
+            mockDirectoryUploadService.Object,
+            options,
+            Mock.Of<ILogger<S3Service>>());
+        var bucketName = "my-bucket";
+        var expectedBucketName = "test-prefix.my-bucket";
+        var tags = new Dictionary<string, string>();
+
+        mockAmazonS3
+            .Setup(s3 => s3.PutBucketTaggingAsync(
+                It.Is<PutBucketTaggingRequest>(req =>
+                    req.BucketName == expectedBucketName &&
+                    req.TagSet.Count == 0),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new PutBucketTaggingResponse
+            {
+                HttpStatusCode = System.Net.HttpStatusCode.NoContent
+            });
+
+        // Act
+        var success = await sut.SetBucketTags(bucketName, tags);
+
+        // Assert
+        Assert.True(success);
+    }
+
+    [Fact]
+    public async Task GivenTags_WhenSetBucketTagsFails_ThenReturnsFalse()
+    {
+        // Arrange
+        var mockAmazonS3 = new Mock<IAmazonS3>();
+        var mockDirectoryUploadService = new Mock<IDirectoryUploadService>();
+        var options = new SetupOptions
+        {
+            ResourcePrefix = "test-prefix"
+        };
+        var sut = new S3Service(
+            mockAmazonS3.Object,
+            mockDirectoryUploadService.Object,
+            options,
+            Mock.Of<ILogger<S3Service>>());
+        var bucketName = "my-bucket";
+        var tags = new Dictionary<string, string>
+        {
+            { "Key1", "Value1" }
+        };
+
+        mockAmazonS3
+            .Setup(s3 => s3.PutBucketTaggingAsync(
+                It.IsAny<PutBucketTaggingRequest>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new PutBucketTaggingResponse
+            {
+                HttpStatusCode = System.Net.HttpStatusCode.Forbidden
+            });
+
+        // Act
+        var success = await sut.SetBucketTags(bucketName, tags);
+
+        // Assert
+        Assert.False(success);
+    }
+
+    [Fact]
+    public async Task GivenDirectoryDoesNotExist_WhenUploadDirectoryToBucket_ThenReturnsFalse()
+    {
+        // Arrange
+        var mockAmazonS3 = new Mock<IAmazonS3>();
+        var mockDirectoryUploadService = new Mock<IDirectoryUploadService>();
+        var options = new SetupOptions
+        {
+            ResourcePrefix = "test-prefix"
+        };
+        var sut = new S3Service(
+            mockAmazonS3.Object,
+            mockDirectoryUploadService.Object,
+            options,
+            Mock.Of<ILogger<S3Service>>());
+        var bucketName = "my-bucket";
+        var directoryPath = @"C:\NonExistent\Directory";
+
+        // Act
+        var success = await sut.UploadDirectoryToBucket(bucketName, directoryPath);
+
+        // Assert
+        Assert.False(success);
+        mockAmazonS3.Verify(s3 => s3.ListBucketsAsync(
+            It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    [Fact]
+    public async Task GivenDirectoryExist_WhenUploadDirectoryToBucket_ThenReturnsTrue()
+    {
+        // Arrange
+        var mockAmazonS3 = new Mock<IAmazonS3>();
+        var mockDirectoryUploadService = new Mock<IDirectoryUploadService>();
+        var options = new SetupOptions
+        {
+            ResourcePrefix = "test-prefix"
+        };
+        var sut = new S3Service(
+            mockAmazonS3.Object,
+            mockDirectoryUploadService.Object,
+            options,
+            Mock.Of<ILogger<S3Service>>());
+        var bucketName = "my-bucket";
+        var directoryPath = @"/";
+
+        // Act
+        var success = await sut.UploadDirectoryToBucket(bucketName, directoryPath);
+
+        // Assert
+        Assert.True(success);
+        mockAmazonS3.Verify(s3 => s3.ListBucketsAsync(
+            It.IsAny<CancellationToken>()),
+            Times.Never);
+        mockDirectoryUploadService.Verify(x => x.UploadDirectoryAsync(
+            It.Is<string>(b => b == "test-prefix.my-bucket"),
+            It.Is<string>(d => d == directoryPath),
+            It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task GivenDirectoryExist_WhenUploadDirectoryToBucket_AndUploadFails_ThenReturnsFalse()
+    {
+        // Arrange
+        var mockAmazonS3 = new Mock<IAmazonS3>();
+        var mockDirectoryUploadService = new Mock<IDirectoryUploadService>();
+        var options = new SetupOptions
+        {
+            ResourcePrefix = "test-prefix"
+        };
+        var sut = new S3Service(
+            mockAmazonS3.Object,
+            mockDirectoryUploadService.Object,
+            options,
+            Mock.Of<ILogger<S3Service>>());
+        var bucketName = "my-bucket";
+        var directoryPath = @"/";
+
+        mockDirectoryUploadService.Setup(x => x.UploadDirectoryAsync(
+            It.Is<string>(b => b == "test-prefix.my-bucket"),
+            It.Is<string>(d => d == directoryPath),
+            It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new Exception("Upload failed"));
+
+        // Act
+        var success = await sut.UploadDirectoryToBucket(bucketName, directoryPath);
+
+        // Assert
+        Assert.False(success);
+        mockAmazonS3.Verify(s3 => s3.ListBucketsAsync(
+            It.IsAny<CancellationToken>()),
+            Times.Never);
+        mockDirectoryUploadService.Verify(x => x.UploadDirectoryAsync(
+            It.Is<string>(b => b == "test-prefix.my-bucket"),
+            It.Is<string>(d => d == directoryPath),
+            It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task GivenBucketAndObjectKey_WhenDownloadObjectDataAsync_ThenReturnsDataAndCallsS3WithPrefix()
+    {
+        // Arrange
+        var mockAmazonS3 = new Mock<IAmazonS3>();
+        var mockDirectoryUploadService = new Mock<IDirectoryUploadService>();
+        var options = new SetupOptions
+        {
+            ResourcePrefix = "test-prefix"
+        };
+        var sut = new S3Service(
+            mockAmazonS3.Object,
+            mockDirectoryUploadService.Object,
+            options,
+            Mock.Of<ILogger<S3Service>>());
+        var bucketName = "my-bucket";
+        var objectKey = "path/to/object.txt";
+        var expectedBucketName = "test-prefix.my-bucket";
+        var expectedData = new byte[] { 1, 2, 3, 4 };
+
+        mockAmazonS3
+            .Setup(s3 => s3.GetObjectStreamAsync(
+                It.Is<string>(b => b == expectedBucketName),
+                It.Is<string>(k => k == objectKey),
+                It.Is<Dictionary<string, object>>(d => d != null && d.Count == 0),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new MemoryStream(expectedData));
+
+        // Act
+        var result = await sut.DownloadObjectDataAsync(bucketName, objectKey);
+
+        // Assert
+        Assert.Equal(expectedData, result);
+        mockAmazonS3.Verify(s3 => s3.GetObjectStreamAsync(
+            It.Is<string>(b => b == expectedBucketName),
+            It.Is<string>(k => k == objectKey),
+            It.Is<Dictionary<string, object>>(d => d != null && d.Count == 0),
+            It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task GivenCancellationToken_WhenDownloadObjectDataAsync_ThenPassesToken()
+    {
+        // Arrange
+        var mockAmazonS3 = new Mock<IAmazonS3>();
+        var mockDirectoryUploadService = new Mock<IDirectoryUploadService>();
+        var options = new SetupOptions
+        {
+            ResourcePrefix = "test-prefix"
+        };
+        var sut = new S3Service(
+            mockAmazonS3.Object,
+            mockDirectoryUploadService.Object,
+            options,
+            Mock.Of<ILogger<S3Service>>());
+        var bucketName = "my-bucket";
+        var objectKey = "object.txt";
+        var expectedData = new byte[] { 5, 6 };
+        var cts = new CancellationTokenSource();
+
+        mockAmazonS3
+            .Setup(s3 => s3.GetObjectStreamAsync(
+                It.IsAny<string>(),
+                It.IsAny<string>(),
+                It.IsAny<Dictionary<string, object>>(),
+                It.Is<CancellationToken>(ct => ct == cts.Token)))
+            .ReturnsAsync(new MemoryStream(expectedData));
+
+        // Act
+        var result = await sut.DownloadObjectDataAsync(bucketName, objectKey, cts.Token);
+
+        // Assert
+        Assert.Equal(expectedData, result);
+        mockAmazonS3.Verify(s3 => s3.GetObjectStreamAsync(
+            It.Is<string>(b => b == "test-prefix.my-bucket"),
+            It.Is<string>(k => k == objectKey),
+            It.Is<Dictionary<string, object>>(d => d != null && d.Count == 0),
+            It.Is<CancellationToken>(ct => ct == cts.Token)),
+            Times.Once);
+    }
+}

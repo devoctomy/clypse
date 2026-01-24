@@ -148,7 +148,7 @@ public class AwsS3VaultManagerBootstrapperServiceTests
 
         this.mockAwsEncryptedCloudStorageProviderTransformer.Setup(
             x => x.CreateSseProvider())
-            .Returns(new AwsS3SseCCloudStorageProvider(
+            .Returns(new AwsS3SseCloudStorageProvider(
                 "foo",
                 Mock.Of<IAmazonS3Client>()));
 
@@ -160,7 +160,7 @@ public class AwsS3VaultManagerBootstrapperServiceTests
         Assert.IsType<VaultManager>(result);
         Assert.IsType<KeyDerivationService>(result.KeyDerivationService);
         Assert.IsType<GZipCompressionService>(result.CompressionService);
-        Assert.IsType<AwsS3SseCCloudStorageProvider>(result.EncryptedCloudStorageProvider);
+        Assert.IsType<AwsS3SseCloudStorageProvider>(result.EncryptedCloudStorageProvider);
     }
 
     [Fact]
@@ -197,7 +197,7 @@ public class AwsS3VaultManagerBootstrapperServiceTests
 
         this.mockAwsEncryptedCloudStorageProviderTransformer.Setup(
             x => x.CreateSseProvider())
-            .Returns(new AwsS3SseCCloudStorageProvider(
+            .Returns(new AwsS3SseCloudStorageProvider(
                 "foo",
                 Mock.Of<IAmazonS3Client>()));
 
@@ -242,7 +242,7 @@ public class AwsS3VaultManagerBootstrapperServiceTests
 
         this.mockAwsEncryptedCloudStorageProviderTransformer.Setup(
             x => x.CreateSseProvider())
-            .Returns(new AwsS3SseCCloudStorageProvider(
+            .Returns(new AwsS3SseCloudStorageProvider(
                 "foo",
                 Mock.Of<IAmazonS3Client>()));
 
@@ -287,7 +287,7 @@ public class AwsS3VaultManagerBootstrapperServiceTests
 
         this.mockAwsEncryptedCloudStorageProviderTransformer.Setup(
             x => x.CreateSseProvider())
-            .Returns(new AwsS3SseCCloudStorageProvider(
+            .Returns(new AwsS3SseCloudStorageProvider(
                 "foo",
                 Mock.Of<IAmazonS3Client>()));
 

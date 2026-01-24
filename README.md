@@ -11,55 +11,39 @@ Clypse, is a complete password management system that you host yourself in Amazo
 
 It is designed to use the latest cryptographic standards but also be highly customisable.
 
-## Requirements
+## Setup & Deployment
 
-1. Aws Cognito confgurations
-    - Identity Pool
-    - User Pool
-2. Some Aws credentials which have access to a test S3 bucket
-3. A test S3 bucket
+Clypse includes an automated setup application (`clypse.portal.setup`) that handles all AWS resource creation and deployment. Simply run this application from Visual Studio to set up your complete password management system.
 
-Once you have setup all of the above, you will need to configure the 'appsettings.json' configuration file within the clypse.portal wwwroot folder,
+### AWS Resources
 
-```
-  "AwsS3": {
-    "BucketName": "...",
-    "Region": "..."
-  },
-  "AwsCognito": {
-    "UserPoolId": "...",
-    "UserPoolClientId": "...",
-    "Region": "...",
-    "IdentityPoolId": "..."
-  },
-```
+When deployed to AWS, Clypse requires the following AWS resources (all pay-as-you-go with minimal costs):
 
-> Make sure you do not check in any sensitive information into source control. If you are testing locally you can use 'appsettings.Development.json' which is gitignored.
+* 🪣 **2 x S3 Buckets**
+  - Portal hosting bucket (static website)
+  - User data bucket (individual user folders with scoped access)
+* 👥 **Cognito Identity Pool** - Provides temporary AWS credentials for authenticated users
+* 👤 **Cognito User Pool** - User authentication and management
+* 🛂 **2 x IAM Policies**
+  - Authenticated user policy (scoped S3 access to user's folder)
+  - Internal Cognito service policy
+* 🎖️ **IAM Role** - Assigned to authenticated users for S3 access
+* ☁️ **CloudFront Distribution** - HTTPS access to the portal with caching
 
-One way to test the setup is to use the Test Page which you can access from the Login page when in Debug configuration. Enter your Cognito user credentials and then click the button to 'Test Clypse Core', this will create a vault for you with a test credential, the password will be 'password123.
+### Running the Setup Application
 
-### AWS Resource Summary
+1. Open the solution in Visual Studio
+2. Set `clypse.portal.setup` as the startup project
+3. Run the application - it will present an interactive menu
+4. The setup tool will prompt you for the following parameters:
+   - **AWS Access Key ID** - Your AWS credentials
+   - **AWS Secret Access Key** - Your AWS credentials
+   - **AWS Region** - Where resources will be created (e.g., `us-east-1`)
+   - **Resource Prefix** - Prefix for all AWS resource names (e.g., `my-clypse`)
+   - **Portal Build Output Path** - Path to the published WASM build, this will be set automatically if you do the build within the setup tool.
+   - **Initial User Email** - Email for the first Cognito user account
 
-When fully deployed to AWS S3, using Cognito for authentication, clypse will use the following resources,
-
-* 🪣 2 x S3 Buckets
-  - One for the portal
-  - One for the user data
-    + Each user has read/write access to their own folder
-* 👥 Cognito identity pool
-* 👤 Cognito user pool
-  - This is where the users are configured, not via IAM
-* 🛂 2 x IAM Policies
-  - One for authenticated Cognito users to give access to their user area in user data bucket
-  - One for internal AWS Cognito use
-* 🎖️ IAM Role for clypse user
-  - This is the role that will be assigned to authenticated users
-* ☁️ Cloudfront distribution
-  - Enables HTTPS access to the S3 website
-
-All of these resources are PAYG and cost practically nothing to operate.
-
-> I am currently working on a PowerShell script which will create and deploy everything in a working state. You can try the first version of this script 'quick-start.ps1', this should have everything in it you require but you will need to go through each menu item from top to bottom. It has not been thoroughly tested and was generated with AI assistance.
+The setup application will automatically create all required AWS resources, configure permissions, and deploy the portal. All configuration is managed through an interactive menu.
 
 ## Testing
 

@@ -18,5 +18,5 @@ public interface IAwsEncryptedCloudStorageProviderTransformer
     /// Creates an server-side encrypted AWS S3 cloud storage provider using the specified cryptographic service.
     /// </summary>
     /// <returns>Instance of AwsS3SseCCloudStorageProvider.</returns>
-    AwsS3SseCCloudStorageProvider CreateSseProvider();
+    AwsS3SseCloudStorageProvider CreateSseProvider();
 }

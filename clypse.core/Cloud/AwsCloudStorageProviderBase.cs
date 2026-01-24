@@ -121,9 +121,9 @@ public class AwsCloudStorageProviderBase : ICloudStorageProvider, IAwsEncryptedC
     /// Creates an server-side encrypted AWS S3 cloud storage provider using the specified cryptographic service.
     /// </summary>
     /// <returns>Instance of AwsS3SseCCloudStorageProvider.</returns>
-    public AwsS3SseCCloudStorageProvider CreateSseProvider()
+    public AwsS3SseCloudStorageProvider CreateSseProvider()
     {
-        return new AwsS3SseCCloudStorageProvider(
+        return new AwsS3SseCloudStorageProvider(
             this.bucketName,
             this.amazonS3Client);
     }

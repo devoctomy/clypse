@@ -10,14 +10,14 @@ namespace clypse.core.Cloud;
 /// AWS S3 cloud storage provider with server-side encryption using customer-provided keys (SSE-C).
 /// This implementation uses AWS S3's native server-side encryption capabilities where the customer provides the encryption key.
 /// </summary>
-public class AwsS3SseCCloudStorageProvider : AwsCloudStorageProviderBase, IEncryptedCloudStorageProvider
+public class AwsS3SseCloudStorageProvider : AwsCloudStorageProviderBase, IEncryptedCloudStorageProvider
 {
     /// <summary>
-    /// Initializes a new instance of the <see cref="AwsS3SseCCloudStorageProvider"/> class with the specified S3 configuration.
+    /// Initializes a new instance of the <see cref="AwsS3SseCloudStorageProvider"/> class with the specified S3 configuration.
     /// </summary>
     /// <param name="bucketName">The name of the S3 bucket to use for storage.</param>
     /// <param name="amazonS3Client">The Amazon S3 client for S3 operations.</param>
-    public AwsS3SseCCloudStorageProvider(
+    public AwsS3SseCloudStorageProvider(
         string bucketName,
         IAmazonS3Client amazonS3Client)
         : base(bucketName, amazonS3Client)
