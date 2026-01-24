@@ -326,8 +326,6 @@ public class ClypseAwsSetupOrchestrationTests
         _mockS3Service
             .Setup(s => s.SetBucketWebsiteConfigurationAsync(
                 "clypse.portal",
-                It.IsAny<string>(),
-                It.IsAny<string>(),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(false);
 

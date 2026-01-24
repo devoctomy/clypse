@@ -421,7 +421,7 @@ public class ClypseAwsSetupOrchestration(
             ResourceId = distributionDomain
         });
 
-        var origins = (string[])["http://localhost:8080", $"https://{distributionDomain}"];
+        var origins = (string[])[$"https://{distributionDomain}"];
 
         logger.LogInformation("Setting data bucket CORS configuration with origins ({origins}).", string.Join(',', origins));
         var setDataBucketCorsConfig = await s3Service.SetBucketCorsConfigurationAsync(
