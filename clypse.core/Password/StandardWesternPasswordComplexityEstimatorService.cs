@@ -13,6 +13,28 @@ public class StandardWesternPasswordComplexityEstimatorService(
     : IPasswordComplexityEstimatorService
 #pragma warning restore CS9113 // Parameter is unread.
 {
+    private static async Task<bool> IsWeakKnownPasswordAsync(
+        string password,
+        CancellationToken cancellationToken)
+    {
+        HashSet<string>? weakKnownPasswords = default;
+
+#if DEBUG
+        await Task.Yield();
+        weakKnownPasswords =
+        [
+            "password123",
+        ];
+#else
+        weakKnownPasswords ??= await embeddedResorceLoaderService.LoadCompressedHashSetAsync(
+            ResourceKeys.CompressedWeakKnownPasswordsResourceKey,
+            Assembly.GetExecutingAssembly(),
+            cancellationToken);
+#endif
+
+        return weakKnownPasswords.Contains(password);
+    }
+
     /// <summary>
     /// Estimates the entropy of the given password.
     /// </summary>
@@ -134,27 +156,5 @@ public class StandardWesternPasswordComplexityEstimatorService(
             ComplexityEstimation = complexity,
             AdditionalInfo = string.Empty,
         };
-    }
-
-    private static async Task<bool> IsWeakKnownPasswordAsync(
-        string password,
-        CancellationToken cancellationToken)
-    {
-        HashSet<string>? weakKnownPasswords = default;
-
-#if DEBUG
-        await Task.Yield();
-        weakKnownPasswords =
-        [
-            "password123",
-        ];
-#else
-        weakKnownPasswords ??= await embeddedResorceLoaderService.LoadCompressedHashSetAsync(
-            ResourceKeys.CompressedWeakKnownPasswordsResourceKey,
-            Assembly.GetExecutingAssembly(),
-            cancellationToken);
-#endif
-
-        return weakKnownPasswords.Contains(password);
     }
 }
