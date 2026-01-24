@@ -878,7 +878,7 @@ public class ClypseAwsSetupOrchestrationTests
             .Setup(s => s.SetBucketTags("clypse.data", It.IsAny<Dictionary<string, string>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
         _mockS3Service
-            .Setup(s => s.SetBucketWebsiteConfigurationAsync("clypse.portal", It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .Setup(s => s.SetBucketWebsiteConfigurationAsync("clypse.portal", It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
         _mockS3Service
             .Setup(s => s.UploadDirectoryToBucket(
@@ -1004,7 +1004,7 @@ public class ClypseAwsSetupOrchestrationTests
         _mockS3Service.Verify(s => s.CreateBucketAsync("clypse.data", false, It.IsAny<CancellationToken>()), Times.Once);
         _mockS3Service.Verify(s => s.SetBucketTags("clypse.portal", It.IsAny<Dictionary<string, string>>(), It.IsAny<CancellationToken>()), Times.Once);
         _mockS3Service.Verify(s => s.SetBucketTags("clypse.data", It.IsAny<Dictionary<string, string>>(), It.IsAny<CancellationToken>()), Times.Once);
-        _mockS3Service.Verify(s => s.SetBucketWebsiteConfigurationAsync("clypse.portal", It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Once);
+        _mockS3Service.Verify(s => s.SetBucketWebsiteConfigurationAsync("clypse.portal", It.IsAny<CancellationToken>()), Times.Once);
 
         // Verify IamService
         _mockIamService.Verify(s => s.CreatePolicyAsync("clypse.data.policy", It.IsAny<object>(), It.IsAny<Dictionary<string, string>>(), It.IsAny<CancellationToken>()), Times.Once);
