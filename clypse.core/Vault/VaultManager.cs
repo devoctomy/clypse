@@ -299,7 +299,6 @@ public class VaultManager : IVaultManager
             if (!index.Equals(secret))
             {
                 results.MismatchedSecrets++;
-                continue;
             }
         }
 
@@ -415,12 +414,9 @@ public class VaultManager : IVaultManager
             "info.json",
             base64Key,
             cancellationToken);
-        if (info == null)
-        {
-            throw new FailedToLoadVaultInfoException($"Failed to load Info for vault '{id}'.");
-        }
-
-        return info!;
+        return info == null ?
+            throw new FailedToLoadVaultInfoException($"Failed to load Info for vault '{id}'.") :
+            info!;
     }
 
     private async Task<VaultIndex> LoadIndexAsync(
@@ -651,9 +647,6 @@ public class VaultManager : IVaultManager
         }
     }
 
-    /// <summary>
-    /// Throws an ObjectDisposedException if the service has been disposed.
-    /// </summary>
     private void ThrowIfDisposed()
     {
         ObjectDisposedException.ThrowIf(this.disposed, nameof(VaultManager));

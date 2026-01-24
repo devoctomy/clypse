@@ -93,7 +93,7 @@ public class StandardWesternPasswordComplexityEstimatorService(
         var entropy = (int)Math.Round(this.EstimateEntropy(password), 0);
         var complexity = PasswordComplexityEstimation.Unknown;
 
-        if (checkForPwnedPasswords && await this.IsWeakKnownPasswordAsync(password, cancellationToken))
+        if (checkForPwnedPasswords && await IsWeakKnownPasswordAsync(password, cancellationToken))
         {
             return new PasswordComplexityEstimatorResults
             {
@@ -136,7 +136,7 @@ public class StandardWesternPasswordComplexityEstimatorService(
         };
     }
 
-    private async Task<bool> IsWeakKnownPasswordAsync(
+    private static async Task<bool> IsWeakKnownPasswordAsync(
         string password,
         CancellationToken cancellationToken)
     {

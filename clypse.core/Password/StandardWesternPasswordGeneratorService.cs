@@ -1,10 +1,9 @@
-﻿using clypse.core.Cryptography;
-using clypse.core.Data;
-using clypse.core.Enums;
-using clypse.core.Extensions;
-using System.Globalization;
+﻿using System.Globalization;
 using System.Text;
 using System.Text.RegularExpressions;
+using clypse.core.Cryptography;
+using clypse.core.Enums;
+using clypse.core.Extensions;
 
 namespace clypse.core.Password;
 
@@ -15,7 +14,7 @@ public partial class StandardWesternPasswordGeneratorService : IPasswordGenerato
 {
     private readonly IRandomGeneratorService randomGeneratorService;
     private readonly IEnumerable<IPasswordGeneratorTokenProcessor> tokenProcessors;
-    private bool disposed = false;
+    private bool disposed;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="StandardWesternPasswordGeneratorService"/> class.
@@ -97,41 +96,11 @@ public partial class StandardWesternPasswordGeneratorService : IPasswordGenerato
         var password = new StringBuilder();
         var groupsChars = new List<string>();
 
-        if (groups.HasFlag(CharacterGroup.Lowercase))
-        {
-            this.AddCharGroupChars(
-                CharacterGroup.Lowercase,
-                groupsChars,
-                atLeastOneOfEachGroup,
-                password);
-        }
-
-        if (groups.HasFlag(CharacterGroup.Uppercase))
-        {
-            this.AddCharGroupChars(
-                CharacterGroup.Uppercase,
-                groupsChars,
-                atLeastOneOfEachGroup,
-                password);
-        }
-
-        if (groups.HasFlag(CharacterGroup.Digits))
-        {
-            this.AddCharGroupChars(
-                CharacterGroup.Digits,
-                groupsChars,
-                atLeastOneOfEachGroup,
-                password);
-        }
-
-        if (groups.HasFlag(CharacterGroup.Special))
-        {
-            this.AddCharGroupChars(
-                CharacterGroup.Special,
-                groupsChars,
-                atLeastOneOfEachGroup,
-                password);
-        }
+        this.AddCharacterGroups(
+            groups,
+            atLeastOneOfEachGroup,
+            password,
+            groupsChars);
 
         while (password.Length < length)
         {
@@ -178,6 +147,49 @@ public partial class StandardWesternPasswordGeneratorService : IPasswordGenerato
 
     [GeneratedRegex(@"\{[^}]+\}")]
     private static partial Regex TokenExtractionRegex();
+
+    private void AddCharacterGroups(
+        CharacterGroup groups,
+        bool atLeastOneOfEachGroup,
+        StringBuilder password,
+        List<string> groupsChars)
+    {
+        if (groups.HasFlag(CharacterGroup.Lowercase))
+        {
+            this.AddCharGroupChars(
+                CharacterGroup.Lowercase,
+                groupsChars,
+                atLeastOneOfEachGroup,
+                password);
+        }
+
+        if (groups.HasFlag(CharacterGroup.Uppercase))
+        {
+            this.AddCharGroupChars(
+                CharacterGroup.Uppercase,
+                groupsChars,
+                atLeastOneOfEachGroup,
+                password);
+        }
+
+        if (groups.HasFlag(CharacterGroup.Digits))
+        {
+            this.AddCharGroupChars(
+                CharacterGroup.Digits,
+                groupsChars,
+                atLeastOneOfEachGroup,
+                password);
+        }
+
+        if (groups.HasFlag(CharacterGroup.Special))
+        {
+            this.AddCharGroupChars(
+                CharacterGroup.Special,
+                groupsChars,
+                atLeastOneOfEachGroup,
+                password);
+        }
+    }
 
     private static string ReplaceAt(
         string input,
