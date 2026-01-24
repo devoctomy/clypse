@@ -1,9 +1,10 @@
-﻿using System.Text;
-using System.Text.RegularExpressions;
-using clypse.core.Cryptography;
+﻿using clypse.core.Cryptography;
 using clypse.core.Data;
 using clypse.core.Enums;
 using clypse.core.Extensions;
+using System.Globalization;
+using System.Text;
+using System.Text.RegularExpressions;
 
 namespace clypse.core.Password;
 
@@ -247,7 +248,7 @@ public partial class StandardWesternPasswordGeneratorService : IPasswordGenerato
         var tokenParts = tokenValue.Split(':');
         foreach (var curPart in tokenParts)
         {
-            var curPartLower = curPart.ToLower();
+            var curPartLower = curPart.ToLower(CultureInfo.InvariantCulture);
             if (curPartLower == "random")
             {
                 var allCasingOptions = new[] { "upper", "lower", "initialupper", "initiallower" };
@@ -257,21 +258,21 @@ public partial class StandardWesternPasswordGeneratorService : IPasswordGenerato
             switch (curPartLower)
             {
                 case "upper":
-                    processedToken = new StringBuilder(processedToken.ToString().ToUpper());
+                    processedToken = new StringBuilder(processedToken.ToString().ToUpper(CultureInfo.InvariantCulture));
                     break;
 
                 case "lower":
-                    processedToken = new StringBuilder(processedToken.ToString().ToLower());
+                    processedToken = new StringBuilder(processedToken.ToString().ToLower(CultureInfo.InvariantCulture));
                     break;
 
                 case "initialupper":
-                    var initialUpper = processedToken.ToString().ToLower();
+                    var initialUpper = processedToken.ToString().ToLower(CultureInfo.InvariantCulture);
                     initialUpper = char.ToUpper(initialUpper[0]) + initialUpper[1..];
                     processedToken = new StringBuilder(initialUpper);
                     break;
 
                 case "initiallower":
-                    var initialLower = processedToken.ToString().ToUpper();
+                    var initialLower = processedToken.ToString().ToUpper(CultureInfo.InvariantCulture);
                     initialLower = char.ToLower(initialLower[0]) + initialLower[1..];
                     processedToken = new StringBuilder(initialLower);
                     break;
