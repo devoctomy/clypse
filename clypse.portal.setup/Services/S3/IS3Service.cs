@@ -79,8 +79,18 @@ public interface IS3Service
     /// <returns>True if the website configuration was set successfully; otherwise, false.</returns>
     public Task<bool> SetBucketWebsiteConfigurationAsync(
         string bucketName,
-        string indexDocumentSuffix = "index.html",
-        string errorDocument = "error.html",
+        string indexDocumentSuffix,
+        string errorDocument,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Configures the specified S3 bucket to host a static website.
+    /// </summary>
+    /// <param name="bucketName">Name of the bucket to configure (without the resource prefix).</param>
+    /// <param name="cancellationToken">Cancellation token to cancel the operation.</param>
+    /// <returns>True if the website configuration was set successfully; otherwise, false.</returns>
+    public Task<bool> SetBucketWebsiteConfigurationAsync(
+        string bucketName,
         CancellationToken cancellationToken = default);
 
     /// <summary>

@@ -1,7 +1,5 @@
 ﻿using Amazon.S3;
 using Amazon.S3.Model;
-using Amazon.S3.Model.Internal.MarshallTransformations;
-using Amazon.S3.Transfer;
 using clypse.portal.setup.Services.Upload;
 using Microsoft.Extensions.Logging;
 using System.Text.Json;
@@ -170,8 +168,20 @@ public class S3Service(
     /// <inheritdoc />
     public async Task<bool> SetBucketWebsiteConfigurationAsync(
         string bucketName,
-        string indexDocumentSuffix = "index.html",
-        string errorDocument = "error.html",
+        CancellationToken cancellationToken = default)
+    {
+        return await SetBucketWebsiteConfigurationAsync(
+            bucketName,
+            "index.html",
+            "error.html",
+            cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public async Task<bool> SetBucketWebsiteConfigurationAsync(
+        string bucketName,
+        string indexDocumentSuffix,
+        string errorDocument,
         CancellationToken cancellationToken = default)
     {
         var bucketNameWithPrefix = $"{options.ResourcePrefix}.{bucketName}";
