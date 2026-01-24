@@ -1,8 +1,6 @@
 [![Tests](https://github.com/devoctomy/clypse/actions/workflows/tests.yml/badge.svg)](https://github.com/devoctomy/clypse/actions/workflows/tests.yml)
 [![codecov](https://codecov.io/gh/devoctomy/clypse/graph/badge.svg?token=6FUB0KRLUV)](https://codecov.io/gh/devoctomy/clypse)
 
-[![Deploy](https://github.com/devoctomy/clypse/actions/workflows/deploy.yml/badge.svg)](https://github.com/devoctomy/clypse/actions/workflows/deploy.yml)
-
 > AI has been used in the generation of some parts of this application. This includes the portal code and a large number of bulk unit tests. The underlying core library which handles the cyrptographic operations as well as S3 file management has been written by myself. The portal code is pretty messy and not yet adequately covered by tests. This application is also not yet ready for production, so use at your own risk.
 
 # clypse
