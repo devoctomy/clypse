@@ -32,7 +32,7 @@ public class VaultManager : IVaultManager
     private readonly ICompressionService compressionService;
     private readonly IEncryptedCloudStorageProvider encryptedCloudStorageProvider;
     private readonly string prefix;
-    private bool disposed = false;
+    private bool disposed;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="VaultManager"/> class with the specified parameters.
@@ -100,7 +100,6 @@ public class VaultManager : IVaultManager
         string name,
         string description)
     {
-        var parameters = new Dictionary<string, string>();
         var manifest = this.CreateManifest();
         var vaultInfo = new VaultInfo(name, description);
         return new Vault(
@@ -155,58 +154,17 @@ public class VaultManager : IVaultManager
             metaData,
             cancellationToken);
 
-        foreach (var secret in vault.PendingSecrets)
-        {
-            var existing = vault.Index.Entries.SingleOrDefault(x => x.Id == secret.Id);
-            var updating = false;
-            if (existing != null)
-            {
-                vault.Index.Entries.Remove(existing);
-                updating = true;
-            }
+        await this.SavePendingSecretsAsync(
+            vault,
+            base64Key,
+            results,
+            cancellationToken);
 
-            secret.LastUpdatedAt = DateTime.UtcNow;
-            vault.Index.Entries.Add(
-                new VaultIndexEntry(
-                    secret.Id,
-                    secret.Name!,
-                    secret.Description,
-                    string.Join(',', secret.Tags)));
-            await this.SaveEncryptedCompressedObjectAsync(
-                secret,
-                vault.Info.Id,
-                $"secrets/{secret.Id}",
-                base64Key,
-                null,
-                cancellationToken);
-
-            if (updating)
-            {
-                results.SecretsUpdated++;
-            }
-            else
-            {
-                results.SecretsCreated++;
-            }
-        }
-
-        foreach (var secret in vault.SecretsToDelete)
-        {
-            var existing = vault.Index.Entries.SingleOrDefault(x => x.Id == secret);
-            if (existing == null)
-            {
-                continue;
-            }
-
-            vault.Index.Entries.Remove(existing);
-            await this.DeleteSecretAsync(
-                vault.Info.Id,
-                secret,
-                base64Key,
-                cancellationToken);
-
-            results.SecretsDeleted++;
-        }
+        await this.DeletePendingSecretsAsync(
+            vault,
+            base64Key,
+            results,
+            cancellationToken);
 
         vault.MakeClean();
         await this.SaveIndexAsync(
@@ -442,12 +400,9 @@ public class VaultManager : IVaultManager
             id,
             "manifest.json",
             cancellationToken);
-        if (manifest == null)
-        {
-            throw new FailedToLoadVaultInfoException($"Failed to load manifest for vault '{id}'.");
-        }
-
-        return manifest!;
+        return manifest == null ?
+            throw new FailedToLoadVaultInfoException($"Failed to load manifest for vault '{id}'.") :
+            manifest!;
     }
 
     private async Task<VaultInfo> LoadInfoAsync(
@@ -478,12 +433,9 @@ public class VaultManager : IVaultManager
             "index.json",
             base64Key,
             cancellationToken);
-        if (index == null)
-        {
-            throw new FailedToLoadVaultIndexException($"Failed to load Index for vault '{id}'.");
-        }
-
-        return index!;
+        return index == null ?
+            throw new FailedToLoadVaultIndexException($"Failed to load Index for vault '{id}'.") :
+            index!;
     }
 
     private async Task SavePlainTextObjectAsync(
@@ -630,6 +582,73 @@ public class VaultManager : IVaultManager
         }
 
         return manifest;
+    }
+
+    private async Task DeletePendingSecretsAsync(
+        IVault vault,
+        string base64Key,
+        VaultSaveResults results,
+        CancellationToken cancellationToken)
+    {
+        foreach (var secret in vault.SecretsToDelete)
+        {
+            var existing = vault.Index.Entries.SingleOrDefault(x => x.Id == secret);
+            if (existing == null)
+            {
+                continue;
+            }
+
+            vault.Index.Entries.Remove(existing);
+            await this.DeleteSecretAsync(
+                vault.Info.Id,
+                secret,
+                base64Key,
+                cancellationToken);
+
+            results.SecretsDeleted++;
+        }
+    }
+
+    private async Task SavePendingSecretsAsync(
+        IVault vault,
+        string base64Key,
+        VaultSaveResults results,
+        CancellationToken cancellationToken)
+    {
+        foreach (var secret in vault.PendingSecrets)
+        {
+            var existing = vault.Index.Entries.SingleOrDefault(x => x.Id == secret.Id);
+            var updating = false;
+            if (existing != null)
+            {
+                vault.Index.Entries.Remove(existing);
+                updating = true;
+            }
+
+            secret.LastUpdatedAt = DateTime.UtcNow;
+            vault.Index.Entries.Add(
+                new VaultIndexEntry(
+                    secret.Id,
+                    secret.Name!,
+                    secret.Description,
+                    string.Join(',', secret.Tags)));
+            await this.SaveEncryptedCompressedObjectAsync(
+                secret,
+                vault.Info.Id,
+                $"secrets/{secret.Id}",
+                base64Key,
+                null,
+                cancellationToken);
+
+            if (updating)
+            {
+                results.SecretsUpdated++;
+            }
+            else
+            {
+                results.SecretsCreated++;
+            }
+        }
     }
 
     /// <summary>
