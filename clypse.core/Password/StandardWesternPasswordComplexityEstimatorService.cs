@@ -1,4 +1,5 @@
-﻿using clypse.core.Data;
+﻿using System.Reflection;
+using clypse.core.Data;
 using clypse.core.Enums;
 
 namespace clypse.core.Password;
@@ -114,7 +115,7 @@ public class StandardWesternPasswordComplexityEstimatorService(
         var entropy = (int)Math.Round(this.EstimateEntropy(password), 0);
         var complexity = PasswordComplexityEstimation.Unknown;
 
-        if (checkForPwnedPasswords && await IsWeakKnownPasswordAsync(password, cancellationToken))
+        if (checkForPwnedPasswords && await this.IsWeakKnownPasswordAsync(password, cancellationToken))
         {
             return new PasswordComplexityEstimatorResults
             {
