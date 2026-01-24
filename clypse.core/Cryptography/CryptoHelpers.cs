@@ -8,7 +8,7 @@ namespace clypse.core.Cryptography;
 /// <summary>
 /// Provides utility methods for cryptographic operations including random byte generation, hashing, and key derivation.
 /// </summary>
-public class CryptoHelpers
+public static class CryptoHelpers
 {
     /// <summary>
     /// Generates a cryptographically secure array of random bytes.
@@ -122,11 +122,30 @@ public class CryptoHelpers
     }
 
     /// <summary>
+    /// Derives a cryptographic key from a passphrase using the Argon2id key derivation function. Uses default parameters.
+    /// </summary>
+    /// <param name="passphrase">The passphrase to derive the key from.</param>
+    /// <param name="base64Salt">The base64-encoded salt for key derivation.</param>
+    /// <returns>A byte array containing the derived cryptographic key.</returns>
+    public static async Task<byte[]> DeriveKeyFromPassphraseUsingArgon2idAsync(
+        string passphrase,
+        string base64Salt)
+    {
+        return await DeriveKeyFromPassphraseUsingArgon2idAsync(
+            passphrase,
+            base64Salt,
+            32,
+            16,
+            8192,
+            40);
+    }
+
+    /// <summary>
     /// Derives a cryptographic key from a passphrase using the Argon2id key derivation function.
     /// </summary>
     /// <param name="passphrase">The passphrase to derive the key from.</param>
     /// <param name="base64Salt">The base64-encoded salt for key derivation.</param>
-    /// <param name="keyLength">The desired length of the derived key in bytes (default: 32).</param>
+    /// <param name="keyLength">The desired length of the derived key in bytes.</param>
     /// <param name="degreeOfParallelism">Number of threads to use when deriving the key. This is wasted in WASM.</param>
     /// <param name="memorySize">How much RAM Argon2id forces the computation to use.</param>
     /// <param name="iterations">How many times Argon2id runs over that allocated memory.</param>
@@ -134,10 +153,10 @@ public class CryptoHelpers
     public static async Task<byte[]> DeriveKeyFromPassphraseUsingArgon2idAsync(
         string passphrase,
         string base64Salt,
-        int keyLength = 32,
-        int degreeOfParallelism = 16,
-        int memorySize = 8192,
-        int iterations = 40)
+        int keyLength,
+        int degreeOfParallelism,
+        int memorySize,
+        int iterations)
     {
         var argon2 = new Argon2id(Encoding.UTF8.GetBytes(passphrase))
         {
@@ -151,18 +170,35 @@ public class CryptoHelpers
     }
 
     /// <summary>
+    /// Derives a cryptographic key from a passphrase using the native .NET PBKDF2 (RFC 2898) key derivation function. Uses default parameters.
+    /// </summary>
+    /// <param name="passphrase">The passphrase to derive the key from.</param>
+    /// <param name="base64Salt">The base64-encoded salt for key derivation.</param>
+    /// <returns>A byte array containing the derived cryptographic key.</returns>
+    public static async Task<byte[]> DeriveKeyFromPassphraseUsingRfc2898Async(
+        string passphrase,
+        string base64Salt)
+    {
+        return await DeriveKeyFromPassphraseUsingRfc2898Async(
+            passphrase,
+            base64Salt,
+            32,
+            100000);
+    }
+
+    /// <summary>
     /// Derives a cryptographic key from a passphrase using the native .NET PBKDF2 (RFC 2898) key derivation function.
     /// </summary>
     /// <param name="passphrase">The passphrase to derive the key from.</param>
     /// <param name="base64Salt">The base64-encoded salt for key derivation.</param>
-    /// <param name="keyLength">The desired length of the derived key in bytes (default: 32).</param>
-    /// <param name="iterations">The number of iterations to perform (default: 100000).</param>
+    /// <param name="keyLength">The desired length of the derived key in bytes.</param>
+    /// <param name="iterations">The number of iterations to perform.</param>
     /// <returns>A byte array containing the derived cryptographic key.</returns>
     public static async Task<byte[]> DeriveKeyFromPassphraseUsingRfc2898Async(
         string passphrase,
         string base64Salt,
-        int keyLength = 32,
-        int iterations = 100000)
+        int keyLength,
+        int iterations)
     {
         return await Task.Run(() =>
         {

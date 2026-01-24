@@ -146,13 +146,13 @@ public class RandomGeneratorServiceTests
     public void GivenDisposedRngService_WhenGetDouble_ThenObjectDisposedExceptionThrown()
     {
         // Arrange
-        var sut = new RandomGeneratorService();
-        sut.Dispose();
+        var sutLocal = new RandomGeneratorService();
+        sutLocal.Dispose();
 
         // Act & Assert
         Assert.Throws<ObjectDisposedException>(() =>
         {
-            sut.GetRandomDouble();
+            sutLocal.GetRandomDouble();
         });
     }
 
