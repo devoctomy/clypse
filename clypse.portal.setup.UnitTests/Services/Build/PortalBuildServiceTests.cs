@@ -450,7 +450,7 @@ public class PortalBuildServiceTests
         mockIoService.Setup(io => io.CombinePath(currentDir, "portal-output")).Returns(publishOutputPath);
         mockIoService.Setup(io => io.CombinePath(publishOutputPath, "wwwroot")).Returns(wwwrootPath);
         mockIoService.Setup(io => io.GetDirectoryName(portalProjectPath)).Returns(portalProjectDir);
-        mockIoService.Setup(io => io.FileExists(solutionPath)).Returns(true); GivenValidRepoStructure_WhenRun_ThenBuildsSuccessfully
+        mockIoService.Setup(io => io.FileExists(solutionPath)).Returns(true);
         mockIoService.Setup(io => io.FileExists(portalProjectPath)).Returns(true);
         mockIoService.Setup(io => io.DirectoryExists(wwwrootPath)).Returns(true);
         mockIoService.Setup(io => io.CreateDirectory(publishOutputPath));
