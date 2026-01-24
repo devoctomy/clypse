@@ -25,7 +25,6 @@ public class VaultManagerTests
         },
     };
 
-    //private readonly Mock<IKeyDerivationService> mockKeyDerivationService;
     private readonly Mock<ICompressionService> mockCompressionService;
     private readonly Mock<ICloudStorageProvider> mockInnerCloudStorageProvider;
     private readonly Mock<IEncryptedCloudStorageProvider> mockEncryptedCloudStorageProvider;
