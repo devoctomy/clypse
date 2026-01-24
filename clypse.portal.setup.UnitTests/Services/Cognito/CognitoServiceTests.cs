@@ -304,13 +304,6 @@ public class CognitoServiceTests
                 req.DesiredDeliveryMediums.Contains("EMAIL")),
             It.IsAny<CancellationToken>()),
             Times.Once);
-        // TODO: Fix
-        //mockCognitoIdentityProvider
-        //    .Verify(x => x.TagResourceAsync(
-        //        It.Is<Amazon.CognitoIdentityProvider.Model.TagResourceRequest>(req =>
-        //            req.ResourceArn == userId &&
-        //            req.Tags == tags),
-        //        It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
