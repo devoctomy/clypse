@@ -91,15 +91,26 @@ public class CryptoHelpers
     }
 
     /// <summary>
+    /// Computes a SHA-256 hash of the specified string and returns a truncated portion of the hash. Uses a default length of 16 bytes.
+    /// </summary>
+    /// <param name="value">The string value to hash.</param>
+    /// <returns>A byte array containing the truncated SHA-256 hash.</returns>
+    /// <exception cref="ArgumentOutOfRangeException">Thrown when length is greater than the hash size.</exception>
+    public static byte[] Sha256HashString(string value)
+    {
+        return Sha256HashString(value, 16);
+    }
+
+    /// <summary>
     /// Computes a SHA-256 hash of the specified string and returns a truncated portion of the hash.
     /// </summary>
     /// <param name="value">The string value to hash.</param>
-    /// <param name="length">The number of bytes to return from the hash (default: 16).</param>
+    /// <param name="length">The number of bytes to return from the hash.</param>
     /// <returns>A byte array containing the truncated SHA-256 hash.</returns>
     /// <exception cref="ArgumentOutOfRangeException">Thrown when length is greater than the hash size.</exception>
     public static byte[] Sha256HashString(
         string value,
-        int length = 16)
+        int length)
     {
         var norm = value.Trim().ToLowerInvariant();
         var h = SHA256.HashData(Encoding.UTF8.GetBytes(norm));

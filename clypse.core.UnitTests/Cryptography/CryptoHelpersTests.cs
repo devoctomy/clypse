@@ -21,6 +21,17 @@ public class CryptoHelpersTests
     }
 
     [Fact]
+    public void GivenString_WhenSha256HashString_ThenStringHashed()
+    {
+        // Arrange & Act
+        var hash = CryptoHelpers.Sha256HashString("Hello World!");
+
+        // Assert
+        var base64Hash = Convert.ToBase64String(hash);
+        Assert.Equal("dQnlvaDHYtK6x/kNdYtbIg==", base64Hash);
+    }
+
+    [Fact]
     public async Task GivenPassphrase_WhenDeriveKeyFromPassphraseUsingArgon2Async_ThenKeyCorrectlyDerived()
     {
         // Arrange

@@ -58,7 +58,7 @@ public static class ServiceCollectionExtensions
             logging.SetMinimumLevel(logLevel);
         });
 
-        services.AddScoped<IAmazonSecurityTokenService>((sp) =>
+        services.AddScoped<IAmazonSecurityTokenService>((_) =>
         {
             var config = new AmazonSecurityTokenServiceConfig
             {
@@ -76,7 +76,7 @@ public static class ServiceCollectionExtensions
                 config);
         });
 
-        services.AddScoped<IAmazonS3>((sp) =>
+        services.AddScoped<IAmazonS3>((_) =>
         {
             var config = new AmazonS3Config
             {
@@ -95,7 +95,7 @@ public static class ServiceCollectionExtensions
                 config);
         });
 
-        services.AddScoped<IAmazonCognitoIdentity>((sp) =>
+        services.AddScoped<IAmazonCognitoIdentity>((_) =>
         {
             var config = new AmazonCognitoIdentityConfig
             {
@@ -113,7 +113,7 @@ public static class ServiceCollectionExtensions
                 config);
         });
 
-        services.AddScoped<IAmazonCognitoIdentityProvider>((sp) =>
+        services.AddScoped<IAmazonCognitoIdentityProvider>((_) =>
         {
             var config = new AmazonCognitoIdentityProviderConfig
             {
@@ -131,7 +131,7 @@ public static class ServiceCollectionExtensions
                 config);
         });
 
-        services.AddScoped<IAmazonIdentityManagementService>((sp) =>
+        services.AddScoped<IAmazonIdentityManagementService>((_) =>
         {
             var config = new AmazonIdentityManagementServiceConfig
             {
@@ -149,7 +149,7 @@ public static class ServiceCollectionExtensions
                 config);
         });
 
-        services.AddScoped<IAmazonCloudFront>((sp) =>
+        services.AddScoped<IAmazonCloudFront>((_) =>
         {
             var config = new AmazonCloudFrontConfig
             {
