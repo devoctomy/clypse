@@ -695,4 +695,116 @@ public class JavaScriptInteropUtilityTests
         Assert.False(JavaScriptInteropUtility.GetBoolValue(dictionary, key));
         Assert.Null(JavaScriptInteropUtility.GetStringValue(dictionary, key));
     }
+
+    [Fact]
+    public void GivenMissingKey_WhenGetLongValueWithoutDefaultParameter_ThenReturnZero()
+    {
+        // Arrange
+        var dictionary = new Dictionary<string, object?> { { "otherKey", 123L } };
+        const string key = "testKey";
+
+        // Act
+        var result = JavaScriptInteropUtility.GetLongValue(dictionary, key);
+
+        // Assert
+        Assert.Equal(0L, result);
+    }
+
+    [Fact]
+    public void GivenMissingKey_WhenGetIntValueWithoutDefaultParameter_ThenReturnZero()
+    {
+        // Arrange
+        var dictionary = new Dictionary<string, object?> { { "otherKey", 123 } };
+        const string key = "testKey";
+
+        // Act
+        var result = JavaScriptInteropUtility.GetIntValue(dictionary, key);
+
+        // Assert
+        Assert.Equal(0, result);
+    }
+
+    [Fact]
+    public void GivenMissingKey_WhenGetBoolValueWithoutDefaultParameter_ThenReturnFalse()
+    {
+        // Arrange
+        var dictionary = new Dictionary<string, object?> { { "otherKey", true } };
+        const string key = "testKey";
+
+        // Act
+        var result = JavaScriptInteropUtility.GetBoolValue(dictionary, key);
+
+        // Assert
+        Assert.False(result);
+    }
+
+    [Fact]
+    public void GivenMissingKey_WhenGetStringValueWithoutDefaultParameter_ThenReturnNull()
+    {
+        // Arrange
+        var dictionary = new Dictionary<string, object?> { { "otherKey", "value" } };
+        const string key = "testKey";
+
+        // Act
+        var result = JavaScriptInteropUtility.GetStringValue(dictionary, key);
+
+        // Assert
+        Assert.Null(result);
+    }
+
+    [Fact]
+    public void GivenNullDictionary_WhenGetLongValueWithoutDefaultParameter_ThenReturnZero()
+    {
+        // Arrange
+        Dictionary<string, object?>? dictionary = null;
+        const string key = "testKey";
+
+        // Act
+        var result = JavaScriptInteropUtility.GetLongValue(dictionary, key);
+
+        // Assert
+        Assert.Equal(0L, result);
+    }
+
+    [Fact]
+    public void GivenNullDictionary_WhenGetIntValueWithoutDefaultParameter_ThenReturnZero()
+    {
+        // Arrange
+        Dictionary<string, object?>? dictionary = null;
+        const string key = "testKey";
+
+        // Act
+        var result = JavaScriptInteropUtility.GetIntValue(dictionary, key);
+
+        // Assert
+        Assert.Equal(0, result);
+    }
+
+    [Fact]
+    public void GivenNullDictionary_WhenGetBoolValueWithoutDefaultParameter_ThenReturnFalse()
+    {
+        // Arrange
+        Dictionary<string, object?>? dictionary = null;
+        const string key = "testKey";
+
+        // Act
+        var result = JavaScriptInteropUtility.GetBoolValue(dictionary, key);
+
+        // Assert
+        Assert.False(result);
+    }
+
+    [Fact]
+    public void GivenNullDictionary_WhenGetStringValueWithoutDefaultParameter_ThenReturnNull()
+    {
+        // Arrange
+        Dictionary<string, object?>? dictionary = null;
+        const string key = "testKey";
+
+        // Act
+        var result = JavaScriptInteropUtility.GetStringValue(dictionary, key);
+
+        // Assert
+        Assert.Null(result);
+    }
 }
