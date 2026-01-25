@@ -45,7 +45,6 @@ public static class SecretExtensions
         {
             case Enums.SecretType.None:
                 {
-                    // Do nothing;
                     break;
                 }
 
@@ -59,6 +58,11 @@ public static class SecretExtensions
                 {
                     castSecret = AwsCredentials.FromSecret(secret);
                     break;
+                }
+
+            default:
+                {
+                    throw new NotSupportedException($"Unsupported secret type: {secret.SecretType}");
                 }
         }
 

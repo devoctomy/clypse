@@ -104,17 +104,11 @@ public class AwsS3VaultManagerBootstrapperService(
 
     private static ICompressionService GetCompressionServiceForVault(VaultManifest manifest)
     {
-        ICompressionService compressionServiceForVault;
-        switch (manifest.CompressionServiceName)
+        ICompressionService compressionServiceForVault = manifest.CompressionServiceName switch
         {
-            case "GZipCompressionService":
-                compressionServiceForVault = new GZipCompressionService();
-                break;
-
-            default:
-                throw new CompressionServiceNotSupportedByVaultManagerBootstrapperException(manifest.CompressionServiceName);
-        }
-
+            "GZipCompressionService" => new GZipCompressionService(),
+            _ => throw new CompressionServiceNotSupportedByVaultManagerBootstrapperException(manifest.CompressionServiceName),
+        };
         return compressionServiceForVault;
     }
 
@@ -123,19 +117,12 @@ public class AwsS3VaultManagerBootstrapperService(
         ICryptoService? cryptoServiceForVault = null;
         if (!string.IsNullOrEmpty(manifest.CryptoServiceName))
         {
-            switch (manifest.CryptoServiceName)
+            cryptoServiceForVault = manifest.CryptoServiceName switch
             {
-                case "NativeAesGcmCryptoService":
-                    cryptoServiceForVault = new NativeAesGcmCryptoService();
-                    break;
-
-                case "BouncyCastleAesGcmCryptoService":
-                    cryptoServiceForVault = new BouncyCastleAesGcmCryptoService();
-                    break;
-
-                default:
-                    throw new CryptoServiceNotSupportedByVaultManagerBootstrapperException(manifest.CryptoServiceName);
-            }
+                "NativeAesGcmCryptoService" => new NativeAesGcmCryptoService(),
+                "BouncyCastleAesGcmCryptoService" => new BouncyCastleAesGcmCryptoService(),
+                _ => throw new CryptoServiceNotSupportedByVaultManagerBootstrapperException(manifest.CryptoServiceName),
+            };
         }
 
         return cryptoServiceForVault;
@@ -146,21 +133,12 @@ public class AwsS3VaultManagerBootstrapperService(
         IAwsEncryptedCloudStorageProviderTransformer awsEncryptedCloudStorageProviderTransformer,
         ICryptoService cryptoServiceForVault)
     {
-        IEncryptedCloudStorageProvider encryptedCloudStorageProviderForVault;
-        switch (manifest.EncryptedCloudStorageProviderName)
+        IEncryptedCloudStorageProvider encryptedCloudStorageProviderForVault = manifest.EncryptedCloudStorageProviderName switch
         {
-            case "AwsS3SseCloudStorageProvider":
-                encryptedCloudStorageProviderForVault = awsEncryptedCloudStorageProviderTransformer!.CreateSseProvider();
-                break;
-
-            case "AwsS3E2eCloudStorageProvider":
-                encryptedCloudStorageProviderForVault = awsEncryptedCloudStorageProviderTransformer!.CreateE2eProvider(cryptoServiceForVault!);
-                break;
-
-            default:
-                throw new EncryptedCloudStorageProviderNotSupportedByVaultManagerBootstrapperException(manifest.EncryptedCloudStorageProviderName);
-        }
-
+            "AwsS3SseCloudStorageProvider" => awsEncryptedCloudStorageProviderTransformer!.CreateSseProvider(),
+            "AwsS3E2eCloudStorageProvider" => awsEncryptedCloudStorageProviderTransformer!.CreateE2eProvider(cryptoServiceForVault!),
+            _ => throw new EncryptedCloudStorageProviderNotSupportedByVaultManagerBootstrapperException(manifest.EncryptedCloudStorageProviderName),
+        };
         return encryptedCloudStorageProviderForVault;
     }
 
@@ -172,12 +150,9 @@ public class AwsS3VaultManagerBootstrapperService(
             id,
             "manifest.json",
             cancellationToken);
-        if (manifest == null)
-        {
-            throw new FailedToLoadVaultInfoException($"Failed to load manifest for vault '{id}'.");
-        }
-
-        return manifest!;
+        return manifest == null ?
+            throw new FailedToLoadVaultInfoException($"Failed to load manifest for vault '{id}'.") :
+            manifest!;
     }
 
     private async Task<T?> LoadPlainTextObjectAsync<T>(
