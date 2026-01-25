@@ -78,6 +78,20 @@ public class StandardWesternPasswordComplexityEstimatorService(
             };
         }
 
+        complexity = CalculateComplexity(entropy, complexity);
+
+        return new PasswordComplexityEstimatorResults
+        {
+            EstimatedEntropy = entropy,
+            ComplexityEstimation = complexity,
+            AdditionalInfo = string.Empty,
+        };
+    }
+
+    private static PasswordComplexityEstimation CalculateComplexity(
+        int entropy,
+        PasswordComplexityEstimation complexity)
+    {
         if (entropy < 0)
         {
             complexity = PasswordComplexityEstimation.Unknown;
@@ -103,12 +117,7 @@ public class StandardWesternPasswordComplexityEstimatorService(
             complexity = PasswordComplexityEstimation.VeryStrong;
         }
 
-        return new PasswordComplexityEstimatorResults
-        {
-            EstimatedEntropy = entropy,
-            ComplexityEstimation = complexity,
-            AdditionalInfo = string.Empty,
-        };
+        return complexity;
     }
 
     private async Task<bool> IsWeakKnownPasswordAsync(
