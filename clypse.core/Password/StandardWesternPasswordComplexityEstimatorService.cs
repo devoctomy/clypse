@@ -120,29 +120,7 @@ public class StandardWesternPasswordComplexityEstimatorService(
         return complexity;
     }
 
-    private async Task<bool> IsWeakKnownPasswordAsync(
-        string password,
-        CancellationToken cancellationToken)
-    {
-        HashSet<string>? weakKnownPasswords = default;
-
-#if DEBUG
-        await Task.Yield();
-        weakKnownPasswords =
-        [
-            "password123",
-        ];
-#else
-        weakKnownPasswords ??= await embeddedResorceLoaderService.LoadCompressedHashSetAsync(
-            ResourceKeys.CompressedWeakKnownPasswordsResourceKey,
-            Assembly.GetExecutingAssembly(),
-            cancellationToken);
-#endif
-
-        return weakKnownPasswords.Contains(password);
-    }
-
-    private Dictionary<CharacterGroup, string> GetCharsByGroup()
+    private static Dictionary<CharacterGroup, string> GetCharsByGroup()
     {
         var charsByGroup = new Dictionary<CharacterGroup, string>();
         var allGroups = Enum.GetValues<CharacterGroup>();
@@ -160,7 +138,7 @@ public class StandardWesternPasswordComplexityEstimatorService(
         return charsByGroup;
     }
 
-    private Dictionary<CharacterGroup, int>? GetCharCountsByGroup(
+    private static Dictionary<CharacterGroup, int>? GetCharCountsByGroup(
         string password,
         Dictionary<CharacterGroup, string> charsByGroup)
     {
@@ -183,5 +161,27 @@ public class StandardWesternPasswordComplexityEstimatorService(
         }
 
         return charCountsByGroup;
+    }
+
+    private async Task<bool> IsWeakKnownPasswordAsync(
+        string password,
+        CancellationToken cancellationToken)
+    {
+        HashSet<string>? weakKnownPasswords = default;
+
+#if DEBUG
+        await Task.Yield();
+        weakKnownPasswords =
+        [
+            "password123",
+        ];
+#else
+        weakKnownPasswords ??= await embeddedResorceLoaderService.LoadCompressedHashSetAsync(
+            ResourceKeys.CompressedWeakKnownPasswordsResourceKey,
+            Assembly.GetExecutingAssembly(),
+            cancellationToken);
+#endif
+
+        return weakKnownPasswords.Contains(password);
     }
 }
