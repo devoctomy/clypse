@@ -5,7 +5,7 @@ namespace clypse.core.Secrets.Import;
 /// <summary>
 /// Provides field mappings for different CSV import data formats.
 /// </summary>
-public class FieldMappings
+public static class FieldMappings
 {
     /// <summary>
     /// Gets dictionary of field mappings for KeePass CSV format version 1.x.

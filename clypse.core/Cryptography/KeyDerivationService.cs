@@ -10,7 +10,7 @@ public class KeyDerivationService : IKeyDerivationService, IDisposable
 {
     private readonly IRandomGeneratorService randomGeneratorService;
     private readonly KeyDerivationServiceOptions options;
-    private bool disposed = false;
+    private bool disposed;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="KeyDerivationService"/> class with the provided options.

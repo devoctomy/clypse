@@ -5,7 +5,7 @@ namespace clypse.core.Cryptography;
 /// <summary>
 /// Provides default configuration options for the KeyDerivationService.
 /// </summary>
-public class KeyDerivationServiceDefaultOptions
+public static class KeyDerivationServiceDefaultOptions
 {
     /// <summary>
     /// Gets default options for the RFC2898 key derivation algorithm, suitable for Blazor applications.
