@@ -1,5 +1,4 @@
 [![Tests](https://github.com/devoctomy/clypse/actions/workflows/tests.yml/badge.svg)](https://github.com/devoctomy/clypse/actions/workflows/tests.yml)
-[![codecov](https://codecov.io/gh/devoctomy/clypse/graph/badge.svg?token=6FUB0KRLUV)](https://codecov.io/gh/devoctomy/clypse)
 [![Codacy Quality Badge](https://app.codacy.com/project/badge/Grade/0792c65d4538403ba18921235c76a8e0)](https://app.codacy.com/gh/devoctomy/clypse/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade)
 [![Codacy Coverage Badge](https://app.codacy.com/project/badge/Coverage/0792c65d4538403ba18921235c76a8e0)](https://app.codacy.com/gh/devoctomy/clypse/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_coverage)
 
