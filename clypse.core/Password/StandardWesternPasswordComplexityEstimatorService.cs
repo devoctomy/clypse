@@ -25,8 +25,8 @@ public class StandardWesternPasswordComplexityEstimatorService(
             return 0;
         }
 
-        var charsByGroup = this.GetCharsByGroup();
-        var charCountsByGroup = this.GetCharCountsByGroup(password, charsByGroup);
+        var charsByGroup = GetCharsByGroup();
+        var charCountsByGroup = GetCharCountsByGroup(password, charsByGroup);
         if (charCountsByGroup == null)
         {
             return -1;
