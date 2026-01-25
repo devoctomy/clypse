@@ -25,7 +25,7 @@ public class StandardWesternPasswordComplexityEstimatorService(
             return 0;
         }
 
-        var charsByGroup = this.GetCharsByGroup(password);
+        var charsByGroup = this.GetCharsByGroup();
         var charCountsByGroup = this.GetCharCountsByGroup(password, charsByGroup);
         if (charCountsByGroup == null)
         {
@@ -133,7 +133,7 @@ public class StandardWesternPasswordComplexityEstimatorService(
         return weakKnownPasswords.Contains(password);
     }
 
-    private Dictionary<CharacterGroup, string> GetCharsByGroup(string password)
+    private Dictionary<CharacterGroup, string> GetCharsByGroup()
     {
         var charsByGroup = new Dictionary<CharacterGroup, string>();
         var allGroups = Enum.GetValues<CharacterGroup>();
