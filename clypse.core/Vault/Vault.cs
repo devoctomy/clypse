@@ -90,7 +90,7 @@ public class Vault : IVault
     {
         var addedSecrets = new List<Secret>();
         var allAdded = true;
-        var isDirty = this.isDirty;
+        var isDirtyNew = this.isDirty;
 
         foreach (var rawSecret in rawSecrets)
         {
@@ -124,7 +124,7 @@ public class Vault : IVault
                 this.pendingSecrets.Remove(secret);
             }
 
-            this.isDirty = isDirty;
+            this.isDirty = isDirtyNew;
         }
 
         return allAdded;

@@ -10,7 +10,7 @@ public class PasswordComplexityEstimatorResults
     /// <summary>
     /// Gets or sets the estimated entropy of the password.
     /// </summary>
-    public double EstimatedEntropy { get; set; } = 0;
+    public double EstimatedEntropy { get; set; }
 
     /// <summary>
     /// Gets or sets the estimated entropy of the password.

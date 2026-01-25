@@ -5,20 +5,6 @@ on:
   workflow_dispatch:
 
 jobs:
-  # codacy-analysis:
-  #   runs-on: ubuntu-latest
-
-  #   steps:
-  #     - name: Checkout code
-  #       uses: actions/checkout@v4
-
-  #     - name: Run Codacy Analysis
-  #       uses: codacy/codacy-analysis-cli-action@v4
-  #       with:
-  #         project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
-  #         verbose: true
-
-
   unit-tests:
     runs-on: ubuntu-latest
     container:
@@ -77,13 +63,20 @@ jobs:
         name: unit-test-results
         path: ./TestResults/UnitTests
 
+    - name: Find coverage files
+      id: coverage
+      run: |
+        echo "Searching for coverage files..."
+        FILES=$(find . -name "coverage.opencover.xml" -type f | tr '\n' ',' | sed 's/,$//')
+        echo "Found coverage files: $FILES"
+        echo "reports=$FILES" >> $GITHUB_OUTPUT
+        
     - name: Collect code coverage
-      uses: codecov/codecov-action@671740ac38dd9b0130fbe1cec585b89eea48d3de
+      if: steps.coverage.outputs.reports != ''
+      uses: codacy/codacy-coverage-reporter-action@89d6c85cfafaec52c72b6c5e8b2878d33104c699
       with:
-        fail_ci_if_error: true
-        files: ./TestResults/UnitTests/**/coverage.opencover.xml
-        token: ${{ secrets.CODECOV_TOKEN }}
-        verbose: true
+        api-token: ${{ secrets.CODACY_API_TOKEN }}
+        coverage-reports: ${{ steps.coverage.outputs.reports }}
 
   integration-tests:
     needs: unit-tests

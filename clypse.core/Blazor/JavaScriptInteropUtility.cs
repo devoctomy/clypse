@@ -13,12 +13,25 @@ public static class JavaScriptInteropUtility
     /// </summary>
     /// <param name="dictionary">The dictionary to extract from.</param>
     /// <param name="key">The key to look for.</param>
+    /// <returns>The extracted long value or the default value of 0.</returns>
+    public static long GetLongValue(
+        Dictionary<string, object?>? dictionary,
+        string key)
+    {
+        return GetLongValue(dictionary, key, 0L);
+    }
+
+    /// <summary>
+    /// Safely extracts a long value from a dictionary that may contain JsonElement objects.
+    /// </summary>
+    /// <param name="dictionary">The dictionary to extract from.</param>
+    /// <param name="key">The key to look for.</param>
     /// <param name="defaultValue">The default value if extraction fails.</param>
-    /// <returns>The extracted long value or the default value.</returns>
+    /// <returns>The extracted long value or the provided default value.</returns>
     public static long GetLongValue(
         Dictionary<string, object?>? dictionary,
         string key,
-        long defaultValue = 0L)
+        long defaultValue)
     {
         var value = dictionary?.GetValueOrDefault(key, defaultValue);
         if (value == null)
@@ -52,12 +65,25 @@ public static class JavaScriptInteropUtility
     /// </summary>
     /// <param name="dictionary">The dictionary to extract from.</param>
     /// <param name="key">The key to look for.</param>
+    /// <returns>The extracted int value or the default value of 0.</returns>
+    public static int GetIntValue(
+        Dictionary<string, object?>? dictionary,
+        string key)
+    {
+        return GetIntValue(dictionary, key, 0);
+    }
+
+    /// <summary>
+    /// Safely extracts an int value from a dictionary that may contain JsonElement objects.
+    /// </summary>
+    /// <param name="dictionary">The dictionary to extract from.</param>
+    /// <param name="key">The key to look for.</param>
     /// <param name="defaultValue">The default value if extraction fails.</param>
-    /// <returns>The extracted int value or the default value.</returns>
+    /// <returns>The extracted int value or the provided default value.</returns>
     public static int GetIntValue(
         Dictionary<string, object?>? dictionary,
         string key,
-        int defaultValue = 0)
+        int defaultValue)
     {
         var value = dictionary?.GetValueOrDefault(key, defaultValue);
         if (value == null)
@@ -91,12 +117,25 @@ public static class JavaScriptInteropUtility
     /// </summary>
     /// <param name="dictionary">The dictionary to extract from.</param>
     /// <param name="key">The key to look for.</param>
+    /// <returns>The extracted bool value or the default value of false.</returns>
+    public static bool GetBoolValue(
+        Dictionary<string, object?>? dictionary,
+        string key)
+    {
+        return GetBoolValue(dictionary, key, false);
+    }
+
+    /// <summary>
+    /// Safely extracts a bool value from a dictionary that may contain JsonElement objects.
+    /// </summary>
+    /// <param name="dictionary">The dictionary to extract from.</param>
+    /// <param name="key">The key to look for.</param>
     /// <param name="defaultValue">The default value if extraction fails.</param>
-    /// <returns>The extracted bool value or the default value.</returns>
+    /// <returns>The extracted bool value or the provided default value.</returns>
     public static bool GetBoolValue(
         Dictionary<string, object?>? dictionary,
         string key,
-        bool defaultValue = false)
+        bool defaultValue)
     {
         var value = dictionary?.GetValueOrDefault(key, defaultValue);
         if (value == null)
@@ -128,12 +167,25 @@ public static class JavaScriptInteropUtility
     /// </summary>
     /// <param name="dictionary">The dictionary to extract from.</param>
     /// <param name="key">The key to look for.</param>
+    /// <returns>The extracted string value or the default value of null.</returns>
+    public static string? GetStringValue(
+        Dictionary<string, object?>? dictionary,
+        string key)
+    {
+        return GetStringValue(dictionary, key, null);
+    }
+
+    /// <summary>
+    /// Safely extracts a string value from a dictionary that may contain JsonElement objects.
+    /// </summary>
+    /// <param name="dictionary">The dictionary to extract from.</param>
+    /// <param name="key">The key to look for.</param>
     /// <param name="defaultValue">The default value if extraction fails.</param>
-    /// <returns>The extracted string value or the default value.</returns>
+    /// <returns>The extracted string value or the provided default value.</returns>
     public static string? GetStringValue(
         Dictionary<string, object?>? dictionary,
         string key,
-        string? defaultValue = null)
+        string? defaultValue)
     {
         var value = dictionary?.GetValueOrDefault(key, defaultValue);
         if (value == null)

@@ -25,41 +25,16 @@ public class StandardWesternPasswordComplexityEstimatorService(
             return 0;
         }
 
-        var charsByGroup = new Dictionary<CharacterGroup, string>();
-        var allGroups = Enum.GetValues<CharacterGroup>();
-        foreach (var group in allGroups)
+        var charsByGroup = GetCharsByGroup();
+        var charCountsByGroup = GetCharCountsByGroup(password, charsByGroup);
+        if (charCountsByGroup == null)
         {
-            if (group == CharacterGroup.None)
-            {
-                continue;
-            }
-
-            var chars = CharacterGroups.GetGroup(group);
-            charsByGroup.Add(group, chars);
-        }
-
-        var charCountsByGroup = new Dictionary<CharacterGroup, int>();
-        foreach (var curChar in password)
-        {
-            var group = charsByGroup.FirstOrDefault(x => x.Value.Contains(curChar)).Key;
-            if (group == CharacterGroup.None)
-            {
-                return -1;
-            }
-
-            if (!charCountsByGroup.TryGetValue(group, out int value))
-            {
-                value = 0;
-                charCountsByGroup[group] = value;
-            }
-
-            charCountsByGroup[group] = ++value;
+            return -1;
         }
 
         var possibleCharsPerChar = 0;
         foreach (var curGroup in charCountsByGroup.Keys)
         {
-            var count = charCountsByGroup[curGroup];
             var charsInGroup = charsByGroup[curGroup].Length;
             possibleCharsPerChar += charsInGroup;
         }
@@ -91,8 +66,6 @@ public class StandardWesternPasswordComplexityEstimatorService(
         }
 
         var entropy = (int)Math.Round(this.EstimateEntropy(password), 0);
-        var complexity = PasswordComplexityEstimation.Unknown;
-
         if (checkForPwnedPasswords && await this.IsWeakKnownPasswordAsync(password, cancellationToken))
         {
             return new PasswordComplexityEstimatorResults
@@ -102,6 +75,19 @@ public class StandardWesternPasswordComplexityEstimatorService(
                 AdditionalInfo = "This password is found in a list of weak known passwords.",
             };
         }
+
+        var complexity = CalculateComplexity(entropy);
+        return new PasswordComplexityEstimatorResults
+        {
+            EstimatedEntropy = entropy,
+            ComplexityEstimation = complexity,
+            AdditionalInfo = string.Empty,
+        };
+    }
+
+    private static PasswordComplexityEstimation CalculateComplexity(int entropy)
+    {
+        var complexity = PasswordComplexityEstimation.Unknown;
 
         if (entropy < 0)
         {
@@ -128,12 +114,50 @@ public class StandardWesternPasswordComplexityEstimatorService(
             complexity = PasswordComplexityEstimation.VeryStrong;
         }
 
-        return new PasswordComplexityEstimatorResults
+        return complexity;
+    }
+
+    private static Dictionary<CharacterGroup, string> GetCharsByGroup()
+    {
+        var charsByGroup = new Dictionary<CharacterGroup, string>();
+        var allGroups = Enum.GetValues<CharacterGroup>();
+        foreach (var group in allGroups)
         {
-            EstimatedEntropy = entropy,
-            ComplexityEstimation = complexity,
-            AdditionalInfo = string.Empty,
-        };
+            if (group == CharacterGroup.None)
+            {
+                continue;
+            }
+
+            var chars = CharacterGroups.GetGroup(group);
+            charsByGroup.Add(group, chars);
+        }
+
+        return charsByGroup;
+    }
+
+    private static Dictionary<CharacterGroup, int>? GetCharCountsByGroup(
+        string password,
+        Dictionary<CharacterGroup, string> charsByGroup)
+    {
+        var charCountsByGroup = new Dictionary<CharacterGroup, int>();
+        foreach (var curChar in password)
+        {
+            var group = charsByGroup.FirstOrDefault(x => x.Value.Contains(curChar)).Key;
+            if (group == CharacterGroup.None)
+            {
+                return null;
+            }
+
+            if (!charCountsByGroup.TryGetValue(group, out int value))
+            {
+                value = 0;
+                charCountsByGroup[group] = value;
+            }
+
+            charCountsByGroup[group] = ++value;
+        }
+
+        return charCountsByGroup;
     }
 
     private async Task<bool> IsWeakKnownPasswordAsync(

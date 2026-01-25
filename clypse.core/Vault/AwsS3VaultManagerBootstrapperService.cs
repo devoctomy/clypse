@@ -38,12 +38,9 @@ public class AwsS3VaultManagerBootstrapperService(
         string id,
         CancellationToken cancellationToken)
     {
-        var awsEncryptedCloudStorageProviderTransformer = awsCloudStorageProvider as IAwsEncryptedCloudStorageProviderTransformer;
-        if (awsEncryptedCloudStorageProviderTransformer == null)
-        {
+        var awsEncryptedCloudStorageProviderTransformer =
+            awsCloudStorageProvider as IAwsEncryptedCloudStorageProviderTransformer ??
             throw new CloudStorageProviderDoesNotImplementIAwsEncryptedCloudStorageProviderTransformerException(awsCloudStorageProvider);
-        }
-
         var manifest = await this.LoadManifestAsync(id, cancellationToken);
         var keyDerivationServiceOptions = new KeyDerivationServiceOptions();
         foreach (var param in manifest.Parameters)
@@ -56,49 +53,12 @@ public class AwsS3VaultManagerBootstrapperService(
             new RandomGeneratorService(),
             keyDerivationServiceOptions);
 
-        ICompressionService compressionServiceForVault;
-        switch (manifest.CompressionServiceName)
-        {
-            case "GZipCompressionService":
-                compressionServiceForVault = new GZipCompressionService();
-                break;
-
-            default:
-                throw new CompressionServiceNotSupportedByVaultManagerBootstrapperException(manifest.CompressionServiceName);
-        }
-
-        ICryptoService? cryptoServiceForVault = null;
-        if (!string.IsNullOrEmpty(manifest.CryptoServiceName))
-        {
-            switch (manifest.CryptoServiceName)
-            {
-                case "NativeAesGcmCryptoService":
-                    cryptoServiceForVault = new NativeAesGcmCryptoService();
-                    break;
-
-                case "BouncyCastleAesGcmCryptoService":
-                    cryptoServiceForVault = new BouncyCastleAesGcmCryptoService();
-                    break;
-
-                default:
-                    throw new CryptoServiceNotSupportedByVaultManagerBootstrapperException(manifest.CryptoServiceName);
-            }
-        }
-
-        IEncryptedCloudStorageProvider encryptedCloudStorageProviderForVault;
-        switch (manifest.EncryptedCloudStorageProviderName)
-        {
-            case "AwsS3SseCloudStorageProvider":
-                encryptedCloudStorageProviderForVault = awsEncryptedCloudStorageProviderTransformer!.CreateSseProvider();
-                break;
-
-            case "AwsS3E2eCloudStorageProvider":
-                encryptedCloudStorageProviderForVault = awsEncryptedCloudStorageProviderTransformer!.CreateE2eProvider(cryptoServiceForVault!);
-                break;
-
-            default:
-                throw new EncryptedCloudStorageProviderNotSupportedByVaultManagerBootstrapperException(manifest.EncryptedCloudStorageProviderName);
-        }
+        ICompressionService compressionServiceForVault = GetCompressionServiceForVault(manifest);
+        ICryptoService? cryptoServiceForVault = GetCryptoServiceForVault(manifest);
+        IEncryptedCloudStorageProvider encryptedCloudStorageProviderForVault = GetEncryptedCloudStorageProviderForVault(
+            manifest,
+            awsEncryptedCloudStorageProviderTransformer,
+            cryptoServiceForVault!);
 
         return new VaultManager(
             prefix,
@@ -139,6 +99,46 @@ public class AwsS3VaultManagerBootstrapperService(
         return vaultListings;
     }
 
+    private static ICompressionService GetCompressionServiceForVault(VaultManifest manifest)
+    {
+        if (manifest.CompressionServiceName == "GZipCompressionService")
+        {
+            return new GZipCompressionService();
+        }
+
+        throw new CompressionServiceNotSupportedByVaultManagerBootstrapperException(manifest.CompressionServiceName);
+    }
+
+    private static ICryptoService? GetCryptoServiceForVault(VaultManifest manifest)
+    {
+        ICryptoService? cryptoServiceForVault = null;
+        if (!string.IsNullOrEmpty(manifest.CryptoServiceName))
+        {
+            cryptoServiceForVault = manifest.CryptoServiceName switch
+            {
+                "NativeAesGcmCryptoService" => new NativeAesGcmCryptoService(),
+                "BouncyCastleAesGcmCryptoService" => new BouncyCastleAesGcmCryptoService(),
+                _ => throw new CryptoServiceNotSupportedByVaultManagerBootstrapperException(manifest.CryptoServiceName),
+            };
+        }
+
+        return cryptoServiceForVault;
+    }
+
+    private static IEncryptedCloudStorageProvider GetEncryptedCloudStorageProviderForVault(
+        VaultManifest manifest,
+        IAwsEncryptedCloudStorageProviderTransformer awsEncryptedCloudStorageProviderTransformer,
+        ICryptoService cryptoServiceForVault)
+    {
+        IEncryptedCloudStorageProvider encryptedCloudStorageProviderForVault = manifest.EncryptedCloudStorageProviderName switch
+        {
+            "AwsS3SseCloudStorageProvider" => awsEncryptedCloudStorageProviderTransformer!.CreateSseProvider(),
+            "AwsS3E2eCloudStorageProvider" => awsEncryptedCloudStorageProviderTransformer!.CreateE2eProvider(cryptoServiceForVault!),
+            _ => throw new EncryptedCloudStorageProviderNotSupportedByVaultManagerBootstrapperException(manifest.EncryptedCloudStorageProviderName),
+        };
+        return encryptedCloudStorageProviderForVault;
+    }
+
     private async Task<VaultManifest> LoadManifestAsync(
         string id,
         CancellationToken cancellationToken)
@@ -147,12 +147,9 @@ public class AwsS3VaultManagerBootstrapperService(
             id,
             "manifest.json",
             cancellationToken);
-        if (manifest == null)
-        {
-            throw new FailedToLoadVaultInfoException($"Failed to load manifest for vault '{id}'.");
-        }
-
-        return manifest!;
+        return manifest == null ?
+            throw new FailedToLoadVaultInfoException($"Failed to load manifest for vault '{id}'.") :
+            manifest!;
     }
 
     private async Task<T?> LoadPlainTextObjectAsync<T>(
@@ -177,4 +174,5 @@ public class AwsS3VaultManagerBootstrapperService(
 
         return value!;
     }
+
 }

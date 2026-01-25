@@ -46,25 +46,7 @@ public class CsvSecretsImporterService : ISecretsImporterService
         }
 
         this.importedHeaders.AddRange(headers);
-        while (!parser.EndOfData)
-        {
-            string[]? values = parser.ReadFields();
-            if (values == null ||
-                values.Length == 0 ||
-                values.Length != headers.Length)
-            {
-                continue;
-            }
-
-            var row = new Dictionary<string, string>();
-            for (var i = 0; i < values.Length; i++)
-            {
-                var header = headers[i];
-                row.Add(header, values[i]);
-            }
-
-            this.importedSecrets.Add(row);
-        }
+        this.ParseSecrets(parser, headers);
 
         return this.importedSecrets.Count;
     }
@@ -102,5 +84,30 @@ public class CsvSecretsImporterService : ISecretsImporterService
         }
 
         return mappedSecrets;
+    }
+
+    private void ParseSecrets(
+        TextFieldParser parser,
+        string[] headers)
+    {
+        while (!parser.EndOfData)
+        {
+            string[]? values = parser.ReadFields();
+            if (values == null ||
+                values.Length == 0 ||
+                values.Length != headers.Length)
+            {
+                continue;
+            }
+
+            var row = new Dictionary<string, string>();
+            for (var i = 0; i < values.Length; i++)
+            {
+                var header = headers[i];
+                row.Add(header, values[i]);
+            }
+
+            this.importedSecrets.Add(row);
+        }
     }
 }
