@@ -37,8 +37,8 @@ When deployed to AWS, Clypse requires the following AWS resources (all pay-as-yo
 4. The setup tool will prompt you for the following parameters:
    - **AWS Access Key ID** - Your AWS credentials
    - **AWS Secret Access Key** - Your AWS credentials
-   - **AWS Region** - Where resources will be created (e.g., `us-east-1`)
-   - **Resource Prefix** - Prefix for all AWS resource names (e.g., `my-clypse`)
+   - **AWS Region** - Where resources will be created (e.g., `eu-west-2`)
+   - **Resource Prefix** - Prefix for all AWS resource names (e.g., `foobar`)
    - **Portal Build Output Path** - Path to the published WASM build, this will be set automatically if you do the build within the setup tool.
    - **Initial User Email** - Email for the first Cognito user account
 
