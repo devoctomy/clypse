@@ -38,12 +38,9 @@ public class AwsS3VaultManagerBootstrapperService(
         string id,
         CancellationToken cancellationToken)
     {
-        var awsEncryptedCloudStorageProviderTransformer = awsCloudStorageProvider as IAwsEncryptedCloudStorageProviderTransformer;
-        if (awsEncryptedCloudStorageProviderTransformer == null)
-        {
+        var awsEncryptedCloudStorageProviderTransformer =
+            awsCloudStorageProvider as IAwsEncryptedCloudStorageProviderTransformer ??
             throw new CloudStorageProviderDoesNotImplementIAwsEncryptedCloudStorageProviderTransformerException(awsCloudStorageProvider);
-        }
-
         var manifest = await this.LoadManifestAsync(id, cancellationToken);
         var keyDerivationServiceOptions = new KeyDerivationServiceOptions();
         foreach (var param in manifest.Parameters)
@@ -104,12 +101,12 @@ public class AwsS3VaultManagerBootstrapperService(
 
     private static ICompressionService GetCompressionServiceForVault(VaultManifest manifest)
     {
-        ICompressionService compressionServiceForVault = manifest.CompressionServiceName switch
+        if (manifest.CompressionServiceName == "GZipCompressionService")
         {
-            "GZipCompressionService" => new GZipCompressionService(),
-            _ => throw new CompressionServiceNotSupportedByVaultManagerBootstrapperException(manifest.CompressionServiceName),
-        };
-        return compressionServiceForVault;
+            return new GZipCompressionService();
+        }
+
+        throw new CompressionServiceNotSupportedByVaultManagerBootstrapperException(manifest.CompressionServiceName);
     }
 
     private static ICryptoService? GetCryptoServiceForVault(VaultManifest manifest)
