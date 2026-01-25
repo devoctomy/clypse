@@ -66,10 +66,13 @@ jobs:
     - name: Find coverage files
       id: coverage
       run: |
-        FILES=$(find ./TestResults/UnitTests -name "coverage.opencover.xml" -type f | tr '\n' ',' | sed 's/,$//')
+        echo "Searching for coverage files..."
+        FILES=$(find . -name "coverage.opencover.xml" -type f | tr '\n' ',' | sed 's/,$//')
+        echo "Found coverage files: $FILES"
         echo "reports=$FILES" >> $GITHUB_OUTPUT
         
     - name: Collect code coverage
+      if: steps.coverage.outputs.reports != ''
       uses: codacy/codacy-coverage-reporter-action@v1.3.0
       with:
         project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
