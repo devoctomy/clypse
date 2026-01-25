@@ -67,7 +67,7 @@ jobs:
       uses: codacy/codacy-coverage-reporter-action@v1.3.0
       with:
         project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
-        coverage-reports: ./TestResults/UnitTests/**/coverage.opencover.xml
+        coverage-reports: $(find ./TestResults/UnitTests -name "coverage.opencover.xml" -type f | tr '\n' ',')
 
   integration-tests:
     needs: unit-tests
