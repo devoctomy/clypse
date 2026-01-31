@@ -24,7 +24,7 @@ public class AmazonS3TransferUtilityDirectoryUploadService(IAmazonS3 amazonS3) :
         };
 
         // Set Content-Type for each file based on extension
-        uploadDirectoryRequest.UploadDirectoryFileRequestEvent += (sender, args) =>
+        uploadDirectoryRequest.UploadDirectoryFileRequestEvent += (_, args) =>
         {
             args.UploadRequest.ContentType = GetContentType(args.UploadRequest.FilePath);
         };

@@ -53,6 +53,13 @@ public interface IIoService
     public Task<string> ReadAllTextAsync(string path, CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Reads all bytes from a file asynchronously.
+    /// </summary>
+    /// <param name="path">File path.</param>
+    /// <param name="cancellationToken">Token to cancel the operation.</param>
+    public Task<byte[]> ReadAllBytesAsync(string path, CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Reads all text from a file synchronously.
     /// </summary>
     public string ReadAllText(string path);
@@ -66,6 +73,14 @@ public interface IIoService
     /// Writes text to a file, overwriting existing content.
     /// </summary>
     public void WriteAllText(string path, string contents);
+
+    /// <summary>
+    /// Writes text to a file asynchronously, overwriting existing content.
+    /// </summary>
+    /// <param name="path">File path.</param>
+    /// <param name="contents">Text content to write.</param>
+    /// <param name="cancellationToken">Token to cancel the operation.</param>
+    public Task WriteAllTextAsync(string path, string contents, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Gets files within a directory that match a search pattern.
