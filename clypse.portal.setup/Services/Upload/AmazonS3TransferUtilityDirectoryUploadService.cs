@@ -23,6 +23,38 @@ public class AmazonS3TransferUtilityDirectoryUploadService(IAmazonS3 amazonS3) :
             SearchPattern = "*"
         };
 
+        // Set Content-Type for each file based on extension
+        uploadDirectoryRequest.UploadDirectoryFileRequestEvent += (sender, args) =>
+        {
+            args.UploadRequest.ContentType = GetContentType(args.UploadRequest.FilePath);
+        };
+
         await transferUtility.UploadDirectoryAsync(uploadDirectoryRequest, cancellationToken);
+    }
+
+    private static string GetContentType(string filePath)
+    {
+        var extension = Path.GetExtension(filePath).ToLowerInvariant();
+        return extension switch
+        {
+            ".js" => "application/javascript",
+            ".json" => "application/json",
+            ".css" => "text/css",
+            ".html" => "text/html",
+            ".wasm" => "application/wasm",
+            ".dll" => "application/octet-stream",
+            ".png" => "image/png",
+            ".jpg" or ".jpeg" => "image/jpeg",
+            ".gif" => "image/gif",
+            ".ico" => "image/x-icon",
+            ".svg" => "image/svg+xml",
+            ".woff" => "font/woff",
+            ".woff2" => "font/woff2",
+            ".ttf" => "font/ttf",
+            ".eot" => "application/vnd.ms-fontobject",
+            ".webmanifest" => "application/manifest+json",
+            ".txt" => "text/plain",
+            _ => "application/octet-stream"
+        };
     }
 }

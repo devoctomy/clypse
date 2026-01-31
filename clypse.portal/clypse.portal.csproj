@@ -28,6 +28,7 @@
 	<ItemGroup>
 		<Content Update="wwwroot\appsettings.Development.json">
 			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+			<CopyToPublishDirectory>Never</CopyToPublishDirectory>
 		</Content>
 		<Content Update="wwwroot\version.txt">
 		  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
