@@ -1,0 +1,34 @@
+@startuml Clypse_Data_Storage_Architecture
+
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+title Clypse - Data Storage Architecture
+
+Person(user, "User", "End user with browser")
+
+System_Boundary(client, "Local Browser") {
+    Container(browser, "Clypse Portal", "Blazor WebAssembly", "Encryption/decryption\n key in memory only")
+}
+
+System_Boundary(portalBucket, "Portal S3 Bucket") {
+    Container(portalFiles, "Portal Files", "Static Assets", "HTML, CSS, JS, WASM")
+}
+
+System_Boundary(dataBucket, "Data S3 Bucket") {
+    Container(userFolder, "/{user-id}/", "User Folder", "Each user has their own folder\nAccess restricted by Cognito IAM role")
+    Container(vaultFolder, "/{vault-id}/", "Vault Folder", "Each vault within user folder")
+    Container(index, "index.json", "Encrypted JSON", "Vault metadata\nEncrypted with main key")
+    Container(manifest, "manifest.json", "Encrypted JSON", "Crypto parameters\nSSE-S3 encryption at rest")
+    Container(secrets, "secrets/*", "Encrypted objects", "Individual secret files\nEncrypted with main key")
+    
+    Rel(userFolder, vaultFolder, "Contains")
+    Rel(vaultFolder, index, "Contains")
+    Rel(vaultFolder, manifest, "Contains")
+    Rel(vaultFolder, secrets, "Contains")
+}
+
+Rel(user, browser, "Uses")
+Rel(browser, portalFiles, "Loads portal from")
+Rel(browser, userFolder, "Accesses user data")
+
+@enduml

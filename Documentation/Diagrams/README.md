@@ -1,5 +1,9 @@
 ﻿# Architecture Diagrams
 
+## Data Storage Architecture
+
+![Data Storage Architecture](png/Clypse_Data_Storage_Architecture.png)
+
 ## First Login Flow Diagram
 
 ![First Login Flow Diagram](png/Clypse_First_Login_Flow.png)
