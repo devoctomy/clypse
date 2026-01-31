@@ -14,7 +14,11 @@ public class NativeAesGcmCryptoServiceTests : IDisposable
     {
         this.randomGeneratorService = new RandomGeneratorService();
         this.sut = new NativeAesGcmCryptoService();
-        byte[] keyBytes = this.randomGeneratorService.GetRandomBytes(32);
+        byte[] keyBytes = new byte[32]; // Hard coded key for consistent testing
+        for(var i = 0; i < keyBytes.Length; i++)
+        {
+            keyBytes[i] = (byte)i;
+        }
         this.testKey = Convert.ToBase64String(keyBytes);
     }
 
