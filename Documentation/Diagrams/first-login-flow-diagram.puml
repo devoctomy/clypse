@@ -1,0 +1,51 @@
+@startuml Clypse_First_Login_Flow
+
+title Clypse Portal - First User Login Flow
+
+actor User
+participant "Email\n(AWS SES)" as Email
+participant "Clypse Portal\n(Blazor WASM)" as Portal
+participant "AWS Cognito\nUser Pool" as Cognito
+
+== Initial User Setup ==
+Email -> User: 📧 Welcome email\nwith temporary password
+note right of User
+Email contains:
+• Username/Email
+• Temporary password
+• Portal URL (Not present in email yet, I'm trying to fix that. Need to get it from setup output.)
+end note
+
+== First Login Attempt ==
+User -> Portal: Navigate to portal URL\n(CloudFront distribution)
+Portal -> User: Display login page
+
+User -> Portal: Enter username & temp password
+Portal -> Cognito: InitiateAuth\n(username, temp password)
+Cognito --> Portal: Challenge: NEW_PASSWORD_REQUIRED
+
+Portal -> User: Display password change form
+
+== Password Change ==
+User -> Portal: Enter new password
+Portal -> Cognito: RespondToAuthChallenge\n(new password)
+Cognito --> Portal: Authentication tokens\n(IdToken, AccessToken, RefreshToken)
+
+Portal -> Portal: Store tokens in browser
+
+Portal -> Cognito: GetCredentialsForIdentity\n(IdToken)
+Cognito --> Portal: AWS temporary credentials\n(AccessKeyId, SecretKey, SessionToken)
+
+Portal -> Portal: Configure AWS SDK\nwith temporary credentials
+
+Portal -> User: ✅ Login successful\nRedirect to vault page
+
+note right of Portal
+User is now authenticated and has:
+• Cognito session tokens
+• AWS temporary credentials
+• Access to their S3 folder
+• Ready to create/manage vaults
+end note
+
+@enduml
