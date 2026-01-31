@@ -91,7 +91,16 @@ foreach ($file in $pumlFiles) {
         $_.Substring(0,1).ToUpper() + $_.Substring(1) 
     }) -join ' '
     
-    $pngPath = "png/$baseName.png"
+    # PlantUML uses the @startuml name for the output file, not the input filename
+    # So we need to find the actual PNG file that was generated
+    $pumlContent = Get-Content $file.FullName -Raw
+    if ($pumlContent -match '@startuml\s+(\S+)') {
+        $actualPngName = $matches[1]
+        $pngPath = "png/$actualPngName.png"
+    } else {
+        # Fallback to the input filename if no @startuml name is found
+        $pngPath = "png/$baseName.png"
+    }
     
     $readmeLines += "## $title"
     $readmeLines += ""
