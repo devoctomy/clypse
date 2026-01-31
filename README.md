@@ -10,6 +10,8 @@ Clypse, is a complete password management system that you host yourself in Amazo
 
 It is designed to use the latest cryptographic standards but also be highly customisable.
 
+[C4 Diagrams are available here.](/Documentation/Diagrams)
+
 ## Setup & Deployment
 
 Clypse includes an automated setup application (`clypse.portal.setup`) that handles all AWS resource creation and deployment. Simply run this application from Visual Studio to set up your complete password management system.
