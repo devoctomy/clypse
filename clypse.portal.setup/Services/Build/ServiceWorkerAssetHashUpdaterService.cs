@@ -102,7 +102,7 @@ public partial class ServiceWorkerAssetHashUpdaterService(
         CancellationToken cancellationToken)
     {
         var manifestContent = await ioService.ReadAllTextAsync(manifestFilePath, cancellationToken);
-        var jsonContent = AssetsManifestPrefixRegex().Replace(manifestContent, string.Empty).TrimEnd(';');
+        var jsonContent = AssetsManifestPrefixRegex().Replace(manifestContent.Trim(), string.Empty).TrimEnd(';');
         
         return JsonNode.Parse(jsonContent) ??
             throw new Exception("Failed to parse service worker manifest JSON.");

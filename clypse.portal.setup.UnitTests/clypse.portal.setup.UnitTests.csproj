@@ -11,6 +11,7 @@
     <None Remove="Data\CommandLineTestOptions3HelpMessage.txt" />
     <None Remove="Data\CommandLineTestOptionsHelpMessage.txt" />
     <None Remove="Data\Json\Base1.json" />
+    <None Remove="Data\service-worker-assets.js" />
   </ItemGroup>
 
   <ItemGroup>
@@ -27,6 +28,9 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="Data\Json\Base1.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Data\service-worker-assets.js">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
   </ItemGroup>

@@ -4,11 +4,18 @@ using Microsoft.Extensions.Logging;
 using Moq;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace clypse.portal.setup.UnitTests.Services.Build;
 
 public class ServiceWorkerAssetHashUpdaterServiceTests
 {
+    private readonly JsonSerializerOptions jsonSerializerOptions = new()
+    {
+        WriteIndented = true
+    };
+
     [Fact]
     public async Task GivenValidAssetAndManifest_WhenUpdateAssetAsync_ThenReturnsTrue()
     {
@@ -110,6 +117,37 @@ public class ServiceWorkerAssetHashUpdaterServiceTests
     }
 
     [Fact]
+    public async Task GivenRealWorldAssetJs_WhenUpdateAssetAsync_ThenReturnsTrue()
+    {
+        var mockIoService = new Mock<IIoService>();
+        var mockLogger = new Mock<ILogger<ServiceWorkerAssetHashUpdaterService>>();
+        var sut = new ServiceWorkerAssetHashUpdaterService(mockIoService.Object, mockLogger.Object);
+
+        var publishDirectory = "/publish";
+        var assetPath = "appsettings.json";
+        var assetFilePath = "/publish/missing.json";
+        var manifestFilePath = "/publish/service-worker-assets.js";
+
+        var assetContent = "{\"test\":\"data\"}"u8.ToArray();
+
+        var realWorldAssetsText = await File.ReadAllTextAsync("Data/service-worker-assets.js");
+
+        mockIoService.Setup(io => io.CombinePath(publishDirectory, assetPath)).Returns(assetFilePath);
+        mockIoService.Setup(io => io.CombinePath(publishDirectory, "service-worker-assets.js")).Returns(manifestFilePath);
+        mockIoService.Setup(io => io.FileExists(assetFilePath)).Returns(true);
+        mockIoService.Setup(io => io.FileExists(manifestFilePath)).Returns(true);
+        mockIoService.Setup(io => io.ReadAllBytesAsync(assetFilePath, It.IsAny<CancellationToken>())).ReturnsAsync(assetContent);
+        mockIoService.Setup(io => io.ReadAllTextAsync(manifestFilePath, It.IsAny<CancellationToken>())).ReturnsAsync(realWorldAssetsText);
+
+        // Act
+        var result = await sut.UpdateAssetAsync(publishDirectory, assetPath);
+
+        // Assert
+        Assert.True(result);
+        mockIoService.Verify(io => io.WriteAllTextAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
     public async Task GivenAssetNotInManifest_WhenUpdateAssetAsync_ThenReturnsFalse()
     {
         // Arrange
@@ -124,17 +162,19 @@ public class ServiceWorkerAssetHashUpdaterServiceTests
 
         var assetContent = "{\"test\":\"data\"}"u8.ToArray();
 
-        var manifestContent = """
-            self.assetsManifest = {
-              "assets": [
+        var manifestContentObject = new
+        {
+            version = "test",
+            assets = new[]
+            {
+                new
                 {
-                  "url": "appsettings.json",
-                  "hash": "sha256-oldHashValue"
+                    url = "appsettings.json",
+                    hash = "sha256-oldHashValue"
                 }
-              ],
-              "version": "test"
-            };
-            """;
+            }
+        };
+        var manifestContent = $"self.assetsManifest = {JsonSerializer.Serialize(manifestContentObject, jsonSerializerOptions)};\r\n";
 
         mockIoService.Setup(io => io.CombinePath(publishDirectory, assetPath)).Returns(assetFilePath);
         mockIoService.Setup(io => io.CombinePath(publishDirectory, "service-worker-assets.js")).Returns(manifestFilePath);
