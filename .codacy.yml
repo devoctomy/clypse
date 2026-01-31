@@ -1,0 +1,13 @@
+---
+engines:
+  duplication:
+    enabled: true
+    exclude_paths:
+      - 'Documentation/Diagrams/Generate-Diagrams.ps1'
+
+exclude_paths:
+  - 'Documentation/Diagrams/Generate-Diagrams.ps1'
+  - '**/bin/**'
+  - '**/obj/**'
+  - '**/*.min.js'
+  - '**/.playwright/**'
