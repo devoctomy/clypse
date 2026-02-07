@@ -181,6 +181,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IPortalConfigService, PortalConfigService>();
         services.AddScoped<IInventoryService, InventoryService>();
         services.AddScoped<IJsonMergerService, NewtonsoftJsonMergerService>();
+        services.AddScoped<IServiceWorkerAssetHashUpdaterService, ServiceWorkerAssetHashUpdaterService>();
         services.AddSingleton<IProgram, SetupProgram>();
 
         return services;

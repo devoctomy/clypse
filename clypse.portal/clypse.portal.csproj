@@ -6,7 +6,7 @@
 		<ServiceWorkerAssetsManifest>service-worker-assets.js</ServiceWorkerAssetsManifest>
 	</PropertyGroup>
 	<PropertyGroup>
-		<AssemblyVersion>1.0.0.*</AssemblyVersion>
+		<AssemblyVersion>1.0.1.0</AssemblyVersion>
 		<Deterministic>false</Deterministic>
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(RuntimeIdentifier)' == 'browser-wasm'">
@@ -28,8 +28,12 @@
 	<ItemGroup>
 		<Content Update="wwwroot\appsettings.Development.json">
 			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+			<CopyToPublishDirectory>Never</CopyToPublishDirectory>
 		</Content>
 		<Content Update="wwwroot\version.txt">
+		  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</Content>
+		<Content Update="wwwroot\changes.json">
 		  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
 		</Content>
 	</ItemGroup>
@@ -42,5 +46,8 @@
 			<Output TaskParameter="Assemblies" ItemName="BuiltAssemblyIdentity" />
 		</GetAssemblyIdentity>
 		<WriteLinesToFile File="$(MSBuildProjectDirectory)\wwwroot\version.txt" Lines="%(BuiltAssemblyIdentity.Version)" Overwrite="true" />
+	</Target>
+	<Target Name="BeforeBuild_CopyChangesJson" BeforeTargets="Build">
+		<Copy SourceFiles="..\Documentation\Changes\changes.json" DestinationFiles="$(MSBuildProjectDirectory)\wwwroot\changes.json" SkipUnchangedFiles="true" />
 	</Target>
 </Project>

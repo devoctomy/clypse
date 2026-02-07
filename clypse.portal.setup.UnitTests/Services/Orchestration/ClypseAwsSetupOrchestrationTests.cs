@@ -24,6 +24,7 @@ public class ClypseAwsSetupOrchestrationTests
     private readonly Mock<IIoService> _mockIoService;
     private readonly Mock<IInventoryService> _mockInventoryService;
     private readonly Mock<IJsonMergerService> _mockJsonMergerService;
+    private readonly Mock<IServiceWorkerAssetHashUpdaterService> _mockServiceWorkerAssetHashUpdaterService;
     private readonly Mock<ILogger<IamService>> _mockLogger;
     private readonly SetupOptions _options;
 
@@ -38,6 +39,7 @@ public class ClypseAwsSetupOrchestrationTests
         _mockIoService = new Mock<IIoService>();
         _mockInventoryService = new Mock<IInventoryService>();
         _mockJsonMergerService = new Mock<IJsonMergerService>();
+        _mockServiceWorkerAssetHashUpdaterService = new Mock<IServiceWorkerAssetHashUpdaterService>();
         _mockLogger = new Mock<ILogger<IamService>>();
         _options = new SetupOptions
         {
@@ -65,6 +67,7 @@ public class ClypseAwsSetupOrchestrationTests
             _mockIoService.Object,
             _mockInventoryService.Object,
             _mockJsonMergerService.Object,
+            _mockServiceWorkerAssetHashUpdaterService.Object,
             _mockLogger.Object);
     }
 
@@ -84,6 +87,7 @@ public class ClypseAwsSetupOrchestrationTests
             _mockIoService.Object,
             _mockInventoryService.Object,
             _mockJsonMergerService.Object,
+            _mockServiceWorkerAssetHashUpdaterService.Object,
             _mockLogger.Object);
 
         // Act & Assert
@@ -517,6 +521,12 @@ public class ClypseAwsSetupOrchestrationTests
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(new MemoryStream());
 
+        _mockServiceWorkerAssetHashUpdaterService.Setup(s => s.UpdateAssetAsync(
+                It.IsAny<string>(),
+                It.IsAny<string>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+
         _mockIoService.Setup(x => x.OpenWrite(
             It.IsAny<string>()))
             .Returns(new MemoryStream());
@@ -586,6 +596,12 @@ public class ClypseAwsSetupOrchestrationTests
                 It.IsAny<string>(),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(new MemoryStream());
+
+        _mockServiceWorkerAssetHashUpdaterService.Setup(s => s.UpdateAssetAsync(
+                It.IsAny<string>(),
+                It.IsAny<string>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
 
         _mockCognitoService
             .Setup(s => s.CreateUserAsync(
@@ -660,6 +676,12 @@ public class ClypseAwsSetupOrchestrationTests
                 It.IsAny<string>(),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(new MemoryStream());
+
+        _mockServiceWorkerAssetHashUpdaterService.Setup(s => s.UpdateAssetAsync(
+                It.IsAny<string>(),
+                It.IsAny<string>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
 
         _mockCognitoService
             .Setup(s => s.CreateUserAsync(
@@ -756,6 +778,12 @@ public class ClypseAwsSetupOrchestrationTests
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(new MemoryStream());
 
+        _mockServiceWorkerAssetHashUpdaterService.Setup(s => s.UpdateAssetAsync(
+                It.IsAny<string>(),
+                It.IsAny<string>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+
         _mockIoService.Setup(x => x.OpenWrite(
             It.IsAny<string>()))
             .Returns(new MemoryStream());
@@ -840,6 +868,12 @@ public class ClypseAwsSetupOrchestrationTests
                 It.IsAny<string>(),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(new MemoryStream());
+
+        _mockServiceWorkerAssetHashUpdaterService.Setup(s => s.UpdateAssetAsync(
+                It.IsAny<string>(),
+                It.IsAny<string>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
 
         _mockIoService.Setup(x => x.OpenWrite(
             It.IsAny<string>()))

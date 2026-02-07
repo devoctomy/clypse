@@ -1,0 +1,21 @@
+{
+  "versions": [
+    {
+      "version": "1.0.1.0",
+      "changes": [
+        {
+          "type": "change",
+          "description": "Portal version is now manually updated, this allows for transparent updates with change logging."
+        },
+        {
+          "type": "change",
+          "description": "PWA Version link now brings up changes dialog with update button (if available)."
+        },		
+        {
+          "type": "feature",
+          "description": "Changes dialog which enumerates changes.json at runtime."
+        }
+      ]
+    }
+  ]
+}

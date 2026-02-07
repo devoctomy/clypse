@@ -76,9 +76,27 @@ public class IoService : IIoService
     }
 
     /// <inheritdoc />
+    public async Task<byte[]> ReadAllBytesAsync(
+        string path,
+        CancellationToken cancellationToken = default)
+    {
+        var bytes = await File.ReadAllBytesAsync(path, cancellationToken);
+        return bytes;
+    }
+
+    /// <inheritdoc />
     public string ReadAllText(string path)
     {
         return File.ReadAllText(path);
+    }
+
+    /// <inheritdoc />
+    public async Task WriteAllTextAsync(
+        string path,
+        string contents,
+        CancellationToken cancellationToken = default)
+    {
+        await File.WriteAllTextAsync(path, contents, cancellationToken);
     }
 
     /// <inheritdoc />

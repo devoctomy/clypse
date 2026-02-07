@@ -1,0 +1,93 @@
+@startuml Clypse_Setup_Flow
+
+title Clypse Setup Program - Full Deployment Flow
+
+actor User
+participant "Setup Tool\n(clypse.portal.setup)" as Setup
+participant "AWS STS" as STS
+participant "AWS S3" as S3
+participant "AWS IAM" as IAM
+participant "AWS Cognito\nUser Pool" as Cognito
+participant "AWS Cognito\nIdentity Pool" as Identity
+participant "AWS CloudFront" as CloudFront
+participant "Email Service\n(AWS SES)" as Email
+
+User -> Setup: Run setup application
+Setup -> User: Prompt for configuration\n(Region, Prefix, Credentials, Initial User Email)
+User -> Setup: Provide configuration
+Setup -> Setup: Validate options\nGenerate setup ID & tags
+
+== AWS Account Verification ==
+Setup -> STS: GetCallerIdentity
+STS --> Setup: Account ID
+
+== S3 Bucket Setup ==
+Setup -> S3: Create portal bucket\n({prefix}.clypse.portal)
+S3 --> Setup: Bucket created
+Setup -> S3: Set bucket tags
+Setup -> S3: Set public read policy
+Setup -> S3: Create data bucket\n({prefix}.clypse.data)
+S3 --> Setup: Bucket created
+Setup -> S3: Set bucket tags
+
+== IAM Policy Creation ==
+Setup -> IAM: Create data policy\n(clypse.data.policy)\nScoped S3 access to user folder
+IAM --> Setup: Data policy ARN
+Setup -> IAM: Create auth policy\n(clypse.auth.policy)\nGetCredentialsForIdentity
+IAM --> Setup: Auth policy ARN
+
+== Cognito User Pool Setup ==
+Setup -> Cognito: Create user pool\n(clypse.user.pool)
+Cognito --> Setup: User pool ID
+Setup -> Cognito: Create user pool client\n(clypse.identity.pool.client)
+Cognito --> Setup: Client ID
+
+== Cognito Identity Pool Setup ==
+Setup -> Identity: Create identity pool\n(clypse.identity.pool)\nLinked to user pool
+Identity --> Setup: Identity pool ID
+
+== IAM Role Configuration ==
+Setup -> IAM: Create auth role\n(clypse.auth.role)\nTrust policy for identity pool
+IAM --> Setup: Auth role ARN
+Setup -> IAM: Attach data policy to role
+Setup -> IAM: Attach auth policy to role
+Setup -> Identity: Set authenticated role
+
+== Portal Deployment ==
+Setup -> Setup: Configure portal settings\n(appsettings.json)\nwith AWS resource IDs
+Setup -> Setup: Write appsettings.json\nto build output folder
+Setup -> Setup: Update service-worker-assets.js\nwith new appsettings.json hash
+Setup -> S3: Upload all portal files\n(including appsettings.json)
+S3 --> Setup: Upload complete
+Setup -> S3: Set bucket website configuration\n(index.html, error.html)
+S3 --> Setup: Website configured
+
+== CloudFront Distribution ==
+Setup -> CloudFront: Create distribution\nOrigin: S3 website endpoint\n(Optional: custom domain & cert)
+CloudFront --> Setup: Distribution domain\n(xxx.cloudfront.net)
+
+== Final Configuration ==
+Setup -> S3: Set data bucket CORS\nOrigin: CloudFront domain\nMethods: GET, PUT, POST, DELETE, HEAD
+S3 --> Setup: CORS configured
+
+== Initial User Creation ==
+Setup -> Cognito: Create initial user\n(AdminCreateUser)
+Cognito --> Setup: User created
+Cognito -> Email: Send welcome email\nwith temporary password
+Email -> User: 📧 Welcome email + temp password
+
+Setup -> Setup: Save resource inventory\n({setupId}-inventory.json)
+Setup -> User: ✅ Setup complete!\nCloudFront URL: https://{distribution}.cloudfront.net
+
+note right of Setup
+**Resources Created:**
+• 2 S3 Buckets (portal, data)
+• 2 IAM Policies (data, auth)
+• 1 IAM Role (authenticated users)
+• 1 Cognito User Pool + Client
+• 1 Cognito Identity Pool
+• 1 CloudFront Distribution
+• 1 Initial Cognito User
+end note
+
+@enduml

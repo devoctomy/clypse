@@ -1,0 +1,58 @@
+@startuml Clypse_Upgrade_Flow
+
+title Clypse Setup Program - Portal Upgrade Flow
+
+actor User
+participant "Setup Tool\n(clypse.portal.setup)" as Setup
+participant "AWS S3\n(Portal Bucket)" as S3
+participant "AWS CloudFront" as CloudFront
+
+User -> Setup: Run setup in upgrade mode
+Setup -> User: Prompt for configuration\n(Region, Prefix, Credentials, Build Path)
+User -> Setup: Provide configuration
+Setup -> Setup: Validate options
+
+== Version Check ==
+Setup -> S3: Check portal bucket exists
+S3 --> Setup: Bucket exists
+Setup -> S3: Download version.txt
+S3 --> Setup: Deployed version (e.g., 1.0.0)
+Setup -> Setup: Read build version.txt\nfrom build output
+Setup -> Setup: Compare versions
+alt Build version > Deployed version
+    Setup -> Setup: Proceed with upgrade
+else Build version <= Deployed version
+    Setup -> User: No upgrade needed\nDeployed version is current
+    note right: Upgrade aborted
+end
+
+== Configuration Merge ==
+Setup -> S3: Download appsettings.json
+S3 --> Setup: Existing configuration
+Setup -> Setup: Read appsettings.json template\nfrom build output
+Setup -> Setup: Merge configurations\n(preserve existing settings,\nadd new settings from template)
+Setup -> Setup: Write merged appsettings.json\nto build output folder
+Setup -> Setup: Update service-worker-assets.js\nwith new appsettings.json hash
+
+== Portal Deployment ==
+Setup -> S3: Upload all portal files\n(including updated appsettings.json)
+S3 --> Setup: All files uploaded
+
+== CloudFront Cache Invalidation ==
+Setup -> CloudFront: Create invalidation\nPath: /*
+CloudFront --> Setup: Invalidation ID
+note right: CloudFront cache cleared\nNew version available
+
+Setup -> Setup: Save resource inventory\n({setupId}-update-inventory.json)
+Setup -> User: ✅ Upgrade complete!\nNew version deployed
+
+note right of Setup
+**Upgrade Process:**
+• Version comparison
+• Configuration merge
+• File upload to S3
+• CloudFront invalidation
+• No AWS resource changes
+end note
+
+@enduml

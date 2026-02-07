@@ -1,0 +1,91 @@
+@startuml Clypse_Vault_Unlock_Flow
+
+title Clypse Portal - Vault Unlock Flow
+
+actor User
+participant "Clypse Portal\n(Blazor WASM)" as Portal
+participant "AWS S3\n(User Bucket)" as S3
+participant "Vault Manager" as VaultMgr
+participant "Crypto Service" as Crypto
+
+== Portal Login ==
+User -> Portal: Login to portal
+note right of User
+User has already authenticated
+and has AWS temporary credentials
+end note
+
+Portal -> User: Display vault page
+
+== List Available Vaults ==
+Portal -> S3: ListObjects("/")\nList folders in user's S3 bucket
+S3 --> Portal: Folder names (vault IDs)
+
+Portal -> User: Display vault list\n(IDs only, no name/description)
+note right of Portal
+At this stage:
+• Only folder names visible
+• No vault metadata available
+• Vaults appear locked
+end note
+
+== Unlock Vault ==
+User -> Portal: Click unlock vault
+Portal -> User: Prompt for passphrase
+
+Portal -> S3: Download vault manifest\n({vault-id}/manifest.json)
+note right of S3
+Manifest is:
+• Encrypted at rest (AWS SSE-S3)
+• Contains crypto parameters
+• Does not contain secrets
+end note
+S3 --> Portal: Manifest JSON
+
+Portal -> VaultMgr: Create vault manager\n(manifest parameters)
+VaultMgr --> Portal: Vault manager initialized
+
+User -> Portal: Enter passphrase
+Portal -> VaultMgr: Derive key from passphrase\n(using manifest parameters)
+VaultMgr -> Crypto: Key derivation\n
+Crypto --> VaultMgr: Derived key
+VaultMgr --> Portal: Encryption key ready
+
+== Index Download & Decryption ==
+Portal -> S3: Download vault index\n({vault-id}/index.json)
+S3 --> Portal: Encrypted index data
+
+Portal -> VaultMgr: Decrypt vault index\n(using derived key)
+VaultMgr -> Crypto: Attempt decryption
+
+alt Decryption Successful
+    Crypto --> VaultMgr: Decrypted index
+    VaultMgr --> Portal: ✅ Vault unlocked\nVault name, description\nSecrets metadata
+    
+    Portal -> User: ✅ Vault unlocked\nDisplay vault name, description\nand secrets list
+    
+    note right of Portal
+    Secrets metadata displayed:
+    • Secret ID
+    • Secret Name
+    • Secret Description
+    • Secret Tags
+    
+    User can now:
+    • View/search/filter secrets
+    • Add new secrets
+    • Edit existing secrets
+    • Delete secrets
+    • Change vault settings
+    
+    Secret content downloaded
+    on-demand when accessed
+    end note
+    
+else Decryption Failed
+    Crypto --> VaultMgr: ❌ Decryption error
+    VaultMgr --> Portal: Invalid passphrase
+    Portal -> User: ❌ Access denied\nIncorrect passphrase
+end
+
+@enduml

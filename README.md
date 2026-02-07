@@ -10,6 +10,8 @@ Clypse, is a complete password management system that you host yourself in Amazo
 
 It is designed to use the latest cryptographic standards but also be highly customisable.
 
+[C4 Diagrams are available here.](/Documentation/Diagrams)
+
 ## Setup & Deployment
 
 Clypse includes an automated setup application (`clypse.portal.setup`) that handles all AWS resource creation and deployment. Simply run this application from Visual Studio to set up your complete password management system.
@@ -37,8 +39,8 @@ When deployed to AWS, Clypse requires the following AWS resources (all pay-as-yo
 4. The setup tool will prompt you for the following parameters:
    - **AWS Access Key ID** - Your AWS credentials
    - **AWS Secret Access Key** - Your AWS credentials
-   - **AWS Region** - Where resources will be created (e.g., `us-east-1`)
-   - **Resource Prefix** - Prefix for all AWS resource names (e.g., `my-clypse`)
+   - **AWS Region** - Where resources will be created (e.g., `eu-west-2`)
+   - **Resource Prefix** - Prefix for all AWS resource names (e.g., `foobar`)
    - **Portal Build Output Path** - Path to the published WASM build, this will be set automatically if you do the build within the setup tool.
    - **Initial User Email** - Email for the first Cognito user account
 
@@ -202,6 +204,12 @@ To run the Deploy pipeline, configure the following secrets in your GitHub repos
 - **tests.yml � Integration Tests**: Starts only after `unit-tests` succeeds and only for first-party branches (forked PRs are skipped); gated on the AWS integration secrets being available.
 - **tests.yml � UI Tests**: Queues after `integration-tests` completes successfully, reuses the same runner image, and requires the Cognito credentials plus portal appsettings secret before it can run.
 - **deploy.yml � Production Deploy**: Auto-triggers when the Tests workflow finishes successfully on `main` (push or manual rerun), targets the protected `production` environment, and will not start publishing to AWS until a maintainer approves the environment gate.
+
+## Change Logging
+
+Change logging is handled manually via the [Changes JSON](Documentation/Changes/changes.json) file.
+
+This can be seen on the login screen of the portal when clicking the version number in the page footer.
 
 ## Screenshots
 

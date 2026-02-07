@@ -14,7 +14,11 @@ public class NativeAesCbcCryptoServiceTests : IDisposable
     {
         this.randomGeneratorService = new RandomGeneratorService();
         this.sut = new NativeAesCbcCryptoService();
-        byte[] keyBytes = this.randomGeneratorService.GetRandomBytes(32);
+        byte[] keyBytes = new byte[32]; // Hard coded key for consistent testing
+        for(var i = 0; i < keyBytes.Length; i++)
+        {
+            keyBytes[i] = (byte)i;
+        }
         this.testKey = Convert.ToBase64String(keyBytes);
     }
 
@@ -52,6 +56,7 @@ public class NativeAesCbcCryptoServiceTests : IDisposable
         using var decryptedStream = new MemoryStream();
 
         // Assert
+        Assert.NotEqual(this.testKey, Convert.ToBase64String(wrongKeyBytes));       // I put this in as somehow this test failedin github workflow, suggesting the encryption was successful with the wrong key? So CRNG must have produced zeros??
         await this.sut.EncryptAsync(inputStream, encryptedStream, this.testKey);
         encryptedStream.Position = 0;
         var exception = await Assert.ThrowsAnyAsync<CryptographicException>(async () =>

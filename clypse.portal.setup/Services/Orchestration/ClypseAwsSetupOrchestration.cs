@@ -28,6 +28,7 @@ public class ClypseAwsSetupOrchestration(
         IIoService ioService,
         IInventoryService inventoryService,
         IJsonMergerService jsonMergerService,
+        IServiceWorkerAssetHashUpdaterService serviceWorkerAssetHashUpdaterService,
         ILogger<IamService> logger) : IClypseAwsSetupOrchestration
 {
     /// <inheritdoc />
@@ -479,7 +480,9 @@ public class ClypseAwsSetupOrchestration(
             Console.ReadKey();
         }
 
-        var portalBucketName = "clypse.portal";
+        var portalBucketName = !string.IsNullOrWhiteSpace(options.UpgradePortalBucketNameOverride)
+            ? options.UpgradePortalBucketNameOverride
+            : "clypse.portal";
         logger.LogInformation("Checking to see if portal bucket exists.");
         var portalBucketExists = await s3Service.DoesBucketExistAsync(
             portalBucketName,
@@ -619,6 +622,15 @@ public class ClypseAwsSetupOrchestration(
                 outputStream.Close();
 
                 configStream.Dispose();
+
+               var updatedAppSettingsAsset = await serviceWorkerAssetHashUpdaterService.UpdateAssetAsync(
+                    options.PortalBuildOutputPath,
+                    "appsettings.json");
+                if(!updatedAppSettingsAsset)
+                {
+                    logger.LogError("Failed to update service worker asset 'appsettings.json'.");
+                    throw new Exception("Failed to update service worker asset 'appsettings.json'.");
+                }
             }
 
             logger.LogInformation("Deploying portal to portal bucket.");

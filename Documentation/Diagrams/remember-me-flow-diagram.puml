@@ -1,0 +1,77 @@
+@startuml Clypse_Remember_Me_Flow
+
+title Clypse Portal - Remember Me with Biometric Authentication
+
+actor User
+participant "Clypse Portal\n(Blazor WASM)" as Portal
+participant "Browser\nWebAuthn API" as WebAuthn
+participant "Authenticator\n(Touch ID/Windows Hello)" as Auth
+participant "AWS Cognito" as Cognito
+participant "Browser\nLocal Storage" as Storage
+
+== Initial Login with Remember Me ==
+User -> Portal: Navigate to login page
+Portal -> User: Display login form
+
+User -> Portal: Enter credentials\nCheck "Remember Me"
+Portal -> Cognito: Authenticate\n(username, password)
+Cognito --> Portal: Authentication successful\n(tokens)
+
+Portal -> User: Prompt: Enable biometric login?\n(Requires PRF support)
+note right of Portal
+"Remember Me" requires:
+• WebAuthn PRF extension
+• Compatible authenticator
+• User verification
+end note
+
+User -> Portal: Confirm biometric setup
+
+Portal -> WebAuthn: Register credential\nwith PRF extension
+WebAuthn -> Auth: Request user verification\n(Touch ID, Face ID, Windows Hello)
+Auth -> User: Prompt for biometric
+User -> Auth: Provide biometric
+Auth --> WebAuthn: Credential created\n+ PRF enabled
+WebAuthn --> Portal: Credential ID\n+ PRF extension confirmed
+
+Portal -> Portal: Use PRF output as encryption key
+Portal -> Portal: Encrypt password\nusing PRF-derived key
+Portal -> Storage: Store encrypted data:\n• Username\n• Encrypted password\n• Credential ID
+
+Portal -> User: ✅ Biometric login enabled\nYou can now use biometrics to login
+
+== Subsequent Login with Biometrics ==
+User -> Portal: Navigate to login page
+Portal -> Storage: Check for remembered accounts
+Storage --> Portal: Remembered account(s) found
+
+Portal -> User: Display remembered account(s)\n"Login with biometrics"
+
+User -> Portal: Click remembered account
+Portal -> Storage: Retrieve encrypted password\nand credential ID
+Storage --> Portal: Encrypted data + credential ID
+
+Portal -> WebAuthn: Authenticate with PRF\n(credential ID, PRF eval salt)
+WebAuthn -> Auth: Request user verification
+Auth -> User: Prompt for biometric
+User -> Auth: Provide biometric
+Auth --> WebAuthn: Authentication successful
+WebAuthn --> Portal: PRF output (same key)
+
+Portal -> Portal: Use PRF output to decrypt password
+Portal -> Portal: Decrypt stored password
+
+Portal -> Cognito: Authenticate\n(username, decrypted password)
+Cognito --> Portal: Authentication successful\n(tokens)
+
+Portal -> User: ✅ Login successful\nRedirect to vault page
+
+note right of Portal
+**Security Benefits:**
+• Password never stored in plaintext
+• Decryption key derived from biometric
+• No password without biometric verification
+• PRF output unique to authenticator
+end note
+
+@enduml

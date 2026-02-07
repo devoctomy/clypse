@@ -1990,3 +1990,121 @@ body { position:static !important; height:auto !important; }
         max-width: none;
     }
 }
+
+/* ================================
+   CHANGES DIALOG STYLES
+   ================================ */
+
+/* Changes dialog specific styles */
+.changes-dialog .modal-body {
+    max-height: calc(100vh - 300px);
+    overflow-y: auto;
+}
+
+.changes-list {
+    padding: 0.5rem 0;
+}
+
+.version-section {
+    border-left: 3px solid var(--bs-primary);
+    padding-left: 1rem;
+}
+
+.version-header {
+    color: var(--clypse-text-primary);
+    font-weight: 600;
+    margin-bottom: 0.75rem;
+    display: flex;
+    align-items: center;
+}
+
+.changes-items {
+    padding-left: 0.5rem;
+}
+
+.change-item {
+    display: flex;
+    align-items: flex-start;
+    padding: 0.5rem 0;
+    color: var(--clypse-text-secondary);
+    line-height: 1.5;
+}
+
+.change-item i {
+    margin-top: 0.25rem;
+    flex-shrink: 0;
+}
+
+.change-item span {
+    flex: 1;
+}
+
+/* Change type icons */
+.change-item .bi-bug-fill {
+    color: #dc3545 !important;
+}
+
+.change-item .bi-star-fill {
+    color: #28a745 !important;
+}
+
+.change-item .bi-arrow-repeat {
+    color: #007bff !important;
+}
+
+/* Update button in footer */
+.changes-dialog .modal-footer {
+    border-top: 1px solid var(--clypse-border-light);
+    padding: 1rem;
+}
+
+.changes-dialog .modal-footer .btn-success {
+    font-weight: 600;
+}
+
+/* Dark mode adjustments */
+[data-theme="dark"] .changes-dialog .modal-content {
+    background-color: var(--clypse-surface-primary);
+    border-color: var(--clypse-border-medium);
+}
+
+[data-theme="dark"] .changes-dialog .modal-header {
+    background-color: var(--clypse-surface-secondary);
+    border-bottom-color: var(--clypse-border-medium);
+}
+
+[data-theme="dark"] .changes-dialog .modal-footer {
+    background-color: var(--clypse-surface-secondary);
+    border-top-color: var(--clypse-border-medium);
+}
+
+/* Ensure dialog doesn't exceed screen boundaries */
+@media (max-width: 768px) {
+    .changes-dialog {
+        margin: 1rem;
+    }
+    
+    .changes-dialog .modal-body {
+        max-height: calc(100vh - 250px);
+    }
+}
+
+/* Make dialog scrollable with custom scrollbar */
+.changes-dialog .modal-body::-webkit-scrollbar {
+    width: 8px;
+}
+
+.changes-dialog .modal-body::-webkit-scrollbar-track {
+    background: var(--clypse-surface-secondary);
+    border-radius: 4px;
+}
+
+.changes-dialog .modal-body::-webkit-scrollbar-thumb {
+    background: var(--clypse-border-medium);
+    border-radius: 4px;
+}
+
+.changes-dialog .modal-body::-webkit-scrollbar-thumb:hover {
+    background: var(--bs-primary);
+}
+

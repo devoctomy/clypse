@@ -1,0 +1,21 @@
+---
+engines:
+duplication:
+  enabled: true
+  exclude_paths:
+    - 'Documentation/Diagrams/Generate-Diagrams.ps1'
+    - 'Cloudformation/deploy-portal.ps1'
+    - '**/*.md'
+    - 'README.md'
+    - '**/README.md'
+
+exclude_paths:
+- 'Documentation/Diagrams/Generate-Diagrams.ps1'
+- 'Cloudformation/deploy-portal.ps1'
+- '**/bin/**'
+- '**/obj/**'
+- '**/*.min.js'
+- '**/.playwright/**'
+- '**/*.md'
+- 'README.md'
+- '**/README.md'
