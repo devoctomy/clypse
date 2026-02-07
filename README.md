@@ -205,6 +205,12 @@ To run the Deploy pipeline, configure the following secrets in your GitHub repos
 - **tests.yml � UI Tests**: Queues after `integration-tests` completes successfully, reuses the same runner image, and requires the Cognito credentials plus portal appsettings secret before it can run.
 - **deploy.yml � Production Deploy**: Auto-triggers when the Tests workflow finishes successfully on `main` (push or manual rerun), targets the protected `production` environment, and will not start publishing to AWS until a maintainer approves the environment gate.
 
+## Change Logging
+
+Change logging is handled manually via the [Changes JSON](Documentation/Changes/changes.json) file.
+
+This can be seen on the login screen of the portal when clicking the version number in the page footer.
+
 ## Screenshots
 
 ![Login Page in Light Theme](Resources/Screenshots/1.png)

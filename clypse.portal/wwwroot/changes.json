@@ -10,7 +10,7 @@
         {
           "type": "change",
           "description": "PWA Version link now brings up changes dialog with update button (if available)."
-        },		
+        },
         {
           "type": "feature",
           "description": "Changes dialog which enumerates changes.json at runtime."
