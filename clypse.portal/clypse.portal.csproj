@@ -47,7 +47,7 @@
 		</GetAssemblyIdentity>
 		<WriteLinesToFile File="$(MSBuildProjectDirectory)\wwwroot\version.txt" Lines="%(BuiltAssemblyIdentity.Version)" Overwrite="true" />
 	</Target>
-	<Target Name="AfterBuild_CopyChangesJson" AfterTargets="Build">
+	<Target Name="BeforeBuild_CopyChangesJson" BeforeTargets="Build">
 		<Copy SourceFiles="..\Documentation\Changes\changes.json" DestinationFiles="$(MSBuildProjectDirectory)\wwwroot\changes.json" SkipUnchangedFiles="true" />
 	</Target>
 </Project>
