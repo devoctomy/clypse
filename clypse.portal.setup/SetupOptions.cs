@@ -61,6 +61,11 @@ public class SetupOptions
     public bool EnableUpgradeMode { get; set; } = false;
 
     /// <summary>
+    /// Gets or sets an optional override for the portal bucket name during upgrades.
+    /// </summary>
+    public string UpgradePortalBucketNameOverride { get; set; } = string.Empty;
+
+    /// <summary>
     /// Determines whether the options contain the required values.
     /// </summary>
     /// <returns><see langword="true"/> when required values are present; otherwise, <see langword="false"/>.</returns>

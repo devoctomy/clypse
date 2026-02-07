@@ -46,6 +46,7 @@ public class SetupInteractiveMenuService(IPortalBuildService portalBuildService)
                         "Edit CertificateArn",
                         "Edit InitialUserEmail",
                         "Edit PortalBuildOutputPath",
+                        "Edit UpgradePortalBucketNameOverride",
                         "Save options",
                         "Continue",
                         "Upgrade",
@@ -163,6 +164,13 @@ public class SetupInteractiveMenuService(IPortalBuildService portalBuildService)
                             .AllowEmpty());
                     break;
 
+                case "Edit UpgradePortalBucketNameOverride":
+                    options.UpgradePortalBucketNameOverride = AnsiConsole.Prompt(
+                        new TextPrompt<string>("[green]UpgradePortalBucketNameOverride[/] (optional)")
+                            .DefaultValue(options.UpgradePortalBucketNameOverride ?? string.Empty)
+                            .AllowEmpty());
+                    break;
+
                 case "Save options":
                     {
                         var confirm = AnsiConsole.Confirm(
@@ -237,36 +245,37 @@ public class SetupInteractiveMenuService(IPortalBuildService portalBuildService)
         table.AddRow("[blue]CertificateArn[/]", Markup.Escape(options.CertificateArn ?? string.Empty));
         table.AddRow("[blue]InitialUserEmail[/]", Markup.Escape(options.InitialUserEmail ?? string.Empty));
         table.AddRow("[blue]PortalBuildOutputPath[/]", Markup.Escape(options.PortalBuildOutputPath ?? string.Empty));
+        table.AddRow("[blue]UpgradePortalBucketNameOverride[/]", Markup.Escape(options.UpgradePortalBucketNameOverride ?? string.Empty));
 
         return table;
     }
 
     private static bool TrySaveOptionsToUserEnvironment(SetupOptions options, out string message)
     {
+        var stopwatch = System.Diagnostics.Stopwatch.StartNew();
         try
         {
-            var target = OperatingSystem.IsWindows()
-                ? EnvironmentVariableTarget.User
-                : EnvironmentVariableTarget.Process;
+            SetEnv("CLYPSE_SETUP__BaseUrl", options.BaseUrl, EnvironmentVariableTarget.User);
+            SetEnv("CLYPSE_SETUP__AccessId", options.AccessId, EnvironmentVariableTarget.User);
+            SetEnv("CLYPSE_SETUP__SecretAccessKey", options.SecretAccessKey, EnvironmentVariableTarget.User);
+            SetEnv("CLYPSE_SETUP__Region", options.Region, EnvironmentVariableTarget.User);
+            SetEnv("CLYPSE_SETUP__ResourcePrefix", options.ResourcePrefix, EnvironmentVariableTarget.User);
+            SetEnv("CLYPSE_SETUP__Alias", options.Alias, EnvironmentVariableTarget.User);
+            SetEnv("CLYPSE_SETUP__CertificateArn", options.CertificateArn, EnvironmentVariableTarget.User);
+            SetEnv("CLYPSE_SETUP__InitialUserEmail", options.InitialUserEmail, EnvironmentVariableTarget.User);
+            SetEnv("CLYPSE_SETUP__PortalBuildOutputPath", options.PortalBuildOutputPath, EnvironmentVariableTarget.User);
+            SetEnv("CLYPSE_SETUP__UpgradePortalBucketNameOverride", options.UpgradePortalBucketNameOverride, EnvironmentVariableTarget.User);
 
-            SetEnv("CLYPSE_SETUP__BaseUrl", options.BaseUrl, target);
-            SetEnv("CLYPSE_SETUP__AccessId", options.AccessId, target);
-            SetEnv("CLYPSE_SETUP__SecretAccessKey", options.SecretAccessKey, target);
-            SetEnv("CLYPSE_SETUP__Region", options.Region, target);
-            SetEnv("CLYPSE_SETUP__ResourcePrefix", options.ResourcePrefix, target);
-            SetEnv("CLYPSE_SETUP__Alias", options.Alias, target);
-            SetEnv("CLYPSE_SETUP__CertificateArn", options.CertificateArn, target);
-            SetEnv("CLYPSE_SETUP__InitialUserEmail", options.InitialUserEmail, target);
-            SetEnv("CLYPSE_SETUP__PortalBuildOutputPath", options.PortalBuildOutputPath, target);
-
-            message = OperatingSystem.IsWindows()
-                ? "Saved. Next run will load values from your user environment."
-                : "Saved for the current process only (non-Windows OS cannot persist user env vars via .NET).";
+            stopwatch.Stop();
+            var seconds = stopwatch.Elapsed.TotalSeconds;
+            message = $"Saved in {seconds:F1}s. Next run will load values from your user environment.";
             return true;
         }
         catch (Exception ex)
         {
-            message = $"Failed to save environment variables: {ex.Message}";
+            stopwatch.Stop();
+            var seconds = stopwatch.Elapsed.TotalSeconds;
+            message = $"Failed to save environment variables after {seconds:F1}s: {ex.Message}";
             return false;
         }
     }
@@ -279,23 +288,22 @@ public class SetupInteractiveMenuService(IPortalBuildService portalBuildService)
 
     private static bool TrySetPortalBuildOutputPathToUserEnvironment(string? portalBuildOutputPath, out string message)
     {
+        var stopwatch = System.Diagnostics.Stopwatch.StartNew();
         try
         {
-            var target = OperatingSystem.IsWindows()
-                ? EnvironmentVariableTarget.User
-                : EnvironmentVariableTarget.Process;
+            SetEnv("CLYPSE_SETUP__PortalBuildOutputPath", portalBuildOutputPath, EnvironmentVariableTarget.User);
 
-            SetEnv("CLYPSE_SETUP__PortalBuildOutputPath", portalBuildOutputPath, target);
-
-            message = OperatingSystem.IsWindows()
-                ? $"PortalBuildOutputPath set to '{portalBuildOutputPath}' (saved to user environment)."
-                : $"PortalBuildOutputPath set to '{portalBuildOutputPath}' (current process only).";
+            stopwatch.Stop();
+            var seconds = stopwatch.Elapsed.TotalSeconds;
+            message = $"PortalBuildOutputPath set to '{portalBuildOutputPath}' (saved to user environment in {seconds:F1}s).";
 
             return true;
         }
         catch (Exception ex)
         {
-            message = $"Portal build succeeded, but failed to persist env var: {ex.Message}";
+            stopwatch.Stop();
+            var seconds = stopwatch.Elapsed.TotalSeconds;
+            message = $"Portal build succeeded, but failed to persist env var after {seconds:F1}s: {ex.Message}";
             return false;
         }
     }

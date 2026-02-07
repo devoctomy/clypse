@@ -480,7 +480,9 @@ public class ClypseAwsSetupOrchestration(
             Console.ReadKey();
         }
 
-        var portalBucketName = "clypse.portal";
+        var portalBucketName = !string.IsNullOrWhiteSpace(options.UpgradePortalBucketNameOverride)
+            ? options.UpgradePortalBucketNameOverride
+            : "clypse.portal";
         logger.LogInformation("Checking to see if portal bucket exists.");
         var portalBucketExists = await s3Service.DoesBucketExistAsync(
             portalBucketName,
