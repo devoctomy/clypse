@@ -15,23 +15,25 @@
                         Version 
                         <span class="version-number @(updateAvailable ? "update-available" : "")" 
                               @onclick="HandleVersionClick" 
-                              title="@(updateAvailable ? "Update available - Click to update" : "Click to check for updates")">
+                              title="Click to view version history">
                             @AppSettings.Version
                             @if (updateAvailable)
                             {
                                 <i class="bi bi-exclamation-circle text-warning ms-1"></i>
                             }
                         </span>
-                        @if (isUpdating)
-                        {
-                            <span class="spinner-border spinner-border-sm ms-2" role="status" aria-hidden="true"></span>
-                        }
                     </small>
                 </div>
             </div>
         </div>
     </footer>
 </div>
+
+<ChangesDialog Show="@showChangesDialog" 
+ShowUpdateButton="@updateAvailable" 
+AvailableVersion="@availableVersion"
+OnClose="@HandleCloseChangesDialog"
+OnUpdate="@HandleInstallUpdate" />
 
 @using clypse.portal.Models
 

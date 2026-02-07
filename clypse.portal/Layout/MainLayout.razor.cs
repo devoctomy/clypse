@@ -15,6 +15,8 @@ public partial class MainLayout : LayoutComponentBase, IAsyncDisposable
 
     private bool updateAvailable;
     private bool isUpdating;
+    private bool showChangesDialog;
+    private string availableVersion => AppSettings.Version;
     
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -71,6 +73,45 @@ public partial class MainLayout : LayoutComponentBase, IAsyncDisposable
 
     private async Task HandleVersionClick()
     {
+        // Simply show the changes dialog
+        showChangesDialog = true;
+        StateHasChanged();
+        
+        // If no update is currently available, check for one in the background
+        if (!updateAvailable)
+        {
+            _ = Task.Run(async () =>
+            {
+                try
+                {
+                    Logger.LogInformation("Checking for new updates in background");
+                    await PwaUpdateService.CheckForUpdateAsync();
+                    
+                    // Wait a moment and check if update became available
+                    await Task.Delay(1500);
+                    updateAvailable = await PwaUpdateService.IsUpdateAvailableAsync();
+                    
+                    if (updateAvailable)
+                    {
+                        await InvokeAsync(StateHasChanged);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Logger.LogError(ex, "Error checking for updates in background");
+                }
+            });
+        }
+    }
+
+    private void HandleCloseChangesDialog()
+    {
+        showChangesDialog = false;
+        StateHasChanged();
+    }
+
+    private async Task HandleInstallUpdate()
+    {
         if (isUpdating) return;
 
         try
@@ -78,48 +119,19 @@ public partial class MainLayout : LayoutComponentBase, IAsyncDisposable
             isUpdating = true;
             StateHasChanged();
 
-            Logger.LogInformation("Version clicked - checking for updates");
-
-            if (updateAvailable)
+            Logger.LogInformation("Installing available update");
+            var installResult = await PwaUpdateService.InstallUpdateAsync();
+            
+            if (!installResult)
             {
-                // Install the waiting update
-                Logger.LogInformation("Installing available update");
-                var installResult = await PwaUpdateService.InstallUpdateAsync();
-                
-                if (!installResult)
-                {
-                    // If install failed, try force update
-                    Logger.LogInformation("Install failed, trying force update");
-                    await PwaUpdateService.ForceUpdateAsync();
-                }
-            }
-            else
-            {
-                // Check for new updates
-                Logger.LogInformation("Checking for new updates");
-                var checkResult = await PwaUpdateService.CheckForUpdateAsync();
-                
-                if (!checkResult)
-                {
-                    // Show no updates available message
-                    await JSRuntime.InvokeVoidAsync("console.log", "No updates available");
-                }
-                
-                // Wait a moment and check if update became available
-                await Task.Delay(1500);
-                updateAvailable = await PwaUpdateService.IsUpdateAvailableAsync();
-                
-                if (updateAvailable)
-                {
-                    // New update found, install it
-                    Logger.LogInformation("New update found, installing");
-                    await PwaUpdateService.InstallUpdateAsync();
-                }
+                // If install failed, try force update
+                Logger.LogInformation("Install failed, trying force update");
+                await PwaUpdateService.ForceUpdateAsync();
             }
         }
         catch (Exception ex)
         {
-            Logger.LogError(ex, "Error handling version click");
+            Logger.LogError(ex, "Error installing update");
             await JSRuntime.InvokeVoidAsync("console.error", $"Update error: {ex.Message}");
         }
         finally

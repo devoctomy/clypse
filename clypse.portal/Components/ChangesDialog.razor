@@ -1,0 +1,97 @@
+@using System.Text.Json
+
+@if (Show)
+{
+    <div class="modal" style="display: block; background-color: rgba(0,0,0,0.5);" @onclick="HandleBackdropClick">
+        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable" @onclick:stopPropagation="true">
+            <div class="modal-content changes-dialog">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="bi bi-clock-history me-2"></i>
+                        Version History
+                    </h5>
+                    <button type="button" class="btn-close" @onclick="HandleClose"></button>
+                </div>
+                <div class="modal-body">
+                    @if (isLoading)
+                    {
+                        <div class="text-center py-5">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Loading changes...</span>
+                            </div>
+                            <p class="mt-2">Loading version history...</p>
+                        </div>
+                    }
+                    else if (changeLog != null && changeLog.Versions.Any())
+                    {
+                        <div class="changes-list">
+                            @foreach (var version in changeLog.Versions.OrderByDescending(v => v.Version))
+                            {
+                                <div class="version-section mb-4">
+                                    <h6 class="version-header">
+                                        <i class="bi bi-tag me-2"></i>
+                                        Version @version.Version
+                                    </h6>
+                                    <div class="changes-items">
+                                        @foreach (var change in version.Changes)
+                                        {
+                                            <div class="change-item">
+                                                @switch (change.Type.ToLower())
+                                                {
+                                                    case "fix":
+                                                        <i class="bi bi-bug-fill text-danger me-2"></i>
+                                                        break;
+                                                    case "feature":
+                                                        <i class="bi bi-star-fill text-success me-2"></i>
+                                                        break;
+                                                    case "change":
+                                                        <i class="bi bi-arrow-repeat text-primary me-2"></i>
+                                                        break;
+                                                    default:
+                                                        <i class="bi bi-dot text-muted me-2"></i>
+                                                        break;
+                                                }
+                                                <span>@change.Description</span>
+                                            </div>
+                                        }
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else if (errorMessage != null)
+                    {
+                        <div class="alert alert-danger">
+                            <i class="bi bi-exclamation-triangle me-2"></i>
+                            @errorMessage
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center py-5">
+                            <i class="bi bi-inbox" style="font-size: 3rem; color: var(--bs-secondary);"></i>
+                            <p class="mt-2">No version history available</p>
+                        </div>
+                    }
+                </div>
+                @if (ShowUpdateButton && !string.IsNullOrEmpty(AvailableVersion))
+                {
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-success w-100" @onclick="HandleUpdateClick" disabled="@isUpdating">
+                            @if (isUpdating)
+                            {
+                                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                <span class="ms-2">Updating...</span>
+                            }
+                            else
+                            {
+                                <i class="bi bi-download me-2"></i>
+                                <span>Update to Version @AvailableVersion</span>
+                            }
+                        </button>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+}
