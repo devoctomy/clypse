@@ -28,30 +28,28 @@ flowchart TB
         direction TB
 
         subgraph CloudfrontDistribution["🌍 CloudFront Distribution"]
-            direction LR
+            direction TB
             CDN["⚡ CDN Edge"]
         end        
         
         subgraph S3["📦 S3"]
             direction TB
             subgraph PortalBucket["PORTAL BUCKET"]
-                direction LR
+                direction TB
                 HTML["🌐 Published Blazor WASM PWA"]
             end
 
             subgraph DataBucket["DATA BUCKET (SSE-S3)"]
-                direction TB
-                
+                direction LR                
                 subgraph UserFolder["📁 /{user-id}/"]
-                    direction TB
+                    direction LR
                     subgraph VaultFolder["📁 /{vault-id}/"]
                         direction LR
                         Index["📜🔑 index.json"]
-                        Manifest["📜 manifest.json<br/><i>Cryptographic Metadata</i>"]
                         subgraph SecretsFolder["📁 /secrets/"]
-                            direction LR
                             Secret["📜🔑 {secret-id}"]
                         end                    
+                        Manifest["📜 manifest.json<br/><i>Cryptographic Metadata</i>"]
                     end
                 end
             end            
@@ -62,8 +60,8 @@ flowchart TB
 
     User --> Blazor
     Blazor <--> VaultManager
-    Blazor -->|"🌐 Loads portal (HTTPS)"| CloudfrontDistribution
-    CloudfrontDistribution -->|"Origin"| PortalBucket
+    CloudfrontDistribution -->|"🌐 Downloads portal (HTTPS)"| Blazor
+    PortalBucket --> CloudfrontDistribution
     Blazor -->|"🔐 Authenticated access"| Cognito
     Cognito -->|"Scoped permissions"| UserFolder
     Manifest <--> KeyDerivationService
