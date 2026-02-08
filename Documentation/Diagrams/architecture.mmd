@@ -66,11 +66,11 @@ flowchart TB
     CloudfrontDistribution -->|"Origin"| PortalBucket
     Blazor -->|"🔐 Authenticated access"| Cognito
     Cognito -->|"Scoped permissions"| UserFolder
-    Manifest --> KeyDerivationService
+    Manifest <--> KeyDerivationService
     KeyDerivationService --> CryptographyService
-    Index --> CryptographyService
-    Secret --> CryptographyService
-    CryptographyService --> Blazor
+    Index <--> CryptographyService
+    Secret <--> CryptographyService
+    CryptographyService <--> Blazor
 
 
     style CLIENT fill:#1e1b4b,stroke:#6366f1,stroke-width:2px,color:#fff
