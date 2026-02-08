@@ -1,0 +1,91 @@
+---
+config:
+  theme: dark
+  themeVariables:
+    primaryColor: '#6366f1'
+    primaryTextColor: '#fff'
+    primaryBorderColor: '#818cf8'
+    lineColor: '#94a3b8'
+    secondaryColor: '#1e293b'
+    tertiaryColor: '#0f172a'
+---
+flowchart TB
+    subgraph CLIENT["🖥️💻📱 LOCAL BROWSER"]
+        direction TB
+        User["🧑‍🦱 User"]
+        subgraph Portal["CLYPSE PORTAL"]
+            direction LR
+            Blazor["⚡ Blazor WASM PWA"]
+            subgraph VaultManager["🧑‍💼 Vault Manager"]
+                direction TB
+                KeyDerivationService["Key Derivation Service<br/>🔑 Encryption Key<br/>Initialised with Manifest<br/><i>In memory only</i>"]
+                CryptographyService["Cryptography Service<br/>🔐 Encrypts/Decrypts secrets<br/><i>In memory only</i>"]
+            end
+        end
+    end
+
+    subgraph AWS["☁️ AWS CLOUD"]
+        direction TB
+
+        subgraph CloudfrontDistribution["🌍 CloudFront Distribution"]
+            direction LR
+            CDN["⚡ CDN Edge"]
+        end        
+        
+        subgraph S3["📦 S3"]
+            direction TB
+            subgraph PortalBucket["PORTAL BUCKET"]
+                direction LR
+                HTML["🌐 Published Blazor WASM PWA"]
+            end
+
+            subgraph DataBucket["DATA BUCKET (SSE-S3)"]
+                direction TB
+                
+                subgraph UserFolder["📁 /{user-id}/"]
+                    direction TB
+                    subgraph VaultFolder["📁 /{vault-id}/"]
+                        direction LR
+                        Index["📜🔑 index.json"]
+                        Manifest["📜 manifest.json<br/><i>Cryptographic Metadata</i>"]
+                        subgraph SecretsFolder["📁 /secrets/"]
+                            direction LR
+                            Secret["📜🔑 {secret-id}"]
+                        end                    
+                    end
+                end
+            end            
+        end
+
+        Cognito["🛡️ Cognito<br/><i>IAM Role Access Control</i>"]
+    end
+
+    User --> Blazor
+    Blazor <--> VaultManager
+    Blazor -->|"🌐 Loads portal (HTTPS)"| CloudfrontDistribution
+    CloudfrontDistribution -->|"Origin"| PortalBucket
+    Blazor -->|"🔐 Authenticated access"| Cognito
+    Cognito -->|"Scoped permissions"| UserFolder
+    Manifest --> KeyDerivationService
+    KeyDerivationService --> CryptographyService
+    Index --> CryptographyService
+    Secret --> CryptographyService
+    CryptographyService --> Blazor
+
+
+    style CLIENT fill:#1e1b4b,stroke:#6366f1,stroke-width:2px,color:#fff
+    style Portal fill:#312e81,stroke:#818cf8,stroke-width:2px,color:#fff
+    style AWS fill:#0c4a6e,stroke:#0ea5e9,stroke-width:2px,color:#fff
+    style CloudfrontDistribution fill:#4c1d95,stroke:#8b5cf6,stroke-width:2px,color:#fff
+    style CDN fill:#5b21b6,stroke:#a78bfa,color:#fff
+    style PortalBucket fill:#134e4a,stroke:#14b8a6,stroke-width:2px,color:#fff
+    style DataBucket fill:#7c2d12,stroke:#f97316,stroke-width:2px,color:#fff
+    style Cognito fill:#581c87,stroke:#a855f7,stroke-width:2px,color:#fff
+    
+    style User fill:#3730a3,stroke:#818cf8,color:#fff
+    style Blazor fill:#4338ca,stroke:#818cf8,color:#fff
+    style VaultManager fill:#4338ca,stroke:#818cf8,color:#fff
+    style HTML fill:#115e59,stroke:#14b8a6,color:#fff
+    style Index fill:#92400e,stroke:#fbbf24,color:#fff
+    style Manifest fill:#92400e,stroke:#fbbf24,color:#fff
+    style Secret fill:#92400e,stroke:#fbbf24,color:#fff
