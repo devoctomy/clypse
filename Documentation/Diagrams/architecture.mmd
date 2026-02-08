@@ -22,6 +22,10 @@ flowchart TB
                 KeyDerivationService["🔑 Key Derivation Service<br/>Argon2id (Default)<br/>Initialised with Manifest<br/><i>In memory only</i>"]
                 CryptographyService["Cryptography Service<br/>🔐 Encrypts/Decrypts secrets<br/><i>In memory only</i>"]
             end
+            subgraph S3ApiClient["📦 S3 API Client"]
+                direction TB
+                S3Client["<i>Interacts with S3 API via AWS SDK & .NET interop.</i>"]
+            end
         end
     end
 
@@ -47,7 +51,7 @@ flowchart TB
                     subgraph Vault1["📁 /{vault1-id}/"]
                         direction TB
                         Index["📜🔑 index.json"]
-                        Manifest["📜 manifest.json<br/><i>Cryptographic Metadata</i>"]
+                        Manifest["📜 manifest.json<br/><i>Cryptographic Metadata</i>"] ~~~ S3ApiClient
                         subgraph Secrets["📁 /secrets/"]
                             Secret["📜🔑 {secret-id}"]
                         end                    
@@ -55,7 +59,7 @@ flowchart TB
                     end     
                     subgraph VaultN["📁 /{vault*-id}/"]
                     end
-                    Vault1 ~~~ VaultN
+                    Vault1 ~~~ VaultN                    
                 end
             end
         end
@@ -67,16 +71,14 @@ flowchart TB
     
     Blazor -->|"🔑 Passphrase"| KeyDerivationService
     Blazor <-->|"🔑 AES GCM 128"| CryptographyService
-    Blazor -->|"🔐 Authenticated access (Username / Password)"| Cognito
+    Blazor <-->|"🔐 Authenticated access (Username / Password)</br>Provides scoped IAM credentials for S3 access."| Cognito
 
     CloudfrontDistribution -->|"🌐 Downloads portal (HTTPS)"| Blazor
     PortalBucket --> CloudfrontDistribution
     Cognito -->|"Scoped permissions"| UserFolder
-    Manifest <--> KeyDerivationService
     KeyDerivationService -->|"🔑"| CryptographyService
-    Index <--> CryptographyService
-    Secret <--> CryptographyService
-
+    S3ApiClient <--> CryptographyService
+    S3ApiClient <--> DataBucket
 
     style CLIENT fill:#1e1b4b,stroke:#6366f1,stroke-width:2px,color:#fff
     style Portal fill:#312e81,stroke:#818cf8,stroke-width:2px,color:#fff
@@ -91,6 +93,7 @@ flowchart TB
     style User fill:#3730a3,stroke:#818cf8,color:#fff
     style Blazor fill:#4338ca,stroke:#818cf8,color:#fff
     style VaultManager fill:#4338ca,stroke:#818cf8,color:#fff
+    style S3ApiClient fill:#4338ca,stroke:#818cf8,color:#fff
     style HTML fill:#115e59,stroke:#14b8a6,color:#fff
     style Index fill:#7f1d1d,stroke:#ef4444,color:#fff
     style Manifest fill:#92400e,stroke:#fbbf24,color:#fff
