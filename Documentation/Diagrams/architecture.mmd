@@ -43,10 +43,10 @@ flowchart TB
                 direction LR                
                 subgraph UserFolder["📁 /{user-id}/"]
                     direction LR
-                    subgraph VaultFolder["📁 /{vault1-id}/"]
+                    subgraph Vault1["📁 /{vault1-id}/"]
                         direction LR
                         Index["📜🔑 index.json"]
-                        subgraph SecretsFolder["📁 /secrets/"]
+                        subgraph Secrets["📁 /secrets/"]
                             Secret["📜🔑 {secret-id}"]
                         end                    
                         Manifest["📜 manifest.json<br/><i>Cryptographic Metadata</i>"]
@@ -87,6 +87,11 @@ flowchart TB
     style Blazor fill:#4338ca,stroke:#818cf8,color:#fff
     style VaultManager fill:#4338ca,stroke:#818cf8,color:#fff
     style HTML fill:#115e59,stroke:#14b8a6,color:#fff
-    style Index fill:#92400e,stroke:#fbbf24,color:#fff
+    style Index fill:#7f1d1d,stroke:#ef4444,color:#fff
     style Manifest fill:#92400e,stroke:#fbbf24,color:#fff
-    style Secret fill:#92400e,stroke:#fbbf24,color:#fff
+    style Secret fill:#7f1d1d,stroke:#ef4444,color:#fff
+    style Vault1 fill:#713f12,stroke:#facc15,stroke-width:2px,color:#fff
+    style Vault2 fill:#713f12,stroke:#facc15,color:#fff
+    style Vault3 fill:#713f12,stroke:#facc15,color:#fff
+    style Vault4 fill:#713f12,stroke:#facc15,color:#fff
+    style Secrets fill:#713f12,stroke:#facc15,color:#fff
