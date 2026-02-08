@@ -18,7 +18,7 @@ flowchart TB
             Blazor["⚡ Blazor WASM PWA"]
             subgraph VaultManager["🧑‍💼 Vault Manager"]
                 direction TB
-                KeyDerivationService["Key Derivation Service<br/>🔑 Encryption Key<br/>Initialised with Manifest<br/><i>In memory only</i>"]
+                KeyDerivationService["🔑 Key Derivation Service<br/>Argon2id (Default)<br/>Initialised with Manifest<br/><i>In memory only</i>"]
                 CryptographyService["Cryptography Service<br/>🔐 Encrypts/Decrypts secrets<br/><i>In memory only</i>"]
             end
         end
@@ -62,7 +62,7 @@ flowchart TB
     end
 
     User --> Blazor
-    Blazor <--> VaultManager
+    Blazor -->|"🔑 Passphrase"| KeyDerivationService
     CloudfrontDistribution -->|"🌐 Downloads portal (HTTPS)"| Blazor
     PortalBucket --> CloudfrontDistribution
     Blazor -->|"🔐 Authenticated access"| Cognito
@@ -71,7 +71,7 @@ flowchart TB
     KeyDerivationService --> CryptographyService
     Index <--> CryptographyService
     Secret <--> CryptographyService
-    CryptographyService <--> Blazor
+    CryptographyService <-->|"🔑 AES GCM 128"| Blazor
 
 
     style CLIENT fill:#1e1b4b,stroke:#6366f1,stroke-width:2px,color:#fff
