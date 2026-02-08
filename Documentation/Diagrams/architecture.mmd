@@ -10,9 +10,10 @@ config:
     tertiaryColor: '#0f172a'
 ---
 flowchart TB
+    User["🧑‍🦱 User"]
+
     subgraph CLIENT["🖥️💻📱 LOCAL BROWSER"]
         direction TB
-        User["🧑‍🦱 User"]
         subgraph Portal["CLYPSE PORTAL"]
             direction LR
             Blazor["⚡ Blazor WASM PWA"]
