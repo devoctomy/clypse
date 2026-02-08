@@ -75,7 +75,7 @@ flowchart TB
 
     CloudfrontDistribution -->|"🌐 Downloads portal (HTTPS)"| Blazor
     PortalBucket --> CloudfrontDistribution
-    Cognito -->|"Scoped permissions"| UserFolder
+
     KeyDerivationService -->|"🔑"| CryptographyService
     S3ApiClient <--> CryptographyService
     S3ApiClient <--> DataBucket
