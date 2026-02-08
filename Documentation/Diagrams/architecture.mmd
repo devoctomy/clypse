@@ -41,38 +41,41 @@ flowchart TB
             end
 
             subgraph DataBucket["DATA BUCKET (SSE-S3)"]
-                direction LR                
+                direction TB                
                 subgraph UserFolder["📁 /{user-id}/"]
-                    direction LR
+                    direction TB          
                     subgraph Vault1["📁 /{vault1-id}/"]
-                        direction LR
+                        direction TB
                         Index["📜🔑 index.json"]
+                        Manifest["📜 manifest.json<br/><i>Cryptographic Metadata</i>"]
                         subgraph Secrets["📁 /secrets/"]
                             Secret["📜🔑 {secret-id}"]
                         end                    
-                        Manifest["📜 manifest.json<br/><i>Cryptographic Metadata</i>"]
+                        Index ~~~ Manifest ~~~ Secrets
+                    end     
+                    subgraph VaultN["📁 /{vault*-id}/"]
                     end
-                    Vault2["{vault2-id}/"]
-                    Vault3["{vault3-id}/"]
-                    Vault4["{vault4-id}/"]
+                    Vault1 ~~~ VaultN
                 end
-            end            
+            end
         end
 
         Cognito["🛡️ Cognito<br/><i>IAM Role Access Control</i>"]
     end
 
     User --> Blazor
+    
     Blazor -->|"🔑 Passphrase"| KeyDerivationService
+    Blazor <-->|"🔑 AES GCM 128"| CryptographyService
+    Blazor -->|"🔐 Authenticated access (Username / Password)"| Cognito
+
     CloudfrontDistribution -->|"🌐 Downloads portal (HTTPS)"| Blazor
     PortalBucket --> CloudfrontDistribution
-    Blazor -->|"🔐 Authenticated access"| Cognito
     Cognito -->|"Scoped permissions"| UserFolder
     Manifest <--> KeyDerivationService
-    KeyDerivationService --> CryptographyService
+    KeyDerivationService -->|"🔑"| CryptographyService
     Index <--> CryptographyService
     Secret <--> CryptographyService
-    CryptographyService <-->|"🔑 AES GCM 128"| Blazor
 
 
     style CLIENT fill:#1e1b4b,stroke:#6366f1,stroke-width:2px,color:#fff
@@ -82,6 +85,7 @@ flowchart TB
     style CDN fill:#5b21b6,stroke:#a78bfa,color:#fff
     style PortalBucket fill:#134e4a,stroke:#14b8a6,stroke-width:2px,color:#fff
     style DataBucket fill:#7c2d12,stroke:#f97316,stroke-width:2px,color:#fff
+    style UserFolder fill:#7c2d12,stroke:#f97316,stroke-width:2px,color:#fff
     style Cognito fill:#581c87,stroke:#a855f7,stroke-width:2px,color:#fff
     
     style User fill:#3730a3,stroke:#818cf8,color:#fff
@@ -91,8 +95,6 @@ flowchart TB
     style Index fill:#7f1d1d,stroke:#ef4444,color:#fff
     style Manifest fill:#92400e,stroke:#fbbf24,color:#fff
     style Secret fill:#7f1d1d,stroke:#ef4444,color:#fff
-    style Vault1 fill:#713f12,stroke:#facc15,stroke-width:2px,color:#fff
-    style Vault2 fill:#713f12,stroke:#facc15,color:#fff
-    style Vault3 fill:#713f12,stroke:#facc15,color:#fff
-    style Vault4 fill:#713f12,stroke:#facc15,color:#fff
+    style Vault1 fill:#7c2d12,stroke:#f97316,stroke-width:2px,color:#fff
+    style VaultN fill:#7c2d12,stroke:#f97316,stroke-width:2px,color:#fff
     style Secrets fill:#713f12,stroke:#facc15,color:#fff
