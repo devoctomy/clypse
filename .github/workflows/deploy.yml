@@ -36,7 +36,7 @@ jobs:
     - name: Setup HTTPS development certificates
       run: |
         dotnet dev-certs https --clean
-        dotnet dev-certs https --trust
+        dotnet dev-certs https --trust || true
 
     - name: Install .NET workloads
       run: dotnet workload install wasm-tools
