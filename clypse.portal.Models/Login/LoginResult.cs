@@ -1,6 +1,7 @@
+using clypse.portal.Models.Aws;
 using System.Text.Json.Serialization;
 
-namespace clypse.portal.Models;
+namespace clypse.portal.Models.Login;
 
 public class LoginResult
 {

@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
 using clypse.core.Enums;
 using clypse.core.Secrets.Import;
+using clypse.portal.Models.Import;
 
 namespace clypse.portal.Components;
 
@@ -170,14 +171,5 @@ public partial class ImportSecretsDialog : ComponentBase
     private async Task OnCancelClick()
     {
         await OnCancel.InvokeAsync();
-    }
-
-    public class ImportResult
-    {
-        public bool Success { get; set; }
-        public int ImportedCount { get; set; }
-        public List<Dictionary<string, string>> MappedSecrets { get; set; } = new();
-        public CsvImportDataFormat Format { get; set; }
-        public string? ErrorMessage { get; set; }
     }
 }

@@ -2,13 +2,13 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.JSInterop;
 using clypse.portal.Models;
+using clypse.portal.Models.Vault;
 
 namespace clypse.portal.Components;
 
 public partial class UnlockVaultDialog : ComponentBase
 {
     [Inject] public IJSRuntime JSRuntime { get; set; } = default!;
-
     [Parameter] public bool IsVisible { get; set; }
     [Parameter] public VaultMetadata? Vault { get; set; }
     [Parameter] public bool IsUnlocking { get; set; }

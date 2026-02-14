@@ -1,13 +1,13 @@
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 using clypse.portal.Models;
+using clypse.portal.Models.Vault;
 
 namespace clypse.portal.Components;
 
 public partial class VaultCreateDialog : ComponentBase
 {
     [Inject] public IJSRuntime JSRuntime { get; set; } = default!;
-
     [Parameter] public bool Show { get; set; }
     [Parameter] public bool IsCreating { get; set; }
     [Parameter] public string? ErrorMessage { get; set; }

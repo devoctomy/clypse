@@ -1,7 +1,8 @@
 using Microsoft.AspNetCore.Components;
 using clypse.core.Password;
 using clypse.core.Enums;
-using clypse.portal.Models;
+using clypse.portal.Models.Enums;
+using clypse.portal.Models.Settings;
 
 namespace clypse.portal.Components;
 
@@ -12,12 +13,6 @@ public partial class PasswordGeneratorDialog : ComponentBase
     [Parameter] public EventCallback OnCancel { get; set; }
     [Inject] public IPasswordGeneratorService PasswordGeneratorService { get; set; } = default!;
     [Inject] public AppSettings AppSettings { get; set; } = default!;
-
-    protected enum PasswordType
-    {
-        Memorable,
-        Random
-    }
 
     // UI State
     protected string generatedPassword = string.Empty;

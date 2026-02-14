@@ -1,4 +1,4 @@
-namespace clypse.portal.Models;
+namespace clypse.portal.Models.Vault;
 
 public class VaultCreationRequest
 {

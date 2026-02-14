@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace clypse.portal.Models;
+namespace clypse.portal.Models.Aws;
 
 public class AwsCredentials
 {

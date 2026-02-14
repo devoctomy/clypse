@@ -1,4 +1,4 @@
-﻿using clypse.portal.Models;
+﻿using clypse.portal.Models.Settings;
 
 namespace clypse.portal.Services;
 

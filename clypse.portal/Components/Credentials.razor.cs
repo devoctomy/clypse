@@ -1,10 +1,10 @@
 using clypse.core.Enums;
 using clypse.core.Secrets;
-using clypse.core.Secrets.Import;
 using clypse.core.Vault;
-using clypse.portal.Models;
+using clypse.portal.Models.Enums;
+using clypse.portal.Models.Import;
+using clypse.portal.Models.Vault;
 using Microsoft.AspNetCore.Components;
-using System.Linq;
 
 namespace clypse.portal.Components;
 
@@ -29,7 +29,7 @@ public partial class Credentials : ComponentBase
     // SecretDialog properties
     private bool showSecretDialog;
     private Secret? currentSecret;
-    private SecretDialog.SecretDialogMode secretDialogMode = SecretDialog.SecretDialogMode.Create;
+    private CrudDialogMode secretDialogMode = CrudDialogMode.Create;
     private string searchTerm = string.Empty;
     private List<VaultIndexEntry> filteredEntries = [];
 
@@ -55,7 +55,7 @@ public partial class Credentials : ComponentBase
             if (secret != null)
             {
                 currentSecret = secret; // Reuse the currentSecret for viewing
-                secretDialogMode = SecretDialog.SecretDialogMode.View;
+                secretDialogMode = CrudDialogMode.View;
                 showSecretDialog = true;
             }
         }
@@ -87,7 +87,7 @@ public partial class Credentials : ComponentBase
             if (secret != null)
             {
                 currentSecret = secret;
-                secretDialogMode = SecretDialog.SecretDialogMode.Edit;
+                secretDialogMode = CrudDialogMode.Update;
                 showSecretDialog = true;
             }
         }
@@ -105,7 +105,7 @@ public partial class Credentials : ComponentBase
     public void ShowCreateDialog()
     {
         currentSecret = new WebSecret();
-        secretDialogMode = SecretDialog.SecretDialogMode.Create;
+        secretDialogMode = CrudDialogMode.Create;
         showSecretDialog = true;
         StateHasChanged();
     }
@@ -129,7 +129,7 @@ public partial class Credentials : ComponentBase
         StateHasChanged();
     }
 
-    private async Task HandleImportSecrets(ImportSecretsDialog.ImportResult result)
+    private async Task HandleImportSecrets(ImportResult result)
     {
         if (VaultManager == null || LoadedVault == null || string.IsNullOrEmpty(CurrentVaultKey))
         {
@@ -357,13 +357,13 @@ public partial class Credentials : ComponentBase
     {
         switch (secretDialogMode)
         {
-            case SecretDialog.SecretDialogMode.Create:
+            case CrudDialogMode.Create:
                 await HandleCreateSecret(secret);
                 break;
-            case SecretDialog.SecretDialogMode.Edit:
+            case CrudDialogMode.Update:
                 await HandleSaveSecret(secret);
                 break;
-            case SecretDialog.SecretDialogMode.View:
+            case CrudDialogMode.View:
                 // View mode doesn't save
                 CloseSecretDialog();
                 break;

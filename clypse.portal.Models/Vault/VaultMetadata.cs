@@ -1,7 +1,7 @@
 using System.Text.Json.Serialization;
 using clypse.core.Vault;
 
-namespace clypse.portal.Models;
+namespace clypse.portal.Models.Vault;
 
 public class VaultMetadata
 {

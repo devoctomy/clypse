@@ -1,8 +1,8 @@
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 using clypse.portal.Services;
-using clypse.portal.Models;
 using clypse.core.Cryptography.Interfaces;
+using clypse.portal.Models.Settings;
 
 namespace clypse.portal.Pages;
 

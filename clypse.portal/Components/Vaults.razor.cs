@@ -1,13 +1,12 @@
 using Microsoft.AspNetCore.Components;
-using Microsoft.AspNetCore.Components.Web;
 using Microsoft.JSInterop;
-using System.Security;
 using clypse.portal.Models;
 using clypse.portal.Services;
-using clypse.core.Cryptography;
 using clypse.core.Cryptography.Interfaces;
 using clypse.core.Vault;
 using clypse.core.Cloud.Aws.S3;
+using clypse.portal.Models.Aws;
+using clypse.portal.Models.Vault;
 
 namespace clypse.portal.Components;
 

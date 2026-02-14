@@ -1,6 +1,6 @@
+using clypse.portal.Models.Changes;
 using Microsoft.AspNetCore.Components;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 
 namespace clypse.portal.Components;
 
@@ -77,29 +77,5 @@ public partial class ChangesDialog : ComponentBase
             isUpdating = false;
             StateHasChanged();
         }
-    }
-
-    private class ChangeLog
-    {
-        [JsonPropertyName("versions")]
-        public List<VersionEntry> Versions { get; set; } = new();
-    }
-
-    private class VersionEntry
-    {
-        [JsonPropertyName("version")]
-        public string Version { get; set; } = string.Empty;
-
-        [JsonPropertyName("changes")]
-        public List<ChangeEntry> Changes { get; set; } = new();
-    }
-
-    private class ChangeEntry
-    {
-        [JsonPropertyName("type")]
-        public string Type { get; set; } = string.Empty;
-
-        [JsonPropertyName("description")]
-        public string Description { get; set; } = string.Empty;
     }
 }

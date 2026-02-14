@@ -1,6 +1,6 @@
 using System.Reflection;
 
-namespace clypse.portal.Models;
+namespace clypse.portal.Models.Settings;
 
 public class AppSettings
 {

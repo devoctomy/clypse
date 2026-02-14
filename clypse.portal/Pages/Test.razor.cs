@@ -4,9 +4,8 @@ using clypse.core.Compression;
 using clypse.core.Cryptography;
 using clypse.core.Secrets;
 using clypse.core.Vault;
-using clypse.portal.Models;
+using clypse.portal.Models.Aws;
 using Microsoft.AspNetCore.Components;
-using Microsoft.AspNetCore.Components.Web;
 using Microsoft.JSInterop;
 
 namespace clypse.portal.Pages;

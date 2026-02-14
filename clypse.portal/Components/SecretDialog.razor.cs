@@ -5,6 +5,7 @@ using clypse.core.Enums;
 using clypse.core.Extensions;
 using clypse.portal.Components.Fields;
 using System.Reflection;
+using clypse.portal.Models.Enums;
 
 namespace clypse.portal.Components;
 
@@ -12,20 +13,13 @@ public partial class SecretDialog : ComponentBase
 {
     [Parameter] public bool Show { get; set; }
     [Parameter] public Secret? Secret { get; set; }
-    [Parameter] public SecretDialogMode Mode { get; set; } = SecretDialogMode.Create;
+    [Parameter] public CrudDialogMode Mode { get; set; } = CrudDialogMode.Create;
     [Parameter] public EventCallback<Secret> OnSave { get; set; }
     [Parameter] public EventCallback OnCancel { get; set; }
 
     private Secret? EditableSecret { get; set; }
     private Dictionary<PropertyInfo, SecretFieldAttribute>? secretFields;
     private bool isSaving;
-
-    public enum SecretDialogMode
-    {
-        Create,
-        Edit,
-        View
-    }
 
     protected override void OnParametersSet()
     {
@@ -58,7 +52,7 @@ public partial class SecretDialog : ComponentBase
 
     private async Task HandleSave()
     {
-        if (EditableSecret == null || Mode == SecretDialogMode.View)
+        if (EditableSecret == null || Mode == CrudDialogMode.View)
             return;
 
         try
@@ -90,9 +84,9 @@ public partial class SecretDialog : ComponentBase
     {
         return Mode switch
         {
-            SecretDialogMode.Create => "Create Secret",
-            SecretDialogMode.Edit => "Edit Secret",
-            SecretDialogMode.View => "View Secret",
+            CrudDialogMode.Create => "Create Secret",
+            CrudDialogMode.Update => "Update Secret",
+            CrudDialogMode.View => "View Secret",
             _ => "Secret"
         };
     }
@@ -124,7 +118,7 @@ public partial class SecretDialog : ComponentBase
         return builder =>
         {
             var propertyValue = property.GetValue(EditableSecret)?.ToString();
-            var isReadOnly = Mode == SecretDialogMode.View;
+            var isReadOnly = Mode == CrudDialogMode.View;
 
             switch (attribute.FieldType)
             {
