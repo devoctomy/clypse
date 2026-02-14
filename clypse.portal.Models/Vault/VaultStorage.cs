@@ -5,5 +5,5 @@ namespace clypse.portal.Models.Vault;
 public class VaultStorage
 {
     [JsonPropertyName("vaults")]
-    public List<VaultMetadata> Vaults { get; set; } = new();
+    public List<VaultMetadata> Vaults { get; set; } = [];
 }
