@@ -45,6 +45,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "clypse.portal.Models", "cly
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "clypse.portal.Application", "clypse.portal.Application\clypse.portal.Application.csproj", "{A52F3353-5651-4B6D-81E1-0F9780FAF239}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "clypse.portal.Application.UnitTests", "clypse.portal.Application.UnitTests\clypse.portal.Application.UnitTests.csproj", "{DEE8F7C7-0145-4F39-8121-A1C2B294DDEE}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -87,6 +89,10 @@ Global
 		{A52F3353-5651-4B6D-81E1-0F9780FAF239}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A52F3353-5651-4B6D-81E1-0F9780FAF239}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A52F3353-5651-4B6D-81E1-0F9780FAF239}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DEE8F7C7-0145-4F39-8121-A1C2B294DDEE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DEE8F7C7-0145-4F39-8121-A1C2B294DDEE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DEE8F7C7-0145-4F39-8121-A1C2B294DDEE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DEE8F7C7-0145-4F39-8121-A1C2B294DDEE}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -97,6 +103,7 @@ Global
 		{E991BCD7-5623-467A-A6F2-BBD3A222E9AD} = {18DDBCE1-AF0A-4625-B8CA-BA848F6DB43A}
 		{68B3BA25-0290-41C7-97A6-B7F5F903CE75} = {3BA7C657-5D0E-4A72-BE18-554252D9C24A}
 		{39B7FE8A-92FC-4710-9E2D-94B6545FCAE3} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{DEE8F7C7-0145-4F39-8121-A1C2B294DDEE} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {234CE61D-11A8-4ABB-BE55-10C28007EE2A}
