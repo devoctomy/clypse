@@ -1,9 +1,10 @@
 using System.Text.Json;
+using clypse.portal.Application.Services.Interfaces;
 using clypse.portal.Models.Aws;
 using clypse.portal.Models.Login;
 using Microsoft.JSInterop;
 
-namespace clypse.portal.Services;
+namespace clypse.portal.Application.Services;
 
 public class AwsCognitoAuthenticationService : IAuthenticationService
 {

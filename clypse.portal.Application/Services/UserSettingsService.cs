@@ -1,8 +1,9 @@
 using Microsoft.JSInterop;
 using System.Text.Json;
 using clypse.portal.Models.Settings;
+using clypse.portal.Application.Services.Interfaces;
 
-namespace clypse.portal.Services;
+namespace clypse.portal.Application.Services;
 
 public class UserSettingsService : IUserSettingsService
 {

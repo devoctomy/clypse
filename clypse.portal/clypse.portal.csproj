@@ -21,6 +21,7 @@
 	</ItemGroup>
 	<ItemGroup>
 		<ProjectReference Include="..\clypse.core\clypse.core.csproj" />
+		<ProjectReference Include="..\clypse.portal.Application\clypse.portal.Application.csproj" />
 		<ProjectReference Include="..\clypse.portal.Models\clypse.portal.Models.csproj" />
 	</ItemGroup>
 	<ItemGroup>

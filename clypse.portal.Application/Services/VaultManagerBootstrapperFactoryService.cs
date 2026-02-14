@@ -1,8 +1,9 @@
 using clypse.core.Cloud;
 using clypse.core.Cloud.Aws.S3;
 using clypse.core.Vault;
+using clypse.portal.Application.Services.Interfaces;
 
-namespace clypse.portal.Services;
+namespace clypse.portal.Application.Services;
 
 public class VaultManagerBootstrapperFactoryService : IVaultManagerBootstrapperFactoryService
 {

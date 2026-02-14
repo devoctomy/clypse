@@ -1,6 +1,7 @@
-﻿using Microsoft.JSInterop;
+﻿using clypse.portal.Application.Services.Interfaces;
+using Microsoft.JSInterop;
 
-namespace clypse.portal.Services;
+namespace clypse.portal.Application.Services;
 
 public class LocalStorageService : ILocalStorageService
 {

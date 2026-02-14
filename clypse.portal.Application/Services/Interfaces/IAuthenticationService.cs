@@ -1,7 +1,7 @@
 using clypse.portal.Models.Aws;
 using clypse.portal.Models.Login;
 
-namespace clypse.portal.Services;
+namespace clypse.portal.Application.Services.Interfaces;
 
 /// <summary>
 /// Provides authentication functionality for the application.

@@ -2,8 +2,8 @@ using clypse.core.Cryptography;
 using clypse.core.Cryptography.Interfaces;
 using clypse.core.Extensions;
 using clypse.portal;
+using clypse.portal.Application.Extensions;
 using clypse.portal.Extensions;
-using clypse.portal.Services;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 
@@ -14,14 +14,10 @@ builder.RootComponents.Add<HeadOutlet>("head::after");
 builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
 
 // Register services
-builder.Services.AddScoped<ILocalStorageService, LocalStorageService>();
-builder.Services.AddScoped<IVaultManagerFactoryService, VaultManagerFactoryService>();
-builder.Services.AddScoped<IVaultManagerBootstrapperFactoryService, VaultManagerBootstrapperFactoryService>();
-builder.Services.AddScoped<IVaultStorageService, VaultStorageService>();
-builder.Services.AddScoped<IAuthenticationService, AwsCognitoAuthenticationService>();
-builder.Services.AddScoped<IPwaUpdateService, PwaUpdateService>();
 builder.Services.AddScoped<ICryptoService, BouncyCastleAesGcmCryptoService>();
-builder.Services.AddScoped<IUserSettingsService, UserSettingsService>();
+
+// Add application logic services
+builder.Services.AddApplicationLogicServices();
 
 // Add Clypse core services
 builder.Services.AddClypseCoreServices();

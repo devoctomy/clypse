@@ -1,15 +1,15 @@
-﻿using clypse.core.Cloud.Aws.S3;
+using clypse.core.Cloud.Aws.S3;
 using clypse.core.Vault;
 
-namespace clypse.portal.Services;
+namespace clypse.portal.Application.Services.Interfaces;
 
 /// <summary>
-/// Factory service for IVaultManager.
+/// Factory service for IVaultManagerBootstrapperService.
 /// </summary>
-public interface IVaultManagerFactoryService
+public interface IVaultManagerBootstrapperFactoryService
 {
     /// <summary>
-    /// Create an instance of IVaultManager that is suitable for use with Blazor.
+    /// Create an instance of IVaultManagerBootstrapperService that is suitable for use with Blazor.
     /// </summary>
     /// <param name="jsInvoker">The JavaScript S3 invoker for interop calls.</param>
     /// <param name="accessKey">AWS access key ID.</param>
@@ -18,8 +18,8 @@ public interface IVaultManagerFactoryService
     /// <param name="region">AWS region name.</param>
     /// <param name="bucketName">Name of S3 bucket where data is stored.</param>
     /// <param name="identityId">Cognito Identity Id of user that owns the vault.</param>
-    /// <returns>Instance of IVaultManager.</returns>
-    public IVaultManager CreateForBlazor(
+    /// <returns>Instance of IVaultManagerBootstrapperService.</returns>
+    public IVaultManagerBootstrapperService CreateForBlazor(
         IJavaScriptS3Invoker jsInvoker,
         string accessKey,
         string secretAccessKey,

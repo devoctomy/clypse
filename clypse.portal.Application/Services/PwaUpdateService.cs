@@ -1,6 +1,8 @@
+using clypse.portal.Application.Services.Interfaces;
+using Microsoft.Extensions.Logging;
 using Microsoft.JSInterop;
 
-namespace clypse.portal.Services;
+namespace clypse.portal.Application.Services;
 
 /// <summary>
 /// Implementation of PWA update service using JavaScript interop.

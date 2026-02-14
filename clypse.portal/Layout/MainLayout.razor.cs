@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
-using clypse.portal.Services;
 using clypse.portal.Models.Settings;
+using clypse.portal.Application.Services.Interfaces;
 
 namespace clypse.portal.Layout;
 

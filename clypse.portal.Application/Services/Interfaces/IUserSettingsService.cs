@@ -1,6 +1,6 @@
 ﻿using clypse.portal.Models.Settings;
 
-namespace clypse.portal.Services;
+namespace clypse.portal.Application.Services.Interfaces;
 
 public interface IUserSettingsService
 {

@@ -1,5 +1,5 @@
-using clypse.portal.Models.Aws;
 using System.Text.Json.Serialization;
+using clypse.portal.Models.Aws;
 
 namespace clypse.portal.Models.Login;
 

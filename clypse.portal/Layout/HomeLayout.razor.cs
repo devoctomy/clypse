@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
-using clypse.portal.Services;
+using clypse.portal.Application.Services.Interfaces;
 using clypse.portal.Models.Settings;
 using clypse.portal.Models.Aws;
 using clypse.portal.Models.Navigation;
