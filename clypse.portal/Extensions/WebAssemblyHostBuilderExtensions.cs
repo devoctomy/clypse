@@ -1,5 +1,4 @@
-﻿using clypse.portal.Models;
-using clypse.portal.Models.Aws;
+﻿using clypse.portal.Models.Aws;
 using clypse.portal.Models.Settings;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 

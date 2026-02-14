@@ -1,6 +1,5 @@
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
-using clypse.portal.Models;
 using clypse.portal.Models.Vault;
 
 namespace clypse.portal.Components;

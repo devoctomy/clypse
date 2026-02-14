@@ -5,6 +5,7 @@ using clypse.core.Cryptography;
 using clypse.core.Secrets;
 using clypse.core.Vault;
 using clypse.portal.Models.Aws;
+using clypse.portal.Models.WebAuthn;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 
@@ -411,24 +412,5 @@ public partial class Test : ComponentBase
         webAuthnStatus = "Ready";
         LogWebAuthn("Log cleared.");
         StateHasChanged();
-    }
-
-    private class WebAuthnRegisterResult
-    {
-        public bool Success { get; set; }
-        public string? Error { get; set; }
-        public string? CredentialID { get; set; }
-        public string? UserID { get; set; }
-        public string? Username { get; set; }
-        public bool PrfEnabled { get; set; }
-    }
-
-    private class WebAuthnAuthenticateResult
-    {
-        public bool Success { get; set; }
-        public string? Error { get; set; }
-        public bool UserPresent { get; set; }
-        public bool UserVerified { get; set; }
-        public string? PrfOutput { get; set; }
     }
 }
