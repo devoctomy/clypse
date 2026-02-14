@@ -52,4 +52,20 @@
 	<Target Name="BeforeBuild_CopyChangesJson" BeforeTargets="Build">
 		<Copy SourceFiles="..\Documentation\Changes\changes.json" DestinationFiles="$(MSBuildProjectDirectory)\wwwroot\changes.json" SkipUnchangedFiles="true" />
 	</Target>
+	<!-- Client Scripts Build Process -->
+	<Target Name="NpmInstall" BeforeTargets="BuildClientScripts" Condition="!Exists('..\clypse.portal.ClientScripts\node_modules')">
+		<Message Text="Installing npm packages for ClientScripts..." Importance="high" />
+		<Exec Command="npm install" WorkingDirectory="..\clypse.portal.ClientScripts" />
+	</Target>
+	<Target Name="BuildClientScripts" BeforeTargets="BeforeBuild">
+		<Message Text="Building ClientScripts..." Importance="high" />
+		<Exec Command="npm run build" WorkingDirectory="..\clypse.portal.ClientScripts" />
+	</Target>
+	<Target Name="CopyClientScripts" AfterTargets="BuildClientScripts">
+		<Message Text="Copying ClientScripts to wwwroot/js..." Importance="high" />
+		<ItemGroup>
+			<ClientScriptFiles Include="..\clypse.portal.ClientScripts\dist\**\*.js" />
+		</ItemGroup>
+		<Copy SourceFiles="@(ClientScriptFiles)" DestinationFolder="$(MSBuildProjectDirectory)\wwwroot\js" SkipUnchangedFiles="true" />
+	</Target>
 </Project>

@@ -425,3 +425,11 @@ quick-start.aws-resources.json
 
 # PlantUML
 Documentation/Diagrams/plantuml.jar
+
+# JavaScript / Node.js
+node_modules/
+clypse.portal.ClientScripts/dist/
+clypse.portal/wwwroot/js/*.js
+
+# Keep directory but not generated files
+!clypse.portal/wwwroot/js/.gitkeep
