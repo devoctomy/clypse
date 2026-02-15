@@ -41,7 +41,7 @@ public class AwsCognitoAuthenticationService(
             "eval",
             script);
 
-        var initResult = await this.jsRuntime.InvokeAsync<string>("CognitoAuth.initialize", this.cognitoConfig);
+        _ = await this.jsRuntime.InvokeAsync<string>("CognitoAuth.initialize", this.cognitoConfig);
         this.isInitialized = true;
         Console.WriteLine("AwsCognitoAuthenticationService.Initialize: Initialization complete");
     }
