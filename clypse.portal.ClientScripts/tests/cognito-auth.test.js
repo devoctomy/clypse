@@ -1,2 +1,4 @@
-// Placeholder for cognito-auth tests
-// TODO: Implement unit tests for cognito-auth.js
+describe('cognito-auth', () => {
+    test.skip('GivenNoTests_WhenRunning_ThenSkip', () => {
+    });
+});

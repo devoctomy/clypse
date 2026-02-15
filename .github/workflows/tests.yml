@@ -19,6 +19,18 @@ jobs:
       with:
         node-version: '20'
       
+    - name: Install JavaScript dependencies
+      run: |
+        cd clypse.portal.ClientScripts
+        npm ci
+      
+    - name: Run JavaScript Unit Tests
+      run: |
+        echo "🧪 Running JavaScript Unit Tests..."
+        cd clypse.portal.ClientScripts
+        npm test
+        echo "✅ JavaScript Unit Tests completed"
+      
     - name: Install Python (required for WASM build)
       run: |
         apt-get update

@@ -1,2 +1,4 @@
-// Placeholder for mobile-viewport tests
-// TODO: Implement unit tests for mobile-viewport.js
+describe('mobile-viewport', () => {
+    test.skip('GivenNoTests_WhenRunning_ThenSkip', () => {
+    });
+});

@@ -1,2 +1,4 @@
-// Placeholder for pwa-update tests
-// TODO: Implement unit tests for pwa-update.js
+describe('pwa-update', () => {
+    test.skip('GivenNoTests_WhenRunning_ThenSkip', () => {
+    });
+});
