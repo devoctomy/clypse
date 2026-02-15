@@ -1,3 +1,4 @@
+/* global SimpleWebAuthnBrowser */
 /**
  * WebAuthn bridge for Blazor - Direct SimpleWebAuthn integration
  */

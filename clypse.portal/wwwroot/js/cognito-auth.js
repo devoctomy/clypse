@@ -1,3 +1,4 @@
+/* global AWS, AmazonCognitoIdentity */
 window.CognitoAuth = {
     userPool: null,
     cognitoUser: null,
@@ -89,8 +90,9 @@ window.CognitoAuth = {
     getAwsCredentials: function(idToken) {
         return new Promise((resolve, reject) => {
             const loginKey = `cognito-idp.${AWS.config.region}.amazonaws.com/${this.userPool.getUserPoolId()}`;
-            const loginData = {};
-            loginData[loginKey] = idToken;
+            const loginData = {
+                [loginKey]: idToken
+            };
 
             AWS.config.credentials = new AWS.CognitoIdentityCredentials({
                 IdentityPoolId: window.cognitoConfig.identityPoolId,

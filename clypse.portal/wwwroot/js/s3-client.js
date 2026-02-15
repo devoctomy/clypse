@@ -1,3 +1,4 @@
+/* global AWS */
 window.S3Client = {
 
     putObject: async function(request) {
