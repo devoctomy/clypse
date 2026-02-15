@@ -7,19 +7,11 @@ using clypse.portal.Application.Services.Interfaces;
 
 namespace clypse.portal.Application.Services;
 
-public class VaultManagerFactoryService(KeyDerivationServiceOptions keyDerivationServiceOptions) : IVaultManagerFactoryService
+/// <inheritdoc/>
+public class VaultManagerFactoryService(KeyDerivationServiceOptions keyDerivationServiceOptions)
+    : IVaultManagerFactoryService
 {
-    /// <summary>
-    /// Create an instance of IVaultManager that is suitable for use with Blazor.
-    /// </summary>
-    /// <param name="jsInvoker">The JavaScript S3 invoker for interop calls.</param>
-    /// <param name="accessKey">AWS access key ID.</param>
-    /// <param name="secretKey">AWS secret access key.</param>
-    /// <param name="sessionToken">AWS session token (for temporary credentials).</param>
-    /// <param name="region">AWS region name.</param>
-    /// <param name="bucketName">Name of S3 bucket where data is stored.</param>
-    /// <param name="identityId">Cognito Identity Id of user that owns the vault.</param>
-    /// <returns>Instance of IVaultManager.</returns>
+    /// <inheritdoc/>
     public IVaultManager CreateForBlazor(
         IJavaScriptS3Invoker jsInvoker,
         string accessKey,

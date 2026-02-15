@@ -3,37 +3,37 @@ using Microsoft.JSInterop;
 
 namespace clypse.portal.Application.Services;
 
-public class LocalStorageService : ILocalStorageService
+/// <inheritdoc/>
+public class LocalStorageService(IJSRuntime jsRuntime)
+    : ILocalStorageService
 {
-    private readonly IJSRuntime _jsRuntime;
+    private static readonly string[] PersistentLocalStorageKeys = { "users", "clypse_user_settings" };
+    private readonly IJSRuntime jsRuntime = jsRuntime ?? throw new ArgumentNullException(nameof(jsRuntime));
 
-    private static readonly string[] PersistentStorageKeys = { "users", "clypse_user_settings" };
-
-    public LocalStorageService(IJSRuntime jsRuntime)
-    {
-        _jsRuntime = jsRuntime;
-    }
-
+    /// <inheritdoc/>
     public async Task<string?> GetItemAsync(string key)
     {
-        return await _jsRuntime.InvokeAsync<string?>("localStorage.getItem", key);
+        return await this.jsRuntime.InvokeAsync<string?>("localStorage.getItem", key);
     }
 
+    /// <inheritdoc/>
     public async Task SetItemAsync(string key, string value)
     {
-        await _jsRuntime.InvokeVoidAsync("localStorage.setItem", key, value);
+        await this.jsRuntime.InvokeVoidAsync("localStorage.setItem", key, value);
     }
 
+    /// <inheritdoc/>
     public async Task RemoveItemAsync(string key)
     {
-        await _jsRuntime.InvokeVoidAsync("localStorage.removeItem", key);
+        await this.jsRuntime.InvokeVoidAsync("localStorage.removeItem", key);
     }
 
+    /// <inheritdoc/>
     public async Task ClearAllExceptPersistentSettingsAsync()
     {
         // Clear all localStorage data except persistent user settings and saved users
-        var persistentKeysJson = System.Text.Json.JsonSerializer.Serialize(PersistentStorageKeys);
-        await _jsRuntime.InvokeVoidAsync("eval", $@"
+        var persistentKeysJson = System.Text.Json.JsonSerializer.Serialize(PersistentLocalStorageKeys);
+        var clearStorageScript = $@"
             const persistentKeys = {persistentKeysJson};
             const keysToRemove = [];
             for (let i = 0; i < localStorage.length; i++) {{
@@ -42,7 +42,7 @@ public class LocalStorageService : ILocalStorageService
                     keysToRemove.push(key);
                 }}
             }}
-            keysToRemove.forEach(key => localStorage.removeItem(key));
-        ");
+            keysToRemove.forEach(key => localStorage.removeItem(key));";
+        await this.jsRuntime.InvokeVoidAsync("eval", clearStorageScript);
     }
 }

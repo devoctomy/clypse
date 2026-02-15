@@ -35,5 +35,9 @@ public interface IPwaUpdateService : IAsyncDisposable
     /// <param name="onUpdateAvailable">Callback when update becomes available.</param>
     /// <param name="onUpdateInstalled">Callback when update is installed.</param>
     /// <param name="onUpdateError">Callback when update error occurs.</param>
-    Task SetupUpdateCallbacksAsync(Func<Task>? onUpdateAvailable = null, Func<Task>? onUpdateInstalled = null, Func<string, Task>? onUpdateError = null);
+    /// <returns>Nothing.</returns>
+    Task SetupUpdateCallbacksAsync(
+        Func<Task>? onUpdateAvailable = null,
+        Func<Task>? onUpdateInstalled = null,
+        Func<string, Task>? onUpdateError = null);
 }

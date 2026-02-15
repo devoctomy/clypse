@@ -1,34 +1,38 @@
-using Microsoft.JSInterop;
 using System.Text.Json;
-using clypse.portal.Models.Vault;
 using clypse.portal.Application.Services.Interfaces;
+using clypse.portal.Models.Vault;
+using Microsoft.JSInterop;
 
 namespace clypse.portal.Application.Services;
 
-public class VaultStorageService : IVaultStorageService
+/// <inheritdoc/>
+public class VaultStorageService(IJSRuntime jsRuntime)
+    : IVaultStorageService
 {
-    private readonly IJSRuntime _jsRuntime;
-    private const string StorageKey = "clypse_vaults";
-
-    public VaultStorageService(IJSRuntime jsRuntime)
+    private const string VaultsLocalStorageKey = "clypse_vaults";
+    private static readonly JsonSerializerOptions JsonSerializerOptions = new ()
     {
-        _jsRuntime = jsRuntime;
-    }
+        WriteIndented = true,
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+        DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull,
+    };
 
+    private readonly IJSRuntime jsRuntime = jsRuntime ?? throw new ArgumentNullException(nameof(jsRuntime));
+
+    /// <inheritdoc/>
     public async Task<List<VaultMetadata>> GetVaultsAsync()
     {
         try
         {
-            var vaultsJson = await _jsRuntime.InvokeAsync<string>("localStorage.getItem", StorageKey);
-            
+            var vaultsJson = await this.jsRuntime.InvokeAsync<string>("localStorage.getItem", VaultsLocalStorageKey);
+
             if (string.IsNullOrEmpty(vaultsJson))
             {
-                return new List<VaultMetadata>();
+                return [];
             }
 
             var vaultStorage = JsonSerializer.Deserialize<VaultStorage>(vaultsJson);
-
-            return vaultStorage?.Vaults ?? new List<VaultMetadata>();
+            return vaultStorage?.Vaults ?? [];
         }
         catch (Exception ex)
         {
@@ -37,18 +41,17 @@ public class VaultStorageService : IVaultStorageService
         }
     }
 
+    /// <inheritdoc/>
     public async Task SaveVaultsAsync(List<VaultMetadata> vaults)
     {
         try
         {
             var vaultStorage = new VaultStorage { Vaults = vaults };
-            var vaultsJson = JsonSerializer.Serialize(vaultStorage, new JsonSerializerOptions 
-            { 
-                WriteIndented = true,
-                DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull
-            });
-            
-            await _jsRuntime.InvokeVoidAsync("localStorage.setItem", StorageKey, vaultsJson);
+            var vaultsJson = JsonSerializer.Serialize(
+                vaultStorage,
+                JsonSerializerOptions);
+
+            await this.jsRuntime.InvokeVoidAsync("localStorage.setItem", VaultsLocalStorageKey, vaultsJson);
         }
         catch (Exception ex)
         {
@@ -56,13 +59,14 @@ public class VaultStorageService : IVaultStorageService
         }
     }
 
+    /// <inheritdoc/>
     public async Task UpdateVaultAsync(VaultMetadata vault)
     {
         try
         {
-            var vaults = await GetVaultsAsync();
+            var vaults = await this.GetVaultsAsync();
             var existingVault = vaults.FirstOrDefault(v => v.Id == vault.Id);
-            
+
             if (existingVault != null)
             {
                 existingVault.Name = vault.Name;
@@ -72,8 +76,8 @@ public class VaultStorageService : IVaultStorageService
             {
                 vaults.Add(vault);
             }
-            
-            await SaveVaultsAsync(vaults);
+
+            await this.SaveVaultsAsync(vaults);
         }
         catch (Exception ex)
         {
@@ -81,17 +85,18 @@ public class VaultStorageService : IVaultStorageService
         }
     }
 
+    /// <inheritdoc/>
     public async Task RemoveVaultAsync(string vaultId)
     {
         try
         {
-            var vaults = await GetVaultsAsync();
+            var vaults = await this.GetVaultsAsync();
             var vaultToRemove = vaults.FirstOrDefault(v => v.Id == vaultId);
-            
+
             if (vaultToRemove != null)
             {
                 vaults.Remove(vaultToRemove);
-                await SaveVaultsAsync(vaults);
+                await this.SaveVaultsAsync(vaults);
             }
         }
         catch (Exception ex)
@@ -100,11 +105,12 @@ public class VaultStorageService : IVaultStorageService
         }
     }
 
+    /// <inheritdoc/>
     public async Task ClearVaultsAsync()
     {
         try
         {
-            await _jsRuntime.InvokeVoidAsync("localStorage.removeItem", StorageKey);
+            await this.jsRuntime.InvokeVoidAsync("localStorage.removeItem", VaultsLocalStorageKey);
         }
         catch (Exception ex)
         {

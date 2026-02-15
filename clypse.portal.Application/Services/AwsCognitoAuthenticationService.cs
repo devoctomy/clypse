@@ -6,24 +6,23 @@ using Microsoft.JSInterop;
 
 namespace clypse.portal.Application.Services;
 
-public class AwsCognitoAuthenticationService : IAuthenticationService
+/// <inheritdoc/>
+public class AwsCognitoAuthenticationService(
+    IJSRuntime jsRuntime,
+    AwsCognitoConfig cognitoConfig,
+    ILocalStorageService localStorage)
+    : IAuthenticationService
 {
-    private readonly IJSRuntime _jsRuntime;
-    private readonly AwsCognitoConfig _cognitoConfig;
-    private readonly ILocalStorageService _localStorage;
-    private bool _isInitialized;
-    private bool _justLoggedIn;
+    private readonly IJSRuntime jsRuntime = jsRuntime ?? throw new ArgumentNullException(nameof(jsRuntime));
+    private readonly AwsCognitoConfig cognitoConfig = cognitoConfig ?? throw new ArgumentNullException(nameof(cognitoConfig));
+    private readonly ILocalStorageService localStorage = localStorage ?? throw new ArgumentNullException(nameof(localStorage));
+    private bool isInitialized;
+    private bool justLoggedIn;
 
-    public AwsCognitoAuthenticationService(IJSRuntime jsRuntime, AwsCognitoConfig cognitoConfig, ILocalStorageService localStorage)
-    {
-        _jsRuntime = jsRuntime ?? throw new ArgumentNullException(nameof(jsRuntime));
-        _cognitoConfig = cognitoConfig ?? throw new ArgumentNullException(nameof(cognitoConfig));
-        _localStorage = localStorage ?? throw new ArgumentNullException(nameof(localStorage));
-    }
-
+    /// <inheritdoc/>
     public async Task Initialize()
     {
-        if (_isInitialized)
+        if (this.isInitialized)
         {
             Console.WriteLine("AwsCognitoAuthenticationService.Initialize: Already initialized, skipping");
             return;
@@ -32,35 +31,37 @@ public class AwsCognitoAuthenticationService : IAuthenticationService
         Console.WriteLine("AwsCognitoAuthenticationService.Initialize: Starting initialization");
 
         // Initialize Cognito configuration in JavaScript
-        await _jsRuntime.InvokeVoidAsync("eval", $@"
-            window.cognitoConfig = {{
-                userPoolId: '{_cognitoConfig.UserPoolId}',
-                userPoolClientId: '{_cognitoConfig.UserPoolClientId}',
-                region: '{_cognitoConfig.Region}',
-                identityPoolId: '{_cognitoConfig.IdentityPoolId}'
-            }};
-        ");
+        var script = $@"window.cognitoConfig = {{
+            userPoolId: '{this.cognitoConfig.UserPoolId}',
+            userPoolClientId: '{this.cognitoConfig.UserPoolClientId}',
+            region: '{this.cognitoConfig.Region}',
+            identityPoolId: '{this.cognitoConfig.IdentityPoolId}'
+        }};";
+        await this.jsRuntime.InvokeVoidAsync(
+            "eval",
+            script);
 
-        var initResult = await _jsRuntime.InvokeAsync<string>("CognitoAuth.initialize", _cognitoConfig);        
-        _isInitialized = true;
+        var initResult = await this.jsRuntime.InvokeAsync<string>("CognitoAuth.initialize", this.cognitoConfig);
+        this.isInitialized = true;
         Console.WriteLine("AwsCognitoAuthenticationService.Initialize: Initialization complete");
     }
 
+    /// <inheritdoc/>
     public async Task<bool> CheckAuthentication()
     {
         try
         {
-            var credentials = await GetStoredCredentials();
+            var credentials = await this.GetStoredCredentials();
             if (credentials == null)
             {
                 return false;
             }
 
             // If we just logged in, skip the refresh to avoid double AWS API calls
-            if (_justLoggedIn)
+            if (this.justLoggedIn)
             {
                 Console.WriteLine("AwsCognitoAuthenticationService.CheckAuthentication: Just logged in, skipping credential refresh");
-                _justLoggedIn = false; // Reset the flag
+                this.justLoggedIn = false; // Reset the flag
                 return true;
             }
 
@@ -69,7 +70,7 @@ public class AwsCognitoAuthenticationService : IAuthenticationService
             {
                 if (expirationTime <= DateTime.UtcNow)
                 {
-                    await ClearStoredCredentials();
+                    await this.ClearStoredCredentials();
                     return false;
                 }
             }
@@ -80,20 +81,20 @@ public class AwsCognitoAuthenticationService : IAuthenticationService
                 try
                 {
                     Console.WriteLine("AwsCognitoAuthenticationService.CheckAuthentication: Refreshing AWS credentials");
-                    var freshAwsCredentials = await _jsRuntime.InvokeAsync<AwsCredentials>("CognitoAuth.getAwsCredentials", credentials.IdToken);
+                    var freshAwsCredentials = await this.jsRuntime.InvokeAsync<AwsCredentials>("CognitoAuth.getAwsCredentials", credentials.IdToken);
                     if (freshAwsCredentials != null)
                     {
-                        freshAwsCredentials.IdentityId = credentials.AwsCredentials?.IdentityId ?? string.Empty;                        
+                        freshAwsCredentials.IdentityId = credentials.AwsCredentials?.IdentityId ?? string.Empty;
                         credentials.AwsCredentials = freshAwsCredentials;
                         var credentialsJson = JsonSerializer.Serialize(credentials);
-                        await _jsRuntime.InvokeVoidAsync("localStorage.setItem", "clypse_credentials", credentialsJson);
+                        await this.jsRuntime.InvokeVoidAsync("localStorage.setItem", "clypse_credentials", credentialsJson);
                     }
-                    
+
                     return true;
                 }
                 catch
                 {
-                    await ClearStoredCredentials();
+                    await this.ClearStoredCredentials();
                     return false;
                 }
             }
@@ -106,19 +107,20 @@ public class AwsCognitoAuthenticationService : IAuthenticationService
         }
     }
 
+    /// <inheritdoc/>
     public async Task<LoginResult> Login(string username, string password)
     {
         try
         {
             Console.WriteLine($"AwsCognitoAuthenticationService.Login: Starting login for user: {username}");
-            var result = await _jsRuntime.InvokeAsync<LoginResult>("CognitoAuth.login", username, password);
+            var result = await this.jsRuntime.InvokeAsync<LoginResult>("CognitoAuth.login", username, password);
 
             Console.WriteLine($"AwsCognitoAuthenticationService.Login: Login result success: {result.Success}");
             if (!string.IsNullOrEmpty(result.Error))
             {
                 Console.WriteLine($"AwsCognitoAuthenticationService.Login: Error: {result.Error}");
             }
-            
+
             if (result.AwsCredentials != null)
             {
                 Console.WriteLine($"AwsCognitoAuthenticationService.Login: AWS Credentials received.");
@@ -131,8 +133,8 @@ public class AwsCognitoAuthenticationService : IAuthenticationService
             if (result.Success)
             {
                 Console.WriteLine("AwsCognitoAuthenticationService.Login: Storing credentials");
-                await StoreCredentials(result);
-                _justLoggedIn = true; // Set flag to avoid double credential refresh
+                await this.StoreCredentials(result);
+                this.justLoggedIn = true; // Set flag to avoid double credential refresh
                 Console.WriteLine("AwsCognitoAuthenticationService.Login: Set _justLoggedIn flag to prevent double AWS API calls");
             }
 
@@ -145,23 +147,25 @@ public class AwsCognitoAuthenticationService : IAuthenticationService
             return new LoginResult
             {
                 Success = false,
-                Error = $"An error occurred during login: {ex.Message}"
+                Error = $"An error occurred during login: {ex.Message}",
             };
         }
     }
 
+    /// <inheritdoc/>
     public async Task Logout()
     {
-        await _jsRuntime.InvokeVoidAsync("CognitoAuth.logout");
-        await ClearStoredCredentials();
+        await this.jsRuntime.InvokeVoidAsync("CognitoAuth.logout");
+        await this.ClearStoredCredentials();
     }
 
+    /// <inheritdoc/>
     public async Task<StoredCredentials?> GetStoredCredentials()
     {
         try
         {
-            var credentialsJson = await _jsRuntime.InvokeAsync<string>("localStorage.getItem", "clypse_credentials");
-            
+            var credentialsJson = await this.jsRuntime.InvokeAsync<string>("localStorage.getItem", "clypse_credentials");
+
             if (string.IsNullOrEmpty(credentialsJson))
             {
                 return null;
@@ -175,37 +179,13 @@ public class AwsCognitoAuthenticationService : IAuthenticationService
         }
     }
 
-    private async Task StoreCredentials(LoginResult result)
-    {
-        Console.WriteLine("AwsCognitoAuthenticationService.StoreCredentials: Storing credentials to localStorage");
-        
-        var credentials = new StoredCredentials
-        {
-            AccessToken = result.AccessToken,
-            IdToken = result.IdToken,
-            AwsCredentials = result.AwsCredentials,
-            ExpirationTime = result.AwsCredentials?.Expiration ?? DateTime.UtcNow.AddHours(1).ToString(),
-            StoredAt = DateTime.UtcNow
-        };
-
-        if (result.AwsCredentials != null)
-        {
-            Console.WriteLine($"AwsCognitoAuthenticationService.StoreCredentials: Storing AWS Credentials with IdentityId: '{result.AwsCredentials.IdentityId}'");
-        }
-
-        var credentialsJson = JsonSerializer.Serialize(credentials);
-        Console.WriteLine($"AwsCognitoAuthenticationService.StoreCredentials: Serialized credentials length: {credentialsJson.Length}");
-        
-        await _jsRuntime.InvokeVoidAsync("localStorage.setItem", "clypse_credentials", credentialsJson);
-        Console.WriteLine("AwsCognitoAuthenticationService.StoreCredentials: Credentials stored successfully");
-    }
-
+    /// <inheritdoc/>
     public async Task<LoginResult> CompletePasswordReset(string username, string newPassword)
     {
         try
         {
             Console.WriteLine($"AwsCognitoAuthenticationService.CompletePasswordReset: Starting password reset for user: {username}");
-            var result = await _jsRuntime.InvokeAsync<LoginResult>("CognitoAuth.completePasswordReset", username, newPassword);
+            var result = await this.jsRuntime.InvokeAsync<LoginResult>("CognitoAuth.completePasswordReset", username, newPassword);
 
             Console.WriteLine($"AwsCognitoAuthenticationService.CompletePasswordReset: Password reset result success: {result.Success}");
             if (!string.IsNullOrEmpty(result.Error))
@@ -216,8 +196,8 @@ public class AwsCognitoAuthenticationService : IAuthenticationService
             if (result.Success)
             {
                 Console.WriteLine("AwsCognitoAuthenticationService.CompletePasswordReset: Storing credentials");
-                await StoreCredentials(result);
-                _justLoggedIn = true;
+                await this.StoreCredentials(result);
+                this.justLoggedIn = true;
                 Console.WriteLine("AwsCognitoAuthenticationService.CompletePasswordReset: Set _justLoggedIn flag to prevent double AWS API calls");
             }
 
@@ -229,17 +209,18 @@ public class AwsCognitoAuthenticationService : IAuthenticationService
             return new LoginResult
             {
                 Success = false,
-                Error = $"An error occurred during password reset: {ex.Message}"
+                Error = $"An error occurred during password reset: {ex.Message}",
             };
         }
     }
 
+    /// <inheritdoc/>
     public async Task<ForgotPasswordResult> ForgotPassword(string username)
     {
         try
         {
             Console.WriteLine($"AwsCognitoAuthenticationService.ForgotPassword: Starting forgot password for user: {username}");
-            var result = await _jsRuntime.InvokeAsync<ForgotPasswordResult>("CognitoAuth.forgotPassword", username);
+            var result = await this.jsRuntime.InvokeAsync<ForgotPasswordResult>("CognitoAuth.forgotPassword", username);
 
             Console.WriteLine($"AwsCognitoAuthenticationService.ForgotPassword: Forgot password result success: {result.Success}");
             if (!string.IsNullOrEmpty(result.Error))
@@ -255,17 +236,18 @@ public class AwsCognitoAuthenticationService : IAuthenticationService
             return new ForgotPasswordResult
             {
                 Success = false,
-                Error = $"An error occurred during forgot password: {ex.Message}"
+                Error = $"An error occurred during forgot password: {ex.Message}",
             };
         }
     }
 
+    /// <inheritdoc/>
     public async Task<ForgotPasswordResult> ConfirmForgotPassword(string username, string verificationCode, string newPassword)
     {
         try
         {
             Console.WriteLine($"AwsCognitoAuthenticationService.ConfirmForgotPassword: Starting confirm forgot password for user: {username}");
-            var result = await _jsRuntime.InvokeAsync<ForgotPasswordResult>("CognitoAuth.confirmForgotPassword", username, verificationCode, newPassword);
+            var result = await this.jsRuntime.InvokeAsync<ForgotPasswordResult>("CognitoAuth.confirmForgotPassword", username, verificationCode, newPassword);
 
             Console.WriteLine($"AwsCognitoAuthenticationService.ConfirmForgotPassword: Confirm forgot password result success: {result.Success}");
             if (!string.IsNullOrEmpty(result.Error))
@@ -281,14 +263,39 @@ public class AwsCognitoAuthenticationService : IAuthenticationService
             return new ForgotPasswordResult
             {
                 Success = false,
-                Error = $"An error occurred during confirm forgot password: {ex.Message}"
+                Error = $"An error occurred during confirm forgot password: {ex.Message}",
             };
         }
+    }
+
+    private async Task StoreCredentials(LoginResult result)
+    {
+        Console.WriteLine("AwsCognitoAuthenticationService.StoreCredentials: Storing credentials to localStorage");
+
+        var credentials = new StoredCredentials
+        {
+            AccessToken = result.AccessToken,
+            IdToken = result.IdToken,
+            AwsCredentials = result.AwsCredentials,
+            ExpirationTime = result.AwsCredentials?.Expiration ?? DateTime.UtcNow.AddHours(1).ToString(),
+            StoredAt = DateTime.UtcNow,
+        };
+
+        if (result.AwsCredentials != null)
+        {
+            Console.WriteLine($"AwsCognitoAuthenticationService.StoreCredentials: Storing AWS Credentials with IdentityId: '{result.AwsCredentials.IdentityId}'");
+        }
+
+        var credentialsJson = JsonSerializer.Serialize(credentials);
+        Console.WriteLine($"AwsCognitoAuthenticationService.StoreCredentials: Serialized credentials length: {credentialsJson.Length}");
+
+        await this.jsRuntime.InvokeVoidAsync("localStorage.setItem", "clypse_credentials", credentialsJson);
+        Console.WriteLine("AwsCognitoAuthenticationService.StoreCredentials: Credentials stored successfully");
     }
 
     private async Task ClearStoredCredentials()
     {
         // Clear all localStorage data except persistent user settings and saved users
-        await _localStorage.ClearAllExceptPersistentSettingsAsync();
+        await this.localStorage.ClearAllExceptPersistentSettingsAsync();
     }
 }

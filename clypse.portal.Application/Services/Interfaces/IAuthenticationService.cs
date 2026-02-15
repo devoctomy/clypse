@@ -11,6 +11,7 @@ public interface IAuthenticationService
     /// <summary>
     /// Initializes the authentication service.
     /// </summary>
+    /// <returns>Nothing.</returns>
     Task Initialize();
 
     /// <summary>
@@ -30,6 +31,7 @@ public interface IAuthenticationService
     /// <summary>
     /// Logs out the current user and clears any stored credentials.
     /// </summary>
+    /// <returns>Nothing.</returns>
     Task Logout();
 
     /// <summary>

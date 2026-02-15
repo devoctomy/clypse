@@ -5,19 +5,10 @@ using clypse.portal.Application.Services.Interfaces;
 
 namespace clypse.portal.Application.Services;
 
+/// <inheritdoc/>
 public class VaultManagerBootstrapperFactoryService : IVaultManagerBootstrapperFactoryService
 {
-    /// <summary>
-    /// Create an instance of IVaultManagerBootstrapperService that is suitable for use with Blazor.
-    /// </summary>
-    /// <param name="jsInvoker">The JavaScript S3 invoker for interop calls.</param>
-    /// <param name="accessKey">AWS access key ID.</param>
-    /// <param name="secretAccessKey">AWS secret access key.</param>
-    /// <param name="sessionToken">AWS session token (for temporary credentials).</param>
-    /// <param name="region">AWS region name.</param>
-    /// <param name="bucketName">Name of S3 bucket where data is stored.</param>
-    /// <param name="identityId">Cognito Identity Id of user that owns the vault.</param>
-    /// <returns>Instance of IVaultManagerBootstrapperService.</returns>
+    /// <inheritdoc/>
     public IVaultManagerBootstrapperService CreateForBlazor(
         IJavaScriptS3Invoker jsInvoker,
         string accessKey,
@@ -33,16 +24,16 @@ public class VaultManagerBootstrapperFactoryService : IVaultManagerBootstrapperF
             secretAccessKey,
             sessionToken,
             region);
-        
+
         // Create the plain cloud storage provider (not encrypted) for the bootstrapper
         var awsCloudStorageProvider = new AwsCloudStorageProviderBase(
             bucketName,
             jsS3Client);
-        
+
         var bootstrapperService = new AwsS3VaultManagerBootstrapperService(
             identityId,
             awsCloudStorageProvider);
-        
+
         return bootstrapperService;
     }
 }

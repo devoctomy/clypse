@@ -1,67 +1,66 @@
-using Microsoft.JSInterop;
 using System.Text.Json;
-using clypse.portal.Models.Settings;
 using clypse.portal.Application.Services.Interfaces;
+using clypse.portal.Models.Settings;
+using Microsoft.JSInterop;
 
 namespace clypse.portal.Application.Services;
 
-public class UserSettingsService : IUserSettingsService
+/// <inheritdoc/>
+public class UserSettingsService(IJSRuntime jsRuntime)
+    : IUserSettingsService
 {
-    private const string SETTINGS_KEY = "clypse_user_settings";
-    private readonly IJSRuntime _jsRuntime;
-    private UserSettings? _cachedSettings;
+    private const string SettingsLocalStorageKey = "clypse_user_settings";
+    private readonly IJSRuntime jsRuntime = jsRuntime ?? throw new ArgumentNullException(nameof(jsRuntime));
+    private UserSettings? cachedSettings;
 
-    public UserSettingsService(IJSRuntime jsRuntime)
-    {
-        _jsRuntime = jsRuntime;
-    }
-
+    /// <inheritdoc/>
     public async Task<UserSettings> GetSettingsAsync()
     {
-        if (_cachedSettings != null)
+        if (this.cachedSettings != null)
         {
-            return _cachedSettings;
+            return this.cachedSettings;
         }
 
         try
         {
-            var settingsJson = await _jsRuntime.InvokeAsync<string?>("localStorage.getItem", SETTINGS_KEY);
-            
+            var settingsJson = await this.jsRuntime.InvokeAsync<string?>("localStorage.getItem", SettingsLocalStorageKey);
+
             if (!string.IsNullOrEmpty(settingsJson))
             {
-                _cachedSettings = JsonSerializer.Deserialize<UserSettings>(settingsJson) ?? new UserSettings();
+                this.cachedSettings = JsonSerializer.Deserialize<UserSettings>(settingsJson) ?? new UserSettings();
             }
             else
             {
                 // Check for legacy theme setting and migrate it
-                var legacyTheme = await _jsRuntime.InvokeAsync<string?>("localStorage.getItem", "clypse_theme");
-                _cachedSettings = new UserSettings();
-                
+                var legacyTheme = await this.jsRuntime.InvokeAsync<string?>("localStorage.getItem", "clypse_theme");
+                this.cachedSettings = new UserSettings();
+
                 if (!string.IsNullOrEmpty(legacyTheme))
                 {
-                    _cachedSettings.Theme = legacyTheme;
-                    
+                    this.cachedSettings.Theme = legacyTheme;
+
                     // Save the migrated settings and remove the legacy key
-                    await SaveSettingsAsync(_cachedSettings);
-                    await _jsRuntime.InvokeVoidAsync("localStorage.removeItem", "clypse_theme");
+                    await this.SaveSettingsAsync(this.cachedSettings);
+                    await this.jsRuntime.InvokeVoidAsync("localStorage.removeItem", "clypse_theme");
                 }
             }
         }
         catch
         {
-            _cachedSettings = new UserSettings();
+            this.cachedSettings = new UserSettings();
         }
 
-        return _cachedSettings;
+        return this.cachedSettings;
     }
 
+    /// <inheritdoc/>
     public async Task SaveSettingsAsync(UserSettings settings)
     {
         try
         {
             var settingsJson = JsonSerializer.Serialize(settings);
-            await _jsRuntime.InvokeVoidAsync("localStorage.setItem", SETTINGS_KEY, settingsJson);
-            _cachedSettings = settings;
+            await this.jsRuntime.InvokeVoidAsync("localStorage.setItem", SettingsLocalStorageKey, settingsJson);
+            this.cachedSettings = settings;
         }
         catch
         {
@@ -69,16 +68,18 @@ public class UserSettingsService : IUserSettingsService
         }
     }
 
+    /// <inheritdoc/>
     public async Task<string> GetThemeAsync()
     {
-        var settings = await GetSettingsAsync();
+        var settings = await this.GetSettingsAsync();
         return settings.Theme;
     }
 
+    /// <inheritdoc/>
     public async Task SetThemeAsync(string theme)
     {
-        var settings = await GetSettingsAsync();
+        var settings = await this.GetSettingsAsync();
         settings.Theme = theme;
-        await SaveSettingsAsync(settings);
+        await this.SaveSettingsAsync(settings);
     }
 }

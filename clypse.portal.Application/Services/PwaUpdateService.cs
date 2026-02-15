@@ -4,35 +4,26 @@ using Microsoft.JSInterop;
 
 namespace clypse.portal.Application.Services;
 
-/// <summary>
-/// Implementation of PWA update service using JavaScript interop.
-/// </summary>
-public class PwaUpdateService : IPwaUpdateService, IAsyncDisposable
+/// <inheritdoc/>
+public class PwaUpdateService(IJSRuntime jsRuntime, ILogger<PwaUpdateService> logger)
+    : IPwaUpdateService, IAsyncDisposable
 {
-    private readonly IJSRuntime _jsRuntime;
-    private readonly ILogger<PwaUpdateService> _logger;
-    private Func<Task>? _onUpdateAvailable;
-    private Func<Task>? _onUpdateInstalled;
-    private Func<string, Task>? _onUpdateError;
-
-    public PwaUpdateService(
-        IJSRuntime jsRuntime,
-        ILogger<PwaUpdateService> logger)
-    {
-        _jsRuntime = jsRuntime;
-        _logger = logger;
-    }
+    private readonly IJSRuntime jsRuntime = jsRuntime ?? throw new ArgumentNullException(nameof(jsRuntime));
+    private readonly ILogger<PwaUpdateService> logger = logger ?? throw new ArgumentNullException(nameof(logger));
+    private Func<Task>? onUpdateAvailable;
+    private Func<Task>? onUpdateInstalled;
+    private Func<string, Task>? onUpdateError;
 
     /// <inheritdoc />
     public async Task<bool> IsUpdateAvailableAsync()
     {
         try
         {
-            return await _jsRuntime.InvokeAsync<bool>("PWAUpdateService.isUpdateAvailable");
+            return await this.jsRuntime.InvokeAsync<bool>("PWAUpdateService.isUpdateAvailable");
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error checking if PWA update is available");
+            this.logger.LogError(ex, "Error checking if PWA update is available");
             return false;
         }
     }
@@ -42,12 +33,12 @@ public class PwaUpdateService : IPwaUpdateService, IAsyncDisposable
     {
         try
         {
-            _logger.LogInformation("Checking for PWA updates");
-            return await _jsRuntime.InvokeAsync<bool>("PWAUpdateService.checkForUpdate");
+            this.logger.LogInformation("Checking for PWA updates");
+            return await this.jsRuntime.InvokeAsync<bool>("PWAUpdateService.checkForUpdate");
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error checking for PWA updates");
+            this.logger.LogError(ex, "Error checking for PWA updates");
             return false;
         }
     }
@@ -57,12 +48,12 @@ public class PwaUpdateService : IPwaUpdateService, IAsyncDisposable
     {
         try
         {
-            _logger.LogInformation("Installing PWA update");
-            return await _jsRuntime.InvokeAsync<bool>("PWAUpdateService.installUpdate");
+            this.logger.LogInformation("Installing PWA update");
+            return await this.jsRuntime.InvokeAsync<bool>("PWAUpdateService.installUpdate");
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error installing PWA update");
+            this.logger.LogError(ex, "Error installing PWA update");
             return false;
         }
     }
@@ -72,12 +63,12 @@ public class PwaUpdateService : IPwaUpdateService, IAsyncDisposable
     {
         try
         {
-            _logger.LogInformation("Force updating PWA");
-            return await _jsRuntime.InvokeAsync<bool>("PWAUpdateService.forceUpdate");
+            this.logger.LogInformation("Force updating PWA");
+            return await this.jsRuntime.InvokeAsync<bool>("PWAUpdateService.forceUpdate");
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error force updating PWA");
+            this.logger.LogError(ex, "Error force updating PWA");
             return false;
         }
     }
@@ -87,18 +78,18 @@ public class PwaUpdateService : IPwaUpdateService, IAsyncDisposable
     {
         try
         {
-            _onUpdateAvailable = onUpdateAvailable;
-            _onUpdateInstalled = onUpdateInstalled;
-            _onUpdateError = onUpdateError;
+            this.onUpdateAvailable = onUpdateAvailable;
+            this.onUpdateInstalled = onUpdateInstalled;
+            this.onUpdateError = onUpdateError;
 
             // Simple approach: just let the PWA service handle updates internally
             // We'll poll for updates instead of using callbacks
-            _logger.LogInformation("PWA update service initialized");
+            this.logger.LogInformation("PWA update service initialized");
             return Task.CompletedTask;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error setting up PWA update callbacks");
+            this.logger.LogError(ex, "Error setting up PWA update callbacks");
             return Task.CompletedTask;
         }
     }
