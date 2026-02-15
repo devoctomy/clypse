@@ -9,6 +9,7 @@ global.TextEncoder = class {
     encode(text) {
         const uint8Array = new Uint8Array(text.length);
         for (let i = 0; i < text.length; i++) {
+            // eslint-disable-next-line no-restricted-syntax
             uint8Array[i] = text.charCodeAt(i);
         }
         return uint8Array;
@@ -18,6 +19,7 @@ global.TextEncoder = class {
 global.crypto = {
     getRandomValues: jest.fn((arr) => {
         for (let i = 0; i < arr.length; i++) {
+            // eslint-disable-next-line no-restricted-syntax
             arr[i] = Math.floor(Math.random() * 256);
         }
         return arr;

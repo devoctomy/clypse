@@ -51,6 +51,15 @@ export default [
             'prefer-const': 'error',
             'prefer-arrow-callback': 'warn',
             
+            // Security: Detect potential object injection (dynamic property assignment)
+            'no-restricted-syntax': [
+                'warn',
+                {
+                    selector: 'AssignmentExpression[left.type="MemberExpression"][left.computed=true]',
+                    message: 'Detected object injection sink: avoid dynamic property assignment (obj[key] = value) as it may lead to prototype pollution or injection attacks'
+                }
+            ],
+            
             // Style (basic)
             'indent': ['error', 4, { SwitchCase: 1 }],
             'quotes': ['error', 'single', { avoidEscape: true }],

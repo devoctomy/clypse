@@ -6,6 +6,7 @@ Object.defineProperty(global, 'navigator', {
         serviceWorker: {
             ready: Promise.resolve(),
             addEventListener: jest.fn((event, handler) => {
+                // eslint-disable-next-line no-restricted-syntax
                 navigatorServiceWorkerListeners[event] = handler;
             }),
             controller: null
