@@ -8,6 +8,7 @@ duplication:
     - '**/*.md'
     - 'README.md'
     - '**/README.md'
+    - 'clypse.portal/wwwroot/js/**'
 
 exclude_paths:
 - 'Documentation/Diagrams/Generate-Diagrams.ps1'
@@ -19,3 +20,4 @@ exclude_paths:
 - '**/*.md'
 - 'README.md'
 - '**/README.md'
+- 'clypse.portal/wwwroot/js/**'
