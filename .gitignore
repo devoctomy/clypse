@@ -433,3 +433,4 @@ clypse.portal/wwwroot/js/*.js
 
 # Keep directory but not generated files
 !clypse.portal/wwwroot/js/.gitkeep
+clypse.portal.ClientScripts/coverage/
