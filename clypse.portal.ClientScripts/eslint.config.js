@@ -27,11 +27,8 @@ export default [
                 TextEncoder: 'readonly',
                 crypto: 'readonly',
                 requestAnimationFrame: 'readonly',
-                self: 'readonly',
-                // Third-party libraries
-                AWS: 'readonly',
-                AmazonCognitoIdentity: 'readonly',
-                SimpleWebAuthnBrowser: 'readonly'
+                self: 'readonly'
+                // Third-party libraries are declared inline with /* global */ comments
             }
         },
         rules: {

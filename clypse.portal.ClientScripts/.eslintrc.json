@@ -1,0 +1,48 @@
+{
+    "env": {
+        "browser": true,
+        "es2022": true
+    },
+    "extends": "eslint:recommended",
+    "parserOptions": {
+        "ecmaVersion": 2022,
+        "sourceType": "module"
+    },
+    "globals": {
+        "AWS": "readonly",
+        "AmazonCognitoIdentity": "readonly",
+        "SimpleWebAuthnBrowser": "readonly"
+    },
+    "rules": {
+        "no-unused-vars": ["error", {
+            "argsIgnorePattern": "^_",
+            "varsIgnorePattern": "^_"
+        }],
+        "no-console": "off",
+        "no-debugger": "error",
+        "no-alert": "warn",
+        "eqeqeq": ["error", "always"],
+        "curly": ["error", "all"],
+        "no-eval": "error",
+        "no-implied-eval": "error",
+        "no-with": "error",
+        "no-var": "error",
+        "prefer-const": "error",
+        "prefer-arrow-callback": "warn",
+        "indent": ["error", 4, { "SwitchCase": 1 }],
+        "quotes": ["error", "single", { "avoidEscape": true }],
+        "semi": ["error", "always"],
+        "comma-dangle": ["error", "never"],
+        "no-trailing-spaces": "error",
+        "eol-last": ["error", "always"]
+    },
+    "overrides": [
+        {
+            "files": ["tests/**/*.js"],
+            "env": {
+                "jest": true,
+                "node": true
+            }
+        }
+    ]
+}

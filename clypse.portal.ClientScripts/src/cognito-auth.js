@@ -1,3 +1,4 @@
+/* global AWS, AmazonCognitoIdentity */
 window.CognitoAuth = {
     userPool: null,
     cognitoUser: null,
