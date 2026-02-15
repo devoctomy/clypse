@@ -229,6 +229,216 @@ public class AwsCognitoAuthenticationServiceTests
     }
 
     [Fact]
+    public async Task GivenJustLoggedInFlag_WhenCheckAuthentication_ThenSkipsRefreshAndReturnsTrue()
+    {
+        // Arrange
+        var validCredentials = new StoredCredentials
+        {
+            IdToken = "test-id-token",
+            AccessToken = "test-access-token",
+            ExpirationTime = DateTime.UtcNow.AddHours(1).ToString("O"),
+            StoredAt = DateTime.UtcNow,
+            AwsCredentials = new AwsCredentials
+            {
+                AccessKeyId = "test-access-key",
+                SecretAccessKey = "test-secret-key",
+                SessionToken = "test-session-token",
+                IdentityId = "test-identity-id",
+                Expiration = DateTime.UtcNow.AddHours(1).ToString("O")
+            }
+        };
+
+        var loginResult = new LoginResult
+        {
+            Success = true,
+            AccessToken = "test-access-token",
+            IdToken = "test-id-token",
+            AwsCredentials = validCredentials.AwsCredentials
+        };
+
+        this.mockJsRuntime
+            .Setup(x => x.InvokeAsync<LoginResult>("CognitoAuth.login", It.IsAny<object[]>()))
+            .ReturnsAsync(loginResult);
+
+        this.mockJsRuntime
+            .Setup(x => x.InvokeAsync<string>("localStorage.getItem", It.IsAny<object[]>()))
+            .ReturnsAsync(JsonSerializer.Serialize(validCredentials));
+
+        var sut = new AwsCognitoAuthenticationService(
+            this.mockJsRuntime.Object,
+            this.cognitoConfig,
+            this.mockLocalStorage.Object);
+
+        // Perform login to set justLoggedIn flag
+        await sut.Login("testuser", "testpassword");
+
+        // Act
+        var result = await sut.CheckAuthentication();
+
+        // Assert
+        Assert.True(result);
+        // Verify that credential refresh was NOT called
+        this.mockJsRuntime.Verify(
+            x => x.InvokeAsync<AwsCredentials>("CognitoAuth.getAwsCredentials", It.IsAny<object[]>()),
+            Times.Never);
+    }
+
+    [Fact]
+    public async Task GivenCredentialRefreshFails_WhenCheckAuthentication_ThenClearsCredentialsAndReturnsFalse()
+    {
+        // Arrange
+        var validCredentials = new StoredCredentials
+        {
+            IdToken = "test-id-token",
+            AccessToken = "test-access-token",
+            ExpirationTime = DateTime.UtcNow.AddHours(1).ToString("O"),
+            StoredAt = DateTime.UtcNow,
+            AwsCredentials = new AwsCredentials
+            {
+                AccessKeyId = "test-access-key",
+                SecretAccessKey = "test-secret-key",
+                SessionToken = "test-session-token",
+                IdentityId = "test-identity-id",
+                Expiration = DateTime.UtcNow.AddHours(1).ToString("O")
+            }
+        };
+
+        this.mockJsRuntime
+            .Setup(x => x.InvokeAsync<string>("localStorage.getItem", It.IsAny<object[]>()))
+            .ReturnsAsync(JsonSerializer.Serialize(validCredentials));
+
+        this.mockJsRuntime
+            .Setup(x => x.InvokeAsync<AwsCredentials>("CognitoAuth.getAwsCredentials", It.IsAny<object[]>()))
+            .ThrowsAsync(new Exception("Credential refresh failed"));
+
+        var sut = new AwsCognitoAuthenticationService(
+            this.mockJsRuntime.Object,
+            this.cognitoConfig,
+            this.mockLocalStorage.Object);
+
+        // Act
+        var result = await sut.CheckAuthentication();
+
+        // Assert
+        Assert.False(result);
+        this.mockLocalStorage.Verify(
+            x => x.ClearAllExceptPersistentSettingsAsync(),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task GivenInvalidExpirationTime_WhenCheckAuthentication_ThenContinuesAndChecksIdToken()
+    {
+        // Arrange
+        var credentialsWithInvalidExpiration = new StoredCredentials
+        {
+            IdToken = "test-id-token",
+            AccessToken = "test-access-token",
+            ExpirationTime = "invalid-date-format",
+            StoredAt = DateTime.UtcNow,
+            AwsCredentials = new AwsCredentials
+            {
+                AccessKeyId = "test-access-key",
+                SecretAccessKey = "test-secret-key",
+                SessionToken = "test-session-token",
+                IdentityId = "test-identity-id",
+                Expiration = DateTime.UtcNow.AddHours(1).ToString("O")
+            }
+        };
+
+        var refreshedCredentials = new AwsCredentials
+        {
+            AccessKeyId = "new-access-key",
+            SecretAccessKey = "new-secret-key",
+            SessionToken = "new-session-token",
+            Expiration = DateTime.UtcNow.AddHours(1).ToString("O")
+        };
+
+        this.mockJsRuntime
+            .Setup(x => x.InvokeAsync<string>("localStorage.getItem", It.IsAny<object[]>()))
+            .ReturnsAsync(JsonSerializer.Serialize(credentialsWithInvalidExpiration));
+
+        this.mockJsRuntime
+            .Setup(x => x.InvokeAsync<AwsCredentials>("CognitoAuth.getAwsCredentials", It.IsAny<object[]>()))
+            .ReturnsAsync(refreshedCredentials);
+
+        var sut = new AwsCognitoAuthenticationService(
+            this.mockJsRuntime.Object,
+            this.cognitoConfig,
+            this.mockLocalStorage.Object);
+
+        // Act
+        var result = await sut.CheckAuthentication();
+
+        // Assert
+        Assert.True(result);
+        // DateTime.TryParse failed, so it continues to refresh credentials
+        this.mockJsRuntime.Verify(
+            x => x.InvokeAsync<AwsCredentials>("CognitoAuth.getAwsCredentials", It.IsAny<object[]>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task GivenExceptionInGetStoredCredentials_WhenCheckAuthentication_ThenCatchesAndReturnsFalse()
+    {
+        // Arrange
+        this.mockJsRuntime
+            .Setup(x => x.InvokeAsync<string>("localStorage.getItem", It.IsAny<object[]>()))
+            .ThrowsAsync(new Exception("Storage access failed"));
+
+        var sut = new AwsCognitoAuthenticationService(
+            this.mockJsRuntime.Object,
+            this.cognitoConfig,
+            this.mockLocalStorage.Object);
+
+        // Act
+        var result = await sut.CheckAuthentication();
+
+        // Assert
+        Assert.False(result);
+    }
+
+    [Fact]
+    public async Task GivenCredentialsWithoutIdToken_WhenCheckAuthentication_ThenReturnsFalse()
+    {
+        // Arrange
+        var credentialsWithoutIdToken = new StoredCredentials
+        {
+            IdToken = null,
+            AccessToken = "test-access-token",
+            ExpirationTime = DateTime.UtcNow.AddHours(1).ToString("O"),
+            StoredAt = DateTime.UtcNow,
+            AwsCredentials = new AwsCredentials
+            {
+                AccessKeyId = "test-access-key",
+                SecretAccessKey = "test-secret-key",
+                SessionToken = "test-session-token",
+                IdentityId = "test-identity-id",
+                Expiration = DateTime.UtcNow.AddHours(1).ToString("O")
+            }
+        };
+
+        this.mockJsRuntime
+            .Setup(x => x.InvokeAsync<string>("localStorage.getItem", It.IsAny<object[]>()))
+            .ReturnsAsync(JsonSerializer.Serialize(credentialsWithoutIdToken));
+
+        var sut = new AwsCognitoAuthenticationService(
+            this.mockJsRuntime.Object,
+            this.cognitoConfig,
+            this.mockLocalStorage.Object);
+
+        // Act
+        var result = await sut.CheckAuthentication();
+
+        // Assert
+        Assert.False(result);
+        // Verify that credential refresh was NOT called since IdToken is null
+        this.mockJsRuntime.Verify(
+            x => x.InvokeAsync<AwsCredentials>("CognitoAuth.getAwsCredentials", It.IsAny<object[]>()),
+            Times.Never);
+    }
+
+    [Fact]
     public async Task GivenSuccessfulLogin_WhenLogin_ThenStoresCredentialsAndReturnsSuccess()
     {
         // Arrange

@@ -49,62 +49,55 @@ public class AwsCognitoAuthenticationService(
     /// <inheritdoc/>
     public async Task<bool> CheckAuthentication()
     {
-        try
+        var credentials = await this.GetStoredCredentials();
+        if (credentials == null)
         {
-            var credentials = await this.GetStoredCredentials();
-            if (credentials == null)
+            return false;
+        }
+
+        // If we just logged in, skip the refresh to avoid double AWS API calls
+        if (this.justLoggedIn)
+        {
+            Console.WriteLine("AwsCognitoAuthenticationService.CheckAuthentication: Just logged in, skipping credential refresh");
+            this.justLoggedIn = false; // Reset the flag
+            return true;
+        }
+
+        // Check if credentials are expired
+        if (DateTime.TryParse(credentials.ExpirationTime, out var expirationTime))
+        {
+            if (expirationTime <= DateTime.UtcNow)
             {
+                await this.ClearStoredCredentials();
                 return false;
             }
+        }
 
-            // If we just logged in, skip the refresh to avoid double AWS API calls
-            if (this.justLoggedIn)
+        // Verify the credentials are still valid with Cognito
+        if (!string.IsNullOrEmpty(credentials.IdToken))
+        {
+            try
             {
-                Console.WriteLine("AwsCognitoAuthenticationService.CheckAuthentication: Just logged in, skipping credential refresh");
-                this.justLoggedIn = false; // Reset the flag
+                Console.WriteLine("AwsCognitoAuthenticationService.CheckAuthentication: Refreshing AWS credentials");
+                var freshAwsCredentials = await this.jsRuntime.InvokeAsync<AwsCredentials>("CognitoAuth.getAwsCredentials", credentials.IdToken);
+                if (freshAwsCredentials != null)
+                {
+                    freshAwsCredentials.IdentityId = credentials.AwsCredentials?.IdentityId ?? string.Empty;
+                    credentials.AwsCredentials = freshAwsCredentials;
+                    var credentialsJson = JsonSerializer.Serialize(credentials);
+                    await this.jsRuntime.InvokeVoidAsync("localStorage.setItem", "clypse_credentials", credentialsJson);
+                }
+
                 return true;
             }
-
-            // Check if credentials are expired
-            if (DateTime.TryParse(credentials.ExpirationTime, out var expirationTime))
+            catch
             {
-                if (expirationTime <= DateTime.UtcNow)
-                {
-                    await this.ClearStoredCredentials();
-                    return false;
-                }
+                await this.ClearStoredCredentials();
+                return false;
             }
-
-            // Verify the credentials are still valid with Cognito
-            if (!string.IsNullOrEmpty(credentials.IdToken))
-            {
-                try
-                {
-                    Console.WriteLine("AwsCognitoAuthenticationService.CheckAuthentication: Refreshing AWS credentials");
-                    var freshAwsCredentials = await this.jsRuntime.InvokeAsync<AwsCredentials>("CognitoAuth.getAwsCredentials", credentials.IdToken);
-                    if (freshAwsCredentials != null)
-                    {
-                        freshAwsCredentials.IdentityId = credentials.AwsCredentials?.IdentityId ?? string.Empty;
-                        credentials.AwsCredentials = freshAwsCredentials;
-                        var credentialsJson = JsonSerializer.Serialize(credentials);
-                        await this.jsRuntime.InvokeVoidAsync("localStorage.setItem", "clypse_credentials", credentialsJson);
-                    }
-
-                    return true;
-                }
-                catch
-                {
-                    await this.ClearStoredCredentials();
-                    return false;
-                }
-            }
-
-            return false;
         }
-        catch
-        {
-            return false;
-        }
+
+        return false;
     }
 
     /// <inheritdoc/>
