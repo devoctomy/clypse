@@ -27,6 +27,12 @@
     ],
     "coveragePathIgnorePatterns": [
       "/node_modules/"
+    ],
+    "coverageDirectory": "coverage",
+    "coverageReporters": [
+      "text",
+      "lcov",
+      "json-summary"
     ]
   }
 }

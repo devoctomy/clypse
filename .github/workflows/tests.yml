@@ -26,9 +26,9 @@ jobs:
       
     - name: Run JavaScript Unit Tests
       run: |
-        echo "🧪 Running JavaScript Unit Tests..."
+        echo "🧪 Running JavaScript Unit Tests with Coverage..."
         cd clypse.portal.ClientScripts
-        npm test
+        npm run test:coverage
         echo "✅ JavaScript Unit Tests completed"
       
     - name: Install Python (required for WASM build)
@@ -84,8 +84,13 @@ jobs:
       id: coverage
       run: |
         echo "Searching for coverage files..."
-        FILES=$(find . -name "coverage.opencover.xml" -type f | tr '\n' ',' | sed 's/,$//')
-        echo "Found coverage files: $FILES"
+        CSHARP_FILES=$(find . -name "coverage.opencover.xml" -type f | tr '\n' ',')
+        JS_FILES=$(find ./clypse.portal.ClientScripts/coverage -name "lcov.info" -type f 2>/dev/null | tr '\n' ',' || echo "")
+        FILES="${CSHARP_FILES}${JS_FILES}"
+        FILES=$(echo "$FILES" | sed 's/,$//')
+        echo "Found C# coverage files: $CSHARP_FILES"
+        echo "Found JavaScript coverage files: $JS_FILES"
+        echo "All coverage files: $FILES"
         echo "reports=$FILES" >> $GITHUB_OUTPUT
         
     - name: Collect code coverage
