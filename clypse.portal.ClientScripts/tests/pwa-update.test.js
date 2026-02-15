@@ -285,7 +285,7 @@ describe('PWAUpdateService.forceUpdate', () => {
         // Assert
         expect(result).toBe(true);
         expect(mockWaitingWorker.postMessage).toHaveBeenCalledWith({ type: 'SKIP_WAITING' });
-        
+
         jest.useRealTimers();
     });
 
@@ -306,7 +306,7 @@ describe('PWAUpdateService.forceUpdate', () => {
 
         // Assert
         expect(result).toBe(false);
-        
+
         jest.useRealTimers();
     });
 
@@ -555,7 +555,7 @@ describe('PWAUpdateService.setupUpdateListeners', () => {
         // Arrange
         const mockOnUpdateInstalled = jest.fn();
         window.PWAUpdateService.callbacks.onUpdateInstalled = mockOnUpdateInstalled;
-        
+
         const mockRegistration = {
             addEventListener: jest.fn(),
             waiting: null,

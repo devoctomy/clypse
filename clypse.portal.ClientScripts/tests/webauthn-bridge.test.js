@@ -235,7 +235,7 @@ describe('webAuthnWrapper.register', () => {
             }
         };
         global.SimpleWebAuthnBrowser.startRegistration.mockResolvedValue(mockResponse);
-        
+
         const mockAuthResponse = {
             clientExtensionResults: {
                 prf: {

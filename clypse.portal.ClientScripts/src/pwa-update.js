@@ -1,6 +1,6 @@
 /**
  * PWA Update Service
- * 
+ *
  * Handles PWA updates, service worker lifecycle events, and provides
  * manual update functionality for users.
  */
@@ -21,7 +21,7 @@ window.PWAUpdateService = {
     initialize: function(registration) {
         console.log('PWAUpdateService: Initializing with registration');
         this.serviceWorkerRegistration = registration;
-        
+
         if (!registration) {
             console.warn('PWAUpdateService: No service worker registration provided');
             return;
@@ -29,7 +29,7 @@ window.PWAUpdateService = {
 
         // Listen for updates
         this.setupUpdateListeners();
-        
+
         // Check for immediate updates
         this.checkForUpdate();
     },
@@ -39,7 +39,7 @@ window.PWAUpdateService = {
      */
     setupUpdateListeners: function() {
         const registration = this.serviceWorkerRegistration;
-        
+
         // Listen for new service worker waiting
         if (registration.waiting) {
             console.log('PWAUpdateService: Update available (waiting worker found)');
@@ -79,7 +79,7 @@ window.PWAUpdateService = {
     trackInstalling: function(worker) {
         worker.addEventListener('statechange', () => {
             console.log('PWAUpdateService: Worker state changed to', worker.state);
-            
+
             if (worker.state === 'installed') {
                 if (navigator.serviceWorker.controller) {
                     // New update available
@@ -99,7 +99,7 @@ window.PWAUpdateService = {
     handleUpdateAvailable: function() {
         this.updateAvailable = true;
         console.log('PWAUpdateService: Update available flag set to true');
-        
+
         if (this.callbacks.onUpdateAvailable) {
             this.callbacks.onUpdateAvailable();
         }
@@ -112,7 +112,7 @@ window.PWAUpdateService = {
     checkForUpdate: async function() {
         try {
             console.log('PWAUpdateService: Manually checking for updates');
-            
+
             if (!this.serviceWorkerRegistration) {
                 console.warn('PWAUpdateService: No service worker registration available');
                 return false;
@@ -137,7 +137,7 @@ window.PWAUpdateService = {
     installUpdate: async function() {
         try {
             console.log('PWAUpdateService: Installing update');
-            
+
             if (!this.serviceWorkerRegistration || !this.serviceWorkerRegistration.waiting) {
                 console.warn('PWAUpdateService: No waiting service worker to install');
                 return false;
@@ -145,7 +145,7 @@ window.PWAUpdateService = {
 
             // Tell the waiting service worker to skip waiting and become active
             this.serviceWorkerRegistration.waiting.postMessage({ type: 'SKIP_WAITING' });
-            
+
             console.log('PWAUpdateService: Sent SKIP_WAITING message to service worker');
             return true;
         } catch (error) {
@@ -163,7 +163,7 @@ window.PWAUpdateService = {
      */
     forceUpdate: async function() {
         console.log('PWAUpdateService: Force update requested');
-        
+
         // First check for updates
         const checkResult = await this.checkForUpdate();
         if (!checkResult) {

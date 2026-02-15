@@ -1,5 +1,5 @@
 window.S3Client = {
-    
+
     putObject: async function(request) {
         try {
             AWS.config.update({
@@ -10,14 +10,14 @@ window.S3Client = {
             });
 
             const s3 = new AWS.S3();
-            
+
             if (!request.body) {
                 return {
                     Success: false,
                     ErrorMessage: 'Request body is null or undefined'
                 };
             }
-                  
+
             const params = {
                 Bucket: request.bucket,
                 Key: request.key,
@@ -26,7 +26,7 @@ window.S3Client = {
             };
 
             const result = await s3.putObject(params).promise();
-            
+
             return {
                 Success: true,
                 Data: {
@@ -52,17 +52,17 @@ window.S3Client = {
             });
 
             const s3 = new AWS.S3();
-            
+
             const params = {
                 Bucket: request.bucket,
                 Key: request.key
             };
 
             const result = await s3.getObject(params).promise();
-            
+
             // Convert buffer to base64 for transfer to .NET
             const base64Body = btoa(String.fromCharCode(...new Uint8Array(result.Body)));
-            
+
             return {
                 Success: true,
                 Data: {
@@ -91,14 +91,14 @@ window.S3Client = {
             });
 
             const s3 = new AWS.S3();
-            
+
             const params = {
                 Bucket: request.bucket,
                 Key: request.key
             };
 
             const result = await s3.headObject(params).promise();
-            
+
             return {
                 Success: true,
                 Data: {
@@ -126,14 +126,14 @@ window.S3Client = {
             });
 
             const s3 = new AWS.S3();
-            
+
             const params = {
                 Bucket: request.bucket,
                 Key: request.key
             };
 
             const result = await s3.deleteObject(params).promise();
-            
+
             return {
                 Success: true,
                 Data: {
@@ -159,7 +159,7 @@ window.S3Client = {
             });
 
             const s3 = new AWS.S3();
-            
+
             const params = {
                 Bucket: request.bucket,
                 Prefix: request.prefix,
@@ -169,7 +169,7 @@ window.S3Client = {
             };
 
             const result = await s3.listObjectsV2(params).promise();
-            
+
             return {
                 Success: true,
                 Data: {

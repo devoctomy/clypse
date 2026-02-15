@@ -102,13 +102,13 @@ describe('CognitoAuth.login', () => {
 
     beforeEach(() => {
         jest.clearAllMocks();
-        
+
         originalGetAwsCredentials = window.CognitoAuth.getAwsCredentials;
-        
+
         mockAuthenticateUser = jest.fn();
         mockGetAccessToken = jest.fn(() => ({ getJwtToken: () => 'test-access-token' }));
         mockGetIdToken = jest.fn(() => ({ getJwtToken: () => 'test-id-token' }));
-        
+
         mockCognitoUser = {
             authenticateUser: mockAuthenticateUser,
             getAccessToken: mockGetAccessToken,
@@ -117,17 +117,17 @@ describe('CognitoAuth.login', () => {
 
         global.AmazonCognitoIdentity.CognitoUser.mockReturnValue(mockCognitoUser);
         global.AmazonCognitoIdentity.AuthenticationDetails.mockReturnValue({});
-        
+
         window.CognitoAuth.userPool = {
             getUserPoolId: () => 'us-east-1_TestPool'
         };
-        
+
         window.CognitoAuth.getAwsCredentials = jest.fn().mockResolvedValue({
             accessKeyId: 'test-access-key',
             secretAccessKey: 'test-secret-key',
             sessionToken: 'test-session-token'
         });
-        
+
         global.AWS.config.region = 'us-east-1';
     });
 
@@ -263,9 +263,9 @@ describe('CognitoAuth.getAwsCredentials', () => {
 
     beforeEach(() => {
         jest.clearAllMocks();
-        
+
         originalGetAwsCredentials = window.CognitoAuth.getAwsCredentials;
-        
+
         mockRefresh = jest.fn();
         mockCredentials = {
             accessKeyId: 'test-access-key-id',
@@ -275,11 +275,11 @@ describe('CognitoAuth.getAwsCredentials', () => {
             identityId: 'us-east-1:test-identity-id',
             refresh: mockRefresh
         };
-        
+
         global.AWS.CognitoIdentityCredentials.mockReturnValue(mockCredentials);
         global.AWS.config.credentials = mockCredentials;
         global.AWS.config.region = 'us-east-1';
-        
+
         window.CognitoAuth.userPool = {
             getUserPoolId: () => 'us-east-1_TestPool'
         };
@@ -429,17 +429,17 @@ describe('CognitoAuth.completePasswordReset', () => {
 
     beforeEach(() => {
         jest.clearAllMocks();
-        
+
         originalGetAwsCredentials = window.CognitoAuth.getAwsCredentials;
-        
+
         mockCompleteNewPasswordChallenge = jest.fn();
         mockGetAccessToken = jest.fn(() => ({ getJwtToken: () => 'new-access-token' }));
         mockGetIdToken = jest.fn(() => ({ getJwtToken: () => 'new-id-token' }));
-        
+
         window.CognitoAuth.pendingPasswordResetUser = {
             completeNewPasswordChallenge: mockCompleteNewPasswordChallenge
         };
-        
+
         window.CognitoAuth.getAwsCredentials = jest.fn().mockResolvedValue({
             accessKeyId: 'test-access-key',
             secretAccessKey: 'test-secret-key',
@@ -543,7 +543,7 @@ describe('CognitoAuth.forgotPassword', () => {
         mockCognitoUser = {
             forgotPassword: mockForgotPassword
         };
-        
+
         global.AmazonCognitoIdentity.CognitoUser.mockReturnValue(mockCognitoUser);
         window.CognitoAuth.userPool = { getUserPoolId: () => 'test-pool' };
     });
@@ -603,7 +603,7 @@ describe('CognitoAuth.confirmForgotPassword', () => {
         mockCognitoUser = {
             confirmPassword: mockConfirmPassword
         };
-        
+
         global.AmazonCognitoIdentity.CognitoUser.mockReturnValue(mockCognitoUser);
         window.CognitoAuth.userPool = { getUserPoolId: () => 'test-pool' };
     });

@@ -142,7 +142,7 @@ describe('mobile-viewport', () => {
                 visualViewportResizeHandler = handler;
             }
         });
-        
+
         Object.defineProperty(global.window, 'visualViewport', {
             writable: true,
             configurable: true,

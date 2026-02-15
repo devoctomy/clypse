@@ -27,6 +27,13 @@ jobs:
         cd clypse.portal.ClientScripts
         npm ci
 
+    - name: Lint JavaScript Code
+      run: |
+        echo "🔍 Running ESLint..."
+        cd clypse.portal.ClientScripts
+        npm run lint
+        echo "✅ ESLint checks passed"
+
     - name: Run JavaScript Unit Tests
       run: |
         echo "🧪 Running JavaScript Unit Tests..."

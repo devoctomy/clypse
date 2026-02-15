@@ -18,31 +18,31 @@ window.webAuthnWrapper = (function() {
         crypto.getRandomValues(a);
         return a;
     }
-    
+
     function toB64URL(bytes) {
-        let str = btoa(String.fromCharCode(...bytes));
+        const str = btoa(String.fromCharCode(...bytes));
         return str.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
     }
 
     function translateError(error) {
         const errorMsg = error?.message || error?.toString() || 'Unknown error';
-        
+
         if (errorMsg.includes('NotAllowedError')) {
             return 'Operation was cancelled or timed out';
         } else if (errorMsg.includes('InvalidStateError')) {
             return 'A credential for this user might already exist or is not available';
         }
-        
+
         return errorMsg;
     }
 
     async function checkSupport() {
         try {
             checkLibrary();
-            
+
             const {
                 browserSupportsWebAuthn,
-                platformAuthenticatorIsAvailable,
+                platformAuthenticatorIsAvailable
             } = SimpleWebAuthnBrowser;
 
             const result = {
@@ -58,7 +58,7 @@ window.webAuthnWrapper = (function() {
 
             result.supported = true;
             result.platformAuthenticator = await platformAuthenticatorIsAvailable();
-            
+
             return result;
         } catch (error) {
             return {
@@ -72,44 +72,44 @@ window.webAuthnWrapper = (function() {
     async function register(username, existingCredentialId = null) {
         try {
             checkLibrary();
-            
+
             if (!username?.trim()) {
                 throw new Error('Username is required');
             }
 
             const { startRegistration } = SimpleWebAuthnBrowser;
-            
+
             const challenge = toB64URL(randomBytes(32));
             const userIdBytes = enc.encode(username + '-' + Date.now());
-            
+
             const optionsJSON = {
-                rp: { 
-                    id: RP_ID, 
-                    name: RP_NAME 
+                rp: {
+                    id: RP_ID,
+                    name: RP_NAME
                 },
                 user: {
                     id: toB64URL(userIdBytes),
                     name: username,
-                    displayName: username,
+                    displayName: username
                 },
                 challenge,
                 pubKeyCredParams: [
                     { type: 'public-key', alg: -7 },   // ES256
                     { type: 'public-key', alg: -257 }, // RS256
                     { type: 'public-key', alg: -35 },  // ES384
-                    { type: 'public-key', alg: -36 },  // ES512
+                    { type: 'public-key', alg: -36 }  // ES512
                 ],
                 timeout: 60_000,
                 attestation: 'none',
                 authenticatorSelection: {
                     residentKey: 'preferred',
                     requireResidentKey: false,
-                    userVerification: 'preferred',
+                    userVerification: 'preferred'
                 },
                 excludeCredentials: existingCredentialId ? [{
                     id: existingCredentialId,
                     type: 'public-key',
-                    transports: ['internal', 'usb', 'ble', 'nfc', 'hybrid'],
+                    transports: ['internal', 'usb', 'ble', 'nfc', 'hybrid']
                 }] : [],
                 extensions: {
                     prf: {}
@@ -120,13 +120,13 @@ window.webAuthnWrapper = (function() {
             const clientExtensionResults = attResp.clientExtensionResults || {};
 
             let prfOutput = null;
-            
+
             // If PRF is enabled, perform a quick authentication to get PRF output
             if (clientExtensionResults.prf?.enabled) {
                 try {
                     const { startAuthentication } = SimpleWebAuthnBrowser;
                     const authChallenge = toB64URL(randomBytes(32));
-                    
+
                     const authOptionsJSON = {
                         challenge: authChallenge,
                         rpId: RP_ID,
@@ -135,8 +135,8 @@ window.webAuthnWrapper = (function() {
                             {
                                 id: attResp.id,
                                 type: 'public-key',
-                                transports: ['internal', 'usb', 'ble', 'nfc', 'hybrid'],
-                            },
+                                transports: ['internal', 'usb', 'ble', 'nfc', 'hybrid']
+                            }
                         ],
                         timeout: 60_000,
                         extensions: {
@@ -150,7 +150,7 @@ window.webAuthnWrapper = (function() {
 
                     const authResp = await startAuthentication({ optionsJSON: authOptionsJSON });
                     const authExtResults = authResp.clientExtensionResults || {};
-                    
+
                     if (authExtResults.prf?.results?.first) {
                         const prfResult = new Uint8Array(authExtResults.prf.results.first);
                         prfOutput = Array.from(prfResult).map(b => b.toString(16).padStart(2, '0')).join('');
@@ -172,7 +172,7 @@ window.webAuthnWrapper = (function() {
             };
         } catch (error) {
             console.error('WebAuthn registration failed:', error);
-            
+
             return {
                 success: false,
                 credentialID: null,
@@ -187,15 +187,15 @@ window.webAuthnWrapper = (function() {
     async function authenticate(credentialID) {
         try {
             checkLibrary();
-            
+
             if (!credentialID) {
                 throw new Error('Credential ID is required');
             }
 
             const { startAuthentication } = SimpleWebAuthnBrowser;
-            
+
             const challenge = toB64URL(randomBytes(32));
-            
+
             const optionsJSON = {
                 challenge,
                 rpId: RP_ID,
@@ -204,8 +204,8 @@ window.webAuthnWrapper = (function() {
                     {
                         id: credentialID,
                         type: 'public-key',
-                        transports: ['internal', 'usb', 'ble', 'nfc', 'hybrid'],
-                    },
+                        transports: ['internal', 'usb', 'ble', 'nfc', 'hybrid']
+                    }
                 ],
                 timeout: 60_000,
                 extensions: {
@@ -236,7 +236,7 @@ window.webAuthnWrapper = (function() {
             };
         } catch (error) {
             console.error('WebAuthn authentication failed:', error);
-            
+
             return {
                 success: false,
                 userPresent: false,
