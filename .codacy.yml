@@ -21,3 +21,4 @@ exclude_paths:
 - 'README.md'
 - '**/README.md'
 - 'clypse.portal/wwwroot/js/**'
+- 'clypse.portal.setup.UnitTests/Data/**'
