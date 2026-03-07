@@ -8,11 +8,6 @@ namespace clypse.portal.Application.Services.Interfaces;
 public interface INavigationStateService
 {
     /// <summary>
-    /// Gets the current list of navigation items to display in the sidebar.
-    /// </summary>
-    IReadOnlyList<NavigationItem> NavigationItems { get; }
-
-    /// <summary>
     /// Occurs when the navigation items collection is updated.
     /// </summary>
     event EventHandler? NavigationItemsChanged;
@@ -21,6 +16,11 @@ public interface INavigationStateService
     /// Occurs when a navigation action has been requested by the sidebar.
     /// </summary>
     event EventHandler<string>? NavigationActionRequested;
+
+    /// <summary>
+    /// Gets the current list of navigation items to display in the sidebar.
+    /// </summary>
+    IReadOnlyList<NavigationItem> NavigationItems { get; }
 
     /// <summary>
     /// Updates the navigation items displayed in the sidebar.

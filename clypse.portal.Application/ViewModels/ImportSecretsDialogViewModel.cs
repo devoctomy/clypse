@@ -1,8 +1,8 @@
 using Blazing.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
 using clypse.core.Enums;
 using clypse.core.Secrets.Import;
 using clypse.portal.Models.Import;
+using CommunityToolkit.Mvvm.Input;
 using Microsoft.AspNetCore.Components.Forms;
 
 namespace clypse.portal.Application.ViewModels;
@@ -14,6 +14,12 @@ public partial class ImportSecretsDialogViewModel : ViewModelBase
 {
     private readonly ISecretsImporterService secretsImporterService;
 
+    private readonly List<CsvImportDataFormat> availableFormats =
+    [
+        CsvImportDataFormat.KeePassCsv1_x,
+        CsvImportDataFormat.Cachy1_x
+    ];
+
     private string? selectedFileName;
     private string? csvContent;
     private CsvImportDataFormat selectedFormat = CsvImportDataFormat.KeePassCsv1_x;
@@ -21,12 +27,6 @@ public partial class ImportSecretsDialogViewModel : ViewModelBase
     private string? errorMessage;
     private List<string>? headers;
     private List<Dictionary<string, string>>? previewData;
-
-    private readonly List<CsvImportDataFormat> availableFormats =
-    [
-        CsvImportDataFormat.KeePassCsv1_x,
-        CsvImportDataFormat.Cachy1_x
-    ];
 
     /// <summary>
     /// Initializes a new instance of <see cref="ImportSecretsDialogViewModel"/>.
@@ -40,7 +40,7 @@ public partial class ImportSecretsDialogViewModel : ViewModelBase
     public string? SelectedFileName { get => selectedFileName; private set => SetProperty(ref selectedFileName, value); }
 
     /// <summary>Gets or sets the selected CSV import format.</summary>
-    public CsvImportDataFormat SelectedFormat { get => selectedFormat; set { SetProperty(ref selectedFormat, value); } }
+    public CsvImportDataFormat SelectedFormat { get => selectedFormat; set => SetProperty(ref selectedFormat, value); }
 
     /// <summary>Gets a value indicating whether an import is in progress.</summary>
     public bool IsImporting { get => isImporting; private set => SetProperty(ref isImporting, value); }
@@ -127,30 +127,6 @@ public partial class ImportSecretsDialogViewModel : ViewModelBase
         OnPropertyChanged(nameof(CanImport));
     }
 
-    private void PreviewCsvData()
-    {
-        if (string.IsNullOrEmpty(csvContent))
-        {
-            return;
-        }
-
-        try
-        {
-            var importCount = secretsImporterService.ReadData(csvContent);
-            if (importCount > 0)
-            {
-                Headers = secretsImporterService.ImportedHeaders.ToList();
-                PreviewData = secretsImporterService.ImportedSecrets.ToList();
-            }
-        }
-        catch (Exception ex)
-        {
-            ErrorMessage = $"Error parsing CSV: {ex.Message}";
-            Headers = null;
-            PreviewData = null;
-        }
-    }
-
     /// <summary>
     /// Executes the import operation.
     /// </summary>
@@ -223,5 +199,29 @@ public partial class ImportSecretsDialogViewModel : ViewModelBase
             CsvImportDataFormat.Cachy1_x => "Cachy CSV (v1.x)",
             _ => format.ToString()
         };
+    }
+
+    private void PreviewCsvData()
+    {
+        if (string.IsNullOrEmpty(csvContent))
+        {
+            return;
+        }
+
+        try
+        {
+            var importCount = secretsImporterService.ReadData(csvContent);
+            if (importCount > 0)
+            {
+                Headers = secretsImporterService.ImportedHeaders.ToList();
+                PreviewData = secretsImporterService.ImportedSecrets.ToList();
+            }
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Error parsing CSV: {ex.Message}";
+            Headers = null;
+            PreviewData = null;
+        }
     }
 }

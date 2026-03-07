@@ -1,6 +1,4 @@
 using Blazing.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
-using CommunityToolkit.Mvvm.Messaging;
 using clypse.core.Enums;
 using clypse.core.Secrets;
 using clypse.core.Vault;
@@ -9,6 +7,8 @@ using clypse.portal.Application.ViewModels.Messages;
 using clypse.portal.Models.Enums;
 using clypse.portal.Models.Import;
 using clypse.portal.Models.Vault;
+using CommunityToolkit.Mvvm.Input;
+using CommunityToolkit.Mvvm.Messaging;
 
 namespace clypse.portal.Application.ViewModels;
 
@@ -75,7 +75,15 @@ public partial class CredentialsViewModel : ViewModelBase,
     public CrudDialogMode SecretDialogMode { get => secretDialogMode; private set => SetProperty(ref secretDialogMode, value); }
 
     /// <summary>Gets or sets the current search term.</summary>
-    public string SearchTerm { get => searchTerm; set { SetProperty(ref searchTerm, value); HandleSearch(); } }
+    public string SearchTerm
+    {
+        get => searchTerm;
+        set
+        {
+            SetProperty(ref searchTerm, value);
+            HandleSearch();
+        }
+    }
 
     /// <summary>Gets the filtered list of vault index entries.</summary>
     public List<VaultIndexEntry> FilteredEntries { get => filteredEntries; private set => SetProperty(ref filteredEntries, value); }
@@ -88,26 +96,6 @@ public partial class CredentialsViewModel : ViewModelBase,
     {
         RefreshFilteredEntries();
         return Task.CompletedTask;
-    }
-
-    private void OnVaultStateChanged(object? sender, EventArgs e)
-    {
-        RefreshFilteredEntries();
-        OnPropertyChanged(nameof(CurrentVault));
-    }
-
-    private void RefreshFilteredEntries()
-    {
-        if (vaultStateService.CurrentVault?.IndexEntries != null)
-        {
-            FilteredEntries = vaultStateService.CurrentVault.IndexEntries
-                .OrderBy(e => e.Name, StringComparer.OrdinalIgnoreCase)
-                .ToList();
-        }
-        else
-        {
-            FilteredEntries = [];
-        }
     }
 
     /// <summary>Handles the search input change.</summary>
@@ -253,56 +241,6 @@ public partial class CredentialsViewModel : ViewModelBase,
         }
     }
 
-    private async Task HandleSaveSecretAsync(Secret editedSecret)
-    {
-        if (vaultStateService.VaultManager == null || vaultStateService.LoadedVault == null || string.IsNullOrEmpty(vaultStateService.CurrentVaultKey))
-        {
-            return;
-        }
-
-        try
-        {
-            IsSavingSecret = true;
-            vaultStateService.LoadedVault.UpdateSecret(editedSecret);
-            await vaultStateService.VaultManager.SaveAsync(vaultStateService.LoadedVault, vaultStateService.CurrentVaultKey, null, CancellationToken.None);
-            CloseSecretDialog();
-            await RefreshVaultStateAsync();
-        }
-        catch
-        {
-            // Error handling
-        }
-        finally
-        {
-            IsSavingSecret = false;
-        }
-    }
-
-    private async Task HandleCreateSecretAsync(Secret newSecret)
-    {
-        if (vaultStateService.VaultManager == null || vaultStateService.LoadedVault == null || string.IsNullOrEmpty(vaultStateService.CurrentVaultKey))
-        {
-            return;
-        }
-
-        try
-        {
-            IsSavingSecret = true;
-            vaultStateService.LoadedVault.AddSecret(newSecret);
-            await vaultStateService.VaultManager.SaveAsync(vaultStateService.LoadedVault, vaultStateService.CurrentVaultKey, null, CancellationToken.None);
-            CloseSecretDialog();
-            await RefreshVaultStateAsync();
-        }
-        catch
-        {
-            // Error handling
-        }
-        finally
-        {
-            IsSavingSecret = false;
-        }
-    }
-
     /// <summary>Handles importing secrets from the import dialog.</summary>
     [RelayCommand]
     public async Task HandleImportSecretsAsync(ImportResult result)
@@ -380,29 +318,6 @@ public partial class CredentialsViewModel : ViewModelBase,
         }
     }
 
-    private async Task RefreshVaultStateAsync()
-    {
-        if (vaultStateService.VaultManager == null || vaultStateService.CurrentVault == null || string.IsNullOrEmpty(vaultStateService.CurrentVaultKey))
-        {
-            return;
-        }
-
-        try
-        {
-            var reloadedVault = await vaultStateService.VaultManager.LoadAsync(
-                vaultStateService.CurrentVault.Id,
-                vaultStateService.CurrentVaultKey,
-                CancellationToken.None);
-
-            vaultStateService.UpdateLoadedVault(reloadedVault);
-            RefreshFilteredEntries();
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error refreshing vault: {ex.Message}");
-        }
-    }
-
     /// <inheritdoc/>
     public void Receive(ShowCreateCredentialMessage message)
     {
@@ -426,5 +341,98 @@ public partial class CredentialsViewModel : ViewModelBase,
         }
 
         base.Dispose(disposing);
+    }
+
+    private void OnVaultStateChanged(object? sender, EventArgs e)
+    {
+        RefreshFilteredEntries();
+        OnPropertyChanged(nameof(CurrentVault));
+    }
+
+    private void RefreshFilteredEntries()
+    {
+        if (vaultStateService.CurrentVault?.IndexEntries != null)
+        {
+            FilteredEntries = vaultStateService.CurrentVault.IndexEntries
+                .OrderBy(e => e.Name, StringComparer.OrdinalIgnoreCase)
+                .ToList();
+        }
+        else
+        {
+            FilteredEntries = [];
+        }
+    }
+
+    private async Task HandleSaveSecretAsync(Secret editedSecret)
+    {
+        if (vaultStateService.VaultManager == null || vaultStateService.LoadedVault == null || string.IsNullOrEmpty(vaultStateService.CurrentVaultKey))
+        {
+            return;
+        }
+
+        try
+        {
+            IsSavingSecret = true;
+            vaultStateService.LoadedVault.UpdateSecret(editedSecret);
+            await vaultStateService.VaultManager.SaveAsync(vaultStateService.LoadedVault, vaultStateService.CurrentVaultKey, null, CancellationToken.None);
+            CloseSecretDialog();
+            await RefreshVaultStateAsync();
+        }
+        catch
+        {
+            // Error handling
+        }
+        finally
+        {
+            IsSavingSecret = false;
+        }
+    }
+
+    private async Task HandleCreateSecretAsync(Secret newSecret)
+    {
+        if (vaultStateService.VaultManager == null || vaultStateService.LoadedVault == null || string.IsNullOrEmpty(vaultStateService.CurrentVaultKey))
+        {
+            return;
+        }
+
+        try
+        {
+            IsSavingSecret = true;
+            vaultStateService.LoadedVault.AddSecret(newSecret);
+            await vaultStateService.VaultManager.SaveAsync(vaultStateService.LoadedVault, vaultStateService.CurrentVaultKey, null, CancellationToken.None);
+            CloseSecretDialog();
+            await RefreshVaultStateAsync();
+        }
+        catch
+        {
+            // Error handling
+        }
+        finally
+        {
+            IsSavingSecret = false;
+        }
+    }
+
+    private async Task RefreshVaultStateAsync()
+    {
+        if (vaultStateService.VaultManager == null || vaultStateService.CurrentVault == null || string.IsNullOrEmpty(vaultStateService.CurrentVaultKey))
+        {
+            return;
+        }
+
+        try
+        {
+            var reloadedVault = await vaultStateService.VaultManager.LoadAsync(
+                vaultStateService.CurrentVault.Id,
+                vaultStateService.CurrentVaultKey,
+                CancellationToken.None);
+
+            vaultStateService.UpdateLoadedVault(reloadedVault);
+            RefreshFilteredEntries();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error refreshing vault: {ex.Message}");
+        }
     }
 }

@@ -1,7 +1,5 @@
 using System.Text.Json;
 using Blazing.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
-using CommunityToolkit.Mvvm.Messaging;
 using clypse.core.Cryptography.Interfaces;
 using clypse.core.Vault;
 using clypse.portal.Application.Services.Interfaces;
@@ -9,6 +7,8 @@ using clypse.portal.Application.ViewModels.Messages;
 using clypse.portal.Models.Aws;
 using clypse.portal.Models.Navigation;
 using clypse.portal.Models.Vault;
+using CommunityToolkit.Mvvm.Input;
+using CommunityToolkit.Mvvm.Messaging;
 
 namespace clypse.portal.Application.ViewModels;
 
@@ -117,6 +117,113 @@ public partial class HomeViewModel : ViewModelBase
         }
     }
 
+    /// <summary>Locks the current vault and navigates back to the vaults page.</summary>
+    [RelayCommand]
+    public async Task HandleLockVaultAsync()
+    {
+        vaultStateService.ClearVaultState();
+        CurrentPage = "vaults";
+        UpdateNavigationItems();
+        await Task.CompletedTask;
+    }
+
+    /// <summary>Closes the verify dialog.</summary>
+    [RelayCommand]
+    public void CloseVerifyDialog()
+    {
+        ShowVerifyDialog = false;
+        VerifyResults = null;
+    }
+
+    /// <summary>Cancels the vault deletion.</summary>
+    [RelayCommand]
+    public void CancelDeleteVault()
+    {
+        ShowDeleteVaultDialog = false;
+        VaultToDelete = null;
+        DeleteVaultErrorMessage = null;
+        IsDeletingVault = false;
+    }
+
+    /// <summary>Confirms and executes vault deletion.</summary>
+    [RelayCommand]
+    public async Task HandleDeleteVaultConfirmAsync()
+    {
+        if (vaultStateService.CurrentVault == null || vaultStateService.VaultManager == null || vaultStateService.CurrentVaultKey == null || vaultStateService.LoadedVault == null)
+        {
+            CancelDeleteVault();
+            return;
+        }
+
+        try
+        {
+            IsDeletingVault = true;
+            DeleteVaultErrorMessage = null;
+
+            await vaultStateService.VaultManager.DeleteAsync(vaultStateService.LoadedVault, vaultStateService.CurrentVaultKey, CancellationToken.None);
+            await vaultStorage.RemoveVaultAsync(vaultStateService.CurrentVault.Id);
+
+            CancelDeleteVault();
+            vaultStateService.ClearVaultState();
+            CurrentPage = "vaults";
+            UpdateNavigationItems();
+            await HandleRefreshAsync();
+        }
+        catch (Exception ex)
+        {
+            DeleteVaultErrorMessage = $"Failed to delete vault: {ex.Message}";
+            Console.WriteLine($"Error deleting vault: {ex.Message}");
+        }
+        finally
+        {
+            IsDeletingVault = false;
+        }
+    }
+
+    /// <summary>Cancels vault creation.</summary>
+    [RelayCommand]
+    public void CancelCreateVault()
+    {
+        ShowCreateVaultDialog = false;
+        CreateVaultErrorMessage = null;
+        IsCreatingVault = false;
+    }
+
+    /// <summary>Creates a vault from the dialog request.</summary>
+    [RelayCommand]
+    public async Task HandleCreateVaultFromDialogAsync(VaultCreationRequest request)
+    {
+        try
+        {
+            IsCreatingVault = true;
+            CreateVaultErrorMessage = null;
+
+            await HandleCreateVaultAsync(request);
+            CancelCreateVault();
+        }
+        catch (Exception ex)
+        {
+            CreateVaultErrorMessage = $"Failed to create vault: {ex.Message}";
+            Console.WriteLine($"Error creating vault: {ex.Message}");
+        }
+        finally
+        {
+            IsCreatingVault = false;
+        }
+    }
+
+    /// <inheritdoc/>
+    protected override void Dispose(bool disposing)
+    {
+        if (disposing)
+        {
+            navigationStateService.NavigationActionRequested -= OnNavigationActionRequested;
+            vaultStateService.VaultStateChanged -= OnVaultStateChanged;
+        }
+
+        base.Dispose(disposing);
+    }
+
     private void OnNavigationActionRequested(object? sender, string action)
     {
         _ = HandleNavigationActionAsync(action);
@@ -213,16 +320,6 @@ public partial class HomeViewModel : ViewModelBase
         await Task.CompletedTask;
     }
 
-    /// <summary>Locks the current vault and navigates back to the vaults page.</summary>
-    [RelayCommand]
-    public async Task HandleLockVaultAsync()
-    {
-        vaultStateService.ClearVaultState();
-        CurrentPage = "vaults";
-        UpdateNavigationItems();
-        await Task.CompletedTask;
-    }
-
     private async Task HandleVerifyAsync()
     {
         if (vaultStateService.LoadedVault == null || vaultStateService.CurrentVaultKey == null || vaultStateService.VaultManager == null)
@@ -247,14 +344,6 @@ public partial class HomeViewModel : ViewModelBase
         }
     }
 
-    /// <summary>Closes the verify dialog.</summary>
-    [RelayCommand]
-    public void CloseVerifyDialog()
-    {
-        ShowVerifyDialog = false;
-        VerifyResults = null;
-    }
-
     private void ShowDeleteVaultDialogInternal()
     {
         if (vaultStateService.CurrentVault == null)
@@ -267,87 +356,10 @@ public partial class HomeViewModel : ViewModelBase
         ShowDeleteVaultDialog = true;
     }
 
-    /// <summary>Cancels the vault deletion.</summary>
-    [RelayCommand]
-    public void CancelDeleteVault()
-    {
-        ShowDeleteVaultDialog = false;
-        VaultToDelete = null;
-        DeleteVaultErrorMessage = null;
-        IsDeletingVault = false;
-    }
-
-    /// <summary>Confirms and executes vault deletion.</summary>
-    [RelayCommand]
-    public async Task HandleDeleteVaultConfirmAsync()
-    {
-        if (vaultStateService.CurrentVault == null || vaultStateService.VaultManager == null || vaultStateService.CurrentVaultKey == null || vaultStateService.LoadedVault == null)
-        {
-            CancelDeleteVault();
-            return;
-        }
-
-        try
-        {
-            IsDeletingVault = true;
-            DeleteVaultErrorMessage = null;
-
-            await vaultStateService.VaultManager.DeleteAsync(vaultStateService.LoadedVault, vaultStateService.CurrentVaultKey, CancellationToken.None);
-            await vaultStorage.RemoveVaultAsync(vaultStateService.CurrentVault.Id);
-
-            CancelDeleteVault();
-            vaultStateService.ClearVaultState();
-            CurrentPage = "vaults";
-            UpdateNavigationItems();
-            await HandleRefreshAsync();
-        }
-        catch (Exception ex)
-        {
-            DeleteVaultErrorMessage = $"Failed to delete vault: {ex.Message}";
-            Console.WriteLine($"Error deleting vault: {ex.Message}");
-        }
-        finally
-        {
-            IsDeletingVault = false;
-        }
-    }
-
     private void ShowCreateVaultDialogInternal()
     {
         CreateVaultErrorMessage = null;
         ShowCreateVaultDialog = true;
-    }
-
-    /// <summary>Cancels vault creation.</summary>
-    [RelayCommand]
-    public void CancelCreateVault()
-    {
-        ShowCreateVaultDialog = false;
-        CreateVaultErrorMessage = null;
-        IsCreatingVault = false;
-    }
-
-    /// <summary>Creates a vault from the dialog request.</summary>
-    [RelayCommand]
-    public async Task HandleCreateVaultFromDialogAsync(VaultCreationRequest request)
-    {
-        try
-        {
-            IsCreatingVault = true;
-            CreateVaultErrorMessage = null;
-
-            await HandleCreateVaultAsync(request);
-            CancelCreateVault();
-        }
-        catch (Exception ex)
-        {
-            CreateVaultErrorMessage = $"Failed to create vault: {ex.Message}";
-            Console.WriteLine($"Error creating vault: {ex.Message}");
-        }
-        finally
-        {
-            IsCreatingVault = false;
-        }
     }
 
     private async Task HandleCreateVaultAsync(VaultCreationRequest request)
@@ -408,17 +420,5 @@ public partial class HomeViewModel : ViewModelBase
         CurrentPage = "vaults";
         UpdateNavigationItems();
         await HandleRefreshAsync();
-    }
-
-    /// <inheritdoc/>
-    protected override void Dispose(bool disposing)
-    {
-        if (disposing)
-        {
-            navigationStateService.NavigationActionRequested -= OnNavigationActionRequested;
-            vaultStateService.VaultStateChanged -= OnVaultStateChanged;
-        }
-
-        base.Dispose(disposing);
     }
 }

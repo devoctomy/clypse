@@ -1,9 +1,9 @@
 using Blazing.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
 using clypse.core.Enums;
 using clypse.core.Password;
 using clypse.portal.Models.Enums;
 using clypse.portal.Models.Settings;
+using CommunityToolkit.Mvvm.Input;
 
 namespace clypse.portal.Application.ViewModels;
 
@@ -41,34 +41,106 @@ public partial class PasswordGeneratorDialogViewModel : ViewModelBase
     public string GeneratedPassword { get => generatedPassword; private set => SetProperty(ref generatedPassword, value); }
 
     /// <summary>Gets or sets the selected password type.</summary>
-    public PasswordType SelectedPasswordType { get => selectedPasswordType; set { SetProperty(ref selectedPasswordType, value); TriggerGenerateAsync(); } }
+    public PasswordType SelectedPasswordType
+    {
+        get => selectedPasswordType;
+        set
+        {
+            SetProperty(ref selectedPasswordType, value);
+            TriggerGenerateAsync();
+        }
+    }
 
     /// <summary>Gets the list of memorable password templates.</summary>
     public List<MemorablePasswordTemplateItem> MemorablePasswordTemplates { get => memorablePasswordTemplates; private set => SetProperty(ref memorablePasswordTemplates, value); }
 
     /// <summary>Gets or sets the selected template name.</summary>
-    public string SelectedTemplateName { get => selectedTemplateName; set { SetProperty(ref selectedTemplateName, value); TriggerGenerateAsync(); } }
+    public string SelectedTemplateName
+    {
+        get => selectedTemplateName;
+        set
+        {
+            SetProperty(ref selectedTemplateName, value);
+            TriggerGenerateAsync();
+        }
+    }
 
     /// <summary>Gets or sets a value indicating whether to shuffle tokens.</summary>
-    public bool ShuffleTokens { get => shuffleTokens; set { SetProperty(ref shuffleTokens, value); TriggerGenerateAsync(); } }
+    public bool ShuffleTokens
+    {
+        get => shuffleTokens;
+        set
+        {
+            SetProperty(ref shuffleTokens, value);
+            TriggerGenerateAsync();
+        }
+    }
 
     /// <summary>Gets or sets the desired password length.</summary>
-    public int PasswordLength { get => passwordLength; set { SetProperty(ref passwordLength, value); TriggerGenerateAsync(); } }
+    public int PasswordLength
+    {
+        get => passwordLength;
+        set
+        {
+            SetProperty(ref passwordLength, value);
+            TriggerGenerateAsync();
+        }
+    }
 
     /// <summary>Gets or sets whether to include lowercase characters.</summary>
-    public bool IncludeLowercase { get => includeLowercase; set { SetProperty(ref includeLowercase, value); TriggerGenerateAsync(); } }
+    public bool IncludeLowercase
+    {
+        get => includeLowercase;
+        set
+        {
+            SetProperty(ref includeLowercase, value);
+            TriggerGenerateAsync();
+        }
+    }
 
     /// <summary>Gets or sets whether to include uppercase characters.</summary>
-    public bool IncludeUppercase { get => includeUppercase; set { SetProperty(ref includeUppercase, value); TriggerGenerateAsync(); } }
+    public bool IncludeUppercase
+    {
+        get => includeUppercase;
+        set
+        {
+            SetProperty(ref includeUppercase, value);
+            TriggerGenerateAsync();
+        }
+    }
 
     /// <summary>Gets or sets whether to include digit characters.</summary>
-    public bool IncludeDigits { get => includeDigits; set { SetProperty(ref includeDigits, value); TriggerGenerateAsync(); } }
+    public bool IncludeDigits
+    {
+        get => includeDigits;
+        set
+        {
+            SetProperty(ref includeDigits, value);
+            TriggerGenerateAsync();
+        }
+    }
 
     /// <summary>Gets or sets whether to include special characters.</summary>
-    public bool IncludeSpecial { get => includeSpecial; set { SetProperty(ref includeSpecial, value); TriggerGenerateAsync(); } }
+    public bool IncludeSpecial
+    {
+        get => includeSpecial;
+        set
+        {
+            SetProperty(ref includeSpecial, value);
+            TriggerGenerateAsync();
+        }
+    }
 
     /// <summary>Gets or sets whether to require at least one character from each group.</summary>
-    public bool AtLeastOneOfEachGroup { get => atLeastOneOfEachGroup; set { SetProperty(ref atLeastOneOfEachGroup, value); TriggerGenerateAsync(); } }
+    public bool AtLeastOneOfEachGroup
+    {
+        get => atLeastOneOfEachGroup;
+        set
+        {
+            SetProperty(ref atLeastOneOfEachGroup, value);
+            TriggerGenerateAsync();
+        }
+    }
 
     /// <summary>Gets or sets the callback invoked when a password is accepted.</summary>
     public Func<string, Task>? OnPasswordGeneratedCallback { get; set; }
@@ -106,14 +178,34 @@ public partial class PasswordGeneratorDialogViewModel : ViewModelBase
         isInitialized = false;
     }
 
+    /// <summary>Regenerates the password.</summary>
+    [RelayCommand]
+    public Task RegenerateAsync() => GeneratePasswordAsync();
+
+    /// <summary>Accepts the generated password and notifies the caller.</summary>
+    [RelayCommand]
+    public async Task AcceptPasswordAsync()
+    {
+        if (OnPasswordGeneratedCallback != null)
+        {
+            await OnPasswordGeneratedCallback(GeneratedPassword);
+        }
+    }
+
+    /// <summary>Cancels the dialog.</summary>
+    [RelayCommand]
+    public async Task CancelAsync()
+    {
+        if (OnCancelCallback != null)
+        {
+            await OnCancelCallback();
+        }
+    }
+
     private void TriggerGenerateAsync()
     {
         _ = GeneratePasswordAsync();
     }
-
-    /// <summary>Regenerates the password.</summary>
-    [RelayCommand]
-    public Task RegenerateAsync() => GeneratePasswordAsync();
 
     private async Task GeneratePasswordAsync()
     {
@@ -152,26 +244,6 @@ public partial class PasswordGeneratorDialogViewModel : ViewModelBase
         catch (Exception ex)
         {
             GeneratedPassword = $"Error: {ex.Message}";
-        }
-    }
-
-    /// <summary>Accepts the generated password and notifies the caller.</summary>
-    [RelayCommand]
-    public async Task AcceptPasswordAsync()
-    {
-        if (OnPasswordGeneratedCallback != null)
-        {
-            await OnPasswordGeneratedCallback(GeneratedPassword);
-        }
-    }
-
-    /// <summary>Cancels the dialog.</summary>
-    [RelayCommand]
-    public async Task CancelAsync()
-    {
-        if (OnCancelCallback != null)
-        {
-            await OnCancelCallback();
         }
     }
 }

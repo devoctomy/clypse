@@ -1,10 +1,10 @@
 using System.Text.Json;
 using Blazing.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
 using clypse.portal.Application.Services.Interfaces;
 using clypse.portal.Models.Aws;
 using clypse.portal.Models.Navigation;
 using clypse.portal.Models.Settings;
+using CommunityToolkit.Mvvm.Input;
 
 namespace clypse.portal.Application.ViewModels;
 
@@ -106,21 +106,6 @@ public partial class HomeLayoutViewModel : ViewModelBase
         }
     }
 
-    private async Task InitializeThemeAsync()
-    {
-        try
-        {
-            CurrentTheme = await userSettingsService.GetThemeAsync();
-            ThemeIcon = CurrentTheme == "light" ? "bi-moon" : "bi-sun";
-            await browserInteropService.SetThemeAsync(CurrentTheme);
-        }
-        catch
-        {
-            CurrentTheme = "light";
-            ThemeIcon = "bi-moon";
-        }
-    }
-
     /// <summary>
     /// Toggles the sidebar expanded/collapsed state.
     /// </summary>
@@ -161,6 +146,34 @@ public partial class HomeLayoutViewModel : ViewModelBase
     {
         await authService.Logout();
         navigationService.NavigateTo("/login");
+    }
+
+    /// <inheritdoc/>
+    protected override void Dispose(bool disposing)
+    {
+        if (disposing)
+        {
+            navigationStateService.NavigationItemsChanged -= OnNavigationItemsChanged;
+            sessionTimer?.Dispose();
+            sessionTimer = null;
+        }
+
+        base.Dispose(disposing);
+    }
+
+    private async Task InitializeThemeAsync()
+    {
+        try
+        {
+            CurrentTheme = await userSettingsService.GetThemeAsync();
+            ThemeIcon = CurrentTheme == "light" ? "bi-moon" : "bi-sun";
+            await browserInteropService.SetThemeAsync(CurrentTheme);
+        }
+        catch
+        {
+            CurrentTheme = "light";
+            ThemeIcon = "bi-moon";
+        }
     }
 
     private async Task StartSessionTimerAsync()
@@ -226,18 +239,5 @@ public partial class HomeLayoutViewModel : ViewModelBase
     private void OnNavigationItemsChanged(object? sender, EventArgs e)
     {
         OnPropertyChanged(nameof(NavigationItems));
-    }
-
-    /// <inheritdoc/>
-    protected override void Dispose(bool disposing)
-    {
-        if (disposing)
-        {
-            navigationStateService.NavigationItemsChanged -= OnNavigationItemsChanged;
-            sessionTimer?.Dispose();
-            sessionTimer = null;
-        }
-
-        base.Dispose(disposing);
     }
 }

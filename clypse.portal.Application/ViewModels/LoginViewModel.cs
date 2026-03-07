@@ -1,10 +1,10 @@
 using System.Text.Json;
 using Blazing.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
 using clypse.core.Cryptography.Interfaces;
 using clypse.portal.Application.Services.Interfaces;
 using clypse.portal.Models.Login;
 using clypse.portal.Models.Settings;
+using CommunityToolkit.Mvvm.Input;
 
 namespace clypse.portal.Application.ViewModels;
 
@@ -153,21 +153,6 @@ public partial class LoginViewModel : ViewModelBase
         }
     }
 
-    private async Task InitializeThemeAsync()
-    {
-        try
-        {
-            CurrentTheme = await userSettingsService.GetThemeAsync();
-            ThemeIcon = CurrentTheme == "light" ? "bi-moon" : "bi-sun";
-            await browserInteropService.SetThemeAsync(CurrentTheme);
-        }
-        catch
-        {
-            CurrentTheme = "light";
-            ThemeIcon = "bi-moon";
-        }
-    }
-
     /// <summary>Toggles between light and dark themes.</summary>
     [RelayCommand]
     public async Task ToggleThemeAsync()
@@ -176,58 +161,6 @@ public partial class LoginViewModel : ViewModelBase
         ThemeIcon = CurrentTheme == "light" ? "bi-moon" : "bi-sun";
         await userSettingsService.SetThemeAsync(CurrentTheme);
         await browserInteropService.SetThemeAsync(CurrentTheme);
-    }
-
-    private async Task LoadSavedUsersAsync()
-    {
-        try
-        {
-            var usersJson = await localStorageService.GetItemAsync(SavedUsersStorageKey);
-
-            if (!string.IsNullOrEmpty(usersJson))
-            {
-                var usersData = JsonSerializer.Deserialize<SavedUsersData>(usersJson);
-                if (usersData?.Users != null && usersData.Users.Count > 0)
-                {
-                    SavedUsers = usersData.Users;
-                    ShowUsersList = true;
-                    ShowRememberMe = false;
-                }
-            }
-        }
-        catch
-        {
-            SavedUsers = [];
-            ShowUsersList = false;
-            ShowRememberMe = true;
-        }
-    }
-
-    private async Task SaveUserAsync(string email, WebAuthnStoredCredential? webAuthnCredential = null)
-    {
-        try
-        {
-            var existingUser = savedUsers.FirstOrDefault(u => u.Email.Equals(email, StringComparison.OrdinalIgnoreCase));
-
-            if (existingUser != null)
-            {
-                if (webAuthnCredential != null)
-                {
-                    existingUser.WebAuthnCredential = webAuthnCredential;
-                }
-            }
-            else
-            {
-                savedUsers.Add(new SavedUser { Email = email, WebAuthnCredential = webAuthnCredential });
-            }
-
-            var usersData = new SavedUsersData { Users = savedUsers };
-            await localStorageService.SetItemAsync(SavedUsersStorageKey, JsonSerializer.Serialize(usersData));
-        }
-        catch
-        {
-            // Continue silently
-        }
     }
 
     /// <summary>Selects a saved user for login.</summary>
@@ -245,59 +178,6 @@ public partial class LoginViewModel : ViewModelBase
             ShowUsersList = false;
             ShowRememberMe = false;
         }
-    }
-
-    private async Task AttemptWebAuthnLoginAsync(SavedUser user)
-    {
-        IsLoading = true;
-        ErrorMessage = null;
-
-        try
-        {
-            var authResult = await webAuthnService.AuthenticateAsync(user.WebAuthnCredential!.CredentialID);
-
-            if (authResult.Success && !string.IsNullOrEmpty(authResult.PrfOutput))
-            {
-                var decryptedPassword = await DecryptPasswordWithPrfAsync(
-                    user.WebAuthnCredential.EncryptedPassword!,
-                    authResult.PrfOutput);
-
-                var loginResult = await authService.Login(user.Email, decryptedPassword);
-
-                if (loginResult.Success)
-                {
-                    navigationService.NavigateTo("/");
-                }
-                else
-                {
-                    ErrorMessage = "Biometric login failed. Please enter your password manually.";
-                    FallbackToManualLogin(user);
-                }
-            }
-            else
-            {
-                ErrorMessage = authResult.Error ?? "Biometric authentication failed. Please enter your password manually.";
-                FallbackToManualLogin(user);
-            }
-        }
-        catch
-        {
-            ErrorMessage = "Biometric login error. Please enter your password manually.";
-            FallbackToManualLogin(user);
-        }
-        finally
-        {
-            IsLoading = false;
-        }
-    }
-
-    private void FallbackToManualLogin(SavedUser user)
-    {
-        Username = user.Email;
-        Password = string.Empty;
-        IsUsernameReadonly = false;
-        ShowUsersList = false;
-        ShowRememberMe = false;
     }
 
     /// <summary>Removes a saved user from the list.</summary>
@@ -642,6 +522,126 @@ public partial class LoginViewModel : ViewModelBase
         {
             IsLoading = false;
         }
+    }
+
+    private async Task InitializeThemeAsync()
+    {
+        try
+        {
+            CurrentTheme = await userSettingsService.GetThemeAsync();
+            ThemeIcon = CurrentTheme == "light" ? "bi-moon" : "bi-sun";
+            await browserInteropService.SetThemeAsync(CurrentTheme);
+        }
+        catch
+        {
+            CurrentTheme = "light";
+            ThemeIcon = "bi-moon";
+        }
+    }
+
+    private async Task LoadSavedUsersAsync()
+    {
+        try
+        {
+            var usersJson = await localStorageService.GetItemAsync(SavedUsersStorageKey);
+
+            if (!string.IsNullOrEmpty(usersJson))
+            {
+                var usersData = JsonSerializer.Deserialize<SavedUsersData>(usersJson);
+                if (usersData?.Users != null && usersData.Users.Count > 0)
+                {
+                    SavedUsers = usersData.Users;
+                    ShowUsersList = true;
+                    ShowRememberMe = false;
+                }
+            }
+        }
+        catch
+        {
+            SavedUsers = [];
+            ShowUsersList = false;
+            ShowRememberMe = true;
+        }
+    }
+
+    private async Task SaveUserAsync(string email, WebAuthnStoredCredential? webAuthnCredential = null)
+    {
+        try
+        {
+            var existingUser = savedUsers.FirstOrDefault(u => u.Email.Equals(email, StringComparison.OrdinalIgnoreCase));
+
+            if (existingUser != null)
+            {
+                if (webAuthnCredential != null)
+                {
+                    existingUser.WebAuthnCredential = webAuthnCredential;
+                }
+            }
+            else
+            {
+                savedUsers.Add(new SavedUser { Email = email, WebAuthnCredential = webAuthnCredential });
+            }
+
+            var usersData = new SavedUsersData { Users = savedUsers };
+            await localStorageService.SetItemAsync(SavedUsersStorageKey, JsonSerializer.Serialize(usersData));
+        }
+        catch
+        {
+            // Continue silently
+        }
+    }
+
+    private async Task AttemptWebAuthnLoginAsync(SavedUser user)
+    {
+        IsLoading = true;
+        ErrorMessage = null;
+
+        try
+        {
+            var authResult = await webAuthnService.AuthenticateAsync(user.WebAuthnCredential!.CredentialID);
+
+            if (authResult.Success && !string.IsNullOrEmpty(authResult.PrfOutput))
+            {
+                var decryptedPassword = await DecryptPasswordWithPrfAsync(
+                    user.WebAuthnCredential.EncryptedPassword!,
+                    authResult.PrfOutput);
+
+                var loginResult = await authService.Login(user.Email, decryptedPassword);
+
+                if (loginResult.Success)
+                {
+                    navigationService.NavigateTo("/");
+                }
+                else
+                {
+                    ErrorMessage = "Biometric login failed. Please enter your password manually.";
+                    FallbackToManualLogin(user);
+                }
+            }
+            else
+            {
+                ErrorMessage = authResult.Error ?? "Biometric authentication failed. Please enter your password manually.";
+                FallbackToManualLogin(user);
+            }
+        }
+        catch
+        {
+            ErrorMessage = "Biometric login error. Please enter your password manually.";
+            FallbackToManualLogin(user);
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    private void FallbackToManualLogin(SavedUser user)
+    {
+        Username = user.Email;
+        Password = string.Empty;
+        IsUsernameReadonly = false;
+        ShowUsersList = false;
+        ShowRememberMe = false;
     }
 
     private async Task<string> EncryptPasswordWithPrfAsync(string password, string prfOutputHex)

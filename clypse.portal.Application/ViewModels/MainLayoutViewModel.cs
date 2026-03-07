@@ -1,7 +1,7 @@
 using Blazing.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
 using clypse.portal.Application.Services.Interfaces;
 using clypse.portal.Models.Settings;
+using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.Logging;
 
 namespace clypse.portal.Application.ViewModels;
@@ -78,50 +78,6 @@ public partial class MainLayoutViewModel : ViewModelBase
             await SetupPwaUpdateServiceAsync();
             updateLoopCts = new CancellationTokenSource();
             _ = RunUpdateLoopAsync(updateLoopCts.Token);
-        }
-    }
-
-    private async Task SetupPwaUpdateServiceAsync()
-    {
-        try
-        {
-            await pwaUpdateService.SetupUpdateCallbacksAsync();
-            logger.LogInformation("PWA update service initialized");
-        }
-        catch (Exception ex)
-        {
-            logger.LogError(ex, "Error setting up PWA update service");
-        }
-    }
-
-    private async Task RunUpdateLoopAsync(CancellationToken cancellationToken)
-    {
-        try
-        {
-            await Task.Delay(2000, cancellationToken);
-            while (!cancellationToken.IsCancellationRequested)
-            {
-                try
-                {
-                    var wasUpdateAvailable = UpdateAvailable;
-                    UpdateAvailable = await pwaUpdateService.IsUpdateAvailableAsync();
-
-                    await Task.Delay(30000, cancellationToken);
-                }
-                catch (OperationCanceledException)
-                {
-                    break;
-                }
-                catch (Exception ex)
-                {
-                    logger.LogError(ex, "Error checking for updates");
-                    await Task.Delay(60000, cancellationToken);
-                }
-            }
-        }
-        catch (OperationCanceledException)
-        {
-            // Expected on disposal
         }
     }
 
@@ -213,5 +169,49 @@ public partial class MainLayoutViewModel : ViewModelBase
         }
 
         base.Dispose(disposing);
+    }
+
+    private async Task SetupPwaUpdateServiceAsync()
+    {
+        try
+        {
+            await pwaUpdateService.SetupUpdateCallbacksAsync();
+            logger.LogInformation("PWA update service initialized");
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error setting up PWA update service");
+        }
+    }
+
+    private async Task RunUpdateLoopAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            await Task.Delay(2000, cancellationToken);
+            while (!cancellationToken.IsCancellationRequested)
+            {
+                try
+                {
+                    var wasUpdateAvailable = UpdateAvailable;
+                    UpdateAvailable = await pwaUpdateService.IsUpdateAvailableAsync();
+
+                    await Task.Delay(30000, cancellationToken);
+                }
+                catch (OperationCanceledException)
+                {
+                    break;
+                }
+                catch (Exception ex)
+                {
+                    logger.LogError(ex, "Error checking for updates");
+                    await Task.Delay(60000, cancellationToken);
+                }
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            // Expected on disposal
+        }
     }
 }

@@ -1,8 +1,8 @@
+using System.Timers;
 using Blazing.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
 using clypse.core.Enums;
 using clypse.core.Password;
-using System.Timers;
+using CommunityToolkit.Mvvm.Input;
 
 namespace clypse.portal.Application.ViewModels;
 
@@ -136,6 +136,14 @@ public partial class PasswordFieldViewModel : ViewModelBase, IDisposable
         debounceTimer.Start();
     }
 
+    /// <inheritdoc/>
+    public new void Dispose()
+    {
+        debounceTimer?.Stop();
+        debounceTimer?.Dispose();
+        base.Dispose();
+    }
+
     private async Task UpdatePasswordComplexityAsync()
     {
         if (passwordComplexityEstimator == null)
@@ -226,13 +234,5 @@ public partial class PasswordFieldViewModel : ViewModelBase, IDisposable
             PasswordComplexityEstimation.VeryStrong => 100,
             _ => 0
         };
-    }
-
-    /// <inheritdoc/>
-    public new void Dispose()
-    {
-        debounceTimer?.Stop();
-        debounceTimer?.Dispose();
-        base.Dispose();
     }
 }
