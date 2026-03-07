@@ -34,4 +34,9 @@ public class WebAuthnRegisterResult
     /// Gets or sets a value indicating whether the Pseudo-Random Function (PRF) extension is enabled.
     /// </summary>
     public bool PrfEnabled { get; set; }
+
+    /// <summary>
+    /// Gets or sets the output from the Pseudo-Random Function (PRF) extension during registration.
+    /// </summary>
+    public string? PrfOutput { get; set; }
 }

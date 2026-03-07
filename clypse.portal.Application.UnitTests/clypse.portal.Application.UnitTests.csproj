@@ -8,6 +8,8 @@
   </PropertyGroup>
 
 	<ItemGroup>
+		<PackageReference Include="Blazing.Mvvm" />
+		<PackageReference Include="CommunityToolkit.Mvvm" />
 		<PackageReference Include="coverlet.collector">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>

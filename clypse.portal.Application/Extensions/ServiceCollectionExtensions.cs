@@ -23,6 +23,8 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IAuthenticationService, AwsCognitoAuthenticationService>();
         services.AddScoped<IPwaUpdateService, PwaUpdateService>();
         services.AddScoped<IUserSettingsService, UserSettingsService>();
+        services.AddScoped<INavigationStateService, NavigationStateService>();
+        services.AddScoped<IVaultStateService, VaultStateService>();
 
         return services;
     }
