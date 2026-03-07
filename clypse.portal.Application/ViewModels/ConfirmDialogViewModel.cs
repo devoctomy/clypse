@@ -24,6 +24,7 @@ public partial class ConfirmDialogViewModel : ViewModelBase
     public Func<Task>? OnCancelCallback { get; set; }
 
     /// <summary>Handles backdrop click (cancel if not processing).</summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     [RelayCommand]
     public async Task HandleBackdropClickAsync()
     {

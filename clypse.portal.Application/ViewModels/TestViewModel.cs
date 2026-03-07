@@ -54,7 +54,7 @@ public partial class TestViewModel : ViewModelBase
     private string? awsSessionToken;
 
     /// <summary>
-    /// Initializes a new instance of <see cref="TestViewModel"/>.
+    /// Initializes a new instance of the <see cref="TestViewModel"/> class.
     /// </summary>
     /// <param name="authService">The authentication service.</param>
     /// <param name="webAuthnService">The WebAuthn service.</param>
@@ -137,6 +137,7 @@ public partial class TestViewModel : ViewModelBase
     // ─── Commands ─────────────────────────────────────────────────────────────
 
     /// <summary>Logs in with the username/password credentials.</summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     [RelayCommand]
     public async Task HandleLoginAsync()
     {
@@ -175,6 +176,7 @@ public partial class TestViewModel : ViewModelBase
     }
 
     /// <summary>Logs out the current user.</summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     [RelayCommand]
     public async Task HandleLogoutAsync()
     {
@@ -194,6 +196,7 @@ public partial class TestViewModel : ViewModelBase
     }
 
     /// <summary>Runs the key derivation benchmark.</summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     [RelayCommand]
     public async Task HandleTestKeyDerivationAsync()
     {
@@ -218,6 +221,7 @@ public partial class TestViewModel : ViewModelBase
     }
 
     /// <summary>Runs the Clypse S3 vault test.</summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     [RelayCommand]
     public async Task HandleTestClypseAsync()
     {
@@ -247,6 +251,7 @@ public partial class TestViewModel : ViewModelBase
     }
 
     /// <summary>Registers a new WebAuthn credential.</summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     [RelayCommand]
     public async Task HandleWebAuthnRegisterAsync()
     {
@@ -301,6 +306,7 @@ public partial class TestViewModel : ViewModelBase
     }
 
     /// <summary>Authenticates with the registered WebAuthn credential.</summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     [RelayCommand]
     public async Task HandleWebAuthnAuthenticateAsync()
     {

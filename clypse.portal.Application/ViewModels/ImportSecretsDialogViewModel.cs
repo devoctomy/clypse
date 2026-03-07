@@ -29,7 +29,7 @@ public partial class ImportSecretsDialogViewModel : ViewModelBase
     private List<Dictionary<string, string>>? previewData;
 
     /// <summary>
-    /// Initializes a new instance of <see cref="ImportSecretsDialogViewModel"/>.
+    /// Initializes a new instance of the <see cref="ImportSecretsDialogViewModel"/> class.
     /// </summary>
     /// <param name="secretsImporterService">The secrets importer service.</param>
     public ImportSecretsDialogViewModel(ISecretsImporterService secretsImporterService)
@@ -71,6 +71,7 @@ public partial class ImportSecretsDialogViewModel : ViewModelBase
     /// Returns the display name for a CSV import format.
     /// </summary>
     /// <param name="format">The CSV import data format to get the display name for.</param>
+    /// <returns>The display name string for the specified format.</returns>
     public static string GetFormatDisplayName(CsvImportDataFormat format)
     {
         return format switch
@@ -100,6 +101,7 @@ public partial class ImportSecretsDialogViewModel : ViewModelBase
     /// Handles a file being selected by the user.
     /// </summary>
     /// <param name="e">The file change event arguments containing the selected file.</param>
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     public async Task HandleFileSelectedAsync(InputFileChangeEventArgs e)
     {
         ErrorMessage = null;
@@ -146,6 +148,7 @@ public partial class ImportSecretsDialogViewModel : ViewModelBase
     /// <summary>
     /// Executes the import operation.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     [RelayCommand]
     public async Task ImportAsync()
     {
@@ -195,6 +198,7 @@ public partial class ImportSecretsDialogViewModel : ViewModelBase
     /// <summary>
     /// Cancels the import dialog.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     [RelayCommand]
     public async Task CancelAsync()
     {

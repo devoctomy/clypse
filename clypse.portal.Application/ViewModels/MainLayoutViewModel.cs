@@ -21,7 +21,7 @@ public partial class MainLayoutViewModel : ViewModelBase
     private bool showChangesDialog;
 
     /// <summary>
-    /// Initializes a new instance of <see cref="MainLayoutViewModel"/>.
+    /// Initializes a new instance of the <see cref="MainLayoutViewModel"/> class.
     /// </summary>
     /// <param name="pwaUpdateService">The PWA update service.</param>
     /// <param name="appSettings">The application settings.</param>
@@ -87,6 +87,7 @@ public partial class MainLayoutViewModel : ViewModelBase
     /// <summary>
     /// Handles a click on the version number to show the changes dialog.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     [RelayCommand]
     public async Task HandleVersionClickAsync()
     {
@@ -122,6 +123,7 @@ public partial class MainLayoutViewModel : ViewModelBase
     /// <summary>
     /// Handles installing an available update.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     [RelayCommand]
     public async Task HandleInstallUpdateAsync()
     {

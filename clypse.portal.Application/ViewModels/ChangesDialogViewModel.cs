@@ -21,7 +21,7 @@ public partial class ChangesDialogViewModel : ViewModelBase
     private ChangeLog? changeLog;
 
     /// <summary>
-    /// Initializes a new instance of <see cref="ChangesDialogViewModel"/>.
+    /// Initializes a new instance of the <see cref="ChangesDialogViewModel"/> class.
     /// </summary>
     /// <param name="httpClient">The HTTP client used to fetch the changelog.</param>
     /// <param name="logger">The logger instance.</param>
@@ -52,6 +52,7 @@ public partial class ChangesDialogViewModel : ViewModelBase
     /// <summary>
     /// Loads the changelog if not already loaded.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     public async Task EnsureChangelogLoadedAsync()
     {
         if (ChangeLog == null)
@@ -61,6 +62,7 @@ public partial class ChangesDialogViewModel : ViewModelBase
     }
 
     /// <summary>Closes the dialog.</summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     [RelayCommand]
     public async Task HandleCloseAsync()
     {
@@ -71,6 +73,7 @@ public partial class ChangesDialogViewModel : ViewModelBase
     }
 
     /// <summary>Installs the available update.</summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     [RelayCommand]
     public async Task HandleUpdateAsync()
     {

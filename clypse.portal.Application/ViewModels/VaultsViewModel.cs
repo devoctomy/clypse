@@ -34,7 +34,7 @@ public partial class VaultsViewModel : ViewModelBase, IRecipient<RefreshVaultsMe
     private IVaultManagerBootstrapperService? bootstrapperService;
 
     /// <summary>
-    /// Initializes a new instance of <see cref="VaultsViewModel"/>.
+    /// Initializes a new instance of the <see cref="VaultsViewModel"/> class.
     /// </summary>
     /// <param name="vaultStorage">The vault storage service.</param>
     /// <param name="vaultManagerBootstrapperFactory">The vault manager bootstrapper factory.</param>
@@ -105,6 +105,7 @@ public partial class VaultsViewModel : ViewModelBase, IRecipient<RefreshVaultsMe
     }
 
     /// <summary>Loads the list of vaults.</summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     public async Task LoadVaultsAsync()
     {
         try
@@ -202,6 +203,7 @@ public partial class VaultsViewModel : ViewModelBase, IRecipient<RefreshVaultsMe
 
     /// <summary>Unlocks the selected vault with the given passphrase.</summary>
     /// <param name="passphrase">The passphrase used to decrypt the vault.</param>
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     [RelayCommand]
     public async Task HandleUnlockVaultAsync(string passphrase)
     {

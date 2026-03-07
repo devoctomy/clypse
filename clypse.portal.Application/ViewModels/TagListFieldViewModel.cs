@@ -17,13 +17,14 @@ public partial class TagListFieldViewModel : ViewModelBase
     /// <summary>Gets or sets the list of tags.</summary>
     public List<string> Tags { get => tags; set => SetProperty(ref tags, value); }
 
-    /// <summary>Gets or sets whether the field is in read-only mode.</summary>
+    /// <summary>Gets or sets a value indicating whether the field is in read-only mode.</summary>
     public bool IsReadOnly { get; set; }
 
     /// <summary>Gets or sets the callback invoked when the tags collection changes.</summary>
     public Func<List<string>, Task>? TagsChangedCallback { get; set; }
 
     /// <summary>Adds the <see cref="NewTag"/> to the tags list.</summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     [RelayCommand]
     public async Task AddTagAsync()
     {
@@ -47,6 +48,7 @@ public partial class TagListFieldViewModel : ViewModelBase
 
     /// <summary>Removes a tag from the tags list.</summary>
     /// <param name="tag">The tag string to remove.</param>
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     [RelayCommand]
     public async Task RemoveTagAsync(string tag)
     {

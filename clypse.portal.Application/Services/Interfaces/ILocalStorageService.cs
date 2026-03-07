@@ -17,16 +17,19 @@ public interface ILocalStorageService
     /// </summary>
     /// <param name="key">The key under which to store the value.</param>
     /// <param name="value">The value to store.</param>
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     Task SetItemAsync(string key, string value);
 
     /// <summary>
     /// Removes an item from local storage by its key.
     /// </summary>
     /// <param name="key">The key of the item to remove.</param>
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     Task RemoveItemAsync(string key);
 
     /// <summary>
     /// Clears all items from local storage except for persistent settings that should be preserved across sessions.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     Task ClearAllExceptPersistentSettingsAsync();
 }

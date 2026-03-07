@@ -36,7 +36,7 @@ public partial class VaultDeleteConfirmDialogViewModel : ViewModelBase
     /// <summary>Gets or sets the error message.</summary>
     public string? ErrorMessage { get; set; }
 
-    /// <summary>Gets or sets whether a deletion is in progress.</summary>
+    /// <summary>Gets or sets a value indicating whether a deletion is in progress.</summary>
     public bool IsDeleting { get; set; }
 
     /// <summary>Gets the text the user must type to confirm deletion.</summary>

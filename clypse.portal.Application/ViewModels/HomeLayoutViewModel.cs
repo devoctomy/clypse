@@ -28,7 +28,7 @@ public partial class HomeLayoutViewModel : ViewModelBase
     private bool isExpanded;
 
     /// <summary>
-    /// Initializes a new instance of <see cref="HomeLayoutViewModel"/>.
+    /// Initializes a new instance of the <see cref="HomeLayoutViewModel"/> class.
     /// </summary>
     /// <param name="authService">The authentication service.</param>
     /// <param name="userSettingsService">The user settings service.</param>
@@ -125,6 +125,7 @@ public partial class HomeLayoutViewModel : ViewModelBase
     /// <summary>
     /// Toggles between light and dark themes.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     [RelayCommand]
     public async Task ToggleThemeAsync()
     {
@@ -148,6 +149,7 @@ public partial class HomeLayoutViewModel : ViewModelBase
     /// <summary>
     /// Handles logout.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     [RelayCommand]
     public async Task HandleLogoutAsync()
     {

@@ -61,7 +61,7 @@ public partial class VaultCreateDialogViewModel : ViewModelBase
     /// <summary>Gets or sets the error message.</summary>
     public string? ErrorMessage { get; set; }
 
-    /// <summary>Gets or sets whether the vault is currently being created.</summary>
+    /// <summary>Gets or sets a value indicating whether the vault is currently being created.</summary>
     public bool IsCreating { get; set; }
 
     /// <summary>Gets a value indicating whether the form has valid input.</summary>
@@ -91,6 +91,7 @@ public partial class VaultCreateDialogViewModel : ViewModelBase
     }
 
     /// <summary>Submits the create vault form.</summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     [RelayCommand]
     public async Task CreateVaultAsync()
     {
@@ -113,6 +114,7 @@ public partial class VaultCreateDialogViewModel : ViewModelBase
     }
 
     /// <summary>Cancels the create vault dialog.</summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     [RelayCommand]
     public async Task CancelAsync()
     {

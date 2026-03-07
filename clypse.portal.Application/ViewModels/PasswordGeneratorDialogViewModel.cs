@@ -29,7 +29,7 @@ public partial class PasswordGeneratorDialogViewModel : ViewModelBase
     private bool isInitialized;
 
     /// <summary>
-    /// Initializes a new instance of <see cref="PasswordGeneratorDialogViewModel"/>.
+    /// Initializes a new instance of the <see cref="PasswordGeneratorDialogViewModel"/> class.
     /// </summary>
     /// <param name="passwordGeneratorService">The password generator service.</param>
     /// <param name="appSettings">The application settings.</param>
@@ -89,7 +89,7 @@ public partial class PasswordGeneratorDialogViewModel : ViewModelBase
         }
     }
 
-    /// <summary>Gets or sets whether to include lowercase characters.</summary>
+    /// <summary>Gets or sets a value indicating whether to include lowercase characters.</summary>
     public bool IncludeLowercase
     {
         get => includeLowercase;
@@ -100,7 +100,7 @@ public partial class PasswordGeneratorDialogViewModel : ViewModelBase
         }
     }
 
-    /// <summary>Gets or sets whether to include uppercase characters.</summary>
+    /// <summary>Gets or sets a value indicating whether to include uppercase characters.</summary>
     public bool IncludeUppercase
     {
         get => includeUppercase;
@@ -111,7 +111,7 @@ public partial class PasswordGeneratorDialogViewModel : ViewModelBase
         }
     }
 
-    /// <summary>Gets or sets whether to include digit characters.</summary>
+    /// <summary>Gets or sets a value indicating whether to include digit characters.</summary>
     public bool IncludeDigits
     {
         get => includeDigits;
@@ -122,7 +122,7 @@ public partial class PasswordGeneratorDialogViewModel : ViewModelBase
         }
     }
 
-    /// <summary>Gets or sets whether to include special characters.</summary>
+    /// <summary>Gets or sets a value indicating whether to include special characters.</summary>
     public bool IncludeSpecial
     {
         get => includeSpecial;
@@ -133,7 +133,7 @@ public partial class PasswordGeneratorDialogViewModel : ViewModelBase
         }
     }
 
-    /// <summary>Gets or sets whether to require at least one character from each group.</summary>
+    /// <summary>Gets or sets a value indicating whether to require at least one character from each group.</summary>
     public bool AtLeastOneOfEachGroup
     {
         get => atLeastOneOfEachGroup;
@@ -153,6 +153,7 @@ public partial class PasswordGeneratorDialogViewModel : ViewModelBase
     /// <summary>
     /// Initializes the ViewModel for first display.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     public async Task InitializeAsync()
     {
         if (isInitialized)
@@ -181,10 +182,12 @@ public partial class PasswordGeneratorDialogViewModel : ViewModelBase
     }
 
     /// <summary>Regenerates the password.</summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     [RelayCommand]
     public Task RegenerateAsync() => GeneratePasswordAsync();
 
     /// <summary>Accepts the generated password and notifies the caller.</summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     [RelayCommand]
     public async Task AcceptPasswordAsync()
     {
@@ -195,6 +198,7 @@ public partial class PasswordGeneratorDialogViewModel : ViewModelBase
     }
 
     /// <summary>Cancels the dialog.</summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     [RelayCommand]
     public async Task CancelAsync()
     {

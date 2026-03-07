@@ -18,10 +18,10 @@ public partial class SecretDialogViewModel : ViewModelBase
     private bool isSaving;
     private CrudDialogMode mode = CrudDialogMode.Create;
 
-    /// <summary>Gets or sets the working copy of the secret being edited.</summary>
+    /// <summary>Gets the working copy of the secret being edited.</summary>
     public Secret? EditableSecret { get => editableSecret; private set => SetProperty(ref editableSecret, value); }
 
-    /// <summary>Gets or sets the ordered fields for the current secret type.</summary>
+    /// <summary>Gets the ordered fields for the current secret type.</summary>
     public Dictionary<PropertyInfo, SecretFieldAttribute>? SecretFields { get => secretFields; private set => SetProperty(ref secretFields, value); }
 
     /// <summary>Gets a value indicating whether a save operation is in progress.</summary>
@@ -37,6 +37,7 @@ public partial class SecretDialogViewModel : ViewModelBase
     public Func<Task>? OnCancelCallback { get; set; }
 
     /// <summary>Returns the mode-specific icon name (without 'bi-' prefix).</summary>
+    /// <returns>The icon name string.</returns>
     public static string GetModeIcon() => "person-badge";
 
     /// <summary>
@@ -78,6 +79,7 @@ public partial class SecretDialogViewModel : ViewModelBase
     }
 
     /// <summary>Returns the mode-specific dialog title.</summary>
+    /// <returns>The dialog title string.</returns>
     public string GetModeTitle()
     {
         return Mode switch
@@ -90,6 +92,7 @@ public partial class SecretDialogViewModel : ViewModelBase
     }
 
     /// <summary>Saves the edited secret.</summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     [RelayCommand]
     public async Task HandleSaveAsync()
     {
@@ -113,6 +116,7 @@ public partial class SecretDialogViewModel : ViewModelBase
     }
 
     /// <summary>Cancels the dialog.</summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     [RelayCommand]
     public async Task HandleCancelAsync()
     {

@@ -49,7 +49,7 @@ public partial class LoginViewModel : ViewModelBase
     private string password = string.Empty;
 
     /// <summary>
-    /// Initializes a new instance of <see cref="LoginViewModel"/>.
+    /// Initializes a new instance of the <see cref="LoginViewModel"/> class.
     /// </summary>
     /// <param name="authService">The authentication service.</param>
     /// <param name="navigationService">The navigation service.</param>
@@ -162,6 +162,7 @@ public partial class LoginViewModel : ViewModelBase
     }
 
     /// <summary>Toggles between light and dark themes.</summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     [RelayCommand]
     public async Task ToggleThemeAsync()
     {
@@ -173,6 +174,7 @@ public partial class LoginViewModel : ViewModelBase
 
     /// <summary>Selects a saved user for login.</summary>
     /// <param name="user">The saved user to select.</param>
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     [RelayCommand]
     public async Task SelectUserAsync(SavedUser user)
     {
@@ -191,6 +193,7 @@ public partial class LoginViewModel : ViewModelBase
 
     /// <summary>Removes a saved user from the list.</summary>
     /// <param name="user">The saved user to remove.</param>
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     [RelayCommand]
     public async Task RemoveUserAsync(SavedUser user)
     {
@@ -238,6 +241,7 @@ public partial class LoginViewModel : ViewModelBase
     }
 
     /// <summary>Handles the login form submission.</summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     [RelayCommand]
     public async Task HandleLoginAsync()
     {
@@ -290,6 +294,7 @@ public partial class LoginViewModel : ViewModelBase
     }
 
     /// <summary>Handles the password change (reset) form submission.</summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     [RelayCommand]
     public async Task HandlePasswordChangeAsync()
     {
@@ -342,6 +347,7 @@ public partial class LoginViewModel : ViewModelBase
     }
 
     /// <summary>Sets up WebAuthn biometric login after successful authentication.</summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     [RelayCommand]
     public async Task HandleWebAuthnSetupAsync()
     {
@@ -442,6 +448,7 @@ public partial class LoginViewModel : ViewModelBase
     }
 
     /// <summary>Sends the forgot password code.</summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     [RelayCommand]
     public async Task HandleForgotPasswordAsync()
     {
@@ -479,6 +486,7 @@ public partial class LoginViewModel : ViewModelBase
     }
 
     /// <summary>Confirms the forgot password with a new password.</summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     [RelayCommand]
     public async Task HandleConfirmForgotPasswordAsync()
     {

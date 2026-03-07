@@ -40,7 +40,7 @@ public partial class HomeViewModel : ViewModelBase
     private string? createVaultErrorMessage;
 
     /// <summary>
-    /// Initializes a new instance of <see cref="HomeViewModel"/>.
+    /// Initializes a new instance of the <see cref="HomeViewModel"/> class.
     /// </summary>
     /// <param name="authService">The authentication service.</param>
     /// <param name="navigationService">The navigation service.</param>
@@ -128,6 +128,7 @@ public partial class HomeViewModel : ViewModelBase
     }
 
     /// <summary>Locks the current vault and navigates back to the vaults page.</summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     [RelayCommand]
     public async Task HandleLockVaultAsync()
     {
@@ -156,6 +157,7 @@ public partial class HomeViewModel : ViewModelBase
     }
 
     /// <summary>Confirms and executes vault deletion.</summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     [RelayCommand]
     public async Task HandleDeleteVaultConfirmAsync()
     {
@@ -201,6 +203,7 @@ public partial class HomeViewModel : ViewModelBase
 
     /// <summary>Creates a vault from the dialog request.</summary>
     /// <param name="request">The vault creation request containing name, description, and passphrase.</param>
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     [RelayCommand]
     public async Task HandleCreateVaultFromDialogAsync(VaultCreationRequest request)
     {

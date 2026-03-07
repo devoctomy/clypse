@@ -18,7 +18,7 @@ public partial class UnlockVaultDialogViewModel : ViewModelBase
     /// <summary>Gets or sets the vault being unlocked.</summary>
     public VaultMetadata? Vault { get => vault; set => SetProperty(ref vault, value); }
 
-    /// <summary>Gets or sets whether an unlock operation is in progress.</summary>
+    /// <summary>Gets or sets a value indicating whether an unlock operation is in progress.</summary>
     public bool IsUnlocking { get; set; }
 
     /// <summary>Gets or sets the error message if unlocking failed.</summary>
@@ -39,6 +39,7 @@ public partial class UnlockVaultDialogViewModel : ViewModelBase
     }
 
     /// <summary>Attempts to unlock with the current passphrase.</summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     [RelayCommand]
     public async Task UnlockAsync()
     {
@@ -49,6 +50,7 @@ public partial class UnlockVaultDialogViewModel : ViewModelBase
     }
 
     /// <summary>Cancels the unlock dialog.</summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     [RelayCommand]
     public async Task CancelAsync()
     {

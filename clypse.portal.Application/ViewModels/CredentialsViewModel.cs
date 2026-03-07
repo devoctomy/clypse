@@ -36,7 +36,7 @@ public partial class CredentialsViewModel : ViewModelBase,
     private List<VaultIndexEntry> filteredEntries = [];
 
     /// <summary>
-    /// Initializes a new instance of <see cref="CredentialsViewModel"/>.
+    /// Initializes a new instance of the <see cref="CredentialsViewModel"/> class.
     /// </summary>
     /// <param name="vaultStateService">The vault state service.</param>
     /// <param name="messenger">The messenger used for cross-component communication.</param>
@@ -136,6 +136,7 @@ public partial class CredentialsViewModel : ViewModelBase,
 
     /// <summary>Opens the secret dialog to view a secret.</summary>
     /// <param name="secretId">The ID of the secret to view.</param>
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     [RelayCommand]
     public async Task ViewSecretAsync(string secretId)
     {
@@ -168,6 +169,7 @@ public partial class CredentialsViewModel : ViewModelBase,
 
     /// <summary>Opens the secret dialog to edit a secret.</summary>
     /// <param name="secretId">The ID of the secret to edit.</param>
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     [RelayCommand]
     public async Task EditSecretAsync(string secretId)
     {
@@ -229,6 +231,7 @@ public partial class CredentialsViewModel : ViewModelBase,
 
     /// <summary>Handles saving a secret (create or update based on current mode).</summary>
     /// <param name="secret">The secret to save.</param>
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     [RelayCommand]
     public async Task HandleSecretDialogSaveAsync(Secret secret)
     {
@@ -248,6 +251,7 @@ public partial class CredentialsViewModel : ViewModelBase,
 
     /// <summary>Handles importing secrets from the import dialog.</summary>
     /// <param name="result">The result of the import operation.</param>
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     [RelayCommand]
     public async Task HandleImportSecretsAsync(ImportResult result)
     {
@@ -294,6 +298,7 @@ public partial class CredentialsViewModel : ViewModelBase,
     }
 
     /// <summary>Deletes the confirmed secret.</summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     [RelayCommand]
     public async Task HandleDeleteSecretAsync()
     {
