@@ -180,7 +180,11 @@ public partial class PasswordFieldViewModel : ViewModelBase, IDisposable
 
     private string GetComplexityColorClass()
     {
-        if (PasswordComplexityResults == null) return "text-dark";
+        if (PasswordComplexityResults == null)
+        {
+            return "text-dark";
+        }
+
         return PasswordComplexityResults.ComplexityEstimation switch
         {
             PasswordComplexityEstimation.VeryWeak => "text-danger",
@@ -194,7 +198,11 @@ public partial class PasswordFieldViewModel : ViewModelBase, IDisposable
 
     private string GetComplexityBackgroundColorClass()
     {
-        if (PasswordComplexityResults == null) return "bg-dark";
+        if (PasswordComplexityResults == null)
+        {
+            return "bg-dark";
+        }
+
         return PasswordComplexityResults.ComplexityEstimation switch
         {
             PasswordComplexityEstimation.VeryWeak => "bg-danger",
@@ -208,7 +216,11 @@ public partial class PasswordFieldViewModel : ViewModelBase, IDisposable
 
     private string GetComplexityText()
     {
-        if (PasswordComplexityResults == null) return "Unknown";
+        if (PasswordComplexityResults == null)
+        {
+            return "Unknown";
+        }
+
         return PasswordComplexityResults.ComplexityEstimation switch
         {
             PasswordComplexityEstimation.None => "None",
@@ -224,7 +236,11 @@ public partial class PasswordFieldViewModel : ViewModelBase, IDisposable
 
     private int GetComplexityPercentage()
     {
-        if (PasswordComplexityResults == null) return 0;
+        if (PasswordComplexityResults == null)
+        {
+            return 0;
+        }
+
         return PasswordComplexityResults.ComplexityEstimation switch
         {
             PasswordComplexityEstimation.VeryWeak => 20,

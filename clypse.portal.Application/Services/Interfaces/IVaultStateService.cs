@@ -9,6 +9,11 @@ namespace clypse.portal.Application.Services.Interfaces;
 public interface IVaultStateService
 {
     /// <summary>
+    /// Occurs when the vault state changes.
+    /// </summary>
+    event EventHandler? VaultStateChanged;
+
+    /// <summary>
     /// Gets the current vault metadata.
     /// </summary>
     VaultMetadata? CurrentVault { get; }
@@ -27,11 +32,6 @@ public interface IVaultStateService
     /// Gets the vault manager for the current vault.
     /// </summary>
     IVaultManager? VaultManager { get; }
-
-    /// <summary>
-    /// Occurs when the vault state changes.
-    /// </summary>
-    event EventHandler? VaultStateChanged;
 
     /// <summary>
     /// Sets the active vault state after a vault has been unlocked.

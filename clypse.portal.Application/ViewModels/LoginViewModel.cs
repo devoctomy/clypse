@@ -363,7 +363,7 @@ public partial class LoginViewModel : ViewModelBase
                     CredentialID = result.CredentialID ?? string.Empty,
                     UserID = result.UserID ?? string.Empty,
                     CreatedAt = DateTime.UtcNow,
-                    EncryptedPassword = encryptedPassword
+                    EncryptedPassword = encryptedPassword,
                 };
 
                 await SaveUserAsync(Username, webAuthnCredential);

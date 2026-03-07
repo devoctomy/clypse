@@ -1,10 +1,10 @@
 using System.Reflection;
 using Blazing.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
 using clypse.core.Enums;
 using clypse.core.Extensions;
 using clypse.core.Secrets;
 using clypse.portal.Models.Enums;
+using CommunityToolkit.Mvvm.Input;
 
 namespace clypse.portal.Application.ViewModels;
 
@@ -36,6 +36,9 @@ public partial class SecretDialogViewModel : ViewModelBase
     /// <summary>Gets or sets the callback invoked when the dialog is cancelled.</summary>
     public Func<Task>? OnCancelCallback { get; set; }
 
+    /// <summary>Returns the mode-specific icon name (without 'bi-' prefix).</summary>
+    public static string GetModeIcon() => "person-badge";
+
     /// <summary>
     /// Initializes the dialog for editing a secret.
     /// </summary>
@@ -56,13 +59,6 @@ public partial class SecretDialogViewModel : ViewModelBase
         IsSaving = false;
     }
 
-    private static Secret CreateWorkingCopy(Secret original)
-    {
-        var workingCopy = (Secret)Activator.CreateInstance(original.GetType())!;
-        workingCopy.SetAllData(original.Data);
-        return workingCopy.CastSecretToCorrectType();
-    }
-
     /// <summary>
     /// Called when the secret type selection changes.
     /// </summary>
@@ -77,9 +73,6 @@ public partial class SecretDialogViewModel : ViewModelBase
         EditableSecret = EditableSecret.CastSecretToCorrectType();
         SecretFields = EditableSecret?.GetOrderedSecretFields();
     }
-
-    /// <summary>Returns the mode-specific icon name (without 'bi-' prefix).</summary>
-    public static string GetModeIcon() => "person-badge";
 
     /// <summary>Returns the mode-specific dialog title.</summary>
     public string GetModeTitle()
@@ -124,5 +117,13 @@ public partial class SecretDialogViewModel : ViewModelBase
         {
             await OnCancelCallback();
         }
+    }
+
+    private static Secret CreateWorkingCopy(Secret original)
+    {
+        var instance = Activator.CreateInstance(original.GetType()) ?? throw new InvalidOperationException("Cannot create working copy");
+        var workingCopy = (Secret)instance;
+        workingCopy.SetAllData(original.Data);
+        return workingCopy.CastSecretToCorrectType();
     }
 }

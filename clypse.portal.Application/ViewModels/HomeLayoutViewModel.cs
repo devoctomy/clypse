@@ -180,10 +180,14 @@ public partial class HomeLayoutViewModel : ViewModelBase
     {
         await UpdateSessionTimerAsync();
 
-        sessionTimer = new Timer(async _ =>
-        {
-            await UpdateSessionTimerAsync();
-        }, null, TimeSpan.FromMinutes(1), TimeSpan.FromMinutes(1));
+        sessionTimer = new Timer(
+            async _ =>
+            {
+                await UpdateSessionTimerAsync();
+            },
+            null,
+            TimeSpan.FromMinutes(1),
+            TimeSpan.FromMinutes(1));
     }
 
     private async Task UpdateSessionTimerAsync()
@@ -212,7 +216,7 @@ public partial class HomeLayoutViewModel : ViewModelBase
                         else
                         {
                             var minutes = (int)timeRemaining.TotalMinutes;
-                            SessionTimeRemaining = $"{minutes} minute{(minutes != 1 ? "s" : "")}";
+                            SessionTimeRemaining = $"{minutes} minute{(minutes != 1 ? "s" : string.Empty)}";
                         }
                     }
                     else

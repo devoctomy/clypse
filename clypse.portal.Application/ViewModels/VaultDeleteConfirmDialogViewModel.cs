@@ -12,10 +12,26 @@ public partial class VaultDeleteConfirmDialogViewModel : ViewModelBase
     private VaultMetadata? vaultToDelete;
 
     /// <summary>Gets or sets the text typed by the user to confirm deletion.</summary>
-    public string ConfirmationText { get => confirmationText; set { SetProperty(ref confirmationText, value); OnPropertyChanged(nameof(IsConfirmationValid)); } }
+    public string ConfirmationText
+    {
+        get => confirmationText;
+        set
+        {
+            SetProperty(ref confirmationText, value);
+            OnPropertyChanged(nameof(IsConfirmationValid));
+        }
+    }
 
     /// <summary>Gets or sets the vault that will be deleted.</summary>
-    public VaultMetadata? VaultToDelete { get => vaultToDelete; set { SetProperty(ref vaultToDelete, value); OnPropertyChanged(nameof(ExpectedConfirmationText)); } }
+    public VaultMetadata? VaultToDelete
+    {
+        get => vaultToDelete;
+        set
+        {
+            SetProperty(ref vaultToDelete, value);
+            OnPropertyChanged(nameof(ExpectedConfirmationText));
+        }
+    }
 
     /// <summary>Gets or sets the error message.</summary>
     public string? ErrorMessage { get; set; }
@@ -28,7 +44,11 @@ public partial class VaultDeleteConfirmDialogViewModel : ViewModelBase
     {
         get
         {
-            if (VaultToDelete == null) return string.Empty;
+            if (VaultToDelete == null)
+            {
+                return string.Empty;
+            }
+
             return !string.IsNullOrEmpty(VaultToDelete.Name) ? VaultToDelete.Name : VaultToDelete.Id;
         }
     }

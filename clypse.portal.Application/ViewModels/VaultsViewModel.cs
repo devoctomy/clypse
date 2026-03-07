@@ -1,11 +1,11 @@
 using System.Text.Json;
 using Blazing.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
-using CommunityToolkit.Mvvm.Messaging;
+using clypse.core.Vault;
 using clypse.portal.Application.Services.Interfaces;
 using clypse.portal.Application.ViewModels.Messages;
 using clypse.portal.Models.Vault;
-using clypse.core.Vault;
+using CommunityToolkit.Mvvm.Input;
+using CommunityToolkit.Mvvm.Messaging;
 
 namespace clypse.portal.Application.ViewModels;
 
@@ -128,7 +128,7 @@ public partial class VaultsViewModel : ViewModelBase, IRecipient<RefreshVaultsMe
                 {
                     Id = listing.Id ?? string.Empty,
                     Name = storedVault?.Name,
-                    Description = storedVault?.Description
+                    Description = storedVault?.Description,
                 };
             }).ToList();
 
@@ -139,7 +139,7 @@ public partial class VaultsViewModel : ViewModelBase, IRecipient<RefreshVaultsMe
                 {
                     Id = Guid.NewGuid().ToString(),
                     Name = $"Test Vault {i + 1}",
-                    Description = "This vault cannot be opened."
+                    Description = "This vault cannot be opened.",
                 });
             }
 #endif
@@ -234,7 +234,7 @@ public partial class VaultsViewModel : ViewModelBase, IRecipient<RefreshVaultsMe
                 Id = SelectedVault.Id,
                 Name = SelectedVault.Name,
                 Description = SelectedVault.Description,
-                IndexEntries = vault.Index.Entries.ToList()
+                IndexEntries = vault.Index.Entries.ToList(),
             };
 
             HidePassphrasePanel();
@@ -257,6 +257,17 @@ public partial class VaultsViewModel : ViewModelBase, IRecipient<RefreshVaultsMe
     public async void Receive(RefreshVaultsMessage message)
     {
         await LoadVaultsAsync();
+    }
+
+    /// <inheritdoc/>
+    protected override void Dispose(bool disposing)
+    {
+        if (disposing)
+        {
+            messenger.Unregister<RefreshVaultsMessage>(this);
+        }
+
+        base.Dispose(disposing);
     }
 
     private async Task<IVaultManagerBootstrapperService?> CreateBootstrapperServiceAsync()
@@ -300,16 +311,5 @@ public partial class VaultsViewModel : ViewModelBase, IRecipient<RefreshVaultsMe
             Console.WriteLine($"Error creating bootstrapper service: {ex.Message}");
             return null;
         }
-    }
-
-    /// <inheritdoc/>
-    protected override void Dispose(bool disposing)
-    {
-        if (disposing)
-        {
-            messenger.Unregister<RefreshVaultsMessage>(this);
-        }
-
-        base.Dispose(disposing);
     }
 }

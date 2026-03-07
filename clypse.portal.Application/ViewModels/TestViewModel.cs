@@ -1,5 +1,4 @@
 using Blazing.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
 using clypse.core.Cloud;
 using clypse.core.Cloud.Aws.S3;
 using clypse.core.Compression;
@@ -9,6 +8,7 @@ using clypse.core.Vault;
 using clypse.portal.Application.Services.Interfaces;
 using clypse.portal.Models.Aws;
 using clypse.portal.Models.WebAuthn;
+using CommunityToolkit.Mvvm.Input;
 
 namespace clypse.portal.Application.ViewModels;
 
@@ -240,53 +240,6 @@ public partial class TestViewModel : ViewModelBase
         }
     }
 
-    private async Task TestClypseAsync(string accessKey, string secretAccessKey)
-    {
-        var compressionService = new GZipCompressionService();
-        var jsInvoker = jsS3InvokerProvider.GetInvoker();
-
-        var jsS3Client = new JavaScriptS3Client(
-            jsInvoker,
-            accessKey,
-            secretAccessKey,
-            awsSessionToken ?? string.Empty,
-            awsS3Config.Region);
-
-        var keyDerivationService = new KeyDerivationService(
-            new RandomGeneratorService(),
-            KeyDerivationServiceDefaultOptions.Blazor_Argon2id());
-
-        var awsS3E2eCloudStorageProvider = new AwsS3E2eCloudStorageProvider(
-            awsS3Config.BucketName,
-            jsS3Client,
-            new BouncyCastleAesGcmCryptoService());
-
-        using var vaultManager = new VaultManager(
-            identityId ?? string.Empty,
-            keyDerivationService,
-            compressionService,
-            awsS3E2eCloudStorageProvider);
-
-        var vault = vaultManager.Create("Foobar", "This is a test vault");
-
-        var webSecret = new WebSecret
-        {
-            Name = "Foobar",
-            Description = "This is a test secret.",
-            Password = "password123"
-        };
-        webSecret.UpdateTags(["apple", "orange"]);
-        vault.AddSecret(webSecret);
-
-        var passphrase = "password123";
-        var keyBytes = await vaultManager.DeriveKeyFromPassphraseAsync(vault.Info.Id, passphrase);
-        var base64Key = Convert.ToBase64String(keyBytes);
-        await vaultManager.SaveAsync(vault, base64Key, null, CancellationToken.None);
-
-        var loadedVault = await vaultManager.LoadAsync(vault.Info.Id, base64Key, CancellationToken.None);
-        _ = await vaultManager.GetSecretAsync(loadedVault, loadedVault.Index.Entries[0].Id, base64Key, CancellationToken.None);
-    }
-
     /// <summary>Registers a new WebAuthn credential.</summary>
     [RelayCommand]
     public async Task HandleWebAuthnRegisterAsync()
@@ -313,7 +266,7 @@ public partial class TestViewModel : ViewModelBase
                     CredentialID = result.CredentialID!,
                     UserID = result.UserID!,
                     Username = result.Username!,
-                    PrfEnabled = result.PrfEnabled
+                    PrfEnabled = result.PrfEnabled,
                 };
 
                 LogWebAuthn("✅ Registration successful!");
@@ -405,5 +358,52 @@ public partial class TestViewModel : ViewModelBase
     {
         var timestamp = DateTime.Now.ToString("HH:mm:ss");
         WebAuthnLog += $"[{timestamp}] {message}\n";
+    }
+
+    private async Task TestClypseAsync(string accessKey, string secretAccessKey)
+    {
+        var compressionService = new GZipCompressionService();
+        var jsInvoker = jsS3InvokerProvider.GetInvoker();
+
+        var jsS3Client = new JavaScriptS3Client(
+            jsInvoker,
+            accessKey,
+            secretAccessKey,
+            awsSessionToken ?? string.Empty,
+            awsS3Config.Region);
+
+        var keyDerivationService = new KeyDerivationService(
+            new RandomGeneratorService(),
+            KeyDerivationServiceDefaultOptions.Blazor_Argon2id());
+
+        var awsS3E2eCloudStorageProvider = new AwsS3E2eCloudStorageProvider(
+            awsS3Config.BucketName,
+            jsS3Client,
+            new BouncyCastleAesGcmCryptoService());
+
+        using var vaultManager = new VaultManager(
+            identityId ?? string.Empty,
+            keyDerivationService,
+            compressionService,
+            awsS3E2eCloudStorageProvider);
+
+        var vault = vaultManager.Create("Foobar", "This is a test vault");
+
+        var webSecret = new WebSecret
+        {
+            Name = "Foobar",
+            Description = "This is a test secret.",
+            Password = "password123",
+        };
+        webSecret.UpdateTags(["apple", "orange"]);
+        vault.AddSecret(webSecret);
+
+        var passphrase = "password123";
+        var keyBytes = await vaultManager.DeriveKeyFromPassphraseAsync(vault.Info.Id, passphrase);
+        var base64Key = Convert.ToBase64String(keyBytes);
+        await vaultManager.SaveAsync(vault, base64Key, null, CancellationToken.None);
+
+        var loadedVault = await vaultManager.LoadAsync(vault.Info.Id, base64Key, CancellationToken.None);
+        _ = await vaultManager.GetSecretAsync(loadedVault, loadedVault.Index.Entries[0].Id, base64Key, CancellationToken.None);
     }
 }

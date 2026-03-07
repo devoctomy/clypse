@@ -17,7 +17,7 @@ public partial class ImportSecretsDialogViewModel : ViewModelBase
     private readonly List<CsvImportDataFormat> availableFormats =
     [
         CsvImportDataFormat.KeePassCsv1_x,
-        CsvImportDataFormat.Cachy1_x
+        CsvImportDataFormat.Cachy1_x,
     ];
 
     private string? selectedFileName;
@@ -65,6 +65,19 @@ public partial class ImportSecretsDialogViewModel : ViewModelBase
 
     /// <summary>Gets or sets the callback invoked when the import completes.</summary>
     public Func<ImportResult, Task>? OnImportCallback { get; set; }
+
+    /// <summary>
+    /// Returns the display name for a CSV import format.
+    /// </summary>
+    public static string GetFormatDisplayName(CsvImportDataFormat format)
+    {
+        return format switch
+        {
+            CsvImportDataFormat.KeePassCsv1_x => "KeePass CSV (v1.x)",
+            CsvImportDataFormat.Cachy1_x => "Cachy CSV (v1.x)",
+            _ => format.ToString()
+        };
+    }
 
     /// <summary>
     /// Resets the dialog state (called when dialog is hidden).
@@ -157,7 +170,7 @@ public partial class ImportSecretsDialogViewModel : ViewModelBase
                 Success = true,
                 ImportedCount = mappedSecrets.Count,
                 MappedSecrets = mappedSecrets,
-                Format = SelectedFormat
+                Format = SelectedFormat,
             };
 
             if (OnImportCallback != null)
@@ -186,19 +199,6 @@ public partial class ImportSecretsDialogViewModel : ViewModelBase
         {
             await OnCancelCallback();
         }
-    }
-
-    /// <summary>
-    /// Returns the display name for a CSV import format.
-    /// </summary>
-    public static string GetFormatDisplayName(CsvImportDataFormat format)
-    {
-        return format switch
-        {
-            CsvImportDataFormat.KeePassCsv1_x => "KeePass CSV (v1.x)",
-            CsvImportDataFormat.Cachy1_x => "Cachy CSV (v1.x)",
-            _ => format.ToString()
-        };
     }
 
     private void PreviewCsvData()

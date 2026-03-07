@@ -259,6 +259,7 @@ public partial class HomeViewModel : ViewModelBase
                 {
                     ShowDeleteVaultDialogInternal();
                 }
+
                 return;
             case "create-credential":
                 messenger.Send(new ShowCreateCredentialMessage());
@@ -291,16 +292,16 @@ public partial class HomeViewModel : ViewModelBase
         {
             "vaults" =>
             [
-                new() { Text = "Create Vault", Action = "create-vault", Icon = "bi bi-plus-circle" },
-                new() { Text = "Refresh", Action = "refresh", Icon = "bi bi-arrow-clockwise" }
+                new () { Text = "Create Vault", Action = "create-vault", Icon = "bi bi-plus-circle" },
+                new () { Text = "Refresh", Action = "refresh", Icon = "bi bi-arrow-clockwise" },
             ],
             "credentials" =>
             [
-                new() { Text = "Create Credential", Action = "create-credential", Icon = "bi bi-plus-circle" },
-                new() { Text = "Import", Action = "import", Icon = "bi bi-upload" },
-                new() { Text = "Verify Vault", Action = "verify", Icon = "bi bi-shield-check", ButtonClass = "btn-success" },
-                new() { Text = "Lock Vault", Action = "lock-vault", Icon = "bi bi-lock", ButtonClass = "btn-primary" },
-                new() { Text = "Delete Vault", Action = "delete-vault", Icon = "bi bi-trash3", ButtonClass = "btn-danger" }
+                new () { Text = "Create Credential", Action = "create-credential", Icon = "bi bi-plus-circle" },
+                new () { Text = "Import", Action = "import", Icon = "bi bi-upload" },
+                new () { Text = "Verify Vault", Action = "verify", Icon = "bi bi-shield-check", ButtonClass = "btn-success" },
+                new () { Text = "Lock Vault", Action = "lock-vault", Icon = "bi bi-lock", ButtonClass = "btn-primary" },
+                new () { Text = "Delete Vault", Action = "delete-vault", Icon = "bi bi-trash3", ButtonClass = "btn-danger" },
             ],
             _ => []
         };
@@ -410,7 +411,7 @@ public partial class HomeViewModel : ViewModelBase
             {
                 Id = vault.Info.Id,
                 Name = vault.Info.Name,
-                Description = vault.Info.Description
+                Description = vault.Info.Description,
             });
         }
 

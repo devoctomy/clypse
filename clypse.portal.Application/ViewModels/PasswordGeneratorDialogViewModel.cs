@@ -226,10 +226,25 @@ public partial class PasswordGeneratorDialogViewModel : ViewModelBase
             else
             {
                 var characterGroups = CharacterGroup.None;
-                if (IncludeLowercase) characterGroups |= CharacterGroup.Lowercase;
-                if (IncludeUppercase) characterGroups |= CharacterGroup.Uppercase;
-                if (IncludeDigits) characterGroups |= CharacterGroup.Digits;
-                if (IncludeSpecial) characterGroups |= CharacterGroup.Special;
+                if (IncludeLowercase)
+                {
+                    characterGroups |= CharacterGroup.Lowercase;
+                }
+
+                if (IncludeUppercase)
+                {
+                    characterGroups |= CharacterGroup.Uppercase;
+                }
+
+                if (IncludeDigits)
+                {
+                    characterGroups |= CharacterGroup.Digits;
+                }
+
+                if (IncludeSpecial)
+                {
+                    characterGroups |= CharacterGroup.Special;
+                }
 
                 if (characterGroups == CharacterGroup.None)
                 {

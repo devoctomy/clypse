@@ -9,13 +9,13 @@ public class NavigationStateService : INavigationStateService
     private List<NavigationItem> navigationItems = [];
 
     /// <inheritdoc/>
-    public IReadOnlyList<NavigationItem> NavigationItems => navigationItems.AsReadOnly();
-
-    /// <inheritdoc/>
     public event EventHandler? NavigationItemsChanged;
 
     /// <inheritdoc/>
     public event EventHandler<string>? NavigationActionRequested;
+
+    /// <inheritdoc/>
+    public IReadOnlyList<NavigationItem> NavigationItems => navigationItems.AsReadOnly();
 
     /// <inheritdoc/>
     public void UpdateNavigationItems(IEnumerable<NavigationItem> items)

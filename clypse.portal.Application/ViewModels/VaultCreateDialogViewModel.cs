@@ -1,6 +1,6 @@
 using Blazing.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
 using clypse.portal.Models.Vault;
+using CommunityToolkit.Mvvm.Input;
 
 namespace clypse.portal.Application.ViewModels;
 
@@ -15,16 +15,48 @@ public partial class VaultCreateDialogViewModel : ViewModelBase
     private string vaultPassphraseConfirm = string.Empty;
 
     /// <summary>Gets or sets the vault name.</summary>
-    public string VaultName { get => vaultName; set { SetProperty(ref vaultName, value); OnPropertyChanged(nameof(IsFormValid)); } }
+    public string VaultName
+    {
+        get => vaultName;
+        set
+        {
+            SetProperty(ref vaultName, value);
+            OnPropertyChanged(nameof(IsFormValid));
+        }
+    }
 
     /// <summary>Gets or sets the vault description.</summary>
-    public string VaultDescription { get => vaultDescription; set { SetProperty(ref vaultDescription, value); OnPropertyChanged(nameof(IsFormValid)); } }
+    public string VaultDescription
+    {
+        get => vaultDescription;
+        set
+        {
+            SetProperty(ref vaultDescription, value);
+            OnPropertyChanged(nameof(IsFormValid));
+        }
+    }
 
     /// <summary>Gets or sets the vault passphrase.</summary>
-    public string VaultPassphrase { get => vaultPassphrase; set { SetProperty(ref vaultPassphrase, value); OnPropertyChanged(nameof(IsFormValid)); } }
+    public string VaultPassphrase
+    {
+        get => vaultPassphrase;
+        set
+        {
+            SetProperty(ref vaultPassphrase, value);
+            OnPropertyChanged(nameof(IsFormValid));
+        }
+    }
 
     /// <summary>Gets or sets the vault passphrase confirmation.</summary>
-    public string VaultPassphraseConfirm { get => vaultPassphraseConfirm; set { SetProperty(ref vaultPassphraseConfirm, value); OnPropertyChanged(nameof(IsFormValid)); } }
+    public string VaultPassphraseConfirm
+    {
+        get => vaultPassphraseConfirm;
+        set
+        {
+            SetProperty(ref vaultPassphraseConfirm, value);
+            OnPropertyChanged(nameof(IsFormValid));
+        }
+    }
 
     /// <summary>Gets or sets the error message.</summary>
     public string? ErrorMessage { get; set; }
@@ -71,7 +103,7 @@ public partial class VaultCreateDialogViewModel : ViewModelBase
         {
             Name = VaultName.Trim(),
             Description = VaultDescription.Trim(),
-            Passphrase = VaultPassphrase
+            Passphrase = VaultPassphrase,
         };
 
         if (OnCreateVaultCallback != null)

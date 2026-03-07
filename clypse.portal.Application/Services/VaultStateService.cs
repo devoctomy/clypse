@@ -8,6 +8,9 @@ namespace clypse.portal.Application.Services;
 public class VaultStateService : IVaultStateService
 {
     /// <inheritdoc/>
+    public event EventHandler? VaultStateChanged;
+
+    /// <inheritdoc/>
     public VaultMetadata? CurrentVault { get; private set; }
 
     /// <inheritdoc/>
@@ -18,9 +21,6 @@ public class VaultStateService : IVaultStateService
 
     /// <inheritdoc/>
     public IVaultManager? VaultManager { get; private set; }
-
-    /// <inheritdoc/>
-    public event EventHandler? VaultStateChanged;
 
     /// <inheritdoc/>
     public void SetVaultState(VaultMetadata vault, string key, IVault loadedVault, IVaultManager manager)

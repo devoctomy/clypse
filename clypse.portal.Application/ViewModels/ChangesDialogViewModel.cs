@@ -1,8 +1,8 @@
 using System.Net.Http;
 using System.Text.Json;
 using Blazing.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
 using clypse.portal.Models.Changes;
+using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.Logging;
 
 namespace clypse.portal.Application.ViewModels;
@@ -58,30 +58,6 @@ public partial class ChangesDialogViewModel : ViewModelBase
         }
     }
 
-    private async Task LoadChangelogAsync()
-    {
-        IsLoading = true;
-        ErrorMessage = null;
-
-        try
-        {
-            var json = await httpClient.GetStringAsync("changes.json");
-            ChangeLog = JsonSerializer.Deserialize<ChangeLog>(json, new JsonSerializerOptions
-            {
-                PropertyNameCaseInsensitive = true
-            });
-        }
-        catch (Exception ex)
-        {
-            logger.LogError(ex, "Error loading changelog");
-            ErrorMessage = "Failed to load version history. Please try again later.";
-        }
-        finally
-        {
-            IsLoading = false;
-        }
-    }
-
     /// <summary>Closes the dialog.</summary>
     [RelayCommand]
     public async Task HandleCloseAsync()
@@ -107,6 +83,30 @@ public partial class ChangesDialogViewModel : ViewModelBase
         finally
         {
             IsUpdating = false;
+        }
+    }
+
+    private async Task LoadChangelogAsync()
+    {
+        IsLoading = true;
+        ErrorMessage = null;
+
+        try
+        {
+            var json = await httpClient.GetStringAsync("changes.json");
+            ChangeLog = JsonSerializer.Deserialize<ChangeLog>(json, new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true,
+            });
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error loading changelog");
+            ErrorMessage = "Failed to load version history. Please try again later.";
+        }
+        finally
+        {
+            IsLoading = false;
         }
     }
 }
