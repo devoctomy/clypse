@@ -1,8 +1,9 @@
 @using System.Text.Json
+@inherits Blazing.Mvvm.Components.MvvmComponentBase<clypse.portal.Application.ViewModels.ChangesDialogViewModel>
 
 @if (Show)
 {
-    <div class="modal" style="display: block; background-color: rgba(0,0,0,0.5);" @onclick="HandleBackdropClick">
+    <div class="modal" style="display: block; background-color: rgba(0,0,0,0.5);" @onclick="ViewModel.HandleCloseCommand.Execute">
         <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable" @onclick:stopPropagation="true">
             <div class="modal-content changes-dialog">
                 <div class="modal-header">
@@ -10,10 +11,10 @@
                         <i class="bi bi-clock-history me-2"></i>
                         Version History
                     </h5>
-                    <button type="button" class="btn-close" @onclick="HandleClose"></button>
+                    <button type="button" class="btn-close" @onclick="ViewModel.HandleCloseCommand.Execute"></button>
                 </div>
                 <div class="modal-body">
-                    @if (isLoading)
+                    @if (ViewModel.IsLoading)
                     {
                         <div class="text-center py-5">
                             <div class="spinner-border text-primary" role="status">
@@ -22,10 +23,10 @@
                             <p class="mt-2">Loading version history...</p>
                         </div>
                     }
-                    else if (changeLog != null && changeLog.Versions.Any())
+                    else if (ViewModel.ChangeLog != null && ViewModel.ChangeLog.Versions.Any())
                     {
                         <div class="changes-list">
-                            @foreach (var version in changeLog.Versions.OrderByDescending(v => v.Version))
+                            @foreach (var version in ViewModel.ChangeLog.Versions.OrderByDescending(v => v.Version))
                             {
                                 <div class="version-section mb-4">
                                     <h6 class="version-header">
@@ -59,11 +60,11 @@
                             }
                         </div>
                     }
-                    else if (errorMessage != null)
+                    else if (ViewModel.ErrorMessage != null)
                     {
                         <div class="alert alert-danger">
                             <i class="bi bi-exclamation-triangle me-2"></i>
-                            @errorMessage
+                            @ViewModel.ErrorMessage
                         </div>
                     }
                     else
@@ -77,8 +78,8 @@
                 @if (ShowUpdateButton && !string.IsNullOrEmpty(AvailableVersion))
                 {
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-success w-100" @onclick="HandleUpdateClick" disabled="@isUpdating">
-                            @if (isUpdating)
+                        <button type="button" class="btn btn-success w-100" @onclick="ViewModel.HandleUpdateCommand.Execute" disabled="@ViewModel.IsUpdating">
+                            @if (ViewModel.IsUpdating)
                             {
                                 <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
                                 <span class="ms-2">Updating...</span>

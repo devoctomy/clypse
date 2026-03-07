@@ -1,9 +1,14 @@
 using Microsoft.AspNetCore.Components;
+using Blazing.Mvvm.Components;
+using clypse.portal.Application.ViewModels;
 using clypse.portal.Models.Vault;
 
 namespace clypse.portal.Components;
 
-public partial class VaultDeleteConfirmDialog : ComponentBase
+/// <summary>
+/// Code-behind for the delete vault confirmation dialog. Business logic is in <see cref="VaultDeleteConfirmDialogViewModel"/>.
+/// </summary>
+public partial class VaultDeleteConfirmDialog : MvvmComponentBase<VaultDeleteConfirmDialogViewModel>
 {
     [Parameter] public bool Show { get; set; }
     [Parameter] public VaultMetadata? VaultToDelete { get; set; }
@@ -11,30 +16,16 @@ public partial class VaultDeleteConfirmDialog : ComponentBase
     [Parameter] public string? ErrorMessage { get; set; }
     [Parameter] public EventCallback OnConfirm { get; set; }
     [Parameter] public EventCallback OnCancel { get; set; }
-    
-    private string confirmationText = string.Empty;
 
     protected override void OnParametersSet()
     {
+        ViewModel.VaultToDelete = VaultToDelete;
+        ViewModel.IsDeleting = IsDeleting;
+        ViewModel.ErrorMessage = ErrorMessage;
+
         if (!Show)
         {
-            confirmationText = string.Empty;
+            ViewModel.Reset();
         }
-    }
-
-    private string GetConfirmationText()
-    {
-        if (VaultToDelete == null) return "";
-        
-        // If vault has a name, use that, otherwise use ID
-        return !string.IsNullOrEmpty(VaultToDelete.Name) ? VaultToDelete.Name : VaultToDelete.Id;
-    }
-    
-    private bool IsConfirmationValid()
-    {
-        if (VaultToDelete == null) return false;
-        
-        var expectedText = GetConfirmationText();
-        return confirmationText.Trim().Equals(expectedText, StringComparison.Ordinal);
     }
 }

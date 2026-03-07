@@ -1,8 +1,13 @@
 using Microsoft.AspNetCore.Components;
+using Blazing.Mvvm.Components;
+using clypse.portal.Application.ViewModels;
 
 namespace clypse.portal.Components.Fields;
 
-public partial class SingleLineTextField : ComponentBase
+/// <summary>
+/// Code-behind for the single-line text field component. Logic is in <see cref="SingleLineTextFieldViewModel"/>.
+/// </summary>
+public partial class SingleLineTextField : MvvmComponentBase<SingleLineTextFieldViewModel>
 {
     [Parameter] public string Label { get; set; } = string.Empty;
     [Parameter] public string? Value { get; set; }
@@ -10,9 +15,9 @@ public partial class SingleLineTextField : ComponentBase
     [Parameter] public string Placeholder { get; set; } = string.Empty;
     [Parameter] public bool IsReadOnly { get; set; } = false;
 
-    private async Task OnValueChanged(string? newValue)
+    protected override void OnParametersSet()
     {
-        Value = newValue;
-        await ValueChanged.InvokeAsync(Value);
+        ViewModel.Value = Value;
+        ViewModel.ValueChangedCallback = v => ValueChanged.InvokeAsync(v);
     }
 }

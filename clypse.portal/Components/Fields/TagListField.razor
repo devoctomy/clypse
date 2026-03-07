@@ -1,39 +1,40 @@
 @using clypse.core.Secrets
 @using Microsoft.AspNetCore.Components.Web
+@inherits Blazing.Mvvm.Components.MvvmComponentBase<clypse.portal.Application.ViewModels.TagListFieldViewModel>
 
 <div class="mb-3">
     <label class="form-label">@Label</label>
-    
+
     @if (!IsReadOnly)
     {
         <div class="row">
             <div class="col-8">
-                <input type="text" 
-                       class="form-control" 
-                       @bind="newTag" 
-                       @onkeypress="HandleTagKeyPress" 
+                <input type="text"
+                       class="form-control"
+                       @bind="ViewModel.NewTag"
+                       @onkeypress="HandleTagKeyPress"
                        placeholder="@Placeholder" />
             </div>
             <div class="col-4">
-                <button type="button" 
-                        class="btn btn-outline-primary w-100" 
-                        @onclick="AddTag">
+                <button type="button"
+                        class="btn btn-outline-primary w-100"
+                        @onclick="ViewModel.AddTagCommand.Execute">
                     Add Tag
                 </button>
             </div>
         </div>
     }
-    
-    @if (Tags?.Any() == true)
+
+    @if (ViewModel.Tags?.Any() == true)
     {
         <div class="mt-2">
-            @foreach (var tag in Tags.ToList())
+            @foreach (var tag in ViewModel.Tags.ToList())
             {
                 <span class="badge bg-secondary me-1 mb-1">
                     @tag
                     @if (!IsReadOnly)
                     {
-                        <button type="button" class="btn-close btn-close-white ms-1" style="font-size: 0.7em;" @onclick="() => RemoveTag(tag)"></button>
+                        <button type="button" class="btn-close btn-close-white ms-1" style="font-size: 0.7em;" @onclick="() => ViewModel.RemoveTagCommand.Execute(tag)"></button>
                     }
                 </span>
             }

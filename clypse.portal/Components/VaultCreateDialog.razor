@@ -1,4 +1,4 @@
-@using clypse.portal.Models
+@inherits Blazing.Mvvm.Components.MvvmComponentBase<clypse.portal.Application.ViewModels.VaultCreateDialogViewModel>
 
 @if (Show)
 {
@@ -10,54 +10,54 @@
                         <i class="bi bi-plus-circle me-2"></i>
                         Create New Vault
                     </h5>
-                    <button type="button" class="btn-close" @onclick="HandleCancel"></button>
+                    <button type="button" class="btn-close" @onclick="ViewModel.CancelCommand.Execute"></button>
                 </div>
                 <div class="modal-body">
                     <div class="mb-3">
                         <label for="vaultName" class="form-label">Name</label>
-                        <input type="text" 
-                               class="form-control" 
-                               id="vaultName" 
+                        <input type="text"
+                               class="form-control"
+                               id="vaultName"
                                @ref="nameInput"
-                               @bind="vaultName" 
+                               @bind="ViewModel.VaultName"
                                @bind:event="oninput"
                                placeholder="Enter vault name"
                                disabled="@IsCreating" />
                     </div>
-                    
+
                     <div class="mb-3">
                         <label for="vaultDescription" class="form-label">Description</label>
-                        <input type="text" 
-                               class="form-control" 
-                               id="vaultDescription" 
-                               @bind="vaultDescription" 
+                        <input type="text"
+                               class="form-control"
+                               id="vaultDescription"
+                               @bind="ViewModel.VaultDescription"
                                @bind:event="oninput"
                                placeholder="Enter vault description"
                                disabled="@IsCreating" />
                     </div>
-                    
+
                     <div class="mb-3">
                         <label for="vaultPassphrase" class="form-label">Passphrase</label>
-                        <input type="password" 
-                               class="form-control" 
-                               id="vaultPassphrase" 
-                               @bind="vaultPassphrase" 
+                        <input type="password"
+                               class="form-control"
+                               id="vaultPassphrase"
+                               @bind="ViewModel.VaultPassphrase"
                                @bind:event="oninput"
                                placeholder="Enter passphrase"
                                disabled="@IsCreating" />
                     </div>
-                    
+
                     <div class="mb-3">
                         <label for="vaultPassphraseConfirm" class="form-label">Confirm Passphrase</label>
-                        <input type="password" 
-                               class="form-control" 
-                               id="vaultPassphraseConfirm" 
-                               @bind="vaultPassphraseConfirm" 
+                        <input type="password"
+                               class="form-control"
+                               id="vaultPassphraseConfirm"
+                               @bind="ViewModel.VaultPassphraseConfirm"
                                @bind:event="oninput"
                                placeholder="Confirm passphrase"
                                disabled="@IsCreating" />
                     </div>
-                    
+
                     @if (!string.IsNullOrEmpty(ErrorMessage))
                     {
                         <div class="alert alert-danger" role="alert">
@@ -66,14 +66,14 @@
                     }
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" @onclick="HandleCancel" disabled="@IsCreating">
+                    <button type="button" class="btn btn-secondary" @onclick="ViewModel.CancelCommand.Execute" disabled="@IsCreating">
                         Cancel
                     </button>
-                    <button type="button" 
-                            class="btn btn-primary" 
+                    <button type="button"
+                            class="btn btn-primary"
                             id="create-vault-button"
-                            @onclick="HandleCreateVault" 
-                            disabled="@(!IsFormValid() || IsCreating)">
+                            @onclick="ViewModel.CreateVaultCommand.Execute"
+                            disabled="@(!ViewModel.IsFormValid || IsCreating)">
                         @if (IsCreating)
                         {
                             <span class="spinner-border spinner-border-sm me-2" role="status"></span>

@@ -1,8 +1,13 @@
 using Microsoft.AspNetCore.Components;
+using Blazing.Mvvm.Components;
+using clypse.portal.Application.ViewModels;
 
 namespace clypse.portal.Components;
 
-public partial class ConfirmDialog : ComponentBase
+/// <summary>
+/// Code-behind for the generic confirm dialog. Business logic is in <see cref="ConfirmDialogViewModel"/>.
+/// </summary>
+public partial class ConfirmDialog : MvvmComponentBase<ConfirmDialogViewModel>
 {
     [Parameter] public bool Show { get; set; }
     [Parameter] public string Message { get; set; } = "Are you sure you want to delete this item?";
@@ -10,12 +15,11 @@ public partial class ConfirmDialog : ComponentBase
     [Parameter] public EventCallback OnConfirm { get; set; }
     [Parameter] public EventCallback OnCancel { get; set; }
 
-    private async Task HandleBackdropClick()
+    protected override void OnParametersSet()
     {
-        // Only close if not currently processing
-        if (!IsProcessing)
-        {
-            await OnCancel.InvokeAsync();
-        }
+        ViewModel.IsProcessing = IsProcessing;
+        ViewModel.Message = Message;
+        ViewModel.OnConfirmCallback = () => OnConfirm.InvokeAsync();
+        ViewModel.OnCancelCallback = () => OnCancel.InvokeAsync();
     }
 }
