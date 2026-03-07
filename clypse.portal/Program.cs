@@ -3,7 +3,6 @@ using clypse.core.Cryptography.Interfaces;
 using clypse.core.Extensions;
 using clypse.portal;
 using clypse.portal.Application.Extensions;
-using clypse.portal.Extensions;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 
