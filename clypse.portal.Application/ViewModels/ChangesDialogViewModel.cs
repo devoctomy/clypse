@@ -23,6 +23,8 @@ public partial class ChangesDialogViewModel : ViewModelBase
     /// <summary>
     /// Initializes a new instance of <see cref="ChangesDialogViewModel"/>.
     /// </summary>
+    /// <param name="httpClient">The HTTP client used to fetch the changelog.</param>
+    /// <param name="logger">The logger instance.</param>
     public ChangesDialogViewModel(HttpClient httpClient, ILogger<ChangesDialogViewModel> logger)
     {
         this.httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));

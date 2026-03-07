@@ -38,6 +38,8 @@ public partial class CredentialsViewModel : ViewModelBase,
     /// <summary>
     /// Initializes a new instance of <see cref="CredentialsViewModel"/>.
     /// </summary>
+    /// <param name="vaultStateService">The vault state service.</param>
+    /// <param name="messenger">The messenger used for cross-component communication.</param>
     public CredentialsViewModel(IVaultStateService vaultStateService, IMessenger messenger)
     {
         this.vaultStateService = vaultStateService ?? throw new ArgumentNullException(nameof(vaultStateService));
@@ -133,6 +135,7 @@ public partial class CredentialsViewModel : ViewModelBase,
     }
 
     /// <summary>Opens the secret dialog to view a secret.</summary>
+    /// <param name="secretId">The ID of the secret to view.</param>
     [RelayCommand]
     public async Task ViewSecretAsync(string secretId)
     {
@@ -164,6 +167,7 @@ public partial class CredentialsViewModel : ViewModelBase,
     }
 
     /// <summary>Opens the secret dialog to edit a secret.</summary>
+    /// <param name="secretId">The ID of the secret to edit.</param>
     [RelayCommand]
     public async Task EditSecretAsync(string secretId)
     {
@@ -224,6 +228,7 @@ public partial class CredentialsViewModel : ViewModelBase,
     }
 
     /// <summary>Handles saving a secret (create or update based on current mode).</summary>
+    /// <param name="secret">The secret to save.</param>
     [RelayCommand]
     public async Task HandleSecretDialogSaveAsync(Secret secret)
     {
@@ -242,6 +247,7 @@ public partial class CredentialsViewModel : ViewModelBase,
     }
 
     /// <summary>Handles importing secrets from the import dialog.</summary>
+    /// <param name="result">The result of the import operation.</param>
     [RelayCommand]
     public async Task HandleImportSecretsAsync(ImportResult result)
     {
@@ -269,6 +275,8 @@ public partial class CredentialsViewModel : ViewModelBase,
     }
 
     /// <summary>Shows the delete confirmation for a secret.</summary>
+    /// <param name="secretId">The ID of the secret to delete.</param>
+    /// <param name="secretName">The display name of the secret to delete.</param>
     public void ShowDeleteConfirmationFor(string secretId, string secretName)
     {
         secretIdToDelete = secretId;

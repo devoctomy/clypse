@@ -30,6 +30,13 @@ public partial class HomeLayoutViewModel : ViewModelBase
     /// <summary>
     /// Initializes a new instance of <see cref="HomeLayoutViewModel"/>.
     /// </summary>
+    /// <param name="authService">The authentication service.</param>
+    /// <param name="userSettingsService">The user settings service.</param>
+    /// <param name="localStorageService">The local storage service.</param>
+    /// <param name="browserInteropService">The browser interop service.</param>
+    /// <param name="navigationService">The navigation service.</param>
+    /// <param name="navigationStateService">The navigation state service.</param>
+    /// <param name="appSettings">The application settings.</param>
     public HomeLayoutViewModel(
         IAuthenticationService authService,
         IUserSettingsService userSettingsService,

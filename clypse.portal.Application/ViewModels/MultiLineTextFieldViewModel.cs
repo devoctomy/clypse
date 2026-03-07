@@ -18,6 +18,7 @@ public partial class MultiLineTextFieldViewModel : ViewModelBase
     /// <summary>
     /// Called when the textarea value changes; propagates to the callback.
     /// </summary>
+    /// <param name="newValue">The new value entered by the user.</param>
     public async Task OnValueChangedAsync(string? newValue)
     {
         Value = newValue;

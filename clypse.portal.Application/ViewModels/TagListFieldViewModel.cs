@@ -46,6 +46,7 @@ public partial class TagListFieldViewModel : ViewModelBase
     }
 
     /// <summary>Removes a tag from the tags list.</summary>
+    /// <param name="tag">The tag string to remove.</param>
     [RelayCommand]
     public async Task RemoveTagAsync(string tag)
     {

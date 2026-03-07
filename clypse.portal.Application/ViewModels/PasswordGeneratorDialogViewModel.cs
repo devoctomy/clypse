@@ -31,6 +31,8 @@ public partial class PasswordGeneratorDialogViewModel : ViewModelBase
     /// <summary>
     /// Initializes a new instance of <see cref="PasswordGeneratorDialogViewModel"/>.
     /// </summary>
+    /// <param name="passwordGeneratorService">The password generator service.</param>
+    /// <param name="appSettings">The application settings.</param>
     public PasswordGeneratorDialogViewModel(IPasswordGeneratorService passwordGeneratorService, AppSettings appSettings)
     {
         this.passwordGeneratorService = passwordGeneratorService ?? throw new ArgumentNullException(nameof(passwordGeneratorService));

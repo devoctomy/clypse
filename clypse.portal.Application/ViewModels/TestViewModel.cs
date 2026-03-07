@@ -56,6 +56,12 @@ public partial class TestViewModel : ViewModelBase
     /// <summary>
     /// Initializes a new instance of <see cref="TestViewModel"/>.
     /// </summary>
+    /// <param name="authService">The authentication service.</param>
+    /// <param name="webAuthnService">The WebAuthn service.</param>
+    /// <param name="jsS3InvokerProvider">The JavaScript S3 invoker provider.</param>
+    /// <param name="cognitoConfig">The AWS Cognito configuration.</param>
+    /// <param name="awsS3Config">The AWS S3 configuration.</param>
+    /// <param name="navigationService">The navigation service.</param>
     public TestViewModel(
         IAuthenticationService authService,
         IWebAuthnService webAuthnService,

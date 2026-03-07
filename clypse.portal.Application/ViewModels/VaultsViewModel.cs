@@ -36,6 +36,13 @@ public partial class VaultsViewModel : ViewModelBase, IRecipient<RefreshVaultsMe
     /// <summary>
     /// Initializes a new instance of <see cref="VaultsViewModel"/>.
     /// </summary>
+    /// <param name="vaultStorage">The vault storage service.</param>
+    /// <param name="vaultManagerBootstrapperFactory">The vault manager bootstrapper factory.</param>
+    /// <param name="localStorageService">The local storage service.</param>
+    /// <param name="vaultStateService">The vault state service.</param>
+    /// <param name="jsS3InvokerProvider">The JavaScript S3 invoker provider.</param>
+    /// <param name="awsS3Config">The AWS S3 configuration.</param>
+    /// <param name="messenger">The messenger used for cross-component communication.</param>
     public VaultsViewModel(
         IVaultStorageService vaultStorage,
         IVaultManagerBootstrapperFactoryService vaultManagerBootstrapperFactory,
@@ -156,6 +163,7 @@ public partial class VaultsViewModel : ViewModelBase, IRecipient<RefreshVaultsMe
     }
 
     /// <summary>Shows the passphrase entry panel for the specified vault.</summary>
+    /// <param name="vault">The vault metadata to unlock.</param>
     [RelayCommand]
     public void ShowPassphrasePanelFor(VaultMetadata vault)
     {
@@ -174,6 +182,7 @@ public partial class VaultsViewModel : ViewModelBase, IRecipient<RefreshVaultsMe
     }
 
     /// <summary>Shows the vault details panel for the specified vault.</summary>
+    /// <param name="vault">The vault metadata to show details for.</param>
     [RelayCommand]
     public void ShowVaultDetailsPanelFor(VaultMetadata vault)
     {
@@ -192,6 +201,7 @@ public partial class VaultsViewModel : ViewModelBase, IRecipient<RefreshVaultsMe
     }
 
     /// <summary>Unlocks the selected vault with the given passphrase.</summary>
+    /// <param name="passphrase">The passphrase used to decrypt the vault.</param>
     [RelayCommand]
     public async Task HandleUnlockVaultAsync(string passphrase)
     {
@@ -254,6 +264,7 @@ public partial class VaultsViewModel : ViewModelBase, IRecipient<RefreshVaultsMe
     }
 
     /// <summary>Receives the refresh vaults message and reloads the vault list.</summary>
+    /// <param name="message">The refresh vaults message.</param>
     public async void Receive(RefreshVaultsMessage message)
     {
         await LoadVaultsAsync();

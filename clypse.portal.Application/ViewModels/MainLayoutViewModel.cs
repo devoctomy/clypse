@@ -23,6 +23,9 @@ public partial class MainLayoutViewModel : ViewModelBase
     /// <summary>
     /// Initializes a new instance of <see cref="MainLayoutViewModel"/>.
     /// </summary>
+    /// <param name="pwaUpdateService">The PWA update service.</param>
+    /// <param name="appSettings">The application settings.</param>
+    /// <param name="logger">The logger instance.</param>
     public MainLayoutViewModel(
         IPwaUpdateService pwaUpdateService,
         AppSettings appSettings,

@@ -31,6 +31,7 @@ public partial class ImportSecretsDialogViewModel : ViewModelBase
     /// <summary>
     /// Initializes a new instance of <see cref="ImportSecretsDialogViewModel"/>.
     /// </summary>
+    /// <param name="secretsImporterService">The secrets importer service.</param>
     public ImportSecretsDialogViewModel(ISecretsImporterService secretsImporterService)
     {
         this.secretsImporterService = secretsImporterService ?? throw new ArgumentNullException(nameof(secretsImporterService));
@@ -69,6 +70,7 @@ public partial class ImportSecretsDialogViewModel : ViewModelBase
     /// <summary>
     /// Returns the display name for a CSV import format.
     /// </summary>
+    /// <param name="format">The CSV import data format to get the display name for.</param>
     public static string GetFormatDisplayName(CsvImportDataFormat format)
     {
         return format switch
@@ -97,6 +99,7 @@ public partial class ImportSecretsDialogViewModel : ViewModelBase
     /// <summary>
     /// Handles a file being selected by the user.
     /// </summary>
+    /// <param name="e">The file change event arguments containing the selected file.</param>
     public async Task HandleFileSelectedAsync(InputFileChangeEventArgs e)
     {
         ErrorMessage = null;

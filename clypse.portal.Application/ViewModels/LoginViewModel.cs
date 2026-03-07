@@ -51,6 +51,14 @@ public partial class LoginViewModel : ViewModelBase
     /// <summary>
     /// Initializes a new instance of <see cref="LoginViewModel"/>.
     /// </summary>
+    /// <param name="authService">The authentication service.</param>
+    /// <param name="navigationService">The navigation service.</param>
+    /// <param name="userSettingsService">The user settings service.</param>
+    /// <param name="browserInteropService">The browser interop service.</param>
+    /// <param name="localStorageService">The local storage service.</param>
+    /// <param name="webAuthnService">The WebAuthn service for passkey authentication.</param>
+    /// <param name="cryptoService">The cryptographic service.</param>
+    /// <param name="appSettings">The application settings.</param>
     public LoginViewModel(
         IAuthenticationService authService,
         INavigationService navigationService,
@@ -164,6 +172,7 @@ public partial class LoginViewModel : ViewModelBase
     }
 
     /// <summary>Selects a saved user for login.</summary>
+    /// <param name="user">The saved user to select.</param>
     [RelayCommand]
     public async Task SelectUserAsync(SavedUser user)
     {
@@ -181,6 +190,7 @@ public partial class LoginViewModel : ViewModelBase
     }
 
     /// <summary>Removes a saved user from the list.</summary>
+    /// <param name="user">The saved user to remove.</param>
     [RelayCommand]
     public async Task RemoveUserAsync(SavedUser user)
     {

@@ -42,6 +42,16 @@ public partial class HomeViewModel : ViewModelBase
     /// <summary>
     /// Initializes a new instance of <see cref="HomeViewModel"/>.
     /// </summary>
+    /// <param name="authService">The authentication service.</param>
+    /// <param name="navigationService">The navigation service.</param>
+    /// <param name="vaultManagerFactory">The vault manager factory service.</param>
+    /// <param name="vaultStorage">The vault storage service.</param>
+    /// <param name="navigationStateService">The navigation state service.</param>
+    /// <param name="vaultStateService">The vault state service.</param>
+    /// <param name="jsS3InvokerProvider">The JavaScript S3 invoker provider.</param>
+    /// <param name="awsS3Config">The AWS S3 configuration.</param>
+    /// <param name="keyDerivationService">The key derivation service.</param>
+    /// <param name="messenger">The messenger used for cross-component communication.</param>
     public HomeViewModel(
         IAuthenticationService authService,
         INavigationService navigationService,
@@ -190,6 +200,7 @@ public partial class HomeViewModel : ViewModelBase
     }
 
     /// <summary>Creates a vault from the dialog request.</summary>
+    /// <param name="request">The vault creation request containing name, description, and passphrase.</param>
     [RelayCommand]
     public async Task HandleCreateVaultFromDialogAsync(VaultCreationRequest request)
     {

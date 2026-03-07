@@ -42,6 +42,8 @@ public partial class SecretDialogViewModel : ViewModelBase
     /// <summary>
     /// Initializes the dialog for editing a secret.
     /// </summary>
+    /// <param name="secret">The secret to edit.</param>
+    /// <param name="dialogMode">The CRUD dialog mode (Create, Read, Update, Delete).</param>
     public void InitializeForSecret(Secret secret, CrudDialogMode dialogMode)
     {
         Mode = dialogMode;
@@ -62,6 +64,7 @@ public partial class SecretDialogViewModel : ViewModelBase
     /// <summary>
     /// Called when the secret type selection changes.
     /// </summary>
+    /// <param name="newSecretType">The newly selected secret type.</param>
     public void OnSecretTypeChanged(SecretType newSecretType)
     {
         if (EditableSecret == null)
