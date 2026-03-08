@@ -22,7 +22,6 @@ public partial class HomeLayoutViewModel : ViewModelBase
     private readonly AppSettings appSettings;
 
     private Timer? sessionTimer;
-    private string? sessionTimeRemaining;
     private string currentTheme = "light";
     private string themeIcon = "bi-moon";
     private bool isExpanded;
