@@ -63,15 +63,6 @@ public partial class HomeLayoutViewModel : ViewModelBase
     public IReadOnlyList<NavigationItem> NavigationItems => navigationStateService.NavigationItems;
 
     /// <summary>
-    /// Gets the remaining session time display string.
-    /// </summary>
-    public string? SessionTimeRemaining
-    {
-        get => sessionTimeRemaining;
-        private set => SetProperty(ref sessionTimeRemaining, value);
-    }
-
-    /// <summary>
     /// Gets the current theme name.
     /// </summary>
     public string CurrentTheme
@@ -216,36 +207,16 @@ public partial class HomeLayoutViewModel : ViewModelBase
 
                     if (timeRemaining.TotalMinutes > 0)
                     {
-                        if (timeRemaining.TotalHours >= 1)
-                        {
-                            var hours = (int)timeRemaining.TotalHours;
-                            var minutes = timeRemaining.Minutes;
-                            SessionTimeRemaining = minutes > 0 ? $"{hours}h {minutes}m" : $"{hours}h";
-                        }
-                        else
-                        {
-                            var minutes = (int)timeRemaining.TotalMinutes;
-                            SessionTimeRemaining = $"{minutes} minute{(minutes != 1 ? "s" : string.Empty)}";
-                        }
-                    }
-                    else
-                    {
-                        SessionTimeRemaining = "expired";
+                        return;
                     }
                 }
-                else
-                {
-                    SessionTimeRemaining = null;
-                }
             }
-            else
-            {
-                SessionTimeRemaining = null;
-            }
+
+            await HandleLogoutAsync();
         }
         catch
         {
-            SessionTimeRemaining = null;
+            await HandleLogoutAsync();
         }
     }
 
