@@ -223,6 +223,12 @@ public partial class ImportSecretsDialogViewModel : ViewModelBase
                 Headers = secretsImporterService.ImportedHeaders.ToList();
                 PreviewData = secretsImporterService.ImportedSecrets.ToList();
             }
+            else
+            {
+                ErrorMessage = "No valid data found in the CSV file.";
+                Headers = null;
+                PreviewData = null;
+            }
         }
         catch (Exception ex)
         {
