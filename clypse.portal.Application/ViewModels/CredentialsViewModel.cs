@@ -111,20 +111,17 @@ public partial class CredentialsViewModel : ViewModelBase,
 
         if (string.IsNullOrWhiteSpace(SearchTerm))
         {
-            FilteredEntries = vaultStateService.CurrentVault.IndexEntries
-                .OrderBy(x => x.Name, StringComparer.OrdinalIgnoreCase)
-                .ToList();
+            FilteredEntries = [.. vaultStateService.CurrentVault.IndexEntries.OrderBy(x => x.Name, StringComparer.OrdinalIgnoreCase)];
             return;
         }
 
         var term = SearchTerm.Trim().ToLower();
-        FilteredEntries = vaultStateService.CurrentVault.IndexEntries
+        FilteredEntries = [.. vaultStateService.CurrentVault.IndexEntries
             .Where(entry =>
                 (entry.Name?.Contains(term, StringComparison.OrdinalIgnoreCase) ?? false) ||
                 (entry.Description?.Contains(term, StringComparison.OrdinalIgnoreCase) ?? false) ||
                 (entry.Tags?.Contains(term, StringComparison.OrdinalIgnoreCase) ?? false))
-            .OrderBy(e => e.Name, StringComparer.OrdinalIgnoreCase)
-            .ToList();
+            .OrderBy(e => e.Name, StringComparer.OrdinalIgnoreCase)];
     }
 
     /// <summary>Clears the search filter.</summary>
@@ -349,9 +346,7 @@ public partial class CredentialsViewModel : ViewModelBase,
     {
         if (vaultStateService.CurrentVault?.IndexEntries != null)
         {
-            FilteredEntries = vaultStateService.CurrentVault.IndexEntries
-                .OrderBy(e => e.Name, StringComparer.OrdinalIgnoreCase)
-                .ToList();
+            FilteredEntries = [.. vaultStateService.CurrentVault.IndexEntries.OrderBy(e => e.Name, StringComparer.OrdinalIgnoreCase)];
         }
         else
         {
