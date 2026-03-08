@@ -209,6 +209,10 @@ public partial class HomeLayoutViewModel : ViewModelBase
                     {
                         return;
                     }
+                    else
+                    {
+                        // TODO: If user is 'remembered' then we can automatically refresh credentials here instead of logging out
+                    }
                 }
             }
 
