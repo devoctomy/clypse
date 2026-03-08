@@ -140,31 +140,7 @@ public partial class CredentialsViewModel : ViewModelBase,
     [RelayCommand]
     public async Task ViewSecretAsync(string secretId)
     {
-        if (vaultStateService.VaultManager == null || vaultStateService.LoadedVault == null || string.IsNullOrEmpty(vaultStateService.CurrentVaultKey))
-        {
-            return;
-        }
-
-        try
-        {
-            IsLoadingSecret = true;
-            var secret = await vaultStateService.VaultManager.GetSecretAsync(vaultStateService.LoadedVault, secretId, vaultStateService.CurrentVaultKey, CancellationToken.None);
-
-            if (secret != null)
-            {
-                CurrentSecret = secret;
-                SecretDialogMode = CrudDialogMode.View;
-                ShowSecretDialog = true;
-            }
-        }
-        catch
-        {
-            // Error handling via loading state
-        }
-        finally
-        {
-            IsLoadingSecret = false;
-        }
+        await ViewOrUpdateSecret(secretId, false);
     }
 
     /// <summary>Opens the secret dialog to edit a secret.</summary>
@@ -173,31 +149,7 @@ public partial class CredentialsViewModel : ViewModelBase,
     [RelayCommand]
     public async Task EditSecretAsync(string secretId)
     {
-        if (vaultStateService.VaultManager == null || vaultStateService.LoadedVault == null || string.IsNullOrEmpty(vaultStateService.CurrentVaultKey))
-        {
-            return;
-        }
-
-        try
-        {
-            IsLoadingSecret = true;
-            var secret = await vaultStateService.VaultManager.GetSecretAsync(vaultStateService.LoadedVault, secretId, vaultStateService.CurrentVaultKey, CancellationToken.None);
-
-            if (secret != null)
-            {
-                CurrentSecret = secret;
-                SecretDialogMode = CrudDialogMode.Update;
-                ShowSecretDialog = true;
-            }
-        }
-        catch
-        {
-            // Error handling via loading state
-        }
-        finally
-        {
-            IsLoadingSecret = false;
-        }
+        await ViewOrUpdateSecret(secretId, true);
     }
 
     /// <summary>Opens the create secret dialog.</summary>
@@ -354,6 +306,37 @@ public partial class CredentialsViewModel : ViewModelBase,
         }
 
         base.Dispose(disposing);
+    }
+
+    private async Task ViewOrUpdateSecret(
+        string secretId,
+        bool update)
+    {
+        if (vaultStateService.VaultManager == null || vaultStateService.LoadedVault == null || string.IsNullOrEmpty(vaultStateService.CurrentVaultKey))
+        {
+            return;
+        }
+
+        try
+        {
+            IsLoadingSecret = true;
+            var secret = await vaultStateService.VaultManager.GetSecretAsync(vaultStateService.LoadedVault, secretId, vaultStateService.CurrentVaultKey, CancellationToken.None);
+
+            if (secret != null)
+            {
+                CurrentSecret = secret;
+                SecretDialogMode = update ? CrudDialogMode.Update : CrudDialogMode.View;
+                ShowSecretDialog = true;
+            }
+        }
+        catch
+        {
+            // Error handling via loading state
+        }
+        finally
+        {
+            IsLoadingSecret = false;
+        }
     }
 
     private void OnVaultStateChanged(object? sender, EventArgs e)
