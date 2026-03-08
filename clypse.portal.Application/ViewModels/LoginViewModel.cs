@@ -254,23 +254,8 @@ public partial class LoginViewModel : ViewModelBase
 
             if (result.Success)
             {
-                if (RememberMe && !string.IsNullOrEmpty(Username))
-                {
-                    await SaveUserAsync(Username);
-
-                    if (appSettings.EnablePortalLoginAuthn)
-                    {
-                        ShowWebAuthnPrompt = true;
-                    }
-                    else
-                    {
-                        navigationService.NavigateTo("/");
-                    }
-                }
-                else
-                {
-                    navigationService.NavigateTo("/");
-                }
+                var rememberMe = RememberMe && !string.IsNullOrEmpty(Username);
+                await DoLogin(rememberMe);
             }
             else if (result.PasswordResetRequired)
             {
@@ -313,23 +298,8 @@ public partial class LoginViewModel : ViewModelBase
 
             if (result.Success)
             {
-                if (rememberMeWhenResetStarted && !string.IsNullOrEmpty(Username))
-                {
-                    await SaveUserAsync(Username);
-
-                    if (appSettings.EnablePortalLoginAuthn)
-                    {
-                        ShowWebAuthnPrompt = true;
-                    }
-                    else
-                    {
-                        navigationService.NavigateTo("/");
-                    }
-                }
-                else
-                {
-                    navigationService.NavigateTo("/");
-                }
+                var rememberMe = rememberMeWhenResetStarted && !string.IsNullOrEmpty(Username);
+                await DoLogin(rememberMe);
             }
             else
             {
@@ -539,6 +509,27 @@ public partial class LoginViewModel : ViewModelBase
         finally
         {
             IsLoading = false;
+        }
+    }
+
+    private async Task DoLogin(bool rememberMe)
+    {
+        if (rememberMe)
+        {
+            await SaveUserAsync(Username);
+
+            if (appSettings.EnablePortalLoginAuthn)
+            {
+                ShowWebAuthnPrompt = true;
+            }
+            else
+            {
+                navigationService.NavigateTo("/");
+            }
+        }
+        else
+        {
+            navigationService.NavigateTo("/");
         }
     }
 
