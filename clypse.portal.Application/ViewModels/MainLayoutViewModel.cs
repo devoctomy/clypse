@@ -198,9 +198,11 @@ public partial class MainLayoutViewModel : ViewModelBase
             {
                 try
                 {
-                    var wasUpdateAvailable = UpdateAvailable;
                     UpdateAvailable = await pwaUpdateService.IsUpdateAvailableAsync();
-                    throw new OperationCanceledException();
+                    if (UpdateAvailable)
+                    {
+                        throw new OperationCanceledException();
+                    }
                 }
                 catch (OperationCanceledException)
                 {
