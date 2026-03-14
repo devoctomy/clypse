@@ -231,27 +231,7 @@ public partial class PasswordGeneratorDialogViewModel : ViewModelBase
             }
             else
             {
-                var characterGroups = CharacterGroup.None;
-                if (IncludeLowercase)
-                {
-                    characterGroups |= CharacterGroup.Lowercase;
-                }
-
-                if (IncludeUppercase)
-                {
-                    characterGroups |= CharacterGroup.Uppercase;
-                }
-
-                if (IncludeDigits)
-                {
-                    characterGroups |= CharacterGroup.Digits;
-                }
-
-                if (IncludeSpecial)
-                {
-                    characterGroups |= CharacterGroup.Special;
-                }
-
+                var characterGroups = GetCharacterGroups();
                 if (characterGroups == CharacterGroup.None)
                 {
                     GeneratedPassword = "Please select at least one character type";
@@ -266,5 +246,32 @@ public partial class PasswordGeneratorDialogViewModel : ViewModelBase
         {
             GeneratedPassword = $"Error: {ex.Message}";
         }
+    }
+
+    private CharacterGroup GetCharacterGroups()
+    {
+        var characterGroups = CharacterGroup.None;
+
+        if (IncludeLowercase)
+        {
+            characterGroups |= CharacterGroup.Lowercase;
+        }
+
+        if (IncludeUppercase)
+        {
+            characterGroups |= CharacterGroup.Uppercase;
+        }
+
+        if (IncludeDigits)
+        {
+            characterGroups |= CharacterGroup.Digits;
+        }
+
+        if (IncludeSpecial)
+        {
+            characterGroups |= CharacterGroup.Special;
+        }
+
+        return characterGroups;
     }
 }
