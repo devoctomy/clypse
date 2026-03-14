@@ -23,7 +23,7 @@ public partial class PasswordFieldViewModel : ViewModelBase, IDisposable
     /// Initializes a new instance of the <see cref="PasswordFieldViewModel"/> class.
     /// </summary>
     /// <param name="passwordComplexityEstimator">Optional service for estimating password complexity.</param>
-    public PasswordFieldViewModel(IPasswordComplexityEstimatorService? passwordComplexityEstimator = null)
+    public PasswordFieldViewModel(IPasswordComplexityEstimatorService? passwordComplexityEstimator)
     {
         this.passwordComplexityEstimator = passwordComplexityEstimator;
     }
