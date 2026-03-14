@@ -26,6 +26,7 @@ public partial class HomeViewModel : ViewModelBase
     private readonly AwsS3Config awsS3Config;
     private readonly IKeyDerivationService keyDerivationService;
     private readonly IMessenger messenger;
+    private readonly Dictionary<string, Func<Task>>? actionHandlers;
 
     private string currentPage = "vaults";
     private bool showVerifyDialog;
@@ -37,6 +38,47 @@ public partial class HomeViewModel : ViewModelBase
     private bool showCreateVaultDialog;
     private bool isCreatingVault;
     private string? createVaultErrorMessage;
+
+    private Dictionary<string, Func<Task>> BuildActionHandlers() => new ()
+    {
+        ["create-vault"] = () =>
+        {
+            ShowCreateVaultDialogInternal();
+            return Task.CompletedTask;
+        },
+        ["show-vaults"] = () =>
+        {
+            CurrentPage = "vaults";
+            UpdateNavigationItems();
+            return Task.CompletedTask;
+        },
+        ["delete-vault"] = () =>
+        {
+            ShowDeleteVaultDialogInternal();
+            return Task.CompletedTask;
+        },
+        ["create-credential"] = () =>
+        {
+            messenger.Send(new ShowCreateCredentialMessage());
+            return Task.CompletedTask;
+        },
+        ["import"] = () =>
+        {
+            messenger.Send(new ShowImportMessage());
+            return Task.CompletedTask;
+        },
+        ["lock-vault"] = HandleLockVaultAsync,
+        ["refresh"] = async () =>
+        {
+            await HandleRefreshAsync();
+            UpdateNavigationItems();
+        },
+        ["verify"] = async () =>
+        {
+            await HandleVerifyAsync();
+            UpdateNavigationItems();
+        },
+    };
 
     /// <summary>
     /// Initializes a new instance of the <see cref="HomeViewModel"/> class.
@@ -73,7 +115,7 @@ public partial class HomeViewModel : ViewModelBase
         this.awsS3Config = awsS3Config ?? throw new ArgumentNullException(nameof(awsS3Config));
         this.keyDerivationService = keyDerivationService ?? throw new ArgumentNullException(nameof(keyDerivationService));
         this.messenger = messenger ?? throw new ArgumentNullException(nameof(messenger));
-
+        this.actionHandlers = BuildActionHandlers();
         this.navigationStateService.NavigationActionRequested += OnNavigationActionRequested;
         this.vaultStateService.VaultStateChanged += OnVaultStateChanged;
     }
@@ -259,45 +301,15 @@ public partial class HomeViewModel : ViewModelBase
 
     private async Task HandleNavigationActionAsync(string action)
     {
-        switch (action)
+        if (this.actionHandlers == null)
         {
-            case "create-vault":
-                ShowCreateVaultDialogInternal();
-                return;
-
-            case "show-vaults":
-                CurrentPage = "vaults";
-                break;
-
-            case "delete-vault":
-                ShowDeleteVaultDialogInternal();
-                return;
-
-            case "create-credential":
-                messenger.Send(new ShowCreateCredentialMessage());
-                return;
-
-            case "import":
-                messenger.Send(new ShowImportMessage());
-                return;
-
-            case "lock-vault":
-                await HandleLockVaultAsync();
-                return;
-
-            case "refresh":
-                await HandleRefreshAsync();
-                break;
-
-            case "verify":
-                await HandleVerifyAsync();
-                break;
-
-            default:
-                return;
+            return;
         }
 
-        UpdateNavigationItems();
+        if (this.actionHandlers.TryGetValue(action, out var handler))
+        {
+            await handler();
+        }
     }
 
     private void UpdateNavigationItems()
