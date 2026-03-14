@@ -1,4 +1,3 @@
-using System.Net.Http;
 using System.Text.Json;
 using Blazing.Mvvm.ComponentModel;
 using clypse.portal.Models.Changes;
@@ -12,6 +11,11 @@ namespace clypse.portal.Application.ViewModels;
 /// </summary>
 public partial class ChangesDialogViewModel : ViewModelBase
 {
+    private static readonly JsonSerializerOptions JsonSerializerOptions = new ()
+    {
+        PropertyNameCaseInsensitive = true,
+    };
+
     private readonly HttpClient httpClient;
     private readonly ILogger<ChangesDialogViewModel> logger;
 
@@ -99,10 +103,7 @@ public partial class ChangesDialogViewModel : ViewModelBase
         try
         {
             var json = await httpClient.GetStringAsync("changes.json");
-            ChangeLog = JsonSerializer.Deserialize<ChangeLog>(json, new JsonSerializerOptions
-            {
-                PropertyNameCaseInsensitive = true,
-            });
+            ChangeLog = JsonSerializer.Deserialize<ChangeLog>(json, JsonSerializerOptions);
         }
         catch (Exception ex)
         {

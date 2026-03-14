@@ -1,4 +1,3 @@
-using System.Timers;
 using Blazing.Mvvm.ComponentModel;
 using clypse.core.Enums;
 using clypse.core.Password;

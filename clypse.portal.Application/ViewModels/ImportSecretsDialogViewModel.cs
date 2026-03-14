@@ -220,8 +220,8 @@ public partial class ImportSecretsDialogViewModel : ViewModelBase
             var importCount = secretsImporterService.ReadData(csvContent);
             if (importCount > 0)
             {
-                Headers = secretsImporterService.ImportedHeaders.ToList();
-                PreviewData = secretsImporterService.ImportedSecrets.ToList();
+                Headers = [.. secretsImporterService.ImportedHeaders];
+                PreviewData = [.. secretsImporterService.ImportedSecrets];
             }
             else
             {

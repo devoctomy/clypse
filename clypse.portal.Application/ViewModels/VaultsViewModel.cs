@@ -125,7 +125,7 @@ public partial class VaultsViewModel : ViewModelBase, IRecipient<RefreshVaultsMe
             }
 
             var vaultListingsResult = await bootstrapperService.ListVaultsAsync(CancellationToken.None);
-            VaultListings = vaultListingsResult.ToList();
+            VaultListings = [.. vaultListingsResult];
 
             var storedVaults = await vaultStorage.GetVaultsAsync();
 
@@ -246,7 +246,7 @@ public partial class VaultsViewModel : ViewModelBase, IRecipient<RefreshVaultsMe
                 Id = SelectedVault.Id,
                 Name = SelectedVault.Name,
                 Description = SelectedVault.Description,
-                IndexEntries = vault.Index.Entries.ToList(),
+                IndexEntries = [.. vault.Index.Entries],
             };
 
             HidePassphrasePanel();

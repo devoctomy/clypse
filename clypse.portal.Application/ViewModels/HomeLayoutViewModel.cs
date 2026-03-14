@@ -160,6 +160,27 @@ public partial class HomeLayoutViewModel : ViewModelBase
         base.Dispose(disposing);
     }
 
+    private static bool ValidateCredentialsExpiry(StoredCredentials? credentials)
+    {
+        if (credentials != null && !string.IsNullOrEmpty(credentials.ExpirationTime))
+        {
+            var expirationTime = DateTime.Parse(credentials.ExpirationTime);
+            var timeRemaining = expirationTime - DateTime.UtcNow;
+
+            if (timeRemaining.TotalMinutes > 0)
+            {
+                return false;
+            }
+            else
+            {
+                // TODO: If user is 'remembered' then we can automatically refresh credentials here instead of logging out, but for now we will just log out when credentials expire
+                return false;
+            }
+        }
+
+        return true;
+    }
+
     private async Task InitializeThemeAsync()
     {
         try
@@ -199,19 +220,10 @@ public partial class HomeLayoutViewModel : ViewModelBase
             {
                 var credentials = JsonSerializer.Deserialize<StoredCredentials>(credentialsJson);
 
-                if (credentials != null && !string.IsNullOrEmpty(credentials.ExpirationTime))
+                bool valid = ValidateCredentialsExpiry(credentials);
+                if (!valid)
                 {
-                    var expirationTime = DateTime.Parse(credentials.ExpirationTime);
-                    var timeRemaining = expirationTime - DateTime.UtcNow;
-
-                    if (timeRemaining.TotalMinutes > 0)
-                    {
-                        return;
-                    }
-                    else
-                    {
-                        // TODO: If user is 'remembered' then we can automatically refresh credentials here instead of logging out
-                    }
+                    return;
                 }
             }
 

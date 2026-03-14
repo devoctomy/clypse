@@ -204,7 +204,9 @@ public partial class CredentialsViewModel : ViewModelBase,
     [RelayCommand]
     public async Task HandleImportSecretsAsync(ImportResult result)
     {
-        if (vaultStateService.VaultManager == null || vaultStateService.LoadedVault == null || string.IsNullOrEmpty(vaultStateService.CurrentVaultKey))
+        if (vaultStateService.VaultManager == null ||
+            vaultStateService.LoadedVault == null ||
+            string.IsNullOrEmpty(vaultStateService.CurrentVaultKey))
         {
             return;
         }
@@ -215,7 +217,11 @@ public partial class CredentialsViewModel : ViewModelBase,
 
             if (addResult)
             {
-                await vaultStateService.VaultManager.SaveAsync(vaultStateService.LoadedVault, vaultStateService.CurrentVaultKey, null, CancellationToken.None);
+                await vaultStateService.VaultManager.SaveAsync(
+                    vaultStateService.LoadedVault,
+                    vaultStateService.CurrentVaultKey,
+                    null,
+                    CancellationToken.None);
                 await RefreshVaultStateAsync();
             }
 
@@ -251,7 +257,10 @@ public partial class CredentialsViewModel : ViewModelBase,
     [RelayCommand]
     public async Task HandleDeleteSecretAsync()
     {
-        if (vaultStateService.VaultManager == null || vaultStateService.LoadedVault == null || string.IsNullOrEmpty(vaultStateService.CurrentVaultKey) || string.IsNullOrEmpty(secretIdToDelete))
+        if (vaultStateService.VaultManager == null ||
+            vaultStateService.LoadedVault == null ||
+            string.IsNullOrEmpty(vaultStateService.CurrentVaultKey) ||
+            string.IsNullOrEmpty(secretIdToDelete))
         {
             CancelDeleteConfirmation();
             return;
@@ -264,7 +273,11 @@ public partial class CredentialsViewModel : ViewModelBase,
 
             if (deleted)
             {
-                await vaultStateService.VaultManager.SaveAsync(vaultStateService.LoadedVault, vaultStateService.CurrentVaultKey, null, CancellationToken.None);
+                await vaultStateService.VaultManager.SaveAsync(
+                    vaultStateService.LoadedVault,
+                    vaultStateService.CurrentVaultKey,
+                    null,
+                    CancellationToken.None);
                 await RefreshVaultStateAsync();
             }
 
@@ -309,7 +322,9 @@ public partial class CredentialsViewModel : ViewModelBase,
         string secretId,
         bool update)
     {
-        if (vaultStateService.VaultManager == null || vaultStateService.LoadedVault == null || string.IsNullOrEmpty(vaultStateService.CurrentVaultKey))
+        if (vaultStateService.VaultManager == null ||
+            vaultStateService.LoadedVault == null ||
+            string.IsNullOrEmpty(vaultStateService.CurrentVaultKey))
         {
             return;
         }
@@ -317,7 +332,11 @@ public partial class CredentialsViewModel : ViewModelBase,
         try
         {
             IsLoadingSecret = true;
-            var secret = await vaultStateService.VaultManager.GetSecretAsync(vaultStateService.LoadedVault, secretId, vaultStateService.CurrentVaultKey, CancellationToken.None);
+            var secret = await vaultStateService.VaultManager.GetSecretAsync(
+                vaultStateService.LoadedVault,
+                secretId,
+                vaultStateService.CurrentVaultKey,
+                CancellationToken.None);
 
             if (secret != null)
             {
@@ -356,7 +375,9 @@ public partial class CredentialsViewModel : ViewModelBase,
 
     private async Task HandleSaveSecretAsync(Secret editedSecret)
     {
-        if (vaultStateService.VaultManager == null || vaultStateService.LoadedVault == null || string.IsNullOrEmpty(vaultStateService.CurrentVaultKey))
+        if (vaultStateService.VaultManager == null ||
+            vaultStateService.LoadedVault == null ||
+            string.IsNullOrEmpty(vaultStateService.CurrentVaultKey))
         {
             return;
         }
@@ -365,7 +386,11 @@ public partial class CredentialsViewModel : ViewModelBase,
         {
             IsSavingSecret = true;
             vaultStateService.LoadedVault.UpdateSecret(editedSecret);
-            await vaultStateService.VaultManager.SaveAsync(vaultStateService.LoadedVault, vaultStateService.CurrentVaultKey, null, CancellationToken.None);
+            await vaultStateService.VaultManager.SaveAsync(
+                vaultStateService.LoadedVault,
+                vaultStateService.CurrentVaultKey,
+                null,
+                CancellationToken.None);
             CloseSecretDialog();
             await RefreshVaultStateAsync();
         }
@@ -381,7 +406,9 @@ public partial class CredentialsViewModel : ViewModelBase,
 
     private async Task HandleCreateSecretAsync(Secret newSecret)
     {
-        if (vaultStateService.VaultManager == null || vaultStateService.LoadedVault == null || string.IsNullOrEmpty(vaultStateService.CurrentVaultKey))
+        if (vaultStateService.VaultManager == null ||
+            vaultStateService.LoadedVault == null ||
+            string.IsNullOrEmpty(vaultStateService.CurrentVaultKey))
         {
             return;
         }
@@ -390,7 +417,11 @@ public partial class CredentialsViewModel : ViewModelBase,
         {
             IsSavingSecret = true;
             vaultStateService.LoadedVault.AddSecret(newSecret);
-            await vaultStateService.VaultManager.SaveAsync(vaultStateService.LoadedVault, vaultStateService.CurrentVaultKey, null, CancellationToken.None);
+            await vaultStateService.VaultManager.SaveAsync(
+                vaultStateService.LoadedVault,
+                vaultStateService.CurrentVaultKey,
+                null,
+                CancellationToken.None);
             CloseSecretDialog();
             await RefreshVaultStateAsync();
         }
@@ -406,7 +437,9 @@ public partial class CredentialsViewModel : ViewModelBase,
 
     private async Task RefreshVaultStateAsync()
     {
-        if (vaultStateService.VaultManager == null || vaultStateService.CurrentVault == null || string.IsNullOrEmpty(vaultStateService.CurrentVaultKey))
+        if (vaultStateService.VaultManager == null ||
+            vaultStateService.CurrentVault == null ||
+            string.IsNullOrEmpty(vaultStateService.CurrentVaultKey))
         {
             return;
         }
