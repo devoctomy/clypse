@@ -39,47 +39,6 @@ public partial class HomeViewModel : ViewModelBase
     private bool isCreatingVault;
     private string? createVaultErrorMessage;
 
-    private Dictionary<string, Func<Task>> BuildActionHandlers() => new ()
-    {
-        ["create-vault"] = () =>
-        {
-            ShowCreateVaultDialogInternal();
-            return Task.CompletedTask;
-        },
-        ["show-vaults"] = () =>
-        {
-            CurrentPage = "vaults";
-            UpdateNavigationItems();
-            return Task.CompletedTask;
-        },
-        ["delete-vault"] = () =>
-        {
-            ShowDeleteVaultDialogInternal();
-            return Task.CompletedTask;
-        },
-        ["create-credential"] = () =>
-        {
-            messenger.Send(new ShowCreateCredentialMessage());
-            return Task.CompletedTask;
-        },
-        ["import"] = () =>
-        {
-            messenger.Send(new ShowImportMessage());
-            return Task.CompletedTask;
-        },
-        ["lock-vault"] = HandleLockVaultAsync,
-        ["refresh"] = async () =>
-        {
-            await HandleRefreshAsync();
-            UpdateNavigationItems();
-        },
-        ["verify"] = async () =>
-        {
-            await HandleVerifyAsync();
-            UpdateNavigationItems();
-        },
-    };
-
     /// <summary>
     /// Initializes a new instance of the <see cref="HomeViewModel"/> class.
     /// </summary>
@@ -105,16 +64,27 @@ public partial class HomeViewModel : ViewModelBase
         IKeyDerivationService keyDerivationService,
         IMessenger messenger)
     {
-        this.authService = authService ?? throw new ArgumentNullException(nameof(authService));
-        this.navigationService = navigationService ?? throw new ArgumentNullException(nameof(navigationService));
-        this.vaultManagerFactory = vaultManagerFactory ?? throw new ArgumentNullException(nameof(vaultManagerFactory));
-        this.vaultStorage = vaultStorage ?? throw new ArgumentNullException(nameof(vaultStorage));
-        this.navigationStateService = navigationStateService ?? throw new ArgumentNullException(nameof(navigationStateService));
-        this.vaultStateService = vaultStateService ?? throw new ArgumentNullException(nameof(vaultStateService));
-        this.jsS3InvokerProvider = jsS3InvokerProvider ?? throw new ArgumentNullException(nameof(jsS3InvokerProvider));
-        this.awsS3Config = awsS3Config ?? throw new ArgumentNullException(nameof(awsS3Config));
-        this.keyDerivationService = keyDerivationService ?? throw new ArgumentNullException(nameof(keyDerivationService));
-        this.messenger = messenger ?? throw new ArgumentNullException(nameof(messenger));
+        ArgumentNullException.ThrowIfNull(authService, nameof(authService));
+        ArgumentNullException.ThrowIfNull(navigationService, nameof(navigationService));
+        ArgumentNullException.ThrowIfNull(vaultManagerFactory, nameof(vaultManagerFactory));
+        ArgumentNullException.ThrowIfNull(vaultStorage, nameof(vaultStorage));
+        ArgumentNullException.ThrowIfNull(navigationStateService, nameof(navigationStateService));
+        ArgumentNullException.ThrowIfNull(vaultStateService, nameof(vaultStateService));
+        ArgumentNullException.ThrowIfNull(jsS3InvokerProvider, nameof(jsS3InvokerProvider));
+        ArgumentNullException.ThrowIfNull(awsS3Config, nameof(awsS3Config));
+        ArgumentNullException.ThrowIfNull(keyDerivationService, nameof(keyDerivationService));
+        ArgumentNullException.ThrowIfNull(messenger, nameof(messenger));
+
+        this.authService = authService;
+        this.navigationService = navigationService;
+        this.vaultManagerFactory = vaultManagerFactory;
+        this.vaultStorage = vaultStorage;
+        this.navigationStateService = navigationStateService;
+        this.vaultStateService = vaultStateService;
+        this.jsS3InvokerProvider = jsS3InvokerProvider;
+        this.awsS3Config = awsS3Config;
+        this.keyDerivationService = keyDerivationService;
+        this.messenger = messenger;
         this.actionHandlers = BuildActionHandlers();
         this.navigationStateService.NavigationActionRequested += OnNavigationActionRequested;
         this.vaultStateService.VaultStateChanged += OnVaultStateChanged;
@@ -278,6 +248,47 @@ public partial class HomeViewModel : ViewModelBase
 
         base.Dispose(disposing);
     }
+
+    private Dictionary<string, Func<Task>> BuildActionHandlers() => new ()
+    {
+        ["create-vault"] = () =>
+        {
+            ShowCreateVaultDialogInternal();
+            return Task.CompletedTask;
+        },
+        ["show-vaults"] = () =>
+        {
+            CurrentPage = "vaults";
+            UpdateNavigationItems();
+            return Task.CompletedTask;
+        },
+        ["delete-vault"] = () =>
+        {
+            ShowDeleteVaultDialogInternal();
+            return Task.CompletedTask;
+        },
+        ["create-credential"] = () =>
+        {
+            messenger.Send(new ShowCreateCredentialMessage());
+            return Task.CompletedTask;
+        },
+        ["import"] = () =>
+        {
+            messenger.Send(new ShowImportMessage());
+            return Task.CompletedTask;
+        },
+        ["lock-vault"] = HandleLockVaultAsync,
+        ["refresh"] = async () =>
+        {
+            await HandleRefreshAsync();
+            UpdateNavigationItems();
+        },
+        ["verify"] = async () =>
+        {
+            await HandleVerifyAsync();
+            UpdateNavigationItems();
+        },
+    };
 
     private void OnNavigationActionRequested(object? sender, string action)
     {
