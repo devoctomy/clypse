@@ -264,31 +264,37 @@ public partial class HomeViewModel : ViewModelBase
             case "create-vault":
                 ShowCreateVaultDialogInternal();
                 return;
+
             case "show-vaults":
                 CurrentPage = "vaults";
                 break;
-            case "delete-vault":
-                if (vaultStateService.CurrentVault != null)
-                {
-                    ShowDeleteVaultDialogInternal();
-                }
 
+            case "delete-vault":
+                ShowDeleteVaultDialogInternal();
                 return;
+
             case "create-credential":
                 messenger.Send(new ShowCreateCredentialMessage());
                 return;
+
             case "import":
                 messenger.Send(new ShowImportMessage());
                 return;
+
             case "lock-vault":
                 await HandleLockVaultAsync();
                 return;
+
             case "refresh":
                 await HandleRefreshAsync();
                 break;
+
             case "verify":
                 await HandleVerifyAsync();
                 break;
+
+            default:
+                return;
         }
 
         UpdateNavigationItems();
