@@ -200,8 +200,7 @@ public partial class MainLayoutViewModel : ViewModelBase
                 {
                     var wasUpdateAvailable = UpdateAvailable;
                     UpdateAvailable = await pwaUpdateService.IsUpdateAvailableAsync();
-
-                    await Task.Delay(30000, cancellationToken);
+                    throw new OperationCanceledException();
                 }
                 catch (OperationCanceledException)
                 {
@@ -210,7 +209,7 @@ public partial class MainLayoutViewModel : ViewModelBase
                 catch (Exception ex)
                 {
                     logger.LogError(ex, "Error checking for updates");
-                    await Task.Delay(60000, cancellationToken);
+                    return;
                 }
             }
         }
