@@ -5,9 +5,9 @@ using clypse.portal.Application.ViewModels;
 namespace clypse.portal.Components.Fields;
 
 /// <summary>
-/// Code-behind for the multi-line text field component. Logic is in <see cref="MultiLineTextFieldViewModel"/>.
+/// Code-behind for the multi-line text field component. Logic is in <see cref="TextFieldViewModel"/>.
 /// </summary>
-public partial class MultiLineTextField : MvvmComponentBase<MultiLineTextFieldViewModel>
+public partial class MultiLineTextField : MvvmComponentBase<TextFieldViewModel>
 {
     [Parameter] public string Label { get; set; } = string.Empty;
     [Parameter] public string? Value { get; set; }

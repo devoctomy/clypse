@@ -3,9 +3,9 @@ using Blazing.Mvvm.ComponentModel;
 namespace clypse.portal.Application.ViewModels;
 
 /// <summary>
-/// ViewModel for the multi-line text field component.
+/// ViewModel for text field components (single-line and multi-line).
 /// </summary>
-public partial class MultiLineTextFieldViewModel : ViewModelBase
+public partial class TextFieldViewModel : ViewModelBase
 {
     private string? value;
 
@@ -16,7 +16,7 @@ public partial class MultiLineTextFieldViewModel : ViewModelBase
     public Func<string?, Task>? ValueChangedCallback { get; set; }
 
     /// <summary>
-    /// Called when the textarea value changes; propagates to the callback.
+    /// Called when the field value changes; propagates to the callback.
     /// </summary>
     /// <param name="newValue">The new value entered by the user.</param>
     /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>

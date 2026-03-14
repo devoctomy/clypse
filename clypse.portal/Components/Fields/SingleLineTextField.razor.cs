@@ -5,9 +5,9 @@ using clypse.portal.Application.ViewModels;
 namespace clypse.portal.Components.Fields;
 
 /// <summary>
-/// Code-behind for the single-line text field component. Logic is in <see cref="SingleLineTextFieldViewModel"/>.
+/// Code-behind for the single-line text field component. Logic is in <see cref="TextFieldViewModel"/>.
 /// </summary>
-public partial class SingleLineTextField : MvvmComponentBase<SingleLineTextFieldViewModel>
+public partial class SingleLineTextField : MvvmComponentBase<TextFieldViewModel>
 {
     [Parameter] public string Label { get; set; } = string.Empty;
     [Parameter] public string? Value { get; set; }
