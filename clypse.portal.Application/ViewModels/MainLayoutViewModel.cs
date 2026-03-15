@@ -19,6 +19,7 @@ public partial class MainLayoutViewModel : ViewModelBase
     private bool updateAvailable;
     private bool isUpdating;
     private bool showChangesDialog;
+    private Task? updateLoopTask;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="MainLayoutViewModel"/> class.
@@ -80,7 +81,7 @@ public partial class MainLayoutViewModel : ViewModelBase
         {
             await SetupPwaUpdateServiceAsync();
             updateLoopCts = new CancellationTokenSource();
-            _ = RunUpdateLoopAsync(updateLoopCts.Token);
+            this.updateLoopTask = RunUpdateLoopAsync(updateLoopCts.Token);
         }
     }
 
@@ -213,6 +214,8 @@ public partial class MainLayoutViewModel : ViewModelBase
                     logger.LogError(ex, "Error checking for updates");
                     return;
                 }
+
+                await Task.Delay(30000, cancellationToken);
             }
         }
         catch (OperationCanceledException)
