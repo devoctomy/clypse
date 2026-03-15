@@ -18,7 +18,7 @@ public class VaultsViewModelTests : IDisposable
     private readonly Mock<IVaultStateService> mockVaultStateService;
     private readonly Mock<IJsS3InvokerProvider> mockJsS3InvokerProvider;
     private readonly AwsS3Config awsS3Config;
-    private readonly IMessenger messenger;
+    private readonly WeakReferenceMessenger messenger;
 
     public VaultsViewModelTests()
     {
@@ -274,9 +274,9 @@ public class VaultsViewModelTests : IDisposable
         var sut = CreateSut();
         SetupValidCredentials();
         var mockBootstrapper = CreateMockBootstrapper(
-            new List<VaultListing> { new VaultListing { Id = "vault-1", Manifest = new VaultManifest() } });
+            [new VaultListing { Id = "vault-1", Manifest = new VaultManifest() }]);
         SetupBootstrapperFactory(mockBootstrapper);
-        this.mockVaultStorage.Setup(x => x.GetVaultsAsync()).ReturnsAsync(new List<VaultMetadata>());
+        this.mockVaultStorage.Setup(x => x.GetVaultsAsync()).ReturnsAsync([]);
         await sut.LoadVaultsAsync();
 
         var vault = new VaultMetadata { Id = "vault-1" };
@@ -311,13 +311,12 @@ public class VaultsViewModelTests : IDisposable
         var sut = CreateSut();
         SetupValidCredentials();
         var mockBootstrapper = CreateMockBootstrapper(
-            new List<VaultListing>
-            {
+            [
                 new VaultListing { Id = "vault-1" },
                 new VaultListing { Id = "vault-2" },
-            });
+            ]);
         SetupBootstrapperFactory(mockBootstrapper);
-        this.mockVaultStorage.Setup(x => x.GetVaultsAsync()).ReturnsAsync(new List<VaultMetadata>());
+        this.mockVaultStorage.Setup(x => x.GetVaultsAsync()).ReturnsAsync([]);
 
         await sut.LoadVaultsAsync();
 
@@ -332,14 +331,14 @@ public class VaultsViewModelTests : IDisposable
         var sut = CreateSut();
         SetupValidCredentials();
         var mockBootstrapper = CreateMockBootstrapper(
-            new List<VaultListing> { new VaultListing { Id = "vault-1" } });
+            [new() { Id = "vault-1" }]);
         SetupBootstrapperFactory(mockBootstrapper);
         this.mockVaultStorage
             .Setup(x => x.GetVaultsAsync())
-            .ReturnsAsync(new List<VaultMetadata>
-            {
+            .ReturnsAsync(
+            [
                 new VaultMetadata { Id = "vault-1", Name = "My Vault", Description = "Test desc" },
-            });
+            ]);
 
         await sut.LoadVaultsAsync();
 
@@ -355,9 +354,9 @@ public class VaultsViewModelTests : IDisposable
         var sut = CreateSut();
         SetupValidCredentials();
         var mockBootstrapper = CreateMockBootstrapper(
-            new List<VaultListing> { new VaultListing { Id = null } });
+            [new() { Id = null }]);
         SetupBootstrapperFactory(mockBootstrapper);
-        this.mockVaultStorage.Setup(x => x.GetVaultsAsync()).ReturnsAsync(new List<VaultMetadata>());
+        this.mockVaultStorage.Setup(x => x.GetVaultsAsync()).ReturnsAsync([]);
 
         await sut.LoadVaultsAsync();
 
@@ -520,12 +519,12 @@ public class VaultsViewModelTests : IDisposable
         var sut = CreateSut();
         SetupValidCredentials();
         var mockBootstrapper = CreateMockBootstrapper(
-            new List<VaultListing> { new VaultListing { Id = "vault-1" } });
+            [new VaultListing { Id = "vault-1" }]);
         mockBootstrapper
             .Setup(x => x.CreateVaultManagerForVaultAsync("vault-1", It.IsAny<CancellationToken>()))
             .ReturnsAsync((IVaultManager?)null);
         SetupBootstrapperFactory(mockBootstrapper);
-        this.mockVaultStorage.Setup(x => x.GetVaultsAsync()).ReturnsAsync(new List<VaultMetadata>());
+        this.mockVaultStorage.Setup(x => x.GetVaultsAsync()).ReturnsAsync([]);
         await sut.LoadVaultsAsync();
 
         sut.ShowPassphrasePanelForCommand.Execute(new VaultMetadata { Id = "vault-1" });
@@ -546,28 +545,28 @@ public class VaultsViewModelTests : IDisposable
         var vaultInfo = new VaultInfo("Unlocked Vault", "Desc");
         var vaultIndex = new VaultIndex
         {
-            Entries = new List<VaultIndexEntry>
-            {
+            Entries =
+            [
                 new VaultIndexEntry("e1", "Secret1", null, null),
-            },
+            ],
         };
         var concreteVault = new clypse.core.Vault.Vault(new VaultManifest(), vaultInfo, vaultIndex);
 
         var mockManager = new Mock<IVaultManager>();
         mockManager
             .Setup(x => x.DeriveKeyFromPassphraseAsync("vault-1", "mypassphrase"))
-            .ReturnsAsync(new byte[] { 1, 2, 3, 4 });
+            .ReturnsAsync([1, 2, 3, 4]);
         mockManager
             .Setup(x => x.LoadAsync("vault-1", It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(concreteVault);
 
         var mockBootstrapper = CreateMockBootstrapper(
-            new List<VaultListing> { new VaultListing { Id = "vault-1" } });
+            [new VaultListing { Id = "vault-1" }]);
         mockBootstrapper
             .Setup(x => x.CreateVaultManagerForVaultAsync("vault-1", It.IsAny<CancellationToken>()))
             .ReturnsAsync(mockManager.Object);
         SetupBootstrapperFactory(mockBootstrapper);
-        this.mockVaultStorage.Setup(x => x.GetVaultsAsync()).ReturnsAsync(new List<VaultMetadata>());
+        this.mockVaultStorage.Setup(x => x.GetVaultsAsync()).ReturnsAsync([]);
         this.mockVaultStorage
             .Setup(x => x.UpdateVaultAsync(It.IsAny<VaultMetadata>()))
             .Returns(Task.CompletedTask);
@@ -603,12 +602,12 @@ public class VaultsViewModelTests : IDisposable
             .ThrowsAsync(new Exception("wrong passphrase"));
 
         var mockBootstrapper = CreateMockBootstrapper(
-            new List<VaultListing> { new VaultListing { Id = "vault-1" } });
+            [new VaultListing { Id = "vault-1" }]);
         mockBootstrapper
             .Setup(x => x.CreateVaultManagerForVaultAsync("vault-1", It.IsAny<CancellationToken>()))
             .ReturnsAsync(mockManager.Object);
         SetupBootstrapperFactory(mockBootstrapper);
-        this.mockVaultStorage.Setup(x => x.GetVaultsAsync()).ReturnsAsync(new List<VaultMetadata>());
+        this.mockVaultStorage.Setup(x => x.GetVaultsAsync()).ReturnsAsync([]);
 
         await sut.LoadVaultsAsync();
         sut.ShowPassphrasePanelForCommand.Execute(new VaultMetadata { Id = "vault-1" });

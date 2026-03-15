@@ -7,13 +7,13 @@ namespace clypse.portal.Application.UnitTests.ViewModels;
 
 public class SecretDialogViewModelTests
 {
-    private SecretDialogViewModel CreateSut() => new();
+    private static SecretDialogViewModel CreateSut() => new();
 
     [Fact]
     public void GivenNewInstance_WhenCheckingDefaults_ThenDefaultValuesAreCorrect()
     {
         // Act
-        var sut = this.CreateSut();
+        var sut = CreateSut();
 
         // Assert
         Assert.Null(sut.EditableSecret);
@@ -41,7 +41,7 @@ public class SecretDialogViewModelTests
     public void GivenMode_WhenGetModeTitle_ThenReturnsExpectedTitle(CrudDialogMode mode, string expectedTitle)
     {
         // Arrange
-        var sut = this.CreateSut();
+        var sut = CreateSut();
         sut.Mode = mode;
 
         // Act
@@ -55,7 +55,7 @@ public class SecretDialogViewModelTests
     public void GivenUnknownMode_WhenGetModeTitle_ThenReturnsFallback()
     {
         // Arrange
-        var sut = this.CreateSut();
+        var sut = CreateSut();
         sut.Mode = (CrudDialogMode)99;
 
         // Act
@@ -69,7 +69,7 @@ public class SecretDialogViewModelTests
     public void GivenWebSecret_WhenInitializeForSecret_ThenEditableSecretAndFieldsAreSet()
     {
         // Arrange
-        var sut = this.CreateSut();
+        var sut = CreateSut();
         var secret = new WebSecret { Name = "MySecret" };
 
         // Act
@@ -86,7 +86,7 @@ public class SecretDialogViewModelTests
     public void GivenInitializedDialog_WhenClear_ThenStateIsReset()
     {
         // Arrange
-        var sut = this.CreateSut();
+        var sut = CreateSut();
         sut.InitializeForSecret(new WebSecret { Name = "MySecret" }, CrudDialogMode.Update);
 
         // Act
@@ -102,7 +102,7 @@ public class SecretDialogViewModelTests
     public void GivenInitializedWithWebSecret_WhenOnSecretTypeChangedToSameType_ThenSecretFieldsAreStillPopulated()
     {
         // Arrange
-        var sut = this.CreateSut();
+        var sut = CreateSut();
         sut.InitializeForSecret(new WebSecret(), CrudDialogMode.Create);
 
         // Act
@@ -117,7 +117,7 @@ public class SecretDialogViewModelTests
     public void GivenNoEditableSecret_WhenOnSecretTypeChanged_ThenNoExceptionIsThrown()
     {
         // Arrange
-        var sut = this.CreateSut();
+        var sut = CreateSut();
 
         // Act & Assert (no exception)
         sut.OnSecretTypeChanged(SecretType.Web);
@@ -128,7 +128,7 @@ public class SecretDialogViewModelTests
     public async Task GivenCreateMode_AndCallback_WhenHandleSave_ThenCallbackIsInvoked()
     {
         // Arrange
-        var sut = this.CreateSut();
+        var sut = CreateSut();
         sut.InitializeForSecret(new WebSecret { Name = "TestSecret" }, CrudDialogMode.Create);
         Secret? savedSecret = null;
         sut.OnSaveCallback = s => { savedSecret = s; return Task.CompletedTask; };
@@ -145,7 +145,7 @@ public class SecretDialogViewModelTests
     public async Task GivenViewMode_WhenHandleSave_ThenCallbackIsNotInvoked()
     {
         // Arrange
-        var sut = this.CreateSut();
+        var sut = CreateSut();
         sut.InitializeForSecret(new WebSecret { Name = "TestSecret" }, CrudDialogMode.View);
         var called = false;
         sut.OnSaveCallback = _ => { called = true; return Task.CompletedTask; };
@@ -161,7 +161,7 @@ public class SecretDialogViewModelTests
     public async Task GivenNoEditableSecret_WhenHandleSave_ThenCallbackIsNotInvoked()
     {
         // Arrange
-        var sut = this.CreateSut();
+        var sut = CreateSut();
         var called = false;
         sut.OnSaveCallback = _ => { called = true; return Task.CompletedTask; };
 
@@ -176,7 +176,7 @@ public class SecretDialogViewModelTests
     public async Task GivenCancelCallback_WhenHandleCancel_ThenCallbackIsInvoked()
     {
         // Arrange
-        var sut = this.CreateSut();
+        var sut = CreateSut();
         var called = false;
         sut.OnCancelCallback = () => { called = true; return Task.CompletedTask; };
 
@@ -191,7 +191,7 @@ public class SecretDialogViewModelTests
     public async Task GivenNoCancelCallback_WhenHandleCancel_ThenNoExceptionIsThrown()
     {
         // Arrange
-        var sut = this.CreateSut();
+        var sut = CreateSut();
 
         // Act & Assert (no exception)
         await sut.HandleCancelCommand.ExecuteAsync(null);
@@ -201,7 +201,7 @@ public class SecretDialogViewModelTests
     public async Task GivenHandleSave_WhenCallbackIsExecuting_ThenIsSavingIsTrueAndResetAfter()
     {
         // Arrange
-        var sut = this.CreateSut();
+        var sut = CreateSut();
         sut.InitializeForSecret(new WebSecret(), CrudDialogMode.Create);
         var wasSavingDuringCallback = false;
         sut.OnSaveCallback = _ =>
@@ -223,7 +223,7 @@ public class SecretDialogViewModelTests
     public void GivenWebSecretWithCreateMode_WhenInitializeForSecret_ThenModeIsCreate()
     {
         // Arrange
-        var sut = this.CreateSut();
+        var sut = CreateSut();
         var secret = new WebSecret { Name = "NewSecret" };
 
         // Act
@@ -242,7 +242,7 @@ public class SecretDialogViewModelTests
     {
         // Arrange - has an editable secret and non-View mode, but OnSaveCallback is null
         // This covers the `if (OnSaveCallback != null)` false branch inside the try/finally
-        var sut = this.CreateSut();
+        var sut = CreateSut();
         sut.InitializeForSecret(new WebSecret { Name = "TestSecret" }, CrudDialogMode.Create);
         sut.OnSaveCallback = null;
 
@@ -260,7 +260,7 @@ public class SecretDialogViewModelTests
     public void GivenInitializedWithWebSecret_WhenOnSecretTypeChangedToAws_ThenSecretTypeIsAws()
     {
         // Arrange
-        var sut = this.CreateSut();
+        var sut = CreateSut();
         sut.InitializeForSecret(new WebSecret(), CrudDialogMode.Create);
 
         // Act - change from Web to Aws, exercising the CastSecretToCorrectType Aws branch
@@ -276,7 +276,7 @@ public class SecretDialogViewModelTests
     public async Task GivenUpdateMode_AndCallback_WhenHandleSave_ThenCallbackIsInvoked()
     {
         // Arrange - Update mode should save just like Create mode
-        var sut = this.CreateSut();
+        var sut = CreateSut();
         sut.InitializeForSecret(new WebSecret { Name = "ExistingSecret" }, CrudDialogMode.Update);
         Secret? savedSecret = null;
         sut.OnSaveCallback = s => { savedSecret = s; return Task.CompletedTask; };

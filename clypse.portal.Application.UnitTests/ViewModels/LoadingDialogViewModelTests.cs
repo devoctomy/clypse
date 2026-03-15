@@ -4,13 +4,13 @@ namespace clypse.portal.Application.UnitTests.ViewModels;
 
 public class LoadingDialogViewModelTests
 {
-    private LoadingDialogViewModel CreateSut() => new();
+    private static LoadingDialogViewModel CreateSut() => new();
 
     [Fact]
     public void GivenNewInstance_WhenCheckingDefaults_ThenDefaultMessageIsLoading()
     {
         // Act
-        var sut = this.CreateSut();
+        var sut = CreateSut();
 
         // Assert
         Assert.Equal("Loading...", sut.Message);
@@ -20,7 +20,7 @@ public class LoadingDialogViewModelTests
     public void GivenInstance_WhenSettingMessage_ThenMessageIsUpdated()
     {
         // Arrange
-        var sut = this.CreateSut();
+        var sut = CreateSut();
 
         // Act
         sut.Message = "Saving vault...";
@@ -33,7 +33,7 @@ public class LoadingDialogViewModelTests
     public void GivenInstance_WhenSettingMessageToEmpty_ThenMessageIsEmpty()
     {
         // Arrange
-        var sut = this.CreateSut();
+        var sut = CreateSut();
 
         // Act
         sut.Message = string.Empty;
@@ -46,7 +46,7 @@ public class LoadingDialogViewModelTests
     public void GivenInstance_WhenSettingMessageTwice_ThenLastValueIsKept()
     {
         // Arrange
-        var sut = this.CreateSut();
+        var sut = CreateSut();
 
         // Act
         sut.Message = "First";

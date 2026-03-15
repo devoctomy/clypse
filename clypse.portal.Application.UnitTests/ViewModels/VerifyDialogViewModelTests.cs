@@ -5,13 +5,13 @@ namespace clypse.portal.Application.UnitTests.ViewModels;
 
 public class VerifyDialogViewModelTests
 {
-    private VerifyDialogViewModel CreateSut() => new();
+    private static VerifyDialogViewModel CreateSut() => new();
 
     [Fact]
     public void GivenNewInstance_WhenCheckingDefaults_ThenDefaultValuesAreCorrect()
     {
         // Act
-        var sut = this.CreateSut();
+        var sut = CreateSut();
 
         // Assert
         Assert.Null(sut.Results);
@@ -22,7 +22,7 @@ public class VerifyDialogViewModelTests
     public void GivenInstance_WhenSettingResults_ThenResultsAreStored()
     {
         // Arrange
-        var sut = this.CreateSut();
+        var sut = CreateSut();
         var results = new VaultVerifyResults
         {
             MissingSecrets = 1,
@@ -41,7 +41,7 @@ public class VerifyDialogViewModelTests
     public void GivenSuccessfulVerification_WhenCheckingResults_ThenSuccessIsTrue()
     {
         // Arrange
-        var sut = this.CreateSut();
+        var sut = CreateSut();
         sut.Results = new VaultVerifyResults
         {
             MissingSecrets = 0,
@@ -56,7 +56,7 @@ public class VerifyDialogViewModelTests
     public void GivenFailedVerification_WhenCheckingResults_ThenSuccessIsFalse()
     {
         // Arrange
-        var sut = this.CreateSut();
+        var sut = CreateSut();
         sut.Results = new VaultVerifyResults
         {
             MissingSecrets = 2,
@@ -71,7 +71,7 @@ public class VerifyDialogViewModelTests
     public void GivenInstance_WhenSettingOnCloseCallback_ThenCallbackIsStored()
     {
         // Arrange
-        var sut = this.CreateSut();
+        var sut = CreateSut();
         Func<Task> callback = () => Task.CompletedTask;
 
         // Act
@@ -85,7 +85,7 @@ public class VerifyDialogViewModelTests
     public void GivenInstance_WhenClearingResults_ThenResultsAreNull()
     {
         // Arrange
-        var sut = this.CreateSut();
+        var sut = CreateSut();
         sut.Results = new VaultVerifyResults();
 
         // Act

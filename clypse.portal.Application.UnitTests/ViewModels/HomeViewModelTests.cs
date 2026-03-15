@@ -441,7 +441,7 @@ public class HomeViewModelTests : IDisposable
 
         // Assert
         Assert.Equal("credentials", sut.CurrentPage);
-        Assert.True(this.navigationStateService.NavigationItems.Any(i => i.Action == "create-credential"));
+        Assert.Contains(this.navigationStateService.NavigationItems, i => i.Action == "create-credential");
     }
 
     [Fact]
@@ -462,7 +462,7 @@ public class HomeViewModelTests : IDisposable
 
         // Assert
         Assert.Equal("vaults", sut.CurrentPage);
-        Assert.True(this.navigationStateService.NavigationItems.Any(i => i.Action == "create-vault"));
+        Assert.Contains(this.navigationStateService.NavigationItems, i => i.Action == "create-vault");
     }
 
     // --- show-vaults navigation action ---

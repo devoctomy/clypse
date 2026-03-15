@@ -4,13 +4,13 @@ namespace clypse.portal.Application.UnitTests.ViewModels;
 
 public class ConfirmDialogViewModelTests
 {
-    private ConfirmDialogViewModel CreateSut() => new();
+    private static ConfirmDialogViewModel CreateSut() => new();
 
     [Fact]
     public void GivenNewInstance_WhenCheckingDefaults_ThenDefaultValuesAreCorrect()
     {
         // Act
-        var sut = this.CreateSut();
+        var sut = CreateSut();
 
         // Assert
         Assert.False(sut.IsProcessing);
@@ -23,7 +23,7 @@ public class ConfirmDialogViewModelTests
     public void GivenInstance_WhenSettingMessage_ThenMessageIsUpdated()
     {
         // Arrange
-        var sut = this.CreateSut();
+        var sut = CreateSut();
 
         // Act
         sut.Message = "Delete vault 'MyVault'?";
@@ -36,7 +36,7 @@ public class ConfirmDialogViewModelTests
     public void GivenInstance_WhenSettingIsProcessing_ThenIsProcessingIsUpdated()
     {
         // Arrange
-        var sut = this.CreateSut();
+        var sut = CreateSut();
 
         // Act
         sut.IsProcessing = true;
@@ -49,7 +49,7 @@ public class ConfirmDialogViewModelTests
     public async Task GivenNotProcessing_AndCancelCallback_WhenHandleBackdropClick_ThenCallbackIsInvoked()
     {
         // Arrange
-        var sut = this.CreateSut();
+        var sut = CreateSut();
         var called = false;
         sut.OnCancelCallback = () => { called = true; return Task.CompletedTask; };
 
@@ -64,7 +64,7 @@ public class ConfirmDialogViewModelTests
     public async Task GivenIsProcessing_WhenHandleBackdropClick_ThenCallbackIsNotInvoked()
     {
         // Arrange
-        var sut = this.CreateSut();
+        var sut = CreateSut();
         sut.IsProcessing = true;
         var called = false;
         sut.OnCancelCallback = () => { called = true; return Task.CompletedTask; };
@@ -80,7 +80,7 @@ public class ConfirmDialogViewModelTests
     public async Task GivenNoCancelCallback_WhenHandleBackdropClick_ThenNoExceptionIsThrown()
     {
         // Arrange
-        var sut = this.CreateSut();
+        var sut = CreateSut();
         sut.OnCancelCallback = null;
 
         // Act & Assert (no exception)
@@ -91,7 +91,7 @@ public class ConfirmDialogViewModelTests
     public void GivenInstance_WhenSettingOnConfirmCallback_ThenCallbackIsStored()
     {
         // Arrange
-        var sut = this.CreateSut();
+        var sut = CreateSut();
         Func<Task> callback = () => Task.CompletedTask;
 
         // Act
