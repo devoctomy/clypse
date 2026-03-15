@@ -217,4 +217,75 @@ public class SecretDialogViewModelTests
         Assert.True(wasSavingDuringCallback);
         Assert.False(sut.IsSaving);
     }
+    // --- InitializeForSecret ---
+
+    [Fact]
+    public void GivenWebSecretWithCreateMode_WhenInitializeForSecret_ThenModeIsCreate()
+    {
+        // Arrange
+        var sut = this.CreateSut();
+        var secret = new WebSecret { Name = "NewSecret" };
+
+        // Act
+        sut.InitializeForSecret(secret, CrudDialogMode.Create);
+
+        // Assert
+        Assert.NotNull(sut.EditableSecret);
+        Assert.Equal(CrudDialogMode.Create, sut.Mode);
+        Assert.NotNull(sut.SecretFields);
+    }
+
+    // --- HandleSave edge cases ---
+
+    [Fact]
+    public async Task GivenCreateModeWithNullCallback_WhenHandleSave_ThenIsSavingResetsCleanly()
+    {
+        // Arrange - has an editable secret and non-View mode, but OnSaveCallback is null
+        // This covers the `if (OnSaveCallback != null)` false branch inside the try/finally
+        var sut = this.CreateSut();
+        sut.InitializeForSecret(new WebSecret { Name = "TestSecret" }, CrudDialogMode.Create);
+        sut.OnSaveCallback = null;
+
+        // Act
+        await sut.HandleSaveCommand.ExecuteAsync(null);
+
+        // Assert - IsSaving correctly reset to false via the finally block
+        Assert.False(sut.IsSaving);
+        Assert.NotNull(sut.EditableSecret);
+    }
+
+    // --- OnSecretTypeChanged ---
+
+    [Fact]
+    public void GivenInitializedWithWebSecret_WhenOnSecretTypeChangedToAws_ThenSecretTypeIsAws()
+    {
+        // Arrange
+        var sut = this.CreateSut();
+        sut.InitializeForSecret(new WebSecret(), CrudDialogMode.Create);
+
+        // Act - change from Web to Aws, exercising the CastSecretToCorrectType Aws branch
+        sut.OnSecretTypeChanged(SecretType.Aws);
+
+        // Assert
+        Assert.NotNull(sut.EditableSecret);
+        Assert.Equal(SecretType.Aws, sut.EditableSecret.SecretType);
+        Assert.NotNull(sut.SecretFields);
+    }
+
+    [Fact]
+    public async Task GivenUpdateMode_AndCallback_WhenHandleSave_ThenCallbackIsInvoked()
+    {
+        // Arrange - Update mode should save just like Create mode
+        var sut = this.CreateSut();
+        sut.InitializeForSecret(new WebSecret { Name = "ExistingSecret" }, CrudDialogMode.Update);
+        Secret? savedSecret = null;
+        sut.OnSaveCallback = s => { savedSecret = s; return Task.CompletedTask; };
+
+        // Act
+        await sut.HandleSaveCommand.ExecuteAsync(null);
+
+        // Assert
+        Assert.NotNull(savedSecret);
+        Assert.Equal("ExistingSecret", savedSecret.Name);
+    }
 }
