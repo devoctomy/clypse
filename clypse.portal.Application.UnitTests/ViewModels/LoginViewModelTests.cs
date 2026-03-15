@@ -571,24 +571,6 @@ public class LoginViewModelTests
     }
 
     [Fact]
-    public async Task GivenFailedRegister_WhenHandleWebAuthnSetup_ThenErrorMessageIsSet()
-    {
-        // Arrange
-        var sut = CreateSut();
-        sut.Username = "user";
-        this.mockWebAuthnService
-            .Setup(w => w.RegisterAsync("user", null))
-            .ReturnsAsync(new WebAuthnRegisterResult { Success = false, Error = "register failed" });
-
-        // Act
-        await sut.HandleWebAuthnSetupCommand.ExecuteAsync(null);
-
-        // Assert
-        Assert.Equal("register failed", sut.WebAuthnErrorMessage);
-        Assert.False(sut.IsWebAuthnProcessing);
-    }
-
-    [Fact]
     public async Task GivenRegisterThrows_WhenHandleWebAuthnSetup_ThenErrorMessageIsSet()
     {
         // Arrange

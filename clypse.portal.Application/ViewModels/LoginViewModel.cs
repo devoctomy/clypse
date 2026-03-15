@@ -327,42 +327,24 @@ public partial class LoginViewModel : ViewModelBase
         try
         {
             var result = await webAuthnService.RegisterAsync(Username, null);
+            var prfSupported = result.Success && result.PrfEnabled && !string.IsNullOrEmpty(result.PrfOutput);
 
-            if (result.Success && result.PrfEnabled)
+            if (prfSupported)
             {
-                string? encryptedPassword = null;
-
-                if (!string.IsNullOrEmpty(result.PrfOutput))
-                {
-                    try
-                    {
-                        encryptedPassword = await EncryptPasswordWithPrfAsync(Password, result.PrfOutput);
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine($"Failed to encrypt password: {ex.Message}");
-                    }
-                }
-
                 var webAuthnCredential = new WebAuthnStoredCredential
                 {
                     CredentialID = result.CredentialID ?? string.Empty,
                     UserID = result.UserID ?? string.Empty,
                     CreatedAt = DateTime.UtcNow,
-                    EncryptedPassword = encryptedPassword,
+                    EncryptedPassword = await EncryptPasswordWithPrfAsync(Password, result.PrfOutput!),
                 };
 
                 await SaveUserAsync(Username, webAuthnCredential);
                 navigationService.NavigateTo("/");
+                return;
             }
-            else if (result.Success && !result.PrfEnabled)
-            {
-                WebAuthnErrorMessage = "Your authenticator doesn't support the required security features for biometric login. Please continue with regular login.";
-            }
-            else
-            {
-                WebAuthnErrorMessage = result.Error ?? "Failed to set up biometric login. Please try again or continue with regular login.";
-            }
+
+            WebAuthnErrorMessage = "Your authenticator doesn't support the required security features for biometric login. Please continue with regular login.";
         }
         catch (Exception ex)
         {
