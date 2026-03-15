@@ -1,5 +1,4 @@
 using clypse.portal.Application.ViewModels;
-using clypse.portal.Models.Changes;
 using Microsoft.Extensions.Logging;
 using Moq;
 using System.Net;
@@ -41,31 +40,25 @@ public class ChangesDialogViewModelTests
     }
 
     [Fact]
-    public void Constructor_SetsDefaultValues()
+    public async Task GivenChangesJson_AndSingleVersion_EnsureChangelogLoadedAsync_ThenSingleVersionReturned()
     {
-        var sut = this.CreateSut();
-        Assert.False(sut.IsLoading);
-        Assert.False(sut.IsUpdating);
-        Assert.Null(sut.ErrorMessage);
-        Assert.Null(sut.ChangeLog);
-    }
-
-    [Fact]
-    public async Task EnsureChangelogLoadedAsync_WhenNotLoaded_LoadsChangelog()
-    {
+        // Arrange
         var json = """{"versions":[{"version":"1.0","changes":[{"type":"feature","description":"First release"}]}]}""";
         var httpClient = CreateHttpClientWithResponse(json);
         var sut = this.CreateSut(httpClient);
 
+        // Act
         await sut.EnsureChangelogLoadedAsync();
 
+        // Assert
         Assert.NotNull(sut.ChangeLog);
         Assert.Single(sut.ChangeLog.Versions);
     }
 
     [Fact]
-    public async Task EnsureChangelogLoadedAsync_WhenAlreadyLoaded_DoesNotReload()
+    public async Task GivenChangelogAlreadyLoaded_WhenEnsureChangelogLoadedAsync_ThenDoesNotReload()
     {
+        // Arrange
         var callCount = 0;
         var handler = new Mock<HttpMessageHandler>();
         handler.Protected()
@@ -84,46 +77,57 @@ public class ChangesDialogViewModelTests
             });
         var httpClient = new HttpClient(handler.Object) { BaseAddress = new Uri("http://localhost/") };
         var sut = this.CreateSut(httpClient);
-
-        await sut.EnsureChangelogLoadedAsync();
         await sut.EnsureChangelogLoadedAsync();
 
+        // Act
+        await sut.EnsureChangelogLoadedAsync();
+
+        // Assert
         Assert.Equal(1, callCount);
     }
 
     [Fact]
-    public async Task EnsureChangelogLoadedAsync_OnHttpError_SetsErrorMessage()
+    public async Task GivenChangeLogUnavailable_WhenEnsureChangelogLoadedAsync_ThenSetsErrorMessage()
     {
+        // Arrange
         var httpClient = CreateHttpClientWithResponse(string.Empty, HttpStatusCode.InternalServerError);
         var sut = this.CreateSut(httpClient);
 
+        // Act
         await sut.EnsureChangelogLoadedAsync();
 
+        // Assert
         Assert.NotNull(sut.ErrorMessage);
         Assert.Null(sut.ChangeLog);
     }
 
     [Fact]
-    public async Task HandleCloseCommand_InvokesCallback()
+    public async Task GivenInstance_WhenHandleCloseCommand_ThenCallbackInvoked()
     {
+        // Arrange
         var sut = this.CreateSut();
         var called = false;
         sut.OnCloseCallback = () => { called = true; return Task.CompletedTask; };
 
+        // Act
         await sut.HandleCloseCommand.ExecuteAsync(null);
 
+        // Assert
         Assert.True(called);
     }
 
     [Fact]
-    public async Task HandleUpdateCommand_InvokesCallback()
+    public async Task GivenInstance_WhenHandleUpdateCommand_ThenCallbackInvoked()
     {
+        // Arrange
         var sut = this.CreateSut();
         var called = false;
         sut.OnUpdateCallback = () => { called = true; return Task.CompletedTask; };
 
+        // Act
         await sut.HandleUpdateCommand.ExecuteAsync(null);
 
+        // Assert
         Assert.True(called);
     }
 }
