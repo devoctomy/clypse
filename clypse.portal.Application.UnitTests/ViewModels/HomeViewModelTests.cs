@@ -1,3 +1,4 @@
+using clypse.core.Vault;
 using clypse.portal.Application.Services;
 using clypse.portal.Application.Services.Interfaces;
 using clypse.portal.Application.ViewModels;
@@ -36,6 +37,12 @@ public class HomeViewModelTests : IDisposable
         this.messenger = WeakReferenceMessenger.Default;
     }
 
+    public void Dispose()
+    {
+        GC.SuppressFinalize(this);
+        this.messenger.UnregisterAll(this);
+    }
+
     private HomeViewModel CreateSut()
     {
         return new HomeViewModel(
@@ -51,6 +58,8 @@ public class HomeViewModelTests : IDisposable
             this.messenger);
     }
 
+    // --- Constructor ---
+
     [Fact]
     public void GivenValidParameters_WhenConstructing_ThenCreatesInstance()
     {
@@ -64,7 +73,7 @@ public class HomeViewModelTests : IDisposable
     [Fact]
     public void GivenNullAuthService_WhenConstructing_ThenThrowsArgumentNullException()
     {
-        // Act & Assert
+        // Arrange / Act / Assert
         Assert.Throws<ArgumentNullException>(() => new HomeViewModel(
             null!,
             this.mockNavigationService.Object,
@@ -78,10 +87,12 @@ public class HomeViewModelTests : IDisposable
             this.messenger));
     }
 
+    // --- Initial state ---
+
     [Fact]
     public void GivenNewInstance_WhenCheckingInitialState_ThenDefaultValuesAreCorrect()
     {
-        // Arrange & Act
+        // Arrange
         var sut = CreateSut();
 
         // Assert
@@ -92,6 +103,54 @@ public class HomeViewModelTests : IDisposable
         Assert.Null(sut.VaultToDelete);
         Assert.False(sut.ShowCreateVaultDialog);
     }
+
+    // --- OnAfterRenderAsync ---
+
+    [Fact]
+    public async Task GivenFirstRenderAndNotLoggedIn_WhenOnAfterRenderAsync_ThenNavigatesToLogin()
+    {
+        // Arrange
+        var sut = CreateSut();
+        this.mockAuthService.Setup(s => s.Initialize()).Returns(Task.CompletedTask);
+        this.mockAuthService.Setup(s => s.CheckAuthentication()).ReturnsAsync(false);
+
+        // Act
+        await sut.OnAfterRenderAsync(firstRender: true);
+
+        // Assert
+        this.mockNavigationService.Verify(n => n.NavigateTo("/login"), Times.Once);
+    }
+
+    [Fact]
+    public async Task GivenFirstRenderAndLoggedIn_WhenOnAfterRenderAsync_ThenNavigationItemsAreSet()
+    {
+        // Arrange
+        var sut = CreateSut();
+        this.mockAuthService.Setup(s => s.Initialize()).Returns(Task.CompletedTask);
+        this.mockAuthService.Setup(s => s.CheckAuthentication()).ReturnsAsync(true);
+
+        // Act
+        await sut.OnAfterRenderAsync(firstRender: true);
+
+        // Assert
+        this.mockNavigationService.Verify(n => n.NavigateTo(It.IsAny<string>()), Times.Never);
+        Assert.NotEmpty(this.navigationStateService.NavigationItems);
+    }
+
+    [Fact]
+    public async Task GivenNotFirstRender_WhenOnAfterRenderAsync_ThenAuthIsNotChecked()
+    {
+        // Arrange
+        var sut = CreateSut();
+
+        // Act
+        await sut.OnAfterRenderAsync(firstRender: false);
+
+        // Assert
+        this.mockAuthService.Verify(s => s.Initialize(), Times.Never);
+    }
+
+    // --- HandleLockVaultAsync ---
 
     [Fact]
     public async Task GivenVaultIsLocked_WhenHandleLockVault_ThenPageChangesToVaults()
@@ -106,13 +165,13 @@ public class HomeViewModelTests : IDisposable
         Assert.Equal("vaults", sut.CurrentPage);
     }
 
+    // --- CloseVerifyDialog ---
+
     [Fact]
-    public async Task GivenShowVerifyDialog_WhenCloseVerifyDialog_ThenDialogIsClosed()
+    public void GivenShowVerifyDialog_WhenCloseVerifyDialog_ThenDialogIsClosed()
     {
         // Arrange
         var sut = CreateSut();
-        // Directly set the property via field (since ShowVerifyDialog is private set)
-        // We'll test through the command flow
 
         // Act
         sut.CloseVerifyDialogCommand.Execute(null);
@@ -122,19 +181,7 @@ public class HomeViewModelTests : IDisposable
         Assert.Null(sut.VerifyResults);
     }
 
-    [Fact]
-    public void GivenShowCreateVaultDialog_WhenCancelCreateVault_ThenDialogIsClosed()
-    {
-        // Arrange
-        var sut = CreateSut();
-
-        // Act
-        sut.CancelCreateVaultCommand.Execute(null);
-
-        // Assert
-        Assert.False(sut.ShowCreateVaultDialog);
-        Assert.Null(sut.CreateVaultErrorMessage);
-    }
+    // --- CancelDeleteVault ---
 
     [Fact]
     public void GivenShowDeleteVaultDialog_WhenCancelDeleteVault_ThenDialogIsClosed()
@@ -151,6 +198,296 @@ public class HomeViewModelTests : IDisposable
         Assert.Null(sut.DeleteVaultErrorMessage);
     }
 
+    // --- CancelCreateVault ---
+
+    [Fact]
+    public void GivenShowCreateVaultDialog_WhenCancelCreateVault_ThenDialogIsClosed()
+    {
+        // Arrange
+        var sut = CreateSut();
+
+        // Act
+        sut.CancelCreateVaultCommand.Execute(null);
+
+        // Assert
+        Assert.False(sut.ShowCreateVaultDialog);
+        Assert.Null(sut.CreateVaultErrorMessage);
+    }
+
+    // --- HandleDeleteVaultConfirmAsync ---
+
+    [Fact]
+    public async Task GivenNoVaultState_WhenHandleDeleteVaultConfirm_ThenDeleteVaultDialogIsClosed()
+    {
+        // Arrange
+        var sut = CreateSut();
+
+        // Act
+        await sut.HandleDeleteVaultConfirmCommand.ExecuteAsync(null);
+
+        // Assert
+        Assert.False(sut.ShowDeleteVaultDialog);
+        Assert.False(sut.IsDeletingVault);
+    }
+
+    [Fact]
+    public async Task GivenVaultStateAndSuccessfulDelete_WhenHandleDeleteVaultConfirm_ThenPageChangesToVaults()
+    {
+        // Arrange
+        var sut = CreateSut();
+        var mockVault = new Mock<IVault>();
+        var mockManager = new Mock<IVaultManager>();
+        mockManager
+            .Setup(m => m.DeleteAsync(It.IsAny<IVault>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+        this.mockVaultStorage
+            .Setup(s => s.RemoveVaultAsync(It.IsAny<string>()))
+            .Returns(Task.CompletedTask);
+        var vault = new VaultMetadata { Id = "v1" };
+        this.vaultStateService.SetVaultState(vault, "key", mockVault.Object, mockManager.Object);
+
+        // Act
+        await sut.HandleDeleteVaultConfirmCommand.ExecuteAsync(null);
+
+        // Assert
+        Assert.Equal("vaults", sut.CurrentPage);
+        Assert.False(sut.IsDeletingVault);
+    }
+
+    [Fact]
+    public async Task GivenVaultStateAndDeleteThrows_WhenHandleDeleteVaultConfirm_ThenErrorMessageIsSet()
+    {
+        // Arrange
+        var sut = CreateSut();
+        var mockVault = new Mock<IVault>();
+        var mockManager = new Mock<IVaultManager>();
+        mockManager
+            .Setup(m => m.DeleteAsync(It.IsAny<IVault>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new Exception("delete failed"));
+        var vault = new VaultMetadata { Id = "v1" };
+        this.vaultStateService.SetVaultState(vault, "key", mockVault.Object, mockManager.Object);
+
+        // Act
+        await sut.HandleDeleteVaultConfirmCommand.ExecuteAsync(null);
+
+        // Assert
+        Assert.NotNull(sut.DeleteVaultErrorMessage);
+        Assert.False(sut.IsDeletingVault);
+    }
+
+    // --- HandleCreateVaultFromDialogAsync ---
+
+    [Fact]
+    public async Task GivenNullStoredCredentials_WhenHandleCreateVaultFromDialog_ThenDialogIsClosed()
+    {
+        // Arrange
+        var sut = CreateSut();
+        this.mockAuthService
+            .Setup(s => s.GetStoredCredentials())
+            .ReturnsAsync((Models.Aws.StoredCredentials?)null);
+        var request = new VaultCreationRequest { Name = "v", Description = "d", Passphrase = "p" };
+
+        // Act
+        await sut.HandleCreateVaultFromDialogCommand.ExecuteAsync(request);
+
+        // Assert
+        Assert.False(sut.ShowCreateVaultDialog);
+        Assert.False(sut.IsCreatingVault);
+    }
+
+    [Fact]
+    public async Task GivenGetStoredCredentialsThrows_WhenHandleCreateVaultFromDialog_ThenErrorMessageIsSet()
+    {
+        // Arrange
+        var sut = CreateSut();
+        this.mockAuthService
+            .Setup(s => s.GetStoredCredentials())
+            .ThrowsAsync(new Exception("credentials error"));
+        var request = new VaultCreationRequest { Name = "v", Description = "d", Passphrase = "p" };
+
+        // Act
+        await sut.HandleCreateVaultFromDialogCommand.ExecuteAsync(request);
+
+        // Assert
+        Assert.NotNull(sut.CreateVaultErrorMessage);
+        Assert.False(sut.IsCreatingVault);
+    }
+
+    // --- HandleVerifyAsync (via "verify" navigation action) ---
+
+    [Fact]
+    public async Task GivenNoVaultState_WhenVerifyAction_ThenShowVerifyDialogRemainsHidden()
+    {
+        // Arrange
+        var sut = CreateSut();
+
+        // Act
+        this.navigationStateService.RequestNavigationAction("verify");
+        await Task.Delay(100);
+
+        // Assert
+        Assert.False(sut.ShowVerifyDialog);
+    }
+
+    [Fact]
+    public async Task GivenVaultStateAndSuccessfulVerify_WhenVerifyAction_ThenVerifyResultsAreSet()
+    {
+        // Arrange
+        var sut = CreateSut();
+        var mockVault = new Mock<IVault>();
+        var mockManager = new Mock<IVaultManager>();
+        var verifyResults = new VaultVerifyResults { MissingSecrets = 0, MismatchedSecrets = 0 };
+        mockManager
+            .Setup(m => m.VerifyAsync(It.IsAny<IVault>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(verifyResults);
+        var vault = new VaultMetadata { Id = "v1" };
+        this.vaultStateService.SetVaultState(vault, "key", mockVault.Object, mockManager.Object);
+
+        // Act
+        this.navigationStateService.RequestNavigationAction("verify");
+        await Task.Delay(100);
+
+        // Assert
+        Assert.NotNull(sut.VerifyResults);
+        Assert.True(sut.VerifyResults.Success);
+    }
+
+    [Fact]
+    public async Task GivenVaultStateAndVerifyThrows_WhenVerifyAction_ThenShowVerifyDialogIsFalse()
+    {
+        // Arrange
+        var sut = CreateSut();
+        var mockVault = new Mock<IVault>();
+        var mockManager = new Mock<IVaultManager>();
+        mockManager
+            .Setup(m => m.VerifyAsync(It.IsAny<IVault>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new Exception("verify failed"));
+        var vault = new VaultMetadata { Id = "v1" };
+        this.vaultStateService.SetVaultState(vault, "key", mockVault.Object, mockManager.Object);
+
+        // Act
+        this.navigationStateService.RequestNavigationAction("verify");
+        await Task.Delay(100);
+
+        // Assert
+        Assert.False(sut.ShowVerifyDialog);
+    }
+
+    // --- ShowDeleteVaultDialogInternal (via "delete-vault" action) ---
+
+    [Fact]
+    public async Task GivenNoCurrentVault_WhenDeleteVaultAction_ThenShowDeleteVaultDialogIsFalse()
+    {
+        // Arrange
+        var sut = CreateSut();
+
+        // Act
+        this.navigationStateService.RequestNavigationAction("delete-vault");
+        await Task.Delay(100);
+
+        // Assert
+        Assert.False(sut.ShowDeleteVaultDialog);
+    }
+
+    [Fact]
+    public async Task GivenCurrentVault_WhenDeleteVaultAction_ThenShowDeleteVaultDialogIsTrue()
+    {
+        // Arrange
+        var sut = CreateSut();
+        var mockVault = new Mock<IVault>();
+        var mockManager = new Mock<IVaultManager>();
+        var vault = new VaultMetadata { Id = "v1" };
+        this.vaultStateService.SetVaultState(vault, "key", mockVault.Object, mockManager.Object);
+
+        // Act
+        this.navigationStateService.RequestNavigationAction("delete-vault");
+        await Task.Delay(100);
+
+        // Assert
+        Assert.True(sut.ShowDeleteVaultDialog);
+        Assert.Equal(vault, sut.VaultToDelete);
+    }
+
+    // --- ShowCreateVaultDialogInternal (via "create-vault" action) ---
+
+    [Fact]
+    public async Task GivenNewInstance_WhenCreateVaultAction_ThenShowCreateVaultDialogIsTrue()
+    {
+        // Arrange
+        var sut = CreateSut();
+
+        // Act
+        this.navigationStateService.RequestNavigationAction("create-vault");
+        await Task.Delay(100);
+
+        // Assert
+        Assert.True(sut.ShowCreateVaultDialog);
+    }
+
+    // --- GetNavigationItems for credentials page ---
+
+    [Fact]
+    public async Task GivenVaultStateSet_WhenVaultStateChanged_ThenPageChangesToCredentials()
+    {
+        // Arrange
+        var sut = CreateSut();
+        var mockVault = new Mock<IVault>();
+        var mockManager = new Mock<IVaultManager>();
+        var vault = new VaultMetadata { Id = "v1" };
+
+        // Act
+        this.vaultStateService.SetVaultState(vault, "key", mockVault.Object, mockManager.Object);
+        await Task.Delay(50);
+
+        // Assert
+        Assert.Equal("credentials", sut.CurrentPage);
+        Assert.True(this.navigationStateService.NavigationItems.Any(i => i.Action == "create-credential"));
+    }
+
+    [Fact]
+    public async Task GivenCredentialsPageAndVaultCleared_WhenVaultStateChanged_ThenPageChangesToVaults()
+    {
+        // Arrange
+        var sut = CreateSut();
+        var mockVault = new Mock<IVault>();
+        var mockManager = new Mock<IVaultManager>();
+        var vault = new VaultMetadata { Id = "v1" };
+        this.vaultStateService.SetVaultState(vault, "key", mockVault.Object, mockManager.Object);
+        await Task.Delay(50);
+        Assert.Equal("credentials", sut.CurrentPage);
+
+        // Act
+        this.vaultStateService.ClearVaultState();
+        await Task.Delay(50);
+
+        // Assert
+        Assert.Equal("vaults", sut.CurrentPage);
+        Assert.True(this.navigationStateService.NavigationItems.Any(i => i.Action == "create-vault"));
+    }
+
+    // --- show-vaults navigation action ---
+
+    [Fact]
+    public async Task GivenCredentialsPage_WhenShowVaultsAction_ThenPageChangesToVaults()
+    {
+        // Arrange
+        var sut = CreateSut();
+        var mockVault = new Mock<IVault>();
+        var mockManager = new Mock<IVaultManager>();
+        this.vaultStateService.SetVaultState(new VaultMetadata { Id = "v1" }, "key", mockVault.Object, mockManager.Object);
+        await Task.Delay(50);
+        Assert.Equal("credentials", sut.CurrentPage);
+
+        // Act
+        this.navigationStateService.RequestNavigationAction("show-vaults");
+        await Task.Delay(100);
+
+        // Assert
+        Assert.Equal("vaults", sut.CurrentPage);
+    }
+
+    // --- Refresh ---
+
     [Fact]
     public async Task GivenRefreshAction_WhenNavigationActionRequested_ThenRefreshVaultsMessageIsSent()
     {
@@ -161,12 +498,7 @@ public class HomeViewModelTests : IDisposable
 
         // Act
         this.navigationStateService.RequestNavigationAction("refresh");
-
-        // Allow async processing
         await Task.Delay(100);
-
-        // Cleanup
-        this.messenger.Unregister<RefreshVaultsMessage>(this);
 
         // Assert
         Assert.True(messageReceived);
@@ -182,12 +514,7 @@ public class HomeViewModelTests : IDisposable
 
         // Act
         this.navigationStateService.RequestNavigationAction("create-credential");
-
-        // Allow async processing
         await Task.Delay(100);
-
-        // Cleanup
-        this.messenger.Unregister<ShowCreateCredentialMessage>(this);
 
         // Assert
         Assert.True(messageReceived);
@@ -203,40 +530,21 @@ public class HomeViewModelTests : IDisposable
 
         // Act
         this.navigationStateService.RequestNavigationAction("import");
-
-        // Allow async processing
         await Task.Delay(100);
-
-        // Cleanup
-        this.messenger.Unregister<ShowImportMessage>(this);
 
         // Assert
         Assert.True(messageReceived);
     }
 
+    // --- Dispose ---
+
     [Fact]
-    public void GivenVaultsPage_WhenNavigationItemsRequested_ThenVaultsNavigationItemsAreSet()
+    public void GivenInstance_WhenDisposed_ThenNoExceptionIsThrown()
     {
         // Arrange
         var sut = CreateSut();
 
-        // Trigger navigation items update by requesting action that changes page
-        // The initial state sets navigation items on first render which we can't easily test
-        // Instead test that the navigation items are updated when the vault state changes
-
-        // Act - simulate vault state change that should trigger credentials page
-        Assert.Equal("vaults", sut.CurrentPage);
-
-        // Navigation items should be for vaults page
-        // We verify through the navigation state service
-        // Initial navigation is empty; items get populated on OnAfterRenderAsync
-        // Testing that page state is correct is sufficient here
-        Assert.Equal("vaults", sut.CurrentPage);
-    }
-
-    public void Dispose()
-    {
-        GC.SuppressFinalize(this);
-        this.messenger.UnregisterAll(this);
+        // Act / Assert
+        sut.Dispose();
     }
 }
