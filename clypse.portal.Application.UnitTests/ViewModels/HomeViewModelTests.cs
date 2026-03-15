@@ -58,18 +58,6 @@ public class HomeViewModelTests : IDisposable
             this.messenger);
     }
 
-    // --- Constructor ---
-
-    [Fact]
-    public void GivenValidParameters_WhenConstructing_ThenCreatesInstance()
-    {
-        // Act
-        var sut = CreateSut();
-
-        // Assert
-        Assert.NotNull(sut);
-    }
-
     [Fact]
     public void GivenNullAuthService_WhenConstructing_ThenThrowsArgumentNullException()
     {
@@ -87,8 +75,6 @@ public class HomeViewModelTests : IDisposable
             this.messenger));
     }
 
-    // --- Initial state ---
-
     [Fact]
     public void GivenNewInstance_WhenCheckingInitialState_ThenDefaultValuesAreCorrect()
     {
@@ -103,8 +89,6 @@ public class HomeViewModelTests : IDisposable
         Assert.Null(sut.VaultToDelete);
         Assert.False(sut.ShowCreateVaultDialog);
     }
-
-    // --- OnAfterRenderAsync ---
 
     [Fact]
     public async Task GivenFirstRenderAndNotLoggedIn_WhenOnAfterRenderAsync_ThenNavigatesToLogin()
@@ -150,8 +134,6 @@ public class HomeViewModelTests : IDisposable
         this.mockAuthService.Verify(s => s.Initialize(), Times.Never);
     }
 
-    // --- HandleLockVaultAsync ---
-
     [Fact]
     public async Task GivenVaultIsLocked_WhenHandleLockVault_ThenPageChangesToVaults()
     {
@@ -164,8 +146,6 @@ public class HomeViewModelTests : IDisposable
         // Assert
         Assert.Equal("vaults", sut.CurrentPage);
     }
-
-    // --- CloseVerifyDialog ---
 
     [Fact]
     public void GivenShowVerifyDialog_WhenCloseVerifyDialog_ThenDialogIsClosed()
@@ -180,8 +160,6 @@ public class HomeViewModelTests : IDisposable
         Assert.False(sut.ShowVerifyDialog);
         Assert.Null(sut.VerifyResults);
     }
-
-    // --- CancelDeleteVault ---
 
     [Fact]
     public void GivenShowDeleteVaultDialog_WhenCancelDeleteVault_ThenDialogIsClosed()
@@ -198,8 +176,6 @@ public class HomeViewModelTests : IDisposable
         Assert.Null(sut.DeleteVaultErrorMessage);
     }
 
-    // --- CancelCreateVault ---
-
     [Fact]
     public void GivenShowCreateVaultDialog_WhenCancelCreateVault_ThenDialogIsClosed()
     {
@@ -213,8 +189,6 @@ public class HomeViewModelTests : IDisposable
         Assert.False(sut.ShowCreateVaultDialog);
         Assert.Null(sut.CreateVaultErrorMessage);
     }
-
-    // --- HandleDeleteVaultConfirmAsync ---
 
     [Fact]
     public async Task GivenNoVaultState_WhenHandleDeleteVaultConfirm_ThenDeleteVaultDialogIsClosed()
@@ -275,8 +249,6 @@ public class HomeViewModelTests : IDisposable
         Assert.False(sut.IsDeletingVault);
     }
 
-    // --- HandleCreateVaultFromDialogAsync ---
-
     [Fact]
     public async Task GivenNullStoredCredentials_WhenHandleCreateVaultFromDialog_ThenDialogIsClosed()
     {
@@ -312,8 +284,6 @@ public class HomeViewModelTests : IDisposable
         Assert.NotNull(sut.CreateVaultErrorMessage);
         Assert.False(sut.IsCreatingVault);
     }
-
-    // --- HandleVerifyAsync (via "verify" navigation action) ---
 
     [Fact]
     public async Task GivenNoVaultState_WhenVerifyAction_ThenShowVerifyDialogRemainsHidden()
@@ -373,8 +343,6 @@ public class HomeViewModelTests : IDisposable
         Assert.False(sut.ShowVerifyDialog);
     }
 
-    // --- ShowDeleteVaultDialogInternal (via "delete-vault" action) ---
-
     [Fact]
     public async Task GivenNoCurrentVault_WhenDeleteVaultAction_ThenShowDeleteVaultDialogIsFalse()
     {
@@ -424,8 +392,6 @@ public class HomeViewModelTests : IDisposable
         Assert.True(sut.ShowCreateVaultDialog);
     }
 
-    // --- GetNavigationItems for credentials page ---
-
     [Fact]
     public async Task GivenVaultStateSet_WhenVaultStateChanged_ThenPageChangesToCredentials()
     {
@@ -465,8 +431,6 @@ public class HomeViewModelTests : IDisposable
         Assert.Contains(this.navigationStateService.NavigationItems, i => i.Action == "create-vault");
     }
 
-    // --- show-vaults navigation action ---
-
     [Fact]
     public async Task GivenCredentialsPage_WhenShowVaultsAction_ThenPageChangesToVaults()
     {
@@ -486,13 +450,11 @@ public class HomeViewModelTests : IDisposable
         Assert.Equal("vaults", sut.CurrentPage);
     }
 
-    // --- Refresh ---
-
     [Fact]
     public async Task GivenRefreshAction_WhenNavigationActionRequested_ThenRefreshVaultsMessageIsSent()
     {
         // Arrange
-        var sut = CreateSut();
+        _ = CreateSut();
         var messageReceived = false;
         this.messenger.Register<RefreshVaultsMessage>(this, (_, _) => messageReceived = true);
 
@@ -535,8 +497,6 @@ public class HomeViewModelTests : IDisposable
         // Assert
         Assert.True(messageReceived);
     }
-
-    // --- Dispose ---
 
     [Fact]
     public void GivenInstance_WhenDisposed_ThenNoExceptionIsThrown()
