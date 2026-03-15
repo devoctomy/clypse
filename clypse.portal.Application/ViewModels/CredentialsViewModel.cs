@@ -1,3 +1,4 @@
+using System.Globalization;
 using Blazing.Mvvm.ComponentModel;
 using clypse.core.Enums;
 using clypse.core.Secrets;
@@ -118,7 +119,7 @@ public partial class CredentialsViewModel : ViewModelBase,
             return;
         }
 
-        var term = SearchTerm.Trim().ToLower();
+        var term = SearchTerm.Trim().ToLower(CultureInfo.InvariantCulture);
         FilteredEntries = [..entries
             .Where(entry => VaultIndexEntryIsSearchMatch(entry, term))
             .OrderBy(e => e.Name, StringComparer.OrdinalIgnoreCase)];
@@ -189,12 +190,17 @@ public partial class CredentialsViewModel : ViewModelBase,
             case CrudDialogMode.Create:
                 await HandleCreateSecretAsync(secret);
                 break;
+
             case CrudDialogMode.Update:
                 await HandleSaveSecretAsync(secret);
                 break;
+
             case CrudDialogMode.View:
                 CloseSecretDialog();
                 break;
+
+            default:
+                throw new NotSupportedException($"Unsupported dialog mode: {SecretDialogMode}");
         }
     }
 
