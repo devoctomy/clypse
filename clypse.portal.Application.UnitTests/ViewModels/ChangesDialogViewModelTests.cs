@@ -16,7 +16,9 @@ public class ChangesDialogViewModelTests
         this.mockLogger = new Mock<ILogger<ChangesDialogViewModel>>();
     }
 
-    private static HttpClient CreateHttpClientWithResponse(string content, HttpStatusCode statusCode = HttpStatusCode.OK)
+    private static HttpClient CreateHttpClientWithResponse(
+        string content,
+        HttpStatusCode statusCode = HttpStatusCode.OK)
     {
         var handler = new Mock<HttpMessageHandler>();
         handler.Protected()

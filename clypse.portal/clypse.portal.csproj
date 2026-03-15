@@ -40,6 +40,16 @@
 		  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
 		</Content>
 	</ItemGroup>
+	<ItemGroup>
+		<None Include="..\Documentation\**\*" Condition="'$(NCrunch)' == '1'">
+			<Visible>false</Visible>
+		</None>
+	</ItemGroup>
+	<ItemGroup>
+		<None Include="..\clypse.portal.ClientScripts\**\*" Condition="'$(NCrunch)' == '1'">
+			<Visible>false</Visible>
+		</None>
+	</ItemGroup>	
 	<Target Name="AfterBuild_WriteAssemblyVersion" AfterTargets="Build" Condition="'$(IsCrossTargetingBuild)' != 'true' and Exists('$(TargetPath)')">
 		<GetAssemblyIdentity AssemblyFiles="$(TargetPath)">
 			<Output TaskParameter="Assemblies" ItemName="BuiltAssemblyIdentity" />

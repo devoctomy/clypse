@@ -112,19 +112,13 @@ public partial class VaultsViewModel : ViewModelBase, IRecipient<RefreshVaultsMe
         {
             IsLoading = true;
 
-            if (bootstrapperService == null)
+            bool prepared = await PrepareBootstrapper();
+            if (!prepared)
             {
-                bootstrapperService = await CreateBootstrapperServiceAsync();
-                if (bootstrapperService == null)
-                {
-                    Console.WriteLine("Failed to create bootstrapper service");
-                    Vaults = [];
-                    IsLoading = false;
-                    return;
-                }
+                return;
             }
 
-            var vaultListingsResult = await bootstrapperService.ListVaultsAsync(CancellationToken.None);
+            var vaultListingsResult = await bootstrapperService!.ListVaultsAsync(CancellationToken.None);
             VaultListings = [.. vaultListingsResult];
 
             var storedVaults = await vaultStorage.GetVaultsAsync();
@@ -141,15 +135,7 @@ public partial class VaultsViewModel : ViewModelBase, IRecipient<RefreshVaultsMe
             }).ToList();
 
 #if DEBUG
-            for (var i = 0; i < 20; i++)
-            {
-                loadedVaults.Add(new VaultMetadata
-                {
-                    Id = Guid.NewGuid().ToString(),
-                    Name = $"Test Vault {i + 1}",
-                    Description = "This vault cannot be opened.",
-                });
-            }
+            CreateDummyTestVaults(loadedVaults);
 #endif
 
             Vaults = loadedVaults;
@@ -281,6 +267,36 @@ public partial class VaultsViewModel : ViewModelBase, IRecipient<RefreshVaultsMe
         }
 
         base.Dispose(disposing);
+    }
+
+    private static void CreateDummyTestVaults(List<VaultMetadata> loadedVaults)
+    {
+        for (var i = 0; i < 20; i++)
+        {
+            loadedVaults.Add(new VaultMetadata
+            {
+                Id = Guid.NewGuid().ToString(),
+                Name = $"Test Vault {i + 1}",
+                Description = "This vault cannot be opened.",
+            });
+        }
+    }
+
+    private async Task<bool> PrepareBootstrapper()
+    {
+        if (bootstrapperService == null)
+        {
+            bootstrapperService = await CreateBootstrapperServiceAsync();
+            if (bootstrapperService == null)
+            {
+                Console.WriteLine("Failed to create bootstrapper service");
+                Vaults = [];
+                IsLoading = false;
+                return false;
+            }
+        }
+
+        return true;
     }
 
     private async Task<IVaultManagerBootstrapperService?> CreateBootstrapperServiceAsync()
