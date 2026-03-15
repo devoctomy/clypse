@@ -43,8 +43,6 @@ public class VaultsViewModelTests : IDisposable
             this.messenger);
     }
 
-    // ─── Constructor ──────────────────────────────────────────────────────────
-
     [Fact]
     public void GivenValidParameters_WhenConstructing_ThenCreatesInstance()
     {
@@ -139,8 +137,6 @@ public class VaultsViewModelTests : IDisposable
             null!));
     }
 
-    // ─── Initial state ────────────────────────────────────────────────────────
-
     [Fact]
     public void GivenNewInstance_WhenCheckingInitialState_ThenDefaultValuesAreCorrect()
     {
@@ -193,8 +189,6 @@ public class VaultsViewModelTests : IDisposable
         Assert.Null(sut.SelectedVault);
         Assert.Null(sut.ErrorMessage);
     }
-
-    // ─── ShowVaultDetailsPanelFor / HideVaultDetailsPanel ────────────────────
 
     [Fact]
     public void GivenVaultMetadata_WhenShowVaultDetailsPanelFor_ThenPanelIsShownWithVault()
@@ -275,8 +269,6 @@ public class VaultsViewModelTests : IDisposable
         // Assert
         Assert.Equal("Bootstrapper service not available", sut.ErrorMessage);
     }
-
-    // ─── LoadVaultsAsync — no credentials path ────────────────────────────────
 
     [Fact]
     public async Task GivenNoCredentials_WhenLoadVaults_ThenVaultsAreEmptyAndLoadingIsFalse()
@@ -372,8 +364,6 @@ public class VaultsViewModelTests : IDisposable
         Assert.Equal("Test desc", vault.Description);
     }
 
-    // ─── RefreshVaultsMessage ─────────────────────────────────────────────────
-
     [Fact]
     public async Task GivenRefreshVaultsMessage_WhenReceived_ThenLoadVaultsIsInvoked()
     {
@@ -391,8 +381,6 @@ public class VaultsViewModelTests : IDisposable
         Assert.False(sut.IsLoading);
     }
 
-    // ─── ErrorMessage property ────────────────────────────────────────────────
-
     [Fact]
     public void GivenInstance_WhenSettingErrorMessage_ThenErrorMessageIsUpdated()
     {
@@ -406,8 +394,6 @@ public class VaultsViewModelTests : IDisposable
         Assert.Equal("Something went wrong", sut.ErrorMessage);
     }
 
-    // ─── Dispose / IDisposable ────────────────────────────────────────────────
-
     [Fact]
     public void GivenInstance_WhenDisposed_ThenNoExceptionIsThrown()
     {
@@ -417,8 +403,6 @@ public class VaultsViewModelTests : IDisposable
         // Act & Assert (no exception)
         sut.Dispose();
     }
-
-    // ─── Helpers ──────────────────────────────────────────────────────────────
 
     private void SetupValidCredentials()
     {
