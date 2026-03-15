@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using Blazing.Mvvm.ComponentModel;
 using clypse.core.Cloud;
 using clypse.core.Cloud.Aws.S3;
@@ -15,6 +16,7 @@ namespace clypse.portal.Application.ViewModels;
 /// <summary>
 /// ViewModel for the Test/debug page.
 /// </summary>
+[ExcludeFromCodeCoverage]
 public partial class TestViewModel : ViewModelBase
 {
     private readonly IAuthenticationService authService;
