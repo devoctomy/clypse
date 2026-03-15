@@ -121,7 +121,7 @@ public partial class CredentialsViewModel : ViewModelBase,
 
         var term = SearchTerm.Trim().ToLower(CultureInfo.InvariantCulture);
         FilteredEntries = [..entries
-            .Where(entry => VaultIndexEntryIsSearchMatch(entry, term))
+            .Where(entry => VaultIndexEntryIsSearchMatch(term, entry.Name, entry.Description, entry.Tags))
             .OrderBy(e => e.Name, StringComparer.OrdinalIgnoreCase)];
     }
 
@@ -325,12 +325,23 @@ public partial class CredentialsViewModel : ViewModelBase,
     }
 
     private static bool VaultIndexEntryIsSearchMatch(
-        VaultIndexEntry entry,
-        string term)
+        string term,
+        params string?[]? parameters)
     {
-        return (entry.Name?.Contains(term, StringComparison.OrdinalIgnoreCase) ?? false) ||
-               (entry.Description?.Contains(term, StringComparison.OrdinalIgnoreCase) ?? false) ||
-               (entry.Tags?.Contains(term, StringComparison.OrdinalIgnoreCase) ?? false);
+        if (parameters == null)
+        {
+            return false;
+        }
+
+        foreach (var param in parameters)
+        {
+            if (param != null && param.Contains(term, StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private async Task ViewOrUpdateSecret(
