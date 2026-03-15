@@ -104,7 +104,9 @@ public partial class CredentialsViewModel : ViewModelBase,
     /// <summary>Handles the search input change.</summary>
     public void HandleSearch()
     {
-        if (vaultStateService.CurrentVault?.IndexEntries == null)
+        var entries = vaultStateService.CurrentVault?.IndexEntries;
+
+        if (entries == null)
         {
             FilteredEntries = [];
             return;
@@ -112,16 +114,13 @@ public partial class CredentialsViewModel : ViewModelBase,
 
         if (string.IsNullOrWhiteSpace(SearchTerm))
         {
-            FilteredEntries = [.. vaultStateService.CurrentVault.IndexEntries.OrderBy(x => x.Name, StringComparer.OrdinalIgnoreCase)];
+            FilteredEntries = [.. entries.OrderBy(x => x.Name, StringComparer.OrdinalIgnoreCase)];
             return;
         }
 
         var term = SearchTerm.Trim().ToLower();
-        FilteredEntries = [.. vaultStateService.CurrentVault.IndexEntries
-            .Where(entry =>
-                (entry.Name?.Contains(term, StringComparison.OrdinalIgnoreCase) ?? false) ||
-                (entry.Description?.Contains(term, StringComparison.OrdinalIgnoreCase) ?? false) ||
-                (entry.Tags?.Contains(term, StringComparison.OrdinalIgnoreCase) ?? false))
+        FilteredEntries = [..entries
+            .Where(entry => VaultIndexEntryIsSearchMatch(entry, term))
             .OrderBy(e => e.Name, StringComparer.OrdinalIgnoreCase)];
     }
 
@@ -317,6 +316,15 @@ public partial class CredentialsViewModel : ViewModelBase,
         }
 
         base.Dispose(disposing);
+    }
+
+    private static bool VaultIndexEntryIsSearchMatch(
+        VaultIndexEntry entry,
+        string term)
+    {
+        return (entry.Name?.Contains(term, StringComparison.OrdinalIgnoreCase) ?? false) ||
+               (entry.Description?.Contains(term, StringComparison.OrdinalIgnoreCase) ?? false) ||
+               (entry.Tags?.Contains(term, StringComparison.OrdinalIgnoreCase) ?? false);
     }
 
     private async Task ViewOrUpdateSecret(
