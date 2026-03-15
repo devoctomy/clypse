@@ -2,6 +2,7 @@ using Blazing.Mvvm.ComponentModel;
 using clypse.core.Enums;
 using clypse.core.Secrets;
 using clypse.core.Vault;
+using clypse.portal.Application.Helpers;
 using clypse.portal.Application.Services.Interfaces;
 using clypse.portal.Application.ViewModels.Messages;
 using clypse.portal.Models.Enums;
@@ -42,8 +43,8 @@ public partial class CredentialsViewModel : ViewModelBase,
     /// <param name="messenger">The messenger used for cross-component communication.</param>
     public CredentialsViewModel(IVaultStateService vaultStateService, IMessenger messenger)
     {
-        this.vaultStateService = vaultStateService ?? throw new ArgumentNullException(nameof(vaultStateService));
-        this.messenger = messenger ?? throw new ArgumentNullException(nameof(messenger));
+        this.vaultStateService = ValidationHelpers.VerifiedAssignent(vaultStateService);
+        this.messenger = ValidationHelpers.VerifiedAssignent(messenger);
         this.messenger.Register<ShowCreateCredentialMessage>(this);
         this.messenger.Register<ShowImportMessage>(this);
         this.vaultStateService.VaultStateChanged += OnVaultStateChanged;

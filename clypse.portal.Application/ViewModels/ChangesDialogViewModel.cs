@@ -1,5 +1,6 @@
 using System.Text.Json;
 using Blazing.Mvvm.ComponentModel;
+using clypse.portal.Application.Helpers;
 using clypse.portal.Models.Changes;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.Logging;
@@ -31,8 +32,8 @@ public partial class ChangesDialogViewModel : ViewModelBase
     /// <param name="logger">The logger instance.</param>
     public ChangesDialogViewModel(HttpClient httpClient, ILogger<ChangesDialogViewModel> logger)
     {
-        this.httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
-        this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        this.httpClient = ValidationHelpers.VerifiedAssignent(httpClient);
+        this.logger = ValidationHelpers.VerifiedAssignent(logger);
     }
 
     /// <summary>Gets a value indicating whether the changelog is loading.</summary>

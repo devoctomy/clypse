@@ -1,6 +1,7 @@
 using Blazing.Mvvm.ComponentModel;
 using clypse.core.Enums;
 using clypse.core.Password;
+using clypse.portal.Application.Helpers;
 using clypse.portal.Models.Enums;
 using clypse.portal.Models.Settings;
 using CommunityToolkit.Mvvm.Input;
@@ -35,8 +36,8 @@ public partial class PasswordGeneratorDialogViewModel : ViewModelBase
     /// <param name="appSettings">The application settings.</param>
     public PasswordGeneratorDialogViewModel(IPasswordGeneratorService passwordGeneratorService, AppSettings appSettings)
     {
-        this.passwordGeneratorService = passwordGeneratorService ?? throw new ArgumentNullException(nameof(passwordGeneratorService));
-        this.appSettings = appSettings ?? throw new ArgumentNullException(nameof(appSettings));
+        this.passwordGeneratorService = ValidationHelpers.VerifiedAssignent(passwordGeneratorService);
+        this.appSettings = ValidationHelpers.VerifiedAssignent(appSettings);
     }
 
     /// <summary>Gets the currently generated password.</summary>

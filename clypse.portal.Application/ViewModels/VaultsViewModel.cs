@@ -1,11 +1,12 @@
-using System.Text.Json;
 using Blazing.Mvvm.ComponentModel;
 using clypse.core.Vault;
+using clypse.portal.Application.Helpers;
 using clypse.portal.Application.Services.Interfaces;
 using clypse.portal.Application.ViewModels.Messages;
 using clypse.portal.Models.Vault;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
+using System.Text.Json;
 
 namespace clypse.portal.Application.ViewModels;
 
@@ -52,13 +53,13 @@ public partial class VaultsViewModel : ViewModelBase, IRecipient<RefreshVaultsMe
         Models.Aws.AwsS3Config awsS3Config,
         IMessenger messenger)
     {
-        this.vaultStorage = vaultStorage ?? throw new ArgumentNullException(nameof(vaultStorage));
-        this.vaultManagerBootstrapperFactory = vaultManagerBootstrapperFactory ?? throw new ArgumentNullException(nameof(vaultManagerBootstrapperFactory));
-        this.localStorageService = localStorageService ?? throw new ArgumentNullException(nameof(localStorageService));
-        this.vaultStateService = vaultStateService ?? throw new ArgumentNullException(nameof(vaultStateService));
-        this.jsS3InvokerProvider = jsS3InvokerProvider ?? throw new ArgumentNullException(nameof(jsS3InvokerProvider));
-        this.awsS3Config = awsS3Config ?? throw new ArgumentNullException(nameof(awsS3Config));
-        this.messenger = messenger ?? throw new ArgumentNullException(nameof(messenger));
+        this.vaultStorage = ValidationHelpers.VerifiedAssignent(vaultStorage);
+        this.vaultManagerBootstrapperFactory = ValidationHelpers.VerifiedAssignent(vaultManagerBootstrapperFactory);
+        this.localStorageService = ValidationHelpers.VerifiedAssignent(localStorageService);
+        this.vaultStateService = ValidationHelpers.VerifiedAssignent(vaultStateService);
+        this.jsS3InvokerProvider = ValidationHelpers.VerifiedAssignent(jsS3InvokerProvider);
+        this.awsS3Config = ValidationHelpers.VerifiedAssignent(awsS3Config);
+        this.messenger = ValidationHelpers.VerifiedAssignent(messenger);
         this.messenger.Register(this);
     }
 

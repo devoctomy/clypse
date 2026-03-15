@@ -1,6 +1,7 @@
 using Blazing.Mvvm.ComponentModel;
 using clypse.core.Cryptography.Interfaces;
 using clypse.core.Vault;
+using clypse.portal.Application.Helpers;
 using clypse.portal.Application.Services.Interfaces;
 using clypse.portal.Application.ViewModels.Messages;
 using clypse.portal.Models.Aws;
@@ -64,27 +65,16 @@ public partial class HomeViewModel : ViewModelBase
         IKeyDerivationService keyDerivationService,
         IMessenger messenger)
     {
-        ArgumentNullException.ThrowIfNull(authService, nameof(authService));
-        ArgumentNullException.ThrowIfNull(navigationService, nameof(navigationService));
-        ArgumentNullException.ThrowIfNull(vaultManagerFactory, nameof(vaultManagerFactory));
-        ArgumentNullException.ThrowIfNull(vaultStorage, nameof(vaultStorage));
-        ArgumentNullException.ThrowIfNull(navigationStateService, nameof(navigationStateService));
-        ArgumentNullException.ThrowIfNull(vaultStateService, nameof(vaultStateService));
-        ArgumentNullException.ThrowIfNull(jsS3InvokerProvider, nameof(jsS3InvokerProvider));
-        ArgumentNullException.ThrowIfNull(awsS3Config, nameof(awsS3Config));
-        ArgumentNullException.ThrowIfNull(keyDerivationService, nameof(keyDerivationService));
-        ArgumentNullException.ThrowIfNull(messenger, nameof(messenger));
-
-        this.authService = authService;
-        this.navigationService = navigationService;
-        this.vaultManagerFactory = vaultManagerFactory;
-        this.vaultStorage = vaultStorage;
-        this.navigationStateService = navigationStateService;
-        this.vaultStateService = vaultStateService;
-        this.jsS3InvokerProvider = jsS3InvokerProvider;
-        this.awsS3Config = awsS3Config;
-        this.keyDerivationService = keyDerivationService;
-        this.messenger = messenger;
+        this.authService = ValidationHelpers.VerifiedAssignent(authService);
+        this.navigationService = ValidationHelpers.VerifiedAssignent(navigationService);
+        this.vaultManagerFactory = ValidationHelpers.VerifiedAssignent(vaultManagerFactory);
+        this.vaultStorage = ValidationHelpers.VerifiedAssignent(vaultStorage);
+        this.navigationStateService = ValidationHelpers.VerifiedAssignent(navigationStateService);
+        this.vaultStateService = ValidationHelpers.VerifiedAssignent(vaultStateService);
+        this.jsS3InvokerProvider = ValidationHelpers.VerifiedAssignent(jsS3InvokerProvider);
+        this.awsS3Config = ValidationHelpers.VerifiedAssignent(awsS3Config);
+        this.keyDerivationService = ValidationHelpers.VerifiedAssignent(keyDerivationService);
+        this.messenger = ValidationHelpers.VerifiedAssignent(messenger);
         this.actionHandlers = BuildActionHandlers();
         this.navigationStateService.NavigationActionRequested += OnNavigationActionRequested;
         this.vaultStateService.VaultStateChanged += OnVaultStateChanged;

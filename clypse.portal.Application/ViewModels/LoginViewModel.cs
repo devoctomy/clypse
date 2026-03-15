@@ -1,10 +1,11 @@
-using System.Text.Json;
 using Blazing.Mvvm.ComponentModel;
 using clypse.core.Cryptography.Interfaces;
+using clypse.portal.Application.Helpers;
 using clypse.portal.Application.Services.Interfaces;
 using clypse.portal.Models.Login;
 using clypse.portal.Models.Settings;
 using CommunityToolkit.Mvvm.Input;
+using System.Text.Json;
 
 namespace clypse.portal.Application.ViewModels;
 
@@ -69,14 +70,14 @@ public partial class LoginViewModel : ViewModelBase
         ICryptoService cryptoService,
         AppSettings appSettings)
     {
-        this.authService = authService ?? throw new ArgumentNullException(nameof(authService));
-        this.navigationService = navigationService ?? throw new ArgumentNullException(nameof(navigationService));
-        this.userSettingsService = userSettingsService ?? throw new ArgumentNullException(nameof(userSettingsService));
-        this.browserInteropService = browserInteropService ?? throw new ArgumentNullException(nameof(browserInteropService));
-        this.localStorageService = localStorageService ?? throw new ArgumentNullException(nameof(localStorageService));
-        this.webAuthnService = webAuthnService ?? throw new ArgumentNullException(nameof(webAuthnService));
-        this.cryptoService = cryptoService ?? throw new ArgumentNullException(nameof(cryptoService));
-        this.appSettings = appSettings ?? throw new ArgumentNullException(nameof(appSettings));
+        this.authService = ValidationHelpers.VerifiedAssignent(authService);
+        this.navigationService = ValidationHelpers.VerifiedAssignent(navigationService);
+        this.userSettingsService = ValidationHelpers.VerifiedAssignent(userSettingsService);
+        this.browserInteropService = ValidationHelpers.VerifiedAssignent(browserInteropService);
+        this.localStorageService = ValidationHelpers.VerifiedAssignent(localStorageService);
+        this.webAuthnService = ValidationHelpers.VerifiedAssignent(webAuthnService);
+        this.cryptoService = ValidationHelpers.VerifiedAssignent(cryptoService);
+        this.appSettings = ValidationHelpers.VerifiedAssignent(appSettings);
     }
 
     /// <summary>Gets the application settings.</summary>

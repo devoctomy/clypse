@@ -1,4 +1,5 @@
 using Blazing.Mvvm.ComponentModel;
+using clypse.portal.Application.Helpers;
 using clypse.portal.Application.Services.Interfaces;
 using clypse.portal.Models.Settings;
 using CommunityToolkit.Mvvm.Input;
@@ -32,9 +33,9 @@ public partial class MainLayoutViewModel : ViewModelBase
         AppSettings appSettings,
         ILogger<MainLayoutViewModel> logger)
     {
-        this.pwaUpdateService = pwaUpdateService ?? throw new ArgumentNullException(nameof(pwaUpdateService));
-        this.appSettings = appSettings ?? throw new ArgumentNullException(nameof(appSettings));
-        this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        this.pwaUpdateService = ValidationHelpers.VerifiedAssignent(pwaUpdateService);
+        this.appSettings = ValidationHelpers.VerifiedAssignent(appSettings);
+        this.logger = ValidationHelpers.VerifiedAssignent(logger);
     }
 
     /// <summary>

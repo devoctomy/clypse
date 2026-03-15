@@ -1,10 +1,11 @@
-using System.Text.Json;
 using Blazing.Mvvm.ComponentModel;
+using clypse.portal.Application.Helpers;
 using clypse.portal.Application.Services.Interfaces;
 using clypse.portal.Models.Aws;
 using clypse.portal.Models.Navigation;
 using clypse.portal.Models.Settings;
 using CommunityToolkit.Mvvm.Input;
+using System.Text.Json;
 
 namespace clypse.portal.Application.ViewModels;
 
@@ -45,13 +46,13 @@ public partial class HomeLayoutViewModel : ViewModelBase
         INavigationStateService navigationStateService,
         AppSettings appSettings)
     {
-        this.authService = authService ?? throw new ArgumentNullException(nameof(authService));
-        this.userSettingsService = userSettingsService ?? throw new ArgumentNullException(nameof(userSettingsService));
-        this.localStorageService = localStorageService ?? throw new ArgumentNullException(nameof(localStorageService));
-        this.browserInteropService = browserInteropService ?? throw new ArgumentNullException(nameof(browserInteropService));
-        this.navigationService = navigationService ?? throw new ArgumentNullException(nameof(navigationService));
-        this.navigationStateService = navigationStateService ?? throw new ArgumentNullException(nameof(navigationStateService));
-        this.appSettings = appSettings ?? throw new ArgumentNullException(nameof(appSettings));
+        this.authService = ValidationHelpers.VerifiedAssignent(authService);
+        this.userSettingsService = ValidationHelpers.VerifiedAssignent(userSettingsService);
+        this.localStorageService = ValidationHelpers.VerifiedAssignent(localStorageService);
+        this.browserInteropService = ValidationHelpers.VerifiedAssignent(browserInteropService);
+        this.navigationService = ValidationHelpers.VerifiedAssignent(navigationService);
+        this.navigationStateService = ValidationHelpers.VerifiedAssignent(navigationStateService);
+        this.appSettings = ValidationHelpers.VerifiedAssignent(appSettings);
 
         this.navigationStateService.NavigationItemsChanged += OnNavigationItemsChanged;
     }

@@ -1,6 +1,7 @@
 using Blazing.Mvvm.ComponentModel;
 using clypse.core.Enums;
 using clypse.core.Secrets.Import;
+using clypse.portal.Application.Helpers;
 using clypse.portal.Models.Import;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.AspNetCore.Components.Forms;
@@ -34,7 +35,7 @@ public partial class ImportSecretsDialogViewModel : ViewModelBase
     /// <param name="secretsImporterService">The secrets importer service.</param>
     public ImportSecretsDialogViewModel(ISecretsImporterService secretsImporterService)
     {
-        this.secretsImporterService = secretsImporterService ?? throw new ArgumentNullException(nameof(secretsImporterService));
+        this.secretsImporterService = ValidationHelpers.VerifiedAssignent(secretsImporterService);
     }
 
     /// <summary>Gets the name of the selected file.</summary>

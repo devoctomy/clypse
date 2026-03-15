@@ -1,4 +1,3 @@
-using System.Diagnostics.CodeAnalysis;
 using Blazing.Mvvm.ComponentModel;
 using clypse.core.Cloud;
 using clypse.core.Cloud.Aws.S3;
@@ -6,10 +5,12 @@ using clypse.core.Compression;
 using clypse.core.Cryptography;
 using clypse.core.Secrets;
 using clypse.core.Vault;
+using clypse.portal.Application.Helpers;
 using clypse.portal.Application.Services.Interfaces;
 using clypse.portal.Models.Aws;
 using clypse.portal.Models.WebAuthn;
 using CommunityToolkit.Mvvm.Input;
+using System.Diagnostics.CodeAnalysis;
 
 namespace clypse.portal.Application.ViewModels;
 
@@ -72,15 +73,13 @@ public partial class TestViewModel : ViewModelBase
         AwsS3Config awsS3Config,
         INavigationService navigationService)
     {
-        this.authService = authService ?? throw new ArgumentNullException(nameof(authService));
-        this.webAuthnService = webAuthnService ?? throw new ArgumentNullException(nameof(webAuthnService));
-        this.jsS3InvokerProvider = jsS3InvokerProvider ?? throw new ArgumentNullException(nameof(jsS3InvokerProvider));
-        this.cognitoConfig = cognitoConfig ?? throw new ArgumentNullException(nameof(cognitoConfig));
-        this.awsS3Config = awsS3Config ?? throw new ArgumentNullException(nameof(awsS3Config));
-        this.navigationService = navigationService ?? throw new ArgumentNullException(nameof(navigationService));
+        this.authService = ValidationHelpers.VerifiedAssignent(authService);
+        this.webAuthnService = ValidationHelpers.VerifiedAssignent(webAuthnService);
+        this.jsS3InvokerProvider = ValidationHelpers.VerifiedAssignent(jsS3InvokerProvider);
+        this.cognitoConfig = ValidationHelpers.VerifiedAssignent(cognitoConfig);
+        this.awsS3Config = ValidationHelpers.VerifiedAssignent(awsS3Config);
+        this.navigationService = ValidationHelpers.VerifiedAssignent(navigationService);
     }
-
-    // ─── Observable properties ────────────────────────────────────────────────
 
     /// <summary>Gets a value indicating whether an operation is in progress.</summary>
     public bool IsLoading { get => isLoading; private set => SetProperty(ref isLoading, value); }
