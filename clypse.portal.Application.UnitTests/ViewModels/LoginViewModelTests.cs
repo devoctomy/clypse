@@ -1,5 +1,4 @@
 using System.Text.Json;
-using clypse.core.Cryptography.Interfaces;
 using clypse.portal.Application.Services.Interfaces;
 using clypse.portal.Application.ViewModels;
 using clypse.portal.Models.Login;
@@ -17,7 +16,7 @@ public class LoginViewModelTests
     private readonly Mock<IBrowserInteropService> mockBrowserInteropService;
     private readonly Mock<ILocalStorageService> mockLocalStorageService;
     private readonly Mock<IWebAuthnService> mockWebAuthnService;
-    private readonly Mock<ICryptoService> mockCryptoService;
+    private readonly Mock<IPasswordCryptoService> mockPasswordCryptoService;
     private readonly AppSettings appSettings;
 
     public LoginViewModelTests()
@@ -28,7 +27,7 @@ public class LoginViewModelTests
         this.mockBrowserInteropService = new Mock<IBrowserInteropService>();
         this.mockLocalStorageService = new Mock<ILocalStorageService>();
         this.mockWebAuthnService = new Mock<IWebAuthnService>();
-        this.mockCryptoService = new Mock<ICryptoService>();
+        this.mockPasswordCryptoService = new Mock<IPasswordCryptoService>();
         this.appSettings = new AppSettings();
 
         this.mockUserSettingsService.Setup(s => s.GetThemeAsync()).ReturnsAsync("light");
@@ -48,7 +47,7 @@ public class LoginViewModelTests
             this.mockBrowserInteropService.Object,
             this.mockLocalStorageService.Object,
             this.mockWebAuthnService.Object,
-            this.mockCryptoService.Object,
+            this.mockPasswordCryptoService.Object,
             this.appSettings);
     }
 
@@ -75,7 +74,7 @@ public class LoginViewModelTests
             this.mockBrowserInteropService.Object,
             this.mockLocalStorageService.Object,
             this.mockWebAuthnService.Object,
-            this.mockCryptoService.Object,
+            this.mockPasswordCryptoService.Object,
             this.appSettings));
     }
 
@@ -90,7 +89,7 @@ public class LoginViewModelTests
             this.mockBrowserInteropService.Object,
             this.mockLocalStorageService.Object,
             this.mockWebAuthnService.Object,
-            this.mockCryptoService.Object,
+            this.mockPasswordCryptoService.Object,
             this.appSettings));
     }
 
@@ -540,9 +539,9 @@ public class LoginViewModelTests
         this.mockWebAuthnService
             .Setup(w => w.RegisterAsync("user", null))
             .ReturnsAsync(new WebAuthnRegisterResult { Success = true, PrfEnabled = true, PrfOutput = prfHex, CredentialID = "cred1", UserID = "uid1" });
-        this.mockCryptoService
-            .Setup(c => c.EncryptAsync(It.IsAny<Stream>(), It.IsAny<Stream>(), It.IsAny<string>()))
-            .Returns(Task.CompletedTask);
+        this.mockPasswordCryptoService
+            .Setup(c => c.EncryptWithPrfAsync(It.IsAny<string>(), It.IsAny<string>()))
+            .ReturnsAsync(string.Empty);
 
         // Act
         await sut.HandleWebAuthnSetupCommand.ExecuteAsync(null);

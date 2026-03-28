@@ -217,7 +217,6 @@ public class SecretDialogViewModelTests
         Assert.True(wasSavingDuringCallback);
         Assert.False(sut.IsSaving);
     }
-    // --- InitializeForSecret ---
 
     [Fact]
     public void GivenWebSecretWithCreateMode_WhenInitializeForSecret_ThenModeIsCreate()
@@ -235,8 +234,6 @@ public class SecretDialogViewModelTests
         Assert.NotNull(sut.SecretFields);
     }
 
-    // --- HandleSave edge cases ---
-
     [Fact]
     public async Task GivenCreateModeWithNullCallback_WhenHandleSave_ThenIsSavingResetsCleanly()
     {
@@ -253,8 +250,6 @@ public class SecretDialogViewModelTests
         Assert.False(sut.IsSaving);
         Assert.NotNull(sut.EditableSecret);
     }
-
-    // --- OnSecretTypeChanged ---
 
     [Fact]
     public void GivenInitializedWithWebSecret_WhenOnSecretTypeChangedToAws_ThenSecretTypeIsAws()

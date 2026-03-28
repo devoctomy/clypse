@@ -1,5 +1,4 @@
 using Blazing.Mvvm.ComponentModel;
-using clypse.core.Cryptography.Interfaces;
 using clypse.portal.Application.Helpers;
 using clypse.portal.Application.Services.Interfaces;
 using clypse.portal.Models.Login;
@@ -23,7 +22,7 @@ public partial class LoginViewModel : ViewModelBase
     private readonly IBrowserInteropService browserInteropService;
     private readonly ILocalStorageService localStorageService;
     private readonly IWebAuthnService webAuthnService;
-    private readonly ICryptoService cryptoService;
+    private readonly IPasswordCryptoService passwordCryptoService;
     private readonly AppSettings appSettings;
 
     private bool isLoading;
@@ -58,7 +57,7 @@ public partial class LoginViewModel : ViewModelBase
     /// <param name="browserInteropService">The browser interop service.</param>
     /// <param name="localStorageService">The local storage service.</param>
     /// <param name="webAuthnService">The WebAuthn service for passkey authentication.</param>
-    /// <param name="cryptoService">The cryptographic service.</param>
+    /// <param name="passwordCryptoService">The password crypto service for PRF-based encryption.</param>
     /// <param name="appSettings">The application settings.</param>
     public LoginViewModel(
         IAuthenticationService authService,
@@ -67,7 +66,7 @@ public partial class LoginViewModel : ViewModelBase
         IBrowserInteropService browserInteropService,
         ILocalStorageService localStorageService,
         IWebAuthnService webAuthnService,
-        ICryptoService cryptoService,
+        IPasswordCryptoService passwordCryptoService,
         AppSettings appSettings)
     {
         this.authService = ValidationHelpers.VerifiedAssignent(authService);
@@ -76,7 +75,7 @@ public partial class LoginViewModel : ViewModelBase
         this.browserInteropService = ValidationHelpers.VerifiedAssignent(browserInteropService);
         this.localStorageService = ValidationHelpers.VerifiedAssignent(localStorageService);
         this.webAuthnService = ValidationHelpers.VerifiedAssignent(webAuthnService);
-        this.cryptoService = ValidationHelpers.VerifiedAssignent(cryptoService);
+        this.passwordCryptoService = ValidationHelpers.VerifiedAssignent(passwordCryptoService);
         this.appSettings = ValidationHelpers.VerifiedAssignent(appSettings);
     }
 
@@ -337,7 +336,7 @@ public partial class LoginViewModel : ViewModelBase
                     CredentialID = result.CredentialID ?? string.Empty,
                     UserID = result.UserID ?? string.Empty,
                     CreatedAt = DateTime.UtcNow,
-                    EncryptedPassword = await EncryptPasswordWithPrfAsync(Password, result.PrfOutput!),
+                    EncryptedPassword = await passwordCryptoService.EncryptWithPrfAsync(Password, result.PrfOutput!),
                 };
 
                 await SaveUserAsync(Username, webAuthnCredential);
@@ -594,7 +593,7 @@ public partial class LoginViewModel : ViewModelBase
 
             if (authResult.Success && !string.IsNullOrEmpty(authResult.PrfOutput))
             {
-                var decryptedPassword = await DecryptPasswordWithPrfAsync(
+                var decryptedPassword = await passwordCryptoService.DecryptWithPrfAsync(
                     user.WebAuthnCredential.EncryptedPassword!,
                     authResult.PrfOutput);
 
@@ -636,27 +635,4 @@ public partial class LoginViewModel : ViewModelBase
         ShowRememberMe = false;
     }
 
-    private async Task<string> EncryptPasswordWithPrfAsync(string password, string prfOutputHex)
-    {
-        var prfBytes = Convert.FromHexString(prfOutputHex);
-        var base64Key = Convert.ToBase64String(prfBytes);
-        var passwordBytes = System.Text.Encoding.UTF8.GetBytes(password);
-
-        using var inputStream = new MemoryStream(passwordBytes);
-        using var outputStream = new MemoryStream();
-        await cryptoService.EncryptAsync(inputStream, outputStream, base64Key);
-        return Convert.ToBase64String(outputStream.ToArray());
-    }
-
-    private async Task<string> DecryptPasswordWithPrfAsync(string encryptedPasswordBase64, string prfOutputHex)
-    {
-        var prfBytes = Convert.FromHexString(prfOutputHex);
-        var base64Key = Convert.ToBase64String(prfBytes);
-        var encryptedBytes = Convert.FromBase64String(encryptedPasswordBase64);
-
-        using var inputStream = new MemoryStream(encryptedBytes);
-        using var outputStream = new MemoryStream();
-        await cryptoService.DecryptAsync(inputStream, outputStream, base64Key);
-        return System.Text.Encoding.UTF8.GetString(outputStream.ToArray());
-    }
 }

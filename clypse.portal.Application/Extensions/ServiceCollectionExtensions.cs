@@ -25,6 +25,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IUserSettingsService, UserSettingsService>();
         services.AddScoped<INavigationStateService, NavigationStateService>();
         services.AddScoped<IVaultStateService, VaultStateService>();
+        services.AddScoped<IPasswordCryptoService, PasswordCryptoService>();
 
         return services;
     }

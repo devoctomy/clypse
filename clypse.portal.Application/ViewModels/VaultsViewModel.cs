@@ -208,7 +208,6 @@ public partial class VaultsViewModel : ViewModelBase, IRecipient<RefreshVaultsMe
             if (bootstrapperService == null)
             {
                 ErrorMessage = "Bootstrapper service not available";
-                IsUnlocking = false;
                 return;
             }
 
@@ -216,7 +215,6 @@ public partial class VaultsViewModel : ViewModelBase, IRecipient<RefreshVaultsMe
             if (vaultSpecificManager == null)
             {
                 ErrorMessage = "Failed to create vault-specific manager";
-                IsUnlocking = false;
                 return;
             }
 
