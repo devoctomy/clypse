@@ -254,8 +254,8 @@ public partial class LoginViewModel : ViewModelBase
 
             if (result.Success)
             {
-                var rememberMe = RememberMe && !string.IsNullOrEmpty(Username);
-                await DoLogin(rememberMe);
+                var rememberMeEnabled = RememberMe && !string.IsNullOrEmpty(Username);
+                await DoLogin(rememberMeEnabled);
             }
             else if (result.PasswordResetRequired)
             {
