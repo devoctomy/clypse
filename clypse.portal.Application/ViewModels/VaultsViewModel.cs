@@ -254,6 +254,7 @@ public partial class VaultsViewModel : ViewModelBase, IRecipient<RefreshVaultsMe
     /// <param name="message">The refresh vaults message.</param>
     public async void Receive(RefreshVaultsMessage message)
     {
+        // This method should return a Task but for some reason Microsoft's CommunityToolkit.Mvvm.Messaging library defines the Receive method as void.
         await LoadVaultsAsync();
     }
 
