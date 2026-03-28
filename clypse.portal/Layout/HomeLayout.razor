@@ -1,90 +1,88 @@
-@inherits LayoutComponentBase
+@inherits MvvmLayoutComponentBase<HomeLayoutViewModel>
+@using Blazing.Mvvm.Components
+@using clypse.portal.Application.ViewModels
 @using clypse.portal.Models
-@implements IDisposable
 
-<CascadingValue Value="this">
-    <div class="app-shell d-flex flex-column vh-100">
-        <!-- Title Bar -->
-        <div class="title-bar text-white p-3 d-flex justify-content-between align-items-center" style="background-color: var(--clypse-primary);">
-            <div class="d-flex align-items-center">
-                <!-- Burger Menu Button -->
-                <button class="btn btn-link text-white p-0 me-3 burger-btn" 
-                        @onclick="ToggleSidebar" 
-                        aria-expanded="@isExpanded.ToString().ToLower()" 
-                        aria-controls="sidebar-navigation"
-                        aria-label="Toggle navigation menu"
-                        title="Toggle navigation menu">
-                    <i class="bi bi-list" style="font-size: 1.5rem;"></i>
-                </button>
-                @if (AppSettings.ShowLogoInTitleBar)
-                {
-                    <img src="/images/titlebar-logo.png" alt="@AppSettings.ApplicationTitle" class="me-2" style="height: 32px;" />
-                }
-                else
-                {
-                    <h4 class="mb-0">@AppSettings.ApplicationTitle</h4>
-                }
-            </div>
-            <div class="d-flex align-items-center">
-                <button class="theme-switcher me-3" @onclick="ToggleTheme" title="Toggle theme">
-                    <i class="bi @themeIcon"></i>
-                </button>
-                <button class="theme-switcher" @onclick="HandleLogout" title="Logout">
-                    <i class="bi bi-box-arrow-right"></i>
-                </button>
-            </div>
+<div class="app-shell d-flex flex-column vh-100">
+    <!-- Title Bar -->
+    <div class="title-bar text-white p-3 d-flex justify-content-between align-items-center" style="background-color: var(--clypse-primary);">
+        <div class="d-flex align-items-center">
+            <!-- Burger Menu Button -->
+            <button class="btn btn-link text-white p-0 me-3 burger-btn" 
+                    @onclick="() => ViewModel.ToggleSidebarCommand.Execute(null)" 
+                    aria-expanded="@ViewModel.IsExpanded.ToString().ToLower()" 
+                    aria-controls="sidebar-navigation"
+                    aria-label="Toggle navigation menu"
+                    title="Toggle navigation menu">
+                <i class="bi bi-list" style="font-size: 1.5rem;"></i>
+            </button>
+            @if (ViewModel.AppSettings.ShowLogoInTitleBar)
+            {
+                <img src="/images/titlebar-logo.png" alt="@ViewModel.AppSettings.ApplicationTitle" class="me-2" style="height: 32px;" />
+            }
+            else
+            {
+                <h4 class="mb-0">@ViewModel.AppSettings.ApplicationTitle</h4>
+            }
         </div>
-
-        <div class="flex-grow-1 d-flex">
-            <!-- Navigation Sidebar -->
-            <nav id="sidebar-navigation" 
-                 class="sidebar-responsive @(isExpanded ? "expanded" : "collapsed")" 
-                 style="background-color: var(--clypse-surface-tertiary); border-right: 1px solid var(--clypse-border-light); transition: width 0.3s ease; display:flex; flex-direction:column;">
-                <!-- Scrollable navigation region -->
-                <div class="sidebar-scroll p-3">
-                    @if (navigationItems != null && navigationItems.Any())
-                    {
-                        @foreach (var item in navigationItems.Where(i => i.Action != "delete-vault"))
-                        {
-                            <button class="btn @item.ButtonClass btn-sm w-100 mb-2 sidebar-btn-responsive" 
-                                    id="@($"nav-{item.Action}-button")"
-                                    title="@item.Text"
-                                    @onclick="() => HandleNavigationAction(item.Action)">
-                                <i class="@item.Icon sidebar-icon-responsive"></i>
-                                <span class="sidebar-text-responsive">@item.Text</span>
-                            </button>
-                        }
-                    }
-                    @if (navigationItems != null && navigationItems.Any(i => i.Action == "delete-vault"))
-                    {
-                        var deleteItem = navigationItems.First(i => i.Action == "delete-vault");
-                        <div class="mb-3">
-                            <button class="btn @deleteItem.ButtonClass btn-sm w-100 mb-2 sidebar-btn-responsive" 
-                                    id="@($"nav-{deleteItem.Action}-button")"
-                                    title="@deleteItem.Text"
-                                    @onclick="() => HandleNavigationAction(deleteItem.Action)">
-                                <i class="@deleteItem.Icon sidebar-icon-responsive"></i>
-                                <span class="sidebar-text-responsive">@deleteItem.Text</span>
-                            </button>
-                        </div>
-                    }
-                </div>
-                <!-- Footer removed as per design change -->
-            </nav>
-
-            <!-- Main Content Area -->
-            <main class="flex-grow-1 main-content-area p-4">
-                @Body
-                
-                <!-- Simple backdrop - show when sidebar expanded -->
-                @if (isExpanded)
-                {
-                    <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: var(--clypse-backdrop-overlay); z-index: 1000; cursor: pointer;" @onclick="ToggleSidebar"></div>
-                }
-            </main>
+        <div class="d-flex align-items-center">
+            <button class="theme-switcher me-3" @onclick="() => ViewModel.ToggleThemeCommand.Execute(null)" title="Toggle theme">
+                <i class="bi @ViewModel.ThemeIcon"></i>
+            </button>
+            <button class="theme-switcher" @onclick="() => ViewModel.HandleLogoutCommand.Execute(null)" title="Logout">
+                <i class="bi bi-box-arrow-right"></i>
+            </button>
         </div>
     </div>
-</CascadingValue>
+
+    <div class="flex-grow-1 d-flex">
+        <!-- Navigation Sidebar -->
+        <nav id="sidebar-navigation" 
+             class="sidebar-responsive @(ViewModel.IsExpanded ? "expanded" : "collapsed")" 
+             style="background-color: var(--clypse-surface-tertiary); border-right: 1px solid var(--clypse-border-light); transition: width 0.3s ease; display:flex; flex-direction:column;">
+            <!-- Scrollable navigation region -->
+            <div class="sidebar-scroll p-3">
+                @if (ViewModel.NavigationItems != null && ViewModel.NavigationItems.Any())
+                {
+                    @foreach (var item in ViewModel.NavigationItems.Where(i => i.Action != "delete-vault"))
+                    {
+                        <button class="btn @item.ButtonClass btn-sm w-100 mb-2 sidebar-btn-responsive" 
+                                id="@($"nav-{item.Action}-button")"
+                                title="@item.Text"
+                                @onclick="() => ViewModel.HandleNavigationActionCommand.Execute(item.Action)">
+                            <i class="@item.Icon sidebar-icon-responsive"></i>
+                            <span class="sidebar-text-responsive">@item.Text</span>
+                        </button>
+                    }
+                }
+                @if (ViewModel.NavigationItems != null && ViewModel.NavigationItems.Any(i => i.Action == "delete-vault"))
+                {
+                    var deleteItem = ViewModel.NavigationItems.First(i => i.Action == "delete-vault");
+                    <div class="mb-3">
+                        <button class="btn @deleteItem.ButtonClass btn-sm w-100 mb-2 sidebar-btn-responsive" 
+                                id="@($"nav-{deleteItem.Action}-button")"
+                                title="@deleteItem.Text"
+                                @onclick="() => ViewModel.HandleNavigationActionCommand.Execute(deleteItem.Action)">
+                            <i class="@deleteItem.Icon sidebar-icon-responsive"></i>
+                            <span class="sidebar-text-responsive">@deleteItem.Text</span>
+                        </button>
+                    </div>
+                }
+            </div>
+        </nav>
+
+        <!-- Main Content Area -->
+        <main class="flex-grow-1 main-content-area p-4">
+            @Body
+            
+            <!-- Simple backdrop - show when sidebar expanded -->
+            @if (ViewModel.IsExpanded)
+            {
+                <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: var(--clypse-backdrop-overlay); z-index: 1000; cursor: pointer;" @onclick="() => ViewModel.ToggleSidebarCommand.Execute(null)"></div>
+            }
+        </main>
+    </div>
+</div>
 
 <style>
     /* Define title bar height as a CSS custom property */
@@ -216,5 +214,3 @@
         transition: opacity 0.3s ease;
     }
 </style>
-
-

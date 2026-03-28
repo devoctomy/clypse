@@ -1,4 +1,4 @@
-﻿@inherits LayoutComponentBase
+﻿@inherits MvvmLayoutComponentBase<MainLayoutViewModel>
 
 <div class="d-flex flex-column mobile-safe-layout">
     <main class="flex-grow-1">
@@ -9,15 +9,15 @@
         <div class="container">
             <div class="row align-items-center">
                 <div class="col-md-12 text-center">
-                    <small class="text-muted">@AppSettings.CopyrightMessage</small>
+                    <small class="text-muted">@ViewModel.AppSettings.CopyrightMessage</small>
                     <br />
                     <small class="text-muted">
                         Version 
-                        <span class="version-number @(updateAvailable ? "update-available" : "")" 
-                              @onclick="HandleVersionClick" 
+                        <span class="version-number @(ViewModel.UpdateAvailable ? "update-available" : "")" 
+                              @onclick="() => ViewModel.HandleVersionClickCommand.Execute(null)" 
                               title="Click to view version history">
-                            @AppSettings.Version
-                            @if (updateAvailable)
+                            @ViewModel.AppSettings.Version
+                            @if (ViewModel.UpdateAvailable)
                             {
                                 <i class="bi bi-exclamation-circle text-warning ms-1"></i>
                             }
@@ -29,12 +29,12 @@
     </footer>
 </div>
 
-<ChangesDialog Show="@showChangesDialog" 
-ShowUpdateButton="@updateAvailable" 
-AvailableVersion="@availableVersion"
-OnClose="@HandleCloseChangesDialog"
-OnUpdate="@HandleInstallUpdate" />
+<ChangesDialog Show="@ViewModel.ShowChangesDialog" 
+ShowUpdateButton="@ViewModel.UpdateAvailable" 
+AvailableVersion="@ViewModel.AvailableVersion"
+OnClose="@(() => ViewModel.HandleCloseChangesDialogCommand.Execute(null))"
+OnUpdate="@(() => ViewModel.HandleInstallUpdateCommand.Execute(null))" />
 
+@using Blazing.Mvvm.Components
+@using clypse.portal.Application.ViewModels
 @using clypse.portal.Models
-
-

@@ -174,5 +174,4 @@ public class AwsS3VaultManagerBootstrapperService(
 
         return value!;
     }
-
 }

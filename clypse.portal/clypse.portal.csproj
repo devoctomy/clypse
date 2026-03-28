@@ -15,12 +15,15 @@
 		<InvariantGlobalization>true</InvariantGlobalization>
 	</PropertyGroup>
 	<ItemGroup>
+		<PackageReference Include="Blazing.Mvvm" />
 		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" />
 		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" PrivateAssets="all" />
 		<PackageReference Include="Microsoft.AspNetCore.App.Internal.Assets" />
 	</ItemGroup>
 	<ItemGroup>
 		<ProjectReference Include="..\clypse.core\clypse.core.csproj" />
+		<ProjectReference Include="..\clypse.portal.Application\clypse.portal.Application.csproj" />
+		<ProjectReference Include="..\clypse.portal.Models\clypse.portal.Models.csproj" />
 	</ItemGroup>
 	<ItemGroup>
 		<ServiceWorker Include="wwwroot\service-worker.js" PublishedContent="wwwroot\service-worker.published.js" />
@@ -37,10 +40,16 @@
 		  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
 		</Content>
 	</ItemGroup>
-	<PropertyGroup>
-		<!-- Stop compiler from complaining about version number wildcard. This auto increments the revision number and is working as expected. -->
-		<NoWarn>$(NoWarn);CS7035</NoWarn>
-	</PropertyGroup>
+	<ItemGroup>
+		<None Include="..\Documentation\**\*" Condition="'$(NCrunch)' == '1'">
+			<Visible>false</Visible>
+		</None>
+	</ItemGroup>
+	<ItemGroup>
+		<None Include="..\clypse.portal.ClientScripts\**\*" Condition="'$(NCrunch)' == '1'">
+			<Visible>false</Visible>
+		</None>
+	</ItemGroup>	
 	<Target Name="AfterBuild_WriteAssemblyVersion" AfterTargets="Build" Condition="'$(IsCrossTargetingBuild)' != 'true' and Exists('$(TargetPath)')">
 		<GetAssemblyIdentity AssemblyFiles="$(TargetPath)">
 			<Output TaskParameter="Assemblies" ItemName="BuiltAssemblyIdentity" />
@@ -49,5 +58,21 @@
 	</Target>
 	<Target Name="BeforeBuild_CopyChangesJson" BeforeTargets="Build">
 		<Copy SourceFiles="..\Documentation\Changes\changes.json" DestinationFiles="$(MSBuildProjectDirectory)\wwwroot\changes.json" SkipUnchangedFiles="true" />
+	</Target>
+	<!-- Client Scripts Build Process -->
+	<Target Name="NpmInstall" BeforeTargets="BuildClientScripts" Condition="!Exists('..\clypse.portal.ClientScripts\node_modules')">
+		<Message Text="Installing npm packages for ClientScripts..." Importance="high" />
+		<Exec Command="npm install" WorkingDirectory="..\clypse.portal.ClientScripts" />
+	</Target>
+	<Target Name="BuildClientScripts" BeforeTargets="BeforeBuild">
+		<Message Text="Building ClientScripts..." Importance="high" />
+		<Exec Command="npm run build" WorkingDirectory="..\clypse.portal.ClientScripts" />
+	</Target>
+	<Target Name="CopyClientScripts" AfterTargets="BuildClientScripts">
+		<Message Text="Copying ClientScripts to wwwroot/js..." Importance="high" />
+		<ItemGroup>
+			<ClientScriptFiles Include="..\clypse.portal.ClientScripts\dist\**\*.js" />
+		</ItemGroup>
+		<Copy SourceFiles="@(ClientScriptFiles)" DestinationFolder="$(MSBuildProjectDirectory)\wwwroot\js" SkipUnchangedFiles="true" />
 	</Target>
 </Project>

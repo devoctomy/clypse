@@ -1,9 +1,14 @@
 using Microsoft.AspNetCore.Components;
+using Blazing.Mvvm.Components;
 using Microsoft.AspNetCore.Components.Web;
+using clypse.portal.Application.ViewModels;
 
 namespace clypse.portal.Components.Fields;
 
-public partial class TagListField : ComponentBase
+/// <summary>
+/// Code-behind for the tag list field component. Business logic is in <see cref="TagListFieldViewModel"/>.
+/// </summary>
+public partial class TagListField : MvvmComponentBase<TagListFieldViewModel>
 {
     [Parameter] public string Label { get; set; } = "Tags";
     [Parameter] public string Placeholder { get; set; } = "Add a tag and press Enter";
@@ -11,45 +16,18 @@ public partial class TagListField : ComponentBase
     [Parameter] public EventCallback<List<string>> TagsChanged { get; set; }
     [Parameter] public bool IsReadOnly { get; set; } = false;
 
-    private string newTag = string.Empty;
+    protected override void OnParametersSet()
+    {
+        ViewModel.Tags = Tags ?? [];
+        ViewModel.IsReadOnly = IsReadOnly;
+        ViewModel.TagsChangedCallback = tags => TagsChanged.InvokeAsync(tags);
+    }
 
     private async Task HandleTagKeyPress(KeyboardEventArgs e)
     {
         if (e.Key == "Enter")
         {
-            await AddTag();
-        }
-    }
-
-    private async Task AddTag()
-    {
-        if (IsReadOnly || string.IsNullOrWhiteSpace(newTag))
-            return;
-
-        var trimmedTag = newTag.Trim();
-        
-        // Initialize Tags if null
-        Tags ??= new List<string>();
-        
-        // Check if tag already exists (case insensitive)
-        if (!Tags.Any(t => t.Equals(trimmedTag, StringComparison.OrdinalIgnoreCase)))
-        {
-            Tags.Add(trimmedTag);
-            newTag = string.Empty;
-            await TagsChanged.InvokeAsync(Tags);
-            StateHasChanged();
-        }
-    }
-
-    private async Task RemoveTag(string tag)
-    {
-        if (IsReadOnly || Tags == null)
-            return;
-
-        if (Tags.Remove(tag))
-        {
-            await TagsChanged.InvokeAsync(Tags);
-            StateHasChanged();
+            await ViewModel.AddTagCommand.ExecuteAsync(null);
         }
     }
 }

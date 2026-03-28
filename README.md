@@ -103,6 +103,37 @@ dotnet serve -d ./clypse.portal/bin/Release/net10.0/publish/wwwroot -p 7153 --tl
 
 > You must have CORS configured for the S3 bucket for 'https://localhost:7153' otherwise all requests to S3 will fail.
 
+### JavaScript Testing
+
+The client-side JavaScript code in `clypse.portal.ClientScripts` is fully tested and linted.
+
+**Linting** - Code quality is enforced using ESLint with industry-standard rules:
+```bash
+cd clypse.portal.ClientScripts
+npm run lint        # Check for issues
+npm run lint:fix    # Auto-fix issues
+```
+
+**Testing** - 113 unit tests covering all client-side modules (S3, Cognito, WebAuthn, PWA, Mobile Viewport):
+```bash
+cd clypse.portal.ClientScripts
+npm test            # Run tests
+npm run test:watch  # Run tests in watch mode
+```
+
+**Coverage** - Code coverage is collected and reported to Codacy alongside .NET coverage:
+```bash
+cd clypse.portal.ClientScripts
+npm run test:coverage  # Run tests with coverage report
+```
+
+Current coverage: **98.97% statements**, **82.3% branches**, **98.38% functions**
+
+Tests follow the same patterns as .NET tests:
+- Gherkin naming convention (`GivenX_WhenY_ThenZ`)
+- Arrange/Act/Assert structure
+- No extraneous comments
+
 ## GitHub Workflows
 
 The project uses a comprehensive CI/CD pipeline that runs automated tests and deploys to production after approval and successful Tests workflow run.

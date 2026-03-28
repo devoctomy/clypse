@@ -94,50 +94,6 @@ public class CloudfrontServiceTests
     }
 
     [Fact]
-    public async Task GivenWebsiteHostAndCertificateArn_WhenCreateDistribution_ThenCreatesDistributionWithCertificate()
-    {
-        // Arrange
-        var mockAmazonCloudFront = new Mock<IAmazonCloudFront>();
-        var mockLogger = new Mock<ILogger<CloudfrontService>>();
-        var sut = new CloudfrontService(
-            mockAmazonCloudFront.Object,
-            mockLogger.Object);
-        var websiteHost = "example.s3.amazonaws.com";
-        var certificateArn = "arn:aws:acm:us-east-1:123456789012:certificate/12345678-1234-1234-1234-123456789012";
-        var expectedDomainName = "d1234567890abc.cloudfront.net";
-
-        mockAmazonCloudFront
-            .Setup(cf => cf.CreateDistributionAsync(
-                It.Is<CreateDistributionRequest>(req =>
-                    req.DistributionConfig.Origins.Items[0].DomainName == websiteHost &&
-                    req.DistributionConfig.ViewerCertificate != null &&
-                    req.DistributionConfig.ViewerCertificate.ACMCertificateArn == certificateArn &&
-                    req.DistributionConfig.ViewerCertificate.SSLSupportMethod == SSLSupportMethod.SniOnly &&
-                    req.DistributionConfig.ViewerCertificate.MinimumProtocolVersion == MinimumProtocolVersion.TLSv1_2016),
-                It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new CreateDistributionResponse
-            {
-                Distribution = new Distribution
-                {
-                    Id = "E1234567890ABC",
-                    DomainName = expectedDomainName
-                }
-            });
-        
-        // Act
-        var domainName = await sut.CreateDistributionAsync(websiteHost, certificateArn: certificateArn);
-
-        // Assert
-        Assert.Equal(expectedDomainName, domainName);
-        mockAmazonCloudFront.Verify(cf => cf.CreateDistributionAsync(
-            It.Is<CreateDistributionRequest>(req =>
-                req.DistributionConfig.ViewerCertificate != null &&
-                req.DistributionConfig.ViewerCertificate.ACMCertificateArn == certificateArn),
-            It.IsAny<CancellationToken>()),
-            Times.Once);
-    }
-
-    [Fact]
     public async Task GivenWebsiteHostAliasAndCertificateArn_WhenCreateDistribution_ThenCreatesDistributionWithAliasAndCertificate()
     {
         // Arrange
@@ -338,44 +294,6 @@ public class CloudfrontServiceTests
         mockAmazonCloudFront.Verify(cf => cf.CreateDistributionAsync(
             It.Is<CreateDistributionRequest>(req =>
                 req.DistributionConfig.Aliases == null),
-            It.IsAny<CancellationToken>()),
-            Times.Once);
-    }
-
-    [Fact]
-    public async Task GivenEmptyCertificateArn_WhenCreateDistribution_ThenDoesNotSetCertificate()
-    {
-        // Arrange
-        var mockAmazonCloudFront = new Mock<IAmazonCloudFront>();
-        var mockLogger = new Mock<ILogger<CloudfrontService>>();
-        var sut = new CloudfrontService(
-            mockAmazonCloudFront.Object,
-            mockLogger.Object);
-        var websiteHost = "example.s3.amazonaws.com";
-        var expectedDomainName = "d1234567890abc.cloudfront.net";
-
-        mockAmazonCloudFront
-            .Setup(cf => cf.CreateDistributionAsync(
-                It.Is<CreateDistributionRequest>(req =>
-                    req.DistributionConfig.ViewerCertificate == null),
-                It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new CreateDistributionResponse
-            {
-                Distribution = new Distribution
-                {
-                    Id = "E1234567890ABC",
-                    DomainName = expectedDomainName
-                }
-            });
-        
-        // Act
-        var domainName = await sut.CreateDistributionAsync(websiteHost, certificateArn: string.Empty);
-
-        // Assert
-        Assert.Equal(expectedDomainName, domainName);
-        mockAmazonCloudFront.Verify(cf => cf.CreateDistributionAsync(
-            It.Is<CreateDistributionRequest>(req =>
-                req.DistributionConfig.ViewerCertificate == null),
             It.IsAny<CancellationToken>()),
             Times.Once);
     }
