@@ -1,9 +1,11 @@
+@inherits Blazing.Mvvm.Components.MvvmComponentBase<clypse.portal.Application.ViewModels.TextFieldViewModel>
+
 <div class="mb-3">
     <label class="form-label">@Label</label>
-    <textarea class="form-control" 
+    <textarea class="form-control"
               rows="@Rows"
-              @bind="Value" 
-              @bind:after="() => ValueChanged.InvokeAsync(Value)"
+              value="@ViewModel.Value"
+              @oninput="async e => await ViewModel.OnValueChangedAsync(e.Value?.ToString())"
               placeholder="@Placeholder"
               style="resize: vertical;"
               readonly="@IsReadOnly"></textarea>

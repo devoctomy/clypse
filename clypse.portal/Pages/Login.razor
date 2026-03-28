@@ -1,4 +1,7 @@
 @page "/login"
+@inherits MvvmComponentBase<LoginViewModel>
+@using Blazing.Mvvm.Components
+@using clypse.portal.Application.ViewModels
 @using clypse.portal.Models
 
 <PageTitle>Clypse Portal - Login</PageTitle>
@@ -6,17 +9,17 @@
 <!-- Title Bar (similar to HomeLayout) -->
 <div class="text-white p-3 d-flex justify-content-between align-items-center" style="background-color: var(--clypse-primary);">
     <div class="d-flex align-items-center">
-        @if (AppSettings.ShowLogoInTitleBar)
+        @if (ViewModel.AppSettings.ShowLogoInTitleBar)
         {
-            <img src="/images/titlebar-logo.png" alt="@AppSettings.ApplicationTitle" class="me-2" style="height: 32px;" />
+            <img src="/images/titlebar-logo.png" alt="@ViewModel.AppSettings.ApplicationTitle" class="me-2" style="height: 32px;" />
         }
         else
         {
-            <h4 class="mb-0">@AppSettings.ApplicationTitle</h4>
+            <h4 class="mb-0">@ViewModel.AppSettings.ApplicationTitle</h4>
         }
     </div>
-    <button class="theme-switcher" @onclick="ToggleTheme" title="Toggle theme">
-        <i class="bi @themeIcon"></i>
+    <button class="theme-switcher" @onclick="() => ViewModel.ToggleThemeCommand.Execute(null)" title="Toggle theme">
+        <i class="bi @ViewModel.ThemeIcon"></i>
     </button>
 </div>
 
@@ -30,16 +33,16 @@
                     </div>
                 </div>
                 <div class="card-body">
-                    @if (showUsersList && savedUsers.Any())
+                    @if (ViewModel.ShowUsersList && ViewModel.SavedUsers.Any())
                     {
                         <!-- Saved Users List -->
                         <div class="mb-3">
                             <div class="d-grid gap-2">
-                                @foreach (var user in savedUsers)
+                                @foreach (var user in ViewModel.SavedUsers)
                                 {
                                     <div class="input-group">
-                                        <button type="button" class="btn btn-outline-primary d-flex align-items-center flex-grow-1" @onclick="async () => await SelectUser(user)" disabled="@isLoading">
-                                            @if (isLoading)
+                                        <button type="button" class="btn btn-outline-primary d-flex align-items-center flex-grow-1" @onclick="() => ViewModel.SelectUserCommand.Execute(user)" disabled="@ViewModel.IsLoading">
+                                            @if (ViewModel.IsLoading)
                                             {
                                                 <span class="spinner-border spinner-border-sm me-3" role="status" aria-hidden="true"></span>
                                             }
@@ -53,14 +56,14 @@
                                             }
                                             <span>@user.Email</span>
                                         </button>
-                                        <button type="button" class="btn btn-outline-danger" @onclick="() => RemoveUser(user)" title="Remove user">
+                                        <button type="button" class="btn btn-outline-danger" @onclick="() => ViewModel.RemoveUserCommand.Execute(user)" title="Remove user">
                                             <i class="bi bi-trash"></i>
                                         </button>
                                     </div>
                                 }
                             </div>
                             <div class="text-center mt-3">
-                                <button type="button" class="btn btn-link" @onclick="ShowLoginForm">
+                                <button type="button" class="btn btn-link" @onclick="() => ViewModel.ShowLoginFormCommand.Execute(null)">
                                     Use different account
                                 </button>
                             </div>
@@ -69,27 +72,27 @@
                     else
                     {
                         <!-- Login Form -->
-                        <EditForm Model="@loginModel" OnValidSubmit="@HandleLogin">
+                        <EditForm Model="@ViewModel" OnValidSubmit="@((ctx) => ViewModel.HandleLoginCommand.Execute(null))">
                             <DataAnnotationsValidator />
                             <ValidationSummary />
 
-                            @if (savedUsers.Any())
+                            @if (ViewModel.SavedUsers.Any())
                             {
                                 <div class="mb-3 text-center">
-                                    <button type="button" class="btn btn-outline-secondary btn-sm" @onclick="ShowUsersList">
+                                    <button type="button" class="btn btn-outline-secondary btn-sm" @onclick="() => ViewModel.ShowUsersListCommandCommand.Execute(null)">
                                         <i class="bi bi-people me-1"></i>Remembered Users
                                     </button>
                                 </div>
                             }
 
-                            @if (!passwordResetRequired && !forgotPasswordMode)
+                            @if (!ViewModel.PasswordResetRequired && !ViewModel.ForgotPasswordMode)
                             {
                                 <div class="mb-3">
                                     <div class="input-group">
                                         <span class="input-group-text">
                                             <i class="bi bi-person"></i>
                                         </span>
-                                        <InputText id="username" class="form-control" @bind-Value="loginModel.Username" placeholder="Enter your username" readonly="@isUsernameReadonly" />
+                                        <InputText id="username" class="form-control" @bind-Value="ViewModel.Username" placeholder="Enter your username" readonly="@ViewModel.IsUsernameReadonly" />
                                     </div>
                                 </div>
 
@@ -98,15 +101,15 @@
                                         <span class="input-group-text">
                                             <i class="bi bi-lock"></i>
                                         </span>
-                                        <InputText id="password" type="password" class="form-control" @bind-Value="loginModel.Password" placeholder="Enter your password" />
+                                        <InputText id="password" type="password" class="form-control" @bind-Value="ViewModel.Password" placeholder="Enter your password" />
                                     </div>
                                 </div>
 
-                                @if (showRememberMe)
+                                @if (ViewModel.ShowRememberMe)
                                 {
                                     <div class="mb-3">
                                         <div class="form-check">
-                                            <InputCheckbox id="rememberMe" class="form-check-input" @bind-Value="rememberMe" />
+                                            <InputCheckbox id="rememberMe" class="form-check-input" @bind-Value="ViewModel.RememberMe" />
                                             <label class="form-check-label" for="rememberMe">
                                                 Remember me
                                             </label>
@@ -115,11 +118,11 @@
                                 }
                             }
 
-                            @if (!passwordResetRequired && !forgotPasswordMode)
+                            @if (!ViewModel.PasswordResetRequired && !ViewModel.ForgotPasswordMode)
                             {
                                 <div class="d-grid">
-                                    <button type="submit" class="btn btn-primary" disabled="@isLoading">
-                                        @if (isLoading)
+                                    <button type="submit" class="btn btn-primary" disabled="@ViewModel.IsLoading">
+                                        @if (ViewModel.IsLoading)
                                         {
                                             <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
                                             <span>Logging in...</span>
@@ -132,13 +135,13 @@
                                 </div>
 
                                 <div class="text-center mt-3">
-                                    <button type="button" class="btn btn-link" @onclick="ShowForgotPassword">
+                                    <button type="button" class="btn btn-link" @onclick="() => ViewModel.ShowForgotPasswordCommand.Execute(null)">
                                         Forgot your password?
                                     </button>
                                 </div>
                             }
 
-                            @if (forgotPasswordMode && !forgotPasswordCodeSent)
+                            @if (ViewModel.ForgotPasswordMode && !ViewModel.ForgotPasswordCodeSent)
                             {
                                 <div class="mt-3">
                                     <div class="alert alert-info">
@@ -151,13 +154,13 @@
                                             <span class="input-group-text">
                                                 <i class="bi bi-person"></i>
                                             </span>
-                                            <InputText id="forgotPasswordUsername" class="form-control" @bind-Value="forgotPasswordUsername" placeholder="Enter your username or email" />
+                                            <InputText id="forgotPasswordUsername" class="form-control" @bind-Value="ViewModel.ForgotPasswordUsername" placeholder="Enter your username or email" />
                                         </div>
                                     </div>
 
                                     <div class="d-grid gap-2">
-                                        <button type="button" class="btn btn-primary" @onclick="HandleForgotPassword" disabled="@(isLoading || string.IsNullOrWhiteSpace(forgotPasswordUsername))">
-                                            @if (isLoading)
+                                        <button type="button" class="btn btn-primary" @onclick="() => ViewModel.HandleForgotPasswordCommand.Execute(null)" disabled="@(ViewModel.IsLoading || string.IsNullOrWhiteSpace(ViewModel.ForgotPasswordUsername))">
+                                            @if (ViewModel.IsLoading)
                                             {
                                                 <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
                                                 <span>Sending code...</span>
@@ -167,14 +170,14 @@
                                                 <span>Send Verification Code</span>
                                             }
                                         </button>
-                                        <button type="button" class="btn btn-outline-secondary" @onclick="CancelForgotPassword" disabled="@isLoading">
+                                        <button type="button" class="btn btn-outline-secondary" @onclick="() => ViewModel.CancelForgotPasswordCommand.Execute(null)" disabled="@ViewModel.IsLoading">
                                             Back to Login
                                         </button>
                                     </div>
                                 </div>
                             }
 
-                            @if (forgotPasswordMode && forgotPasswordCodeSent)
+                            @if (ViewModel.ForgotPasswordMode && ViewModel.ForgotPasswordCodeSent)
                             {
                                 <div class="mt-3">
                                     <div class="alert alert-success">
@@ -187,7 +190,7 @@
                                             <span class="input-group-text">
                                                 <i class="bi bi-shield-check"></i>
                                             </span>
-                                            <InputText id="verificationCode" class="form-control" @bind-Value="verificationCode" placeholder="Enter verification code" />
+                                            <InputText id="verificationCode" class="form-control" @bind-Value="ViewModel.VerificationCode" placeholder="Enter verification code" />
                                         </div>
                                     </div>
 
@@ -196,7 +199,7 @@
                                             <span class="input-group-text">
                                                 <i class="bi bi-lock"></i>
                                             </span>
-                                            <InputText id="newPasswordForgot" type="password" class="form-control" @bind-Value="newPassword" placeholder="Enter new password" />
+                                            <InputText id="newPasswordForgot" type="password" class="form-control" @bind-Value="ViewModel.NewPassword" placeholder="Enter new password" />
                                         </div>
                                     </div>
 
@@ -205,13 +208,13 @@
                                             <span class="input-group-text">
                                                 <i class="bi bi-lock-fill"></i>
                                             </span>
-                                            <InputText id="confirmPasswordForgot" type="password" class="form-control" @bind-Value="confirmPassword" placeholder="Confirm new password" />
+                                            <InputText id="confirmPasswordForgot" type="password" class="form-control" @bind-Value="ViewModel.ConfirmPassword" placeholder="Confirm new password" />
                                         </div>
                                     </div>
 
                                     <div class="d-grid gap-2">
-                                        <button type="button" class="btn btn-success" @onclick="HandleConfirmForgotPassword" disabled="@(isLoading || string.IsNullOrWhiteSpace(verificationCode) || string.IsNullOrEmpty(newPassword) || newPassword != confirmPassword)">
-                                            @if (isLoading)
+                                        <button type="button" class="btn btn-success" @onclick="() => ViewModel.HandleConfirmForgotPasswordCommand.Execute(null)" disabled="@(ViewModel.IsLoading || string.IsNullOrWhiteSpace(ViewModel.VerificationCode) || string.IsNullOrEmpty(ViewModel.NewPassword) || ViewModel.NewPassword != ViewModel.ConfirmPassword)">
+                                            @if (ViewModel.IsLoading)
                                             {
                                                 <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
                                                 <span>Resetting password...</span>
@@ -221,14 +224,14 @@
                                                 <span>Reset Password</span>
                                             }
                                         </button>
-                                        <button type="button" class="btn btn-outline-secondary" @onclick="CancelForgotPassword" disabled="@isLoading">
+                                        <button type="button" class="btn btn-outline-secondary" @onclick="() => ViewModel.CancelForgotPasswordCommand.Execute(null)" disabled="@ViewModel.IsLoading">
                                             Back to Login
                                         </button>
                                     </div>
                                 </div>
                             }
 
-                            @if (passwordResetRequired)
+                            @if (ViewModel.PasswordResetRequired)
                             {
                                 <div class="mt-3">
                                     <div class="mb-3">
@@ -236,7 +239,7 @@
                                             <span class="input-group-text">
                                                 <i class="bi bi-lock"></i>
                                             </span>
-                                            <InputText id="newPassword" type="password" class="form-control" @bind-Value="newPassword" placeholder="Enter new password" />
+                                            <InputText id="newPassword" type="password" class="form-control" @bind-Value="ViewModel.NewPassword" placeholder="Enter new password" />
                                         </div>
                                     </div>
 
@@ -245,13 +248,13 @@
                                             <span class="input-group-text">
                                                 <i class="bi bi-lock-fill"></i>
                                             </span>
-                                            <InputText id="confirmPassword" type="password" class="form-control" @bind-Value="confirmPassword" placeholder="Confirm new password" />
+                                            <InputText id="confirmPassword" type="password" class="form-control" @bind-Value="ViewModel.ConfirmPassword" placeholder="Confirm new password" />
                                         </div>
                                     </div>
 
                                     <div class="d-grid">
-                                        <button type="button" class="btn btn-primary" @onclick="HandlePasswordChange" disabled="@(isLoading || string.IsNullOrEmpty(newPassword) || newPassword != confirmPassword)">
-                                            @if (isLoading)
+                                        <button type="button" class="btn btn-primary" @onclick="() => ViewModel.HandlePasswordChangeCommand.Execute(null)" disabled="@(ViewModel.IsLoading || string.IsNullOrEmpty(ViewModel.NewPassword) || ViewModel.NewPassword != ViewModel.ConfirmPassword)">
+                                            @if (ViewModel.IsLoading)
                                             {
                                                 <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
                                                 <span>Changing password...</span>
@@ -265,10 +268,10 @@
                                 </div>
                             }
 
-                            @if (!string.IsNullOrEmpty(errorMessage))
+                            @if (!string.IsNullOrEmpty(ViewModel.ErrorMessage))
                             {
                                 <div class="alert alert-danger mt-3" role="alert">
-                                    @errorMessage
+                                    @ViewModel.ErrorMessage
                                 </div>
                             }
                         </EditForm>
@@ -286,7 +289,7 @@
 </div>
 
 <!-- WebAuthn Setup Modal -->
-@if (showWebAuthnPrompt)
+@if (ViewModel.ShowWebAuthnPrompt)
 {
     <div class="modal d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
         <div class="modal-dialog modal-dialog-centered">
@@ -298,14 +301,14 @@
                     </h5>
                 </div>
                 <div class="modal-body">
-                    @if (!string.IsNullOrEmpty(webAuthnErrorMessage))
+                    @if (!string.IsNullOrEmpty(ViewModel.WebAuthnErrorMessage))
                     {
                         <div class="alert alert-danger">
                             <i class="bi bi-exclamation-triangle me-2"></i>
-                            @webAuthnErrorMessage
+                            @ViewModel.WebAuthnErrorMessage
                         </div>
                         <div class="d-grid">
-                            <button type="button" class="btn btn-primary" @onclick="DismissWebAuthnError">
+                            <button type="button" class="btn btn-primary" @onclick="() => ViewModel.DismissWebAuthnErrorCommand.Execute(null)">
                                 Continue to App
                             </button>
                         </div>
@@ -322,8 +325,8 @@
                         </p>
                         
                         <div class="d-grid gap-2">
-                            <button type="button" class="btn btn-primary" @onclick="HandleWebAuthnSetup" disabled="@isWebAuthnProcessing">
-                                @if (isWebAuthnProcessing)
+                            <button type="button" class="btn btn-primary" @onclick="() => ViewModel.HandleWebAuthnSetupCommand.Execute(null)" disabled="@ViewModel.IsWebAuthnProcessing">
+                                @if (ViewModel.IsWebAuthnProcessing)
                                 {
                                     <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
                                     <span class="ms-2">Setting up biometric login...</span>
@@ -334,7 +337,7 @@
                                     <span>Yes, Enable Biometric Login</span>
                                 }
                             </button>
-                            <button type="button" class="btn btn-outline-secondary" @onclick="SkipWebAuthnSetup" disabled="@isWebAuthnProcessing">
+                            <button type="button" class="btn btn-outline-secondary" @onclick="() => ViewModel.SkipWebAuthnSetupCommand.Execute(null)" disabled="@ViewModel.IsWebAuthnProcessing">
                                 <i class="bi bi-skip-forward me-2"></i>
                                 Skip for Now
                             </button>
@@ -345,5 +348,3 @@
         </div>
     </div>
 }
-
-

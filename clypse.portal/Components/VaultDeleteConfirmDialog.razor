@@ -1,4 +1,4 @@
-@using clypse.portal.Models
+@inherits Blazing.Mvvm.Components.MvvmComponentBase<clypse.portal.Application.ViewModels.VaultDeleteConfirmDialogViewModel>
 
 @if (Show)
 {
@@ -10,13 +10,13 @@
                         <i class="bi bi-exclamation-triangle me-2"></i>
                         Delete Vault
                     </h5>
-                    <button type="button" class="btn-close btn-close-white" @onclick="OnCancel"></button>
+                    <button type="button" class="btn-close btn-close-white" @onclick="() => OnCancel.InvokeAsync()"></button>
                 </div>
                 <div class="modal-body">
                     <div class="alert alert-warning" role="alert">
                         <strong>Warning:</strong> This action cannot be undone. All secrets and data in this vault will be permanently deleted.
                     </div>
-                    
+
                     @if (VaultToDelete != null)
                     {
                         <p class="mb-3">
@@ -31,20 +31,20 @@
                                 <span class="text-muted">Description:</span> @VaultToDelete.Description<br/>
                             }
                         </p>
-                        
+
                         <div class="mb-3">
                             <label for="confirmName" class="form-label">
-                                To confirm deletion, type <strong>"@GetConfirmationText()"</strong> below:
+                                To confirm deletion, type <strong>"@ViewModel.ExpectedConfirmationText"</strong> below:
                             </label>
-                            <input type="text" 
-                                   class="form-control" 
-                                   id="confirmName" 
-                                   @bind="confirmationText" 
+                            <input type="text"
+                                   class="form-control"
+                                   id="confirmName"
+                                   @bind="ViewModel.ConfirmationText"
                                    @bind:event="oninput"
                                    placeholder="Type the vault name to confirm"
                                    disabled="@IsDeleting" />
                         </div>
-                        
+
                         @if (!string.IsNullOrEmpty(ErrorMessage))
                         {
                             <div class="alert alert-danger" role="alert">
@@ -54,14 +54,14 @@
                     }
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" @onclick="OnCancel" disabled="@IsDeleting">
+                    <button type="button" class="btn btn-secondary" @onclick="() => OnCancel.InvokeAsync()" disabled="@IsDeleting">
                         Cancel
                     </button>
-                    <button type="button" 
-                            class="btn btn-danger" 
+                    <button type="button"
+                            class="btn btn-danger"
                             id="confirm-delete-vault-button"
-                            @onclick="OnConfirm" 
-                            disabled="@(!IsConfirmationValid() || IsDeleting)">
+                            @onclick="() => OnConfirm.InvokeAsync()"
+                            disabled="@(!ViewModel.IsConfirmationValid || IsDeleting)">
                         @if (IsDeleting)
                         {
                             <span class="spinner-border spinner-border-sm me-2" role="status"></span>
@@ -77,5 +77,3 @@
         </div>
     </div>
 }
-
-

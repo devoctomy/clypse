@@ -1,12 +1,13 @@
-@using clypse.core.Cryptography
+@inherits MvvmComponentBase<VaultsViewModel>
+@using Blazing.Mvvm.Components
+@using clypse.portal.Application.ViewModels
 @using clypse.core.Vault
 @using clypse.portal.Models
-@using clypse.portal.Application.Services
 
 <div class="vaults-page">
     <h2>Vaults</h2>
     
-    @if (isLoading)
+    @if (ViewModel.IsLoading)
     {
         <div class="d-flex justify-content-center">
             <div class="spinner-border" role="status">
@@ -14,7 +15,7 @@
             </div>
         </div>
     }
-    else if (vaults == null || vaults.Count == 0)
+    else if (ViewModel.Vaults == null || ViewModel.Vaults.Count == 0)
     {
         <div class="alert alert-info" role="alert" id="no-vaults-found">
             <h5 class="alert-heading">No Vaults Found</h5>
@@ -24,16 +25,16 @@
     else
     {
         <div class="vaults-grid-responsive" id="vaults-list">
-            @foreach (var vault in vaults)
+            @foreach (var vault in ViewModel.Vaults)
             {
-                <div class="vault-card-responsive" data-vault-id="@vault.Id" @onclick="() => ShowPassphrasePanel(vault)">
+                <div class="vault-card-responsive" data-vault-id="@vault.Id" @onclick="() => ViewModel.ShowPassphrasePanelForCommand.Execute(vault)">
                     <div class="vault-lock-icon-responsive">
                         <i class="bi bi-lock-fill"></i>
                     </div>
                     <div class="vault-details-icon-responsive">
                         <button class="btn btn-outline-secondary btn-sm" 
                                 title="Show vault details" 
-                                @onclick="() => ShowVaultDetailsPanel(vault)" 
+                                @onclick="() => ViewModel.ShowVaultDetailsPanelForCommand.Execute(vault)" 
                                 @onclick:stopPropagation="true">
                             <i class="bi bi-question-circle"></i>
                         </button>
@@ -71,17 +72,17 @@
     }
     
     @* Unlock Vault Dialog *@
-    <UnlockVaultDialog IsVisible="showPassphrasePanel"
-                      Vault="selectedVault"
-                      IsUnlocking="isUnlocking"
-                      ErrorMessage="@errorMessage"
-                      OnCancel="HidePassphrasePanel"
-                      OnUnlock="HandleUnlockVault" />
+    <UnlockVaultDialog IsVisible="ViewModel.ShowPassphrasePanel"
+                      Vault="ViewModel.SelectedVault"
+                      IsUnlocking="ViewModel.IsUnlocking"
+                      ErrorMessage="@ViewModel.ErrorMessage"
+                      OnCancel="@(() => ViewModel.HidePassphrasePanelCommand.Execute(null))"
+                      OnUnlock="@((passphrase) => ViewModel.HandleUnlockVaultCommand.Execute(passphrase))" />
     
     @* Vault Details Panel *@
-    @if (showVaultDetailsPanel && selectedVault != null && selectedVaultListing != null)
+    @if (ViewModel.ShowVaultDetailsPanel && ViewModel.SelectedVault != null && ViewModel.SelectedVaultListing != null)
     {
-        <div class="modal vault-details-modal" style="display: block; background-color: rgba(0,0,0,0.7);" @onclick="HideVaultDetailsPanel">
+        <div class="modal vault-details-modal" style="display: block; background-color: rgba(0,0,0,0.7);" @onclick="() => ViewModel.HideVaultDetailsPanelCommand.Execute(null)">
             <div class="modal-dialog modal-dialog-centered modal-fullscreen m-2" style="max-height: calc(100vh - 16px);" @onclick:stopPropagation="true">
                 <div class="modal-content" style="max-height: calc(100vh - 16px); display: flex; flex-direction: column; border-radius: 4px;">
                     <div class="modal-header" style="flex-shrink: 0;">
@@ -89,7 +90,7 @@
                             <i class="bi bi-info-circle me-2"></i>
                             Vault Details
                         </h5>
-                        <button type="button" class="btn-close vault-details-close" @onclick="HideVaultDetailsPanel"></button>
+                        <button type="button" class="btn-close vault-details-close" @onclick="() => ViewModel.HideVaultDetailsPanelCommand.Execute(null)"></button>
                     </div>
                     <div class="modal-body" style="overflow-y: auto; flex: 1; min-height: 0;">
                         <div class="row">
@@ -97,78 +98,78 @@
                                 <h6 class="text-primary mb-3">Vault Information</h6>
                                 <div class="row mb-2">
                                     <div class="col-sm-3"><strong>ID:</strong></div>
-                                    <div class="col-sm-9"><code>@selectedVault.Id</code></div>
+                                    <div class="col-sm-9"><code>@ViewModel.SelectedVault.Id</code></div>
                                 </div>
                                 <div class="row mb-2">
                                     <div class="col-sm-3"><strong>Name:</strong></div>
                                     <div class="col-sm-9">
-                                        @if (string.IsNullOrEmpty(selectedVault.Name))
+                                        @if (string.IsNullOrEmpty(ViewModel.SelectedVault.Name))
                                         {
                                             <span class="text-muted">Unknown (unlock vault to view)</span>
                                         }
                                         else
                                         {
-                                            <span>@selectedVault.Name</span>
+                                            <span>@ViewModel.SelectedVault.Name</span>
                                         }
                                     </div>
                                 </div>
                                 <div class="row mb-4">
                                     <div class="col-sm-3"><strong>Description:</strong></div>
                                     <div class="col-sm-9">
-                                        @if (string.IsNullOrEmpty(selectedVault.Description))
+                                        @if (string.IsNullOrEmpty(ViewModel.SelectedVault.Description))
                                         {
                                             <span class="text-muted">Unknown (unlock vault to view)</span>
                                         }
                                         else
                                         {
-                                            <span>@selectedVault.Description</span>
+                                            <span>@ViewModel.SelectedVault.Description</span>
                                         }
                                     </div>
                                 </div>
                                 
                                 <h6 class="text-primary mb-3">Vault Manifest</h6>
-                                @if (selectedVaultListing.Manifest != null)
+                                @if (ViewModel.SelectedVaultListing.Manifest != null)
                                 {
                                     <div class="list-group list-group-flush">
-                                        @if (!string.IsNullOrEmpty(selectedVaultListing.Manifest.ClypseCoreVersion))
+                                        @if (!string.IsNullOrEmpty(ViewModel.SelectedVaultListing.Manifest.ClypseCoreVersion))
                                         {
                                             <div class="list-group-item list-group-item-action d-flex align-items-center bg-transparent border-secondary">
                                                 <i class="bi bi-file-text me-2 text-muted"></i>
                                                 <div>
-                                                    <strong>Clypse Core Version:</strong> @selectedVaultListing.Manifest.ClypseCoreVersion
+                                                    <strong>Clypse Core Version:</strong> @ViewModel.SelectedVaultListing.Manifest.ClypseCoreVersion
                                                 </div>
                                             </div>
                                         }
-                                        @if (!string.IsNullOrEmpty(selectedVaultListing.Manifest.CompressionServiceName))
+                                        @if (!string.IsNullOrEmpty(ViewModel.SelectedVaultListing.Manifest.CompressionServiceName))
                                         {
                                             <div class="list-group-item list-group-item-action d-flex align-items-center bg-transparent border-secondary">
                                                 <i class="bi bi-file-text me-2 text-muted"></i>
                                                 <div>
-                                                    <strong>Compression Service:</strong> @selectedVaultListing.Manifest.CompressionServiceName
+                                                    <strong>Compression Service:</strong> @ViewModel.SelectedVaultListing.Manifest.CompressionServiceName
                                                 </div>
                                             </div>
                                         }
-                                        @if (!string.IsNullOrEmpty(selectedVaultListing.Manifest.CryptoServiceName))
+                                        @if (!string.IsNullOrEmpty(ViewModel.SelectedVaultListing.Manifest.CryptoServiceName))
                                         {
                                             <div class="list-group-item list-group-item-action d-flex align-items-center bg-transparent border-secondary">
                                                 <i class="bi bi-file-text me-2 text-muted"></i>
                                                 <div>
-                                                    <strong>Crypto Service:</strong> @selectedVaultListing.Manifest.CryptoServiceName
+                                                    <strong>Crypto Service:</strong> @ViewModel.SelectedVaultListing.Manifest.CryptoServiceName
                                                 </div>
                                             </div>
                                         }
-                                        @if (!string.IsNullOrEmpty(selectedVaultListing.Manifest.EncryptedCloudStorageProviderName))
+                                        @if (!string.IsNullOrEmpty(ViewModel.SelectedVaultListing.Manifest.EncryptedCloudStorageProviderName))
                                         {
                                             <div class="list-group-item list-group-item-action d-flex align-items-center bg-transparent border-secondary">
                                                 <i class="bi bi-file-text me-2 text-muted"></i>
                                                 <div>
-                                                    <strong>Encrypted Cloud Storage Provider:</strong> @selectedVaultListing.Manifest.EncryptedCloudStorageProviderName
+                                                    <strong>Encrypted Cloud Storage Provider:</strong> @ViewModel.SelectedVaultListing.Manifest.EncryptedCloudStorageProviderName
                                                 </div>
                                             </div>
                                         }
-                                        @if (selectedVaultListing.Manifest.Parameters != null && selectedVaultListing.Manifest.Parameters.Any())
+                                        @if (ViewModel.SelectedVaultListing.Manifest.Parameters != null && ViewModel.SelectedVaultListing.Manifest.Parameters.Any())
                                         {
-                                            @foreach (var parameter in selectedVaultListing.Manifest.Parameters)
+                                            @foreach (var parameter in ViewModel.SelectedVaultListing.Manifest.Parameters)
                                             {
                                                 <div class="list-group-item list-group-item-action d-flex align-items-center bg-transparent border-secondary">
                                                     <i class="bi bi-file-text me-2 text-muted"></i>
@@ -195,5 +196,3 @@
         </div>
     }
 </div>
-
-

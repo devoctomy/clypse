@@ -12,8 +12,8 @@ public class CloudfrontService(
     /// <inheritdoc />
     public async Task<string?> CreateDistributionAsync(
         string websiteHost,
-        string? alias = null,
-        string? certificateArn = null,
+        string? alias,
+        string? certificateArn,
         CancellationToken cancellationToken = default)
     {
         try
@@ -100,5 +100,22 @@ public class CloudfrontService(
             logger.LogError(ex, "Failed to create CloudFront distribution for {WebsiteHost}", websiteHost);
             return null;
         }
+    }
+
+    /// <inheritdoc />
+    public async Task<string?> CreateDistributionAsync(
+        string websiteHost,
+        CancellationToken cancellationToken = default)
+    {
+        return await CreateDistributionAsync(websiteHost, null, null, cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public async Task<string?> CreateDistributionAsync(
+        string websiteHost,
+        string? alias,
+        CancellationToken cancellationToken = default)
+    {
+        return await CreateDistributionAsync(websiteHost, alias, null, cancellationToken);
     }
 }

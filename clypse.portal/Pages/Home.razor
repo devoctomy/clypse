@@ -1,28 +1,30 @@
-﻿@page "/"
+@page "/"
 @page "/home"
 @layout HomeLayout
+@inherits MvvmComponentBase<HomeViewModel>
+@using Blazing.Mvvm.Components
+@using clypse.portal.Application.ViewModels
 
 <PageTitle>Clypse Portal - Home</PageTitle>
 
-@if (currentPage == "vaults")
+@if (ViewModel.CurrentPage == "vaults")
 {
-    <Vaults @ref="vaultsComponent" OnVaultUnlocked="HandleVaultUnlocked" />
+    <Vaults />
 }
-else if (currentPage == "credentials")
+else if (ViewModel.CurrentPage == "credentials")
 {
-    <Credentials @ref="credentialsComponent" CurrentVault="@currentVault" CurrentVaultKey="@currentVaultKey" LoadedVault="@loadedVault" VaultManager="@vaultManager" OnLockVault="HandleLockVault" OnVaultUpdated="HandleVaultUpdated" />
+    <Credentials />
 }
 
-<VerifyDialog Show="showVerifyDialog" Results="verifyResults" OnClose="() => { showVerifyDialog = false; verifyResults = null; }" />
-<VaultDeleteConfirmDialog Show="showDeleteVaultDialog" 
-                          VaultToDelete="vaultToDelete" 
-                          IsDeleting="isDeletingVault"
-                          ErrorMessage="@deleteVaultErrorMessage"
-                          OnConfirm="HandleDeleteVaultConfirm" 
-                          OnCancel="CancelDeleteVault" />
-<VaultCreateDialog Show="showCreateVaultDialog"
-                   IsCreating="isCreatingVault"
-                   ErrorMessage="@createVaultErrorMessage"
-                   OnCreateVault="HandleCreateVaultFromDialog"
-                   OnCancel="CancelCreateVault" />
-
+<VerifyDialog Show="ViewModel.ShowVerifyDialog" Results="ViewModel.VerifyResults" OnClose="@(() => ViewModel.CloseVerifyDialogCommand.Execute(null))" />
+<VaultDeleteConfirmDialog Show="ViewModel.ShowDeleteVaultDialog" 
+                          VaultToDelete="ViewModel.VaultToDelete" 
+                          IsDeleting="ViewModel.IsDeletingVault"
+                          ErrorMessage="@ViewModel.DeleteVaultErrorMessage"
+                          OnConfirm="@(() => ViewModel.HandleDeleteVaultConfirmCommand.Execute(null))" 
+                          OnCancel="@(() => ViewModel.CancelDeleteVaultCommand.Execute(null))" />
+<VaultCreateDialog Show="ViewModel.ShowCreateVaultDialog"
+                   IsCreating="ViewModel.IsCreatingVault"
+                   ErrorMessage="@ViewModel.CreateVaultErrorMessage"
+                   OnCreateVault="@((req) => ViewModel.HandleCreateVaultFromDialogCommand.Execute(req))"
+                   OnCancel="@(() => ViewModel.CancelCreateVaultCommand.Execute(null))" />

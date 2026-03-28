@@ -37,7 +37,7 @@ public class VaultStorageService(IJSRuntime jsRuntime)
         catch (Exception ex)
         {
             Console.WriteLine($"Error loading vaults from storage: {ex.Message}");
-            return new List<VaultMetadata>();
+            return [];
         }
     }
 

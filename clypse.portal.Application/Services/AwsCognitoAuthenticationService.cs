@@ -73,31 +73,35 @@ public class AwsCognitoAuthenticationService(
             }
         }
 
-        // Verify the credentials are still valid with Cognito
-        if (!string.IsNullOrEmpty(credentials.IdToken))
-        {
-            try
-            {
-                Console.WriteLine("AwsCognitoAuthenticationService.CheckAuthentication: Refreshing AWS credentials");
-                var freshAwsCredentials = await this.jsRuntime.InvokeAsync<AwsCredentials>("CognitoAuth.getAwsCredentials", credentials.IdToken);
-                if (freshAwsCredentials != null)
-                {
-                    freshAwsCredentials.IdentityId = credentials.AwsCredentials?.IdentityId ?? string.Empty;
-                    credentials.AwsCredentials = freshAwsCredentials;
-                    var credentialsJson = JsonSerializer.Serialize(credentials);
-                    await this.jsRuntime.InvokeVoidAsync("localStorage.setItem", "clypse_credentials", credentialsJson);
-                }
+        return await this.RefreshCredentialsAsync(credentials);
+    }
 
-                return true;
-            }
-            catch
-            {
-                await this.ClearStoredCredentials();
-                return false;
-            }
+    private async Task<bool> RefreshCredentialsAsync(StoredCredentials credentials)
+    {
+        if (string.IsNullOrEmpty(credentials.IdToken))
+        {
+            return false;
         }
 
-        return false;
+        try
+        {
+            Console.WriteLine("AwsCognitoAuthenticationService.CheckAuthentication: Refreshing AWS credentials");
+            var freshAwsCredentials = await this.jsRuntime.InvokeAsync<AwsCredentials>("CognitoAuth.getAwsCredentials", credentials.IdToken);
+            if (freshAwsCredentials != null)
+            {
+                freshAwsCredentials.IdentityId = credentials.AwsCredentials?.IdentityId ?? string.Empty;
+                credentials.AwsCredentials = freshAwsCredentials;
+                var credentialsJson = JsonSerializer.Serialize(credentials);
+                await this.jsRuntime.InvokeVoidAsync("localStorage.setItem", "clypse_credentials", credentialsJson);
+            }
+
+            return true;
+        }
+        catch
+        {
+            await this.ClearStoredCredentials();
+            return false;
+        }
     }
 
     /// <inheritdoc/>

@@ -1,4 +1,4 @@
-@using clypse.portal.Models
+@inherits Blazing.Mvvm.Components.MvvmComponentBase<clypse.portal.Application.ViewModels.UnlockVaultDialogViewModel>
 
 @if (IsVisible && Vault != null)
 {
@@ -10,7 +10,7 @@
                         <i class="bi bi-unlock me-2"></i>
                         Unlock Vault
                     </h5>
-                    <button type="button" class="btn-close" @onclick="OnCancelClick"></button>
+                    <button type="button" class="btn-close" @onclick="ViewModel.CancelCommand.Execute"></button>
                 </div>
                 <div class="modal-body">
                     <p class="mb-3">
@@ -24,11 +24,11 @@
                     }
                     <div class="mb-3">
                         <label for="passphrase" class="form-label">Passphrase</label>
-                        <input type="password" 
-                               class="form-control" 
-                               id="passphrase" 
+                        <input type="password"
+                               class="form-control"
+                               id="passphrase"
                                @ref="passphraseInput"
-                               @bind="passphrase" 
+                               @bind="ViewModel.Passphrase"
                                @bind:event="oninput"
                                @onkeydown="OnPassphraseKeyDown"
                                placeholder="Enter vault passphrase"
@@ -36,10 +36,10 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" @onclick="OnCancelClick" disabled="@IsUnlocking">
+                    <button type="button" class="btn btn-secondary" @onclick="ViewModel.CancelCommand.Execute" disabled="@IsUnlocking">
                         Cancel
                     </button>
-                    <button type="button" class="btn btn-primary" id="unlock-vault-button" @onclick="OnUnlockClick" disabled="@IsUnlocking">
+                    <button type="button" class="btn btn-primary" id="unlock-vault-button" @onclick="ViewModel.UnlockCommand.Execute" disabled="@IsUnlocking">
                         @if (IsUnlocking)
                         {
                             <span class="spinner-border spinner-border-sm me-2" role="status"></span>

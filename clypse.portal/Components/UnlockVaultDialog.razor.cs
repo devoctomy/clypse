@@ -1,13 +1,16 @@
 using Microsoft.AspNetCore.Components;
+using Blazing.Mvvm.Components;
 using Microsoft.AspNetCore.Components.Web;
-using Microsoft.JSInterop;
+using clypse.portal.Application.ViewModels;
 using clypse.portal.Models.Vault;
 
 namespace clypse.portal.Components;
 
-public partial class UnlockVaultDialog : ComponentBase
+/// <summary>
+/// Code-behind for the unlock vault dialog. Business logic is in <see cref="UnlockVaultDialogViewModel"/>.
+/// </summary>
+public partial class UnlockVaultDialog : MvvmComponentBase<UnlockVaultDialogViewModel>
 {
-    [Inject] public IJSRuntime JSRuntime { get; set; } = default!;
     [Parameter] public bool IsVisible { get; set; }
     [Parameter] public VaultMetadata? Vault { get; set; }
     [Parameter] public bool IsUnlocking { get; set; }
@@ -15,47 +18,36 @@ public partial class UnlockVaultDialog : ComponentBase
     [Parameter] public EventCallback OnCancel { get; set; }
     [Parameter] public EventCallback<string> OnUnlock { get; set; }
 
-    private string passphrase = string.Empty;
     private ElementReference passphraseInput;
 
     protected override async Task OnParametersSetAsync()
     {
-        // Clear passphrase when dialog is shown
+        ViewModel.Vault = Vault;
+        ViewModel.IsUnlocking = IsUnlocking;
+        ViewModel.ErrorMessage = ErrorMessage;
+        ViewModel.OnUnlockCallback = passphrase => OnUnlock.InvokeAsync(passphrase);
+        ViewModel.OnCancelCallback = () => OnCancel.InvokeAsync();
+
         if (IsVisible && Vault != null)
         {
-            passphrase = string.Empty;
-            await Task.Delay(100); // Small delay to ensure modal is rendered
+            ViewModel.ResetPassphrase();
+            await Task.Delay(100);
             try
             {
                 await passphraseInput.FocusAsync();
             }
-            catch (Exception ex)
+            catch
             {
-                // Focus might fail if component is not yet fully rendered
-                Console.WriteLine($"Failed to focus passphrase input: {ex.Message}");
+                // Focus may fail if not yet rendered
             }
         }
     }
 
     private async Task OnPassphraseKeyDown(KeyboardEventArgs e)
     {
-        if (e.Key == "Enter" && !IsUnlocking && !string.IsNullOrEmpty(passphrase))
+        if (e.Key == "Enter" && !IsUnlocking && !string.IsNullOrEmpty(ViewModel.Passphrase))
         {
-            await OnUnlockClick();
+            await ViewModel.UnlockCommand.ExecuteAsync(null);
         }
-    }
-
-    private async Task OnUnlockClick()
-    {
-        if (!string.IsNullOrEmpty(passphrase))
-        {
-            await OnUnlock.InvokeAsync(passphrase);
-        }
-    }
-
-    private async Task OnCancelClick()
-    {
-        passphrase = string.Empty;
-        await OnCancel.InvokeAsync();
     }
 }

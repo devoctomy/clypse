@@ -15,7 +15,29 @@ public interface ICloudfrontService
     /// <returns>The distribution domain name when successful; otherwise, <see langword="null"/>.</returns>
     public Task<string?> CreateDistributionAsync(
         string websiteHost,
-        string? alias = null,
-        string? certificateArn = null,
+        string? alias,
+        string? certificateArn,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Creates a CloudFront distribution for the specified website host.
+    /// </summary>
+    /// <param name="websiteHost">Origin host name to serve from.</param>
+    /// <param name="cancellationToken">Token to cancel the operation.</param>
+    /// <returns>The distribution domain name when successful; otherwise, <see langword="null"/>.</returns>
+    public Task<string?> CreateDistributionAsync(
+        string websiteHost,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Creates a CloudFront distribution for the specified website host.
+    /// </summary>
+    /// <param name="websiteHost">Origin host name to serve from.</param>
+    /// <param name="alias">Optional alternate domain name (CNAME).</param>
+    /// <param name="cancellationToken">Token to cancel the operation.</param>
+    /// <returns>The distribution domain name when successful; otherwise, <see langword="null"/>.</returns>
+    public Task<string?> CreateDistributionAsync(
+        string websiteHost,
+        string? alias,
         CancellationToken cancellationToken = default);
 }
