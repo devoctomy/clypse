@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Blazing.Mvvm.ComponentModel;
 using clypse.core.Vault;
 using clypse.portal.Application.Helpers;
@@ -6,7 +7,6 @@ using clypse.portal.Application.ViewModels.Messages;
 using clypse.portal.Models.Vault;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
-using System.Text.Json;
 
 namespace clypse.portal.Application.ViewModels;
 
