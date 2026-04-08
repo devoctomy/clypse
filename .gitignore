@@ -435,6 +435,6 @@ clypse.portal/wwwroot/js/*.js
 !clypse.portal/wwwroot/js/.gitkeep
 clypse.portal.ClientScripts/coverage/
 
-#codacy
-.codacy/*
+
+#Ignore vscode AI rules
 .github\instructions\codacy.instructions.md
