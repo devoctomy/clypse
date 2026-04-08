@@ -34,8 +34,6 @@ public class MainLayoutViewModelTests
             this.mockLogger.Object);
     }
 
-    // --- Constructor ---
-
     [Fact]
     public void GivenValidParameters_WhenConstructing_ThenCreatesInstance()
     {
@@ -76,8 +74,6 @@ public class MainLayoutViewModelTests
             null!));
     }
 
-    // --- Initial state ---
-
     [Fact]
     public void GivenNewInstance_WhenCheckingInitialState_ThenDefaultValuesAreCorrect()
     {
@@ -89,8 +85,6 @@ public class MainLayoutViewModelTests
         Assert.False(sut.IsUpdating);
         Assert.False(sut.ShowChangesDialog);
     }
-
-    // --- AvailableVersion / AppSettings ---
 
     [Fact]
     public void GivenAppSettings_WhenGetAvailableVersion_ThenReturnsNonNullString()
@@ -111,8 +105,6 @@ public class MainLayoutViewModelTests
         // Assert
         Assert.Same(this.appSettings, sut.AppSettings);
     }
-
-    // --- OnAfterRenderAsync ---
 
     [Fact]
     public async Task GivenFirstRender_WhenOnAfterRenderAsync_ThenSetupUpdateCallbacksIsCalled()
@@ -153,8 +145,6 @@ public class MainLayoutViewModelTests
         await sut.OnAfterRenderAsync(firstRender: true);
     }
 
-    // --- HandleVersionClickAsync ---
-
     [Fact]
     public async Task GivenUpdateNotAvailable_WhenHandleVersionClick_ThenChangesDialogIsShown()
     {
@@ -186,8 +176,6 @@ public class MainLayoutViewModelTests
         this.mockPwaUpdateService.Verify(s => s.CheckForUpdateAsync(), Times.Never);
     }
 
-    // --- HandleCloseChangesDialog ---
-
     [Fact]
     public void GivenOpenChangesDialog_WhenHandleCloseChangesDialog_ThenDialogIsClosed()
     {
@@ -201,8 +189,6 @@ public class MainLayoutViewModelTests
         // Assert
         Assert.False(sut.ShowChangesDialog);
     }
-
-    // --- HandleInstallUpdateAsync ---
 
     [Fact]
     public async Task GivenInstallSucceeds_WhenHandleInstallUpdate_ThenInstallUpdateIsCalled()
@@ -270,8 +256,6 @@ public class MainLayoutViewModelTests
         this.mockPwaUpdateService.Verify(s => s.InstallUpdateAsync(), Times.Once);
     }
 
-    // --- RunUpdateLoopAsync (via OnAfterRenderAsync) ---
-
     [Fact]
     public async Task GivenIsUpdateAvailableReturnsTrue_WhenRunUpdateLoop_ThenUpdateAvailableIsTrue()
     {
@@ -299,8 +283,6 @@ public class MainLayoutViewModelTests
         await sut.OnAfterRenderAsync(firstRender: true);
         await Task.Delay(2500);
     }
-
-    // --- Dispose ---
 
     [Fact]
     public void GivenInstanceWithNoLoopStarted_WhenDisposed_ThenNoExceptionIsThrown()

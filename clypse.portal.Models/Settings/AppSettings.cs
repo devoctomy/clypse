@@ -40,5 +40,5 @@ public class AppSettings
     /// <summary>
     /// Gets the version of the executing assembly.
     /// </summary>
-    public string Version => Assembly.GetExecutingAssembly().GetName().Version?.ToString() ?? "Unknown";
+    public string Version => Assembly.GetEntryAssembly()?.GetName().Version?.ToString() ?? "Unknown";
 }
