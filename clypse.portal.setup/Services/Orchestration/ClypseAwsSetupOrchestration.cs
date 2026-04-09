@@ -502,12 +502,12 @@ public class ClypseAwsSetupOrchestration(
 
         Version buildVersion = await GetBuildVersionAsync(cancellationToken);
         var versionMatch = (buildVersion <= deployedVersion);
-        
-        //if (versionMatch)
-        //{
-        //    logger.LogInformation("No upgrade required, deployed version '{deployedVersion}' is up to date. Build version is '{buildVersion}'.", deployedVersion, buildVersion);
-        //    return true;
-        //}
+
+        if (versionMatch)
+        {
+            logger.LogInformation("No upgrade required, deployed version '{deployedVersion}' is up to date. Build version is '{buildVersion}'.", deployedVersion, buildVersion);
+            return true;
+        }
 
         logger.LogInformation("Downloading existing configuration.");
         var appSettings = await s3Service.DownloadObjectDataAsync(
