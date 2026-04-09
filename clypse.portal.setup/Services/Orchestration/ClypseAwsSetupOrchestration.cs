@@ -501,12 +501,13 @@ public class ClypseAwsSetupOrchestration(
         var deployedVersion = Version.Parse(Encoding.UTF8.GetString(deployedVersionBytes).Trim());
 
         Version buildVersion = await GetBuildVersionAsync(cancellationToken);
-
-        if (buildVersion <= deployedVersion)
-        {
-            logger.LogInformation("No upgrade required, deployed version '{deployedVersion}' is up to date. Build version is '{buildVersion}'.", deployedVersion, buildVersion);
-            return true;
-        }
+        var versionMatch = (buildVersion <= deployedVersion);
+        
+        //if (versionMatch)
+        //{
+        //    logger.LogInformation("No upgrade required, deployed version '{deployedVersion}' is up to date. Build version is '{buildVersion}'.", deployedVersion, buildVersion);
+        //    return true;
+        //}
 
         logger.LogInformation("Downloading existing configuration.");
         var appSettings = await s3Service.DownloadObjectDataAsync(
@@ -529,6 +530,7 @@ public class ClypseAwsSetupOrchestration(
         var inventoryFilePath = $"{setupId}-update-inventory.json";
         inventoryService.Save(inventoryFilePath);
 
+        logger.LogWarning("If deployment was successful you may need to manually invalidate any associated CloudFront distributions.");
         return true;
     }
 
