@@ -16,4 +16,6 @@ public static class Globals
     /// </summary>
     public const bool IsDebugBuild = false;
 #endif
+
+    public static string Version => typeof(Program).Assembly.GetName().Version!.ToString();
 }

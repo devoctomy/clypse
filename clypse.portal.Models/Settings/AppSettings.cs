@@ -1,5 +1,3 @@
-using System.Reflection;
-
 namespace clypse.portal.Models.Settings;
 
 /// <summary>
@@ -37,8 +35,4 @@ public class AppSettings
     /// </summary>
     public List<MemorablePasswordTemplateItem> MemorablePasswordTemplates { get; set; } = [];
 
-    /// <summary>
-    /// Gets the version of the executing assembly.
-    /// </summary>
-    public string Version => Assembly.GetEntryAssembly()?.GetName().Version?.ToString() ?? "Unknown";
 }

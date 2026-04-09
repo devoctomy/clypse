@@ -66,11 +66,6 @@ public partial class MainLayoutViewModel : ViewModelBase
     }
 
     /// <summary>
-    /// Gets the current application version.
-    /// </summary>
-    public string AvailableVersion => appSettings.Version;
-
-    /// <summary>
     /// Gets the application settings.
     /// </summary>
     public AppSettings AppSettings => appSettings;

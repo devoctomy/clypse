@@ -87,16 +87,6 @@ public class MainLayoutViewModelTests
     }
 
     [Fact]
-    public void GivenAppSettings_WhenGetAvailableVersion_ThenReturnsNonNullString()
-    {
-        // Arrange
-        var sut = CreateSut();
-
-        // Assert
-        Assert.NotNull(sut.AvailableVersion);
-    }
-
-    [Fact]
     public void GivenAppSettings_WhenGetAppSettings_ThenReturnsCorrectSettings()
     {
         // Arrange
