@@ -35,11 +35,11 @@ builder.Services.AddScoped<IJsS3InvokerProvider, JsS3InvokerProvider>();
 // Register messenger for cross-ViewModel communication
 builder.Services.AddSingleton<IMessenger>(WeakReferenceMessenger.Default);
 
-var (CognitoConfig, S3Config, AppSettings) = builder.GetSettings();
+var settings = builder.GetSettings();
 
 // Default key derivation service options
 builder.Services.AddSingleton(
-    AppSettings.TestMode ?
+    settings.AppSettings.TestMode ?
     KeyDerivationServiceDefaultOptions.Blazor_Argon2id_Test() :
     KeyDerivationServiceDefaultOptions.Blazor_Argon2id());
 
