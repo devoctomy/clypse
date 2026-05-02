@@ -84,12 +84,17 @@ public class SetupOptions
     /// Determines whether the options contain the required values.
     /// </summary>
     /// <returns><see langword="true"/> when required values are present; otherwise, <see langword="false"/>.</returns>
-    public bool IsValid()
+    public bool IsValid(bool isUpgrade)
     {
-        return !string.IsNullOrWhiteSpace(AccessId)
+        return isUpgrade ?
+            (!string.IsNullOrWhiteSpace(AccessId)
+            && !string.IsNullOrWhiteSpace(SecretAccessKey)
+            && !string.IsNullOrWhiteSpace(Region)
+            && !string.IsNullOrWhiteSpace(ResourcePrefix)) :
+            (!string.IsNullOrWhiteSpace(AccessId)
             && !string.IsNullOrWhiteSpace(SecretAccessKey)
             && !string.IsNullOrWhiteSpace(Region)
             && !string.IsNullOrWhiteSpace(ResourcePrefix)
-            && !string.IsNullOrWhiteSpace(InitialUserEmail);
+            && !string.IsNullOrWhiteSpace(InitialUserEmail));
     }
 }

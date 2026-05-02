@@ -43,7 +43,7 @@ public class ClypseAwsSetupOrchestration(
         logger.LogDebug("Using IAM Secret Access Key: {secretAccessKey}", options.SecretAccessKey.Redact(3));
         logger.LogDebug("Using Portal Build Output Path: {portalBuildOutputPath}", options.PortalBuildOutputPath);
 
-        if (!options.IsValid())
+        if (!options.IsValid(false))
         {
             throw new Exception("Options are not valid.");
         }
@@ -467,7 +467,7 @@ public class ClypseAwsSetupOrchestration(
         logger.LogDebug("Using IAM Secret Access Key: {secretAccessKey}", options.SecretAccessKey.Redact(3));
         logger.LogDebug("Using Portal Build Output Path: {portalBuildOutputPath}", options.PortalBuildOutputPath);
 
-        if (!options.IsValid())
+        if (!options.IsValid(true))
         {
             throw new Exception("Options are not valid.");
         }

@@ -3,13 +3,14 @@
 public class SetupOptionsTests
 {
     [Theory]
-    [InlineData("base-url", "access-id", "secret-access-key", "region", "resource-prefix", "bob@hoskins.com", true)]
-    [InlineData("", "access-id", "secret-access-key", "region", "resource-prefix", "bob@hoskins.com", true)]
-    [InlineData("", "", "secret-access-key", "region", "resource-prefix", "bob@hoskins.com", false)]
-    [InlineData("", "access-id", "", "region", "resource-prefix", "bob@hoskins.com", false)]
-    [InlineData("", "access-id", "secret-access-key", "", "resource-prefix", "bob@hoskins.com", false)]
-    [InlineData("", "access-id", "secret-access-key", "region", "", "bob@hoskins.com", false)]
-    [InlineData("", "access-id", "secret-access-key", "region", "resource-prefix", "", false)]
+    [InlineData("base-url", "access-id", "secret-access-key", "region", "resource-prefix", "bob@hoskins.com", false, true)]
+    [InlineData("", "access-id", "secret-access-key", "region", "resource-prefix", "bob@hoskins.com", false, true)]
+    [InlineData("", "", "secret-access-key", "region", "resource-prefix", "bob@hoskins.com", false, false)]
+    [InlineData("", "access-id", "", "region", "resource-prefix", "bob@hoskins.com", false, false)]
+    [InlineData("", "access-id", "secret-access-key", "", "resource-prefix", "bob@hoskins.com", false, false)]
+    [InlineData("", "access-id", "secret-access-key", "region", "", "bob@hoskins.com", false, false)]
+    [InlineData("", "access-id", "secret-access-key", "region", "resource-prefix", "", false, false)]
+    [InlineData("", "access-id", "secret-access-key", "region", "resource-prefix", "", true, true)]
     public void GivenValidOptions_WhenIsValid_ThenReturnsTrue(
         string baseUrl,
         string accessId,
@@ -17,6 +18,7 @@ public class SetupOptionsTests
         string region,
         string resourcePrefix,
         string initialUserEmail,
+        bool isUpgrade,
         bool expectedIsValid)
     {
         // Arrange
@@ -31,7 +33,7 @@ public class SetupOptionsTests
         };
 
         // Act
-        var isValid = sut.IsValid();
+        var isValid = sut.IsValid(isUpgrade);
 
         // Assert
         Assert.Equal(expectedIsValid, isValid);
