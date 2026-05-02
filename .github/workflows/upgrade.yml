@@ -60,13 +60,14 @@ jobs:
       env:
         CLYPSE_SETUP__AccessId: ${{ secrets.CLYPSE_SETUP__AccessId }}
         CLYPSE_SETUP__SecretAccessKey: ${{ secrets.CLYPSE_SETUP__SecretAccessKey }}
-        CLYPSE_SETUP__Region: ${{ secrets.CLYPSE_SETUP__Region }}
-        CLYPSE_SETUP__ResourcePrefix: ${{ secrets.CLYPSE_SETUP__ResourcePrefix }}
+        CLYPSE_SETUP__Region: ${{ secrets.CLYPSE_SETUP__Region }} # This doesn't need to be a secret
+        CLYPSE_SETUP__ResourcePrefix: ${{ secrets.CLYPSE_SETUP__ResourcePrefix }} # This doesn't need to be a secret
+        CLYPSE_SETUP__CloudFrontDistributionId: ${{ secrets.CLYPSE_SETUP__CloudFrontDistributionId }}
+        CLYPSE_SETUP__UpgradePortalBucketNameOverride: ${{ secrets.CLYPSE_SETUP__UpgradePortalBucketNameOverride }} # This doesn't need to be a secret
         CLYPSE_SETUP__InteractiveMode: false
         CLYPSE_SETUP__EnableUpgradeMode: true
         CLYPSE_SETUP__BuildPortal: true
-        CLYPSE_SETUP__CloudFrontDistributionId: ${{ secrets.CLYPSE_SETUP__CloudFrontDistributionId }}
-        CLYPSE_SETUP__UpgradePortalBucketNameOverride: ${{ secrets.CLYPSE_SETUP__UpgradePortalBucketNameOverride }}
+        CLYPSE_SETUP__ForceUpgrade: true
 
     - name: Upgrade summary
       run: |
