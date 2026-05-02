@@ -66,6 +66,7 @@ jobs:
         CLYPSE_SETUP__EnableUpgradeMode: true
         CLYPSE_SETUP__BuildPortal: true
         CLYPSE_SETUP__CloudFrontDistributionId: ${{ secrets.CLYPSE_SETUP__CloudFrontDistributionId }}
+        CLYPSE_SETUP__UpgradePortalBucketNameOverride: ${{ secrets.CLYPSE_SETUP__UpgradePortalBucketNameOverride }}
 
     - name: Upgrade summary
       run: |
