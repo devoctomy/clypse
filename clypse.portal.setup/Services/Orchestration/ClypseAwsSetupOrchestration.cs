@@ -503,10 +503,15 @@ public class ClypseAwsSetupOrchestration(
         Version buildVersion = await GetBuildVersionAsync(cancellationToken);
         var versionMatch = (buildVersion <= deployedVersion);
 
-        if (versionMatch)
+        if (!options.ForceUpgrade && versionMatch)
         {
             logger.LogInformation("No upgrade required, deployed version '{deployedVersion}' is up to date. Build version is '{buildVersion}'.", deployedVersion, buildVersion);
             return true;
+        }
+
+        if (options.ForceUpgrade && versionMatch)
+        {
+            logger.LogInformation("ForceUpgrade is enabled. Proceeding with upgrade even though deployed version '{deployedVersion}' matches build version '{buildVersion}'.", deployedVersion, buildVersion);
         }
 
         logger.LogInformation("Downloading existing configuration.");

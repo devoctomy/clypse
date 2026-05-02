@@ -199,6 +199,7 @@ public class ServiceCollectionExtensionsTests
         System.Environment.SetEnvironmentVariable("CLYPSE_SETUP_UNITTEST__InitialUserEmail", "test@example.com");
         System.Environment.SetEnvironmentVariable("CLYPSE_SETUP_UNITTEST__EnableUpgradeMode", "true");
         System.Environment.SetEnvironmentVariable("CLYPSE_SETUP_UNITTEST__BuildPortal", "true");
+        System.Environment.SetEnvironmentVariable("CLYPSE_SETUP_UNITTEST__ForceUpgrade", "true");
         System.Environment.SetEnvironmentVariable("CLYPSE_SETUP_UNITTEST__CloudFrontDistributionId", "E1234567890ABC");
 
         var mockEnvService = CreateMockEnvironmentService();
@@ -214,6 +215,7 @@ public class ServiceCollectionExtensionsTests
             Assert.NotNull(options);
             Assert.True(options.EnableUpgradeMode);
             Assert.True(options.BuildPortal);
+            Assert.True(options.ForceUpgrade);
             Assert.Equal("E1234567890ABC", options.CloudFrontDistributionId);
         }
         finally
@@ -226,6 +228,7 @@ public class ServiceCollectionExtensionsTests
             System.Environment.SetEnvironmentVariable("CLYPSE_SETUP_UNITTEST__InitialUserEmail", null);
             System.Environment.SetEnvironmentVariable("CLYPSE_SETUP_UNITTEST__EnableUpgradeMode", null);
             System.Environment.SetEnvironmentVariable("CLYPSE_SETUP_UNITTEST__BuildPortal", null);
+            System.Environment.SetEnvironmentVariable("CLYPSE_SETUP_UNITTEST__ForceUpgrade", null);
             System.Environment.SetEnvironmentVariable("CLYPSE_SETUP_UNITTEST__CloudFrontDistributionId", null);
         }
     }

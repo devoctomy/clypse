@@ -66,6 +66,11 @@ public class SetupOptions
     public bool BuildPortal { get; set; } = false;
 
     /// <summary>
+    /// Gets or sets a value indicating whether to force an upgrade even if the deployed version is up to date.
+    /// </summary>
+    public bool ForceUpgrade { get; set; } = false;
+
+    /// <summary>
     /// Gets or sets the CloudFront distribution ID to invalidate after deployment.
     /// </summary>
     public string CloudFrontDistributionId { get; set; } = string.Empty;

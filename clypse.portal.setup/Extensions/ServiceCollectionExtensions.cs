@@ -250,6 +250,16 @@ public static class ServiceCollectionExtensions
                 options.BuildPortal = buildPortal;
             }
         }
+
+        var processForceUpgrade = environmentService.GetEnvironmentVariable($"{environmentVariablePrefix}__ForceUpgrade");
+        if (string.IsNullOrWhiteSpace(processForceUpgrade))
+        {
+            var forceUpgradeEnv = environmentService.GetEnvironmentVariable("CLYPSE_SETUP__ForceUpgrade", EnvironmentVariableTarget.User);
+            if (!string.IsNullOrWhiteSpace(forceUpgradeEnv) && bool.TryParse(forceUpgradeEnv, out var forceUpgrade))
+            {
+                options.ForceUpgrade = forceUpgrade;
+            }
+        }
     }
 
     private static string PreferExisting(string currentValue, string? fallbackValue)

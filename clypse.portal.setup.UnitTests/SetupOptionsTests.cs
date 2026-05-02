@@ -45,12 +45,14 @@ public class SetupOptionsTests
         {
             EnableUpgradeMode = true,
             BuildPortal = true,
+            ForceUpgrade = true,
             CloudFrontDistributionId = "E1234567890ABC"
         };
 
         // Assert
         Assert.True(sut.EnableUpgradeMode);
         Assert.True(sut.BuildPortal);
+        Assert.True(sut.ForceUpgrade);
         Assert.Equal("E1234567890ABC", sut.CloudFrontDistributionId);
     }
 
@@ -63,6 +65,7 @@ public class SetupOptionsTests
         // Assert
         Assert.False(sut.EnableUpgradeMode);
         Assert.False(sut.BuildPortal);
+        Assert.False(sut.ForceUpgrade);
         Assert.Equal(string.Empty, sut.CloudFrontDistributionId);
     }
 }
