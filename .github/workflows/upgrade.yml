@@ -1,0 +1,80 @@
+name: Upgrade
+
+on:
+  workflow_run:
+    workflows:
+      - Tests
+    types:
+      - completed
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  upgrade:
+    if: github.repository == 'devoctomy/clypse' && (github.event_name == 'workflow_dispatch' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main' && (github.event.workflow_run.event == 'push' || github.event.workflow_run.event == 'workflow_dispatch')))
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+    - name: Checkout source at tested commit
+      uses: actions/checkout@v4
+      with:
+        repository: ${{ github.event_name == 'workflow_dispatch' && github.repository || github.event.workflow_run.repository.full_name }}
+        ref: ${{ github.event_name == 'workflow_dispatch' && github.sha || github.event.workflow_run.head_sha }}
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+
+    - name: Setup Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.x'
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '10.0.x'
+
+    - name: Setup HTTPS development certificates
+      run: |
+        dotnet dev-certs https --clean
+        dotnet dev-certs https --trust || true
+
+    - name: Install .NET workloads
+      run: dotnet workload install wasm-tools
+
+    - name: Restore dependencies
+      run: dotnet restore
+
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.CLYPSE_PUBLISH_AWS_ACCESSKEY }}
+        aws-secret-access-key: ${{ secrets.CLYPSE_PUBLISH_AWS_SECRETACCESSKEY }}
+        aws-region: ${{ secrets.CLYPSE_PUBLISH_AWS_BUCKETREGION }}
+
+    - name: Run upgrade
+      run: dotnet run --project clypse.portal.setup/clypse.portal.setup.csproj
+      env:
+        CLYPSE_SETUP__AccessId: ${{ secrets.CLYPSE_PUBLISH_AWS_ACCESSKEY }}
+        CLYPSE_SETUP__SecretAccessKey: ${{ secrets.CLYPSE_PUBLISH_AWS_SECRETACCESSKEY }}
+        CLYPSE_SETUP__Region: ${{ secrets.CLYPSE_PUBLISH_AWS_BUCKETREGION }}
+        CLYPSE_SETUP__ResourcePrefix: ${{ secrets.CLYPSE_SETUP_RESOURCEPREFIX }}
+        CLYPSE_SETUP__InteractiveMode: false
+        CLYPSE_SETUP__EnableUpgradeMode: true
+        CLYPSE_SETUP__BuildPortal: true
+        CLYPSE_SETUP__CloudFrontDistributionId: ${{ secrets.CLYPSE_PUBLISH_AWS_CLOUDFRONTDISTRIBUTIONID }}
+
+    - name: Upgrade summary
+      run: |
+        echo "Tested commit: ${{ github.event_name == 'workflow_dispatch' && github.sha || github.event.workflow_run.head_sha }}"
+        echo "Branch: ${{ github.event_name == 'workflow_dispatch' && github.ref_name || github.event.workflow_run.head_branch }}"
+        echo "Run ID: ${{ github.event_name == 'workflow_dispatch' && github.run_id || github.event.workflow_run.id }}"
+        echo "Upgrade completed successfully."
+        echo "Portal upgraded via clypse.portal.setup"
+        echo "CloudFront distribution invalidated: ${{ secrets.CLYPSE_PUBLISH_AWS_CLOUDFRONTDISTRIBUTIONID }}"
+        echo "Site should be available shortly at your CloudFront domain"
