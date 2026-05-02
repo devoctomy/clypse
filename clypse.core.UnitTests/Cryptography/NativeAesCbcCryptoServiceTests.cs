@@ -44,26 +44,35 @@ public class NativeAesCbcCryptoServiceTests : IDisposable
     }
 
     [Fact]
-    public async Task GivenPlainTextData_AndWrongDecryptionKey_WhenEncryptingAndDecrypting_ThenExceptionThrown()
+    public async Task GivenPlainTextData_AndWrongDecryptionKey_WhenEncryptingAndDecrypting_ThenDoesNotReturnOriginalPlaintext()
     {
         // Arrange
         string originalText = "Hello, World!";
         byte[] originalData = Encoding.UTF8.GetBytes(originalText);
-        byte[] wrongKeyBytes = new byte[32];
+        byte[] wrongKeyBytes = new byte[32]; // all zeros -> different from testKey
 
         using var inputStream = new MemoryStream(originalData);
         using var encryptedStream = new MemoryStream();
         using var decryptedStream = new MemoryStream();
 
-        // Assert
-        Assert.NotEqual(this.testKey, Convert.ToBase64String(wrongKeyBytes));       // I put this in as somehow this test failedin github workflow, suggesting the encryption was successful with the wrong key? So CRNG must have produced zeros??
+        Assert.NotEqual(this.testKey, Convert.ToBase64String(wrongKeyBytes));
         await this.sut.EncryptAsync(inputStream, encryptedStream, this.testKey);
         encryptedStream.Position = 0;
-        var exception = await Assert.ThrowsAnyAsync<CryptographicException>(async () =>
+
+        // Act
+        try
         {
             await this.sut.DecryptAsync(encryptedStream, decryptedStream, Convert.ToBase64String(wrongKeyBytes));
-        });
-        Assert.Equal("Padding is invalid and cannot be removed.", exception.Message);
+            string decryptedText = Encoding.UTF8.GetString(decryptedStream.ToArray());
+
+            // Assert: if decryption succeeded, the result must not match the original
+            Assert.NotEqual(originalText, decryptedText);
+        }
+        catch (CryptographicException)
+        {
+            // Also acceptable: decryption failed due to padding/etc.
+            // The catch itself validates an exception was thrown.
+        }
     }
 
     [Fact]
