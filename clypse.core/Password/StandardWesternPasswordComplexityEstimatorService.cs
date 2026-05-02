@@ -160,9 +160,11 @@ public class StandardWesternPasswordComplexityEstimatorService(
         return charCountsByGroup;
     }
 
-    private static async Task<bool> IsWeakKnownPasswordAsync(
+#pragma warning disable CA1822 // Mark members as static
+    private async Task<bool> IsWeakKnownPasswordAsync(
         string password,
         CancellationToken cancellationToken)
+#pragma warning restore CA1822 // Mark members as static
     {
         HashSet<string>? weakKnownPasswords = default;
 
