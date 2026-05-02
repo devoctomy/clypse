@@ -66,7 +66,7 @@ public class TestBase : PageTest
     }
 
     [AssemblyCleanup]
-    public static void AssemblyCleanup(TestContext context)
+    public static void AssemblyCleanup()
     {
         try
         {

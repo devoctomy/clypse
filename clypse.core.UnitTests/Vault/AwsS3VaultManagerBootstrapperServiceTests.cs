@@ -17,7 +17,7 @@ public class AwsS3VaultManagerBootstrapperServiceTests
     private readonly Mock<ICryptoService> mockCryptoService;
     private AwsS3VaultManagerBootstrapperService sut;
 
-    private string prefix = "foobar";
+    private readonly string prefix = "foobar";
 
     public AwsS3VaultManagerBootstrapperServiceTests()
     {

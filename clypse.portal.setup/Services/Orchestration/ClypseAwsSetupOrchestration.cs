@@ -523,7 +523,7 @@ public class ClypseAwsSetupOrchestration(
         logger.LogInformation("Merging existing configuration with latest template.");
         var appDir = ioService.GetApplicationDirectory();
         var templatePath = ioService.CombinePath(appDir, "Data/appsettings.json");
-        var templateSettings = await ioService.ReadAllTextAsync(templatePath);
+        var templateSettings = await ioService.ReadAllTextAsync(templatePath, cancellationToken);
         var merged = jsonMergerService.MergeJsonStrings(
             templateSettings,
             Encoding.UTF8.GetString(appSettings));
@@ -602,7 +602,7 @@ public class ClypseAwsSetupOrchestration(
             if(reconfigure)
             {
                 logger.LogInformation("Reconfiguring portal.");
-                MemoryStream? configStream = null;
+                MemoryStream? configStream;
 
                 if(reconfiguredSettings != null)
                 {
@@ -655,7 +655,8 @@ public class ClypseAwsSetupOrchestration(
 
                var updatedAppSettingsAsset = await serviceWorkerAssetHashUpdaterService.UpdateAssetAsync(
                     options.PortalBuildOutputPath,
-                    "appsettings.json");
+                    "appsettings.json",
+                    cancellationToken);
                 if(!updatedAppSettingsAsset)
                 {
                     logger.LogError("Failed to update service worker asset 'appsettings.json'.");

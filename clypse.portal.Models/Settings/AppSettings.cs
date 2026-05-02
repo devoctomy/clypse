@@ -34,5 +34,4 @@ public class AppSettings
     /// Gets or sets the list of memorable password templates.
     /// </summary>
     public List<MemorablePasswordTemplateItem> MemorablePasswordTemplates { get; set; } = [];
-
 }

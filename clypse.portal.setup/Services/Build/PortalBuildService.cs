@@ -58,14 +58,14 @@ public class PortalBuildService(
         startInfo.ArgumentList.Add("-o");
         startInfo.ArgumentList.Add(publishOutputPath);
 
-        var processResult = await processRunnerService.Run(startInfo);
-        if (!processResult.Success)
+        var (Success, ExitCode, OutputStreamText, ErrorStreamText) = await processRunnerService.Run(startInfo);
+        if (!Success)
         {
             logger.LogError(
                 "dotnet publish failed with exit code {exitCode}.\nSTDOUT:\n{stdout}\nSTDERR:\n{stderr}",
-                processResult.ExitCode,
-                processResult.OutputStreamText,
-                processResult.ErrorStreamText);
+                ExitCode,
+                OutputStreamText,
+                ErrorStreamText);
 
             return new PortalBuildResult(false, string.Empty);
         }
@@ -75,8 +75,8 @@ public class PortalBuildService(
             logger.LogError(
                 "dotnet publish succeeded but wwwroot output path '{wwwroot}' does not exist.\nSTDOUT:\n{stdout}\nSTDERR:\n{stderr}",
                 wwwrootOutputPath,
-                processResult.OutputStreamText,
-                processResult.ErrorStreamText);
+                OutputStreamText,
+                ErrorStreamText);
 
             return new PortalBuildResult(false, string.Empty);
         }

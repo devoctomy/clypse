@@ -30,7 +30,7 @@ public class ValidationHelpersTests
         assigned.Contains(value);
     }
 
-    private List<object?> VerifiedAssignmentTest(object? testParameter1)
+    private static List<object?> VerifiedAssignmentTest(object? testParameter1)
     {
         var parameters = new List<object?>();
         testParameter1 = ValidationHelpers.VerifiedAssignent(testParameter1);

@@ -20,8 +20,8 @@ public class HomeViewModelTests : IDisposable
     private readonly VaultStateService vaultStateService;
     private readonly Mock<IJsS3InvokerProvider> mockJsS3InvokerProvider;
     private readonly AwsS3Config awsS3Config;
-    private readonly Mock<clypse.core.Cryptography.Interfaces.IKeyDerivationService> mockKeyDerivationService;
-    private readonly IMessenger messenger;
+    private readonly Mock<core.Cryptography.Interfaces.IKeyDerivationService> mockKeyDerivationService;
+    private readonly WeakReferenceMessenger messenger;
 
     public HomeViewModelTests()
     {
