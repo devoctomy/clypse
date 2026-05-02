@@ -1145,7 +1145,15 @@ public class ClypseAwsSetupOrchestrationTests
             .ReturnsAsync(System.Text.Encoding.UTF8.GetBytes("{\"key\":\"value\"}"));
 
         _mockIoService
-            .Setup(s => s.ReadAllTextAsync("Data/appsettings.json", It.IsAny<CancellationToken>()))
+            .Setup(x => x.GetApplicationDirectory())
+            .Returns("/app");
+
+        _mockIoService
+            .Setup(x => x.CombinePath("/app", "Data/appsettings.json"))
+            .Returns("/app/Data/appsettings.json");
+
+        _mockIoService
+            .Setup(s => s.ReadAllTextAsync("/app/Data/appsettings.json", It.IsAny<CancellationToken>()))
             .ReturnsAsync("{\"template\":\"value\"}");
 
         _mockJsonMergerService
@@ -1201,7 +1209,15 @@ public class ClypseAwsSetupOrchestrationTests
             .ReturnsAsync(System.Text.Encoding.UTF8.GetBytes("{\"key\":\"value\"}"));
 
         _mockIoService
-            .Setup(s => s.ReadAllTextAsync("Data/appsettings.json", It.IsAny<CancellationToken>()))
+            .Setup(x => x.GetApplicationDirectory())
+            .Returns("/app");
+
+        _mockIoService
+            .Setup(x => x.CombinePath("/app", "Data/appsettings.json"))
+            .Returns("/app/Data/appsettings.json");
+
+        _mockIoService
+            .Setup(s => s.ReadAllTextAsync("/app/Data/appsettings.json", It.IsAny<CancellationToken>()))
             .ReturnsAsync("{\"template\":\"value\"}");
 
         _mockJsonMergerService

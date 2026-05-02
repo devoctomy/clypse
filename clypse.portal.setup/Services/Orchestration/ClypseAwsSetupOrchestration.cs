@@ -521,7 +521,9 @@ public class ClypseAwsSetupOrchestration(
             cancellationToken);
 
         logger.LogInformation("Merging existing configuration with latest template.");
-        var templateSettings = await ioService.ReadAllTextAsync("Data/appsettings.json");
+        var appDir = ioService.GetApplicationDirectory();
+        var templatePath = ioService.CombinePath(appDir, "Data/appsettings.json");
+        var templateSettings = await ioService.ReadAllTextAsync(templatePath);
         var merged = jsonMergerService.MergeJsonStrings(
             templateSettings,
             Encoding.UTF8.GetString(appSettings));

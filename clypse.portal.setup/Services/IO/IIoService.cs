@@ -31,6 +31,11 @@ public interface IIoService
     public string GetCurrentDirectory();
 
     /// <summary>
+    /// Gets the directory where the application is running from.
+    /// </summary>
+    public string GetApplicationDirectory();
+
+    /// <summary>
     /// Gets the parent directory of the specified path.
     /// </summary>
     public string? GetParentDirectory(string path);
