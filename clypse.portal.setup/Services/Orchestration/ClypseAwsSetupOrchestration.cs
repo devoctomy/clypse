@@ -527,10 +527,31 @@ public class ClypseAwsSetupOrchestration(
             reconfiguredSettings: Encoding.UTF8.GetBytes(merged),
             cancellationToken: cancellationToken);
 
+        // Invalidate CloudFront distribution if configured
+        if (!string.IsNullOrWhiteSpace(options.CloudFrontDistributionId))
+        {
+            logger.LogInformation("CloudFront distribution ID provided. Invalidating distribution {DistributionId}.", options.CloudFrontDistributionId);
+            var invalidated = await cloudfrontService.InvalidateDistributionAsync(
+                options.CloudFrontDistributionId,
+                cancellationToken: cancellationToken);
+            
+            if (invalidated)
+            {
+                logger.LogInformation("CloudFront distribution invalidated successfully.");
+            }
+            else
+            {
+                logger.LogWarning("Failed to invalidate CloudFront distribution. You may need to manually invalidate the distribution.");
+            }
+        }
+        else
+        {
+            logger.LogWarning("No CloudFront distribution ID provided. If you have a CloudFront distribution, you may need to manually invalidate it.");
+        }
+
         var inventoryFilePath = $"{setupId}-update-inventory.json";
         inventoryService.Save(inventoryFilePath);
 
-        logger.LogWarning("If deployment was successful you may need to manually invalidate any associated CloudFront distributions.");
         return true;
     }
 

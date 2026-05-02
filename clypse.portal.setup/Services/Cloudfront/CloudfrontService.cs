@@ -118,4 +118,44 @@ public class CloudfrontService(
     {
         return await CreateDistributionAsync(websiteHost, alias, null, cancellationToken);
     }
+
+    /// <inheritdoc />
+    public async Task<bool> InvalidateDistributionAsync(
+        string distributionId,
+        string[]? paths = null,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var invalidationPaths = paths ?? new[] { "/*" };
+            var request = new CreateInvalidationRequest
+            {
+                DistributionId = distributionId,
+                InvalidationBatch = new InvalidationBatch
+                {
+                    CallerReference = Guid.NewGuid().ToString(),
+                    Paths = new Paths
+                    {
+                        Quantity = invalidationPaths.Length,
+                        Items = invalidationPaths.ToList()
+                    }
+                }
+            };
+
+            var response = await amazonCloudFront.CreateInvalidationAsync(request, cancellationToken);
+            
+            logger.LogInformation(
+                "CloudFront invalidation created successfully. Distribution ID: {DistributionId}, Invalidation ID: {InvalidationId}, Status: {Status}",
+                distributionId,
+                response.Invalidation.Id,
+                response.Invalidation.Status);
+
+            return true;
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Failed to create CloudFront invalidation for distribution {DistributionId}", distributionId);
+            return false;
+        }
+    }
 }

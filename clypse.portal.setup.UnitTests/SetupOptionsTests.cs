@@ -36,4 +36,33 @@ public class SetupOptionsTests
         // Assert
         Assert.Equal(expectedIsValid, isValid);
     }
+
+    [Fact]
+    public void GivenSetupOptions_WhenNewPropertiesSet_ThenValuesAreCorrect()
+    {
+        // Arrange & Act
+        var sut = new SetupOptions
+        {
+            EnableUpgradeMode = true,
+            BuildPortal = true,
+            CloudFrontDistributionId = "E1234567890ABC"
+        };
+
+        // Assert
+        Assert.True(sut.EnableUpgradeMode);
+        Assert.True(sut.BuildPortal);
+        Assert.Equal("E1234567890ABC", sut.CloudFrontDistributionId);
+    }
+
+    [Fact]
+    public void GivenSetupOptions_WhenDefaultValues_ThenNewPropertiesHaveExpectedDefaults()
+    {
+        // Arrange & Act
+        var sut = new SetupOptions();
+
+        // Assert
+        Assert.False(sut.EnableUpgradeMode);
+        Assert.False(sut.BuildPortal);
+        Assert.Equal(string.Empty, sut.CloudFrontDistributionId);
+    }
 }

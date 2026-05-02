@@ -297,4 +297,119 @@ public class CloudfrontServiceTests
             It.IsAny<CancellationToken>()),
             Times.Once);
     }
+
+    [Fact]
+    public async Task GivenDistributionId_WhenInvalidateDistribution_ThenCreatesInvalidation()
+    {
+        // Arrange
+        var mockAmazonCloudFront = new Mock<IAmazonCloudFront>();
+        var mockLogger = new Mock<ILogger<CloudfrontService>>();
+        var sut = new CloudfrontService(
+            mockAmazonCloudFront.Object,
+            mockLogger.Object);
+        var distributionId = "E1234567890ABC";
+        var expectedInvalidationId = "I1234567890ABC";
+
+        mockAmazonCloudFront
+            .Setup(cf => cf.CreateInvalidationAsync(
+                It.Is<CreateInvalidationRequest>(req =>
+                    req.DistributionId == distributionId &&
+                    req.InvalidationBatch.Paths.Items.Count == 1 &&
+                    req.InvalidationBatch.Paths.Items[0] == "/*"),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new CreateInvalidationResponse
+            {
+                Invalidation = new Invalidation
+                {
+                    Id = expectedInvalidationId,
+                    Status = "InProgress"
+                }
+            });
+        
+        // Act
+        var result = await sut.InvalidateDistributionAsync(distributionId);
+
+        // Assert
+        Assert.True(result);
+        mockAmazonCloudFront.Verify(cf => cf.CreateInvalidationAsync(
+            It.Is<CreateInvalidationRequest>(req =>
+                req.DistributionId == distributionId &&
+                req.InvalidationBatch.Paths.Items[0] == "/*"),
+            It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task GivenDistributionIdAndSpecificPaths_WhenInvalidateDistribution_ThenCreatesInvalidationWithPaths()
+    {
+        // Arrange
+        var mockAmazonCloudFront = new Mock<IAmazonCloudFront>();
+        var mockLogger = new Mock<ILogger<CloudfrontService>>();
+        var sut = new CloudfrontService(
+            mockAmazonCloudFront.Object,
+            mockLogger.Object);
+        var distributionId = "E1234567890ABC";
+        var paths = new[] { "/index.html", "/app.js", "/styles.css" };
+        var expectedInvalidationId = "I1234567890ABC";
+
+        mockAmazonCloudFront
+            .Setup(cf => cf.CreateInvalidationAsync(
+                It.Is<CreateInvalidationRequest>(req =>
+                    req.DistributionId == distributionId &&
+                    req.InvalidationBatch.Paths.Quantity == 3 &&
+                    req.InvalidationBatch.Paths.Items.Contains("/index.html") &&
+                    req.InvalidationBatch.Paths.Items.Contains("/app.js") &&
+                    req.InvalidationBatch.Paths.Items.Contains("/styles.css")),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new CreateInvalidationResponse
+            {
+                Invalidation = new Invalidation
+                {
+                    Id = expectedInvalidationId,
+                    Status = "InProgress"
+                }
+            });
+        
+        // Act
+        var result = await sut.InvalidateDistributionAsync(distributionId, paths);
+
+        // Assert
+        Assert.True(result);
+        mockAmazonCloudFront.Verify(cf => cf.CreateInvalidationAsync(
+            It.Is<CreateInvalidationRequest>(req =>
+                req.DistributionId == distributionId &&
+                req.InvalidationBatch.Paths.Items.Contains("/index.html") &&
+                req.InvalidationBatch.Paths.Items.Contains("/app.js") &&
+                req.InvalidationBatch.Paths.Items.Contains("/styles.css")),
+            It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task GivenException_WhenInvalidateDistribution_ThenReturnsFalse()
+    {
+        // Arrange
+        var mockAmazonCloudFront = new Mock<IAmazonCloudFront>();
+        var mockLogger = new Mock<ILogger<CloudfrontService>>();
+        var sut = new CloudfrontService(
+            mockAmazonCloudFront.Object,
+            mockLogger.Object);
+        var distributionId = "E1234567890ABC";
+
+        mockAmazonCloudFront
+            .Setup(cf => cf.CreateInvalidationAsync(
+                It.IsAny<CreateInvalidationRequest>(),
+                It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new AmazonCloudFrontException("Test exception"));
+        
+        // Act
+        var result = await sut.InvalidateDistributionAsync(distributionId);
+
+        // Assert
+        Assert.False(result);
+        mockAmazonCloudFront.Verify(cf => cf.CreateInvalidationAsync(
+            It.IsAny<CreateInvalidationRequest>(),
+            It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
 }

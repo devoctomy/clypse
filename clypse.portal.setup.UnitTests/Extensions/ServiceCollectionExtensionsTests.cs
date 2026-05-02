@@ -7,6 +7,7 @@ using clypse.portal.setup.Services;
 using clypse.portal.setup.Services.Build;
 using clypse.portal.setup.Services.Cloudfront;
 using clypse.portal.setup.Services.Cognito;
+using clypse.portal.setup.Services.Environment;
 using clypse.portal.setup.Services.Iam;
 using clypse.portal.setup.Services.Inventory;
 using clypse.portal.setup.Services.IO;
@@ -18,29 +19,41 @@ using clypse.portal.setup.Services.Security;
 using clypse.portal.setup.Services.Upload;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Moq;
 
 namespace clypse.portal.setup.UnitTests.Extensions;
 
 public class ServiceCollectionExtensionsTests
 {
+    private static Mock<IEnvironmentService> CreateMockEnvironmentService()
+    {
+        var mock = new Mock<IEnvironmentService>();
+        mock.Setup(x => x.IsWindows).Returns(false);
+        mock.Setup(x => x.GetEnvironmentVariable(It.IsAny<string>(), It.IsAny<EnvironmentVariableTarget>())).Returns((string?)null);
+        return mock;
+    }
+
     [Fact]
     public void GivenServiceCollection_WhenAddClypseSetupServices_ThenAllServicesAreRegistered()
     {
         // Arrange
         var services = new ServiceCollection();
-        Environment.SetEnvironmentVariable("CLYPSE_SETUP_UNITTEST__BaseUrl", "http://localhost");
-        Environment.SetEnvironmentVariable("CLYPSE_SETUP_UNITTEST__Region", "us-east-1");
-        Environment.SetEnvironmentVariable("CLYPSE_SETUP_UNITTEST__AccessId", "test-access-id");
-        Environment.SetEnvironmentVariable("CLYPSE_SETUP_UNITTEST__SecretAccessKey", "test-secret-key");
-        Environment.SetEnvironmentVariable("CLYPSE_SETUP_UNITTEST__ResourcePrefix", "test-prefix");
-        Environment.SetEnvironmentVariable("CLYPSE_SETUP_UNITTEST__InitialUserEmail", "foo@bar.com");
+        System.Environment.SetEnvironmentVariable("CLYPSE_SETUP_UNITTEST__BaseUrl", "http://localhost");
+        System.Environment.SetEnvironmentVariable("CLYPSE_SETUP_UNITTEST__Region", "us-east-1");
+        System.Environment.SetEnvironmentVariable("CLYPSE_SETUP_UNITTEST__AccessId", "test-access-id");
+        System.Environment.SetEnvironmentVariable("CLYPSE_SETUP_UNITTEST__SecretAccessKey", "test-secret-key");
+        System.Environment.SetEnvironmentVariable("CLYPSE_SETUP_UNITTEST__ResourcePrefix", "test-prefix");
+        System.Environment.SetEnvironmentVariable("CLYPSE_SETUP_UNITTEST__InitialUserEmail", "foo@bar.com");
+
+        var mockEnvService = CreateMockEnvironmentService();
 
         try
         {
             // Act
             var result = services.AddClypseSetupServices(
                 "CLYPSE_SETUP_UNITTEST",
-                Microsoft.Extensions.Logging.LogLevel.Information);
+                Microsoft.Extensions.Logging.LogLevel.Information,
+                mockEnvService.Object);
 
             // Assert
             Assert.NotNull(result);
@@ -88,10 +101,10 @@ public class ServiceCollectionExtensionsTests
         finally
         {
             // Cleanup
-            Environment.SetEnvironmentVariable("CLYPSE_SETUP_UNITTEST__Region", null);
-            Environment.SetEnvironmentVariable("CLYPSE_SETUP_UNITTEST__AccessId", null);
-            Environment.SetEnvironmentVariable("CLYPSE_SETUP_UNITTEST__SecretAccessKey", null);
-            Environment.SetEnvironmentVariable("CLYPSE_SETUP_UNITTEST__ResourcePrefix", null);
+            System.Environment.SetEnvironmentVariable("CLYPSE_SETUP_UNITTEST__Region", null);
+            System.Environment.SetEnvironmentVariable("CLYPSE_SETUP_UNITTEST__AccessId", null);
+            System.Environment.SetEnvironmentVariable("CLYPSE_SETUP_UNITTEST__SecretAccessKey", null);
+            System.Environment.SetEnvironmentVariable("CLYPSE_SETUP_UNITTEST__ResourcePrefix", null);
         }
     }
 
@@ -100,15 +113,17 @@ public class ServiceCollectionExtensionsTests
     {
         // Arrange
         var services = new ServiceCollection();
-        Environment.SetEnvironmentVariable("CLYPSE_SETUP_UNITTEST__Region", "eu-west-1");
-        Environment.SetEnvironmentVariable("CLYPSE_SETUP_UNITTEST__AccessId", "test-access-id");
-        Environment.SetEnvironmentVariable("CLYPSE_SETUP_UNITTEST__SecretAccessKey", "test-secret-key");
-        Environment.SetEnvironmentVariable("CLYPSE_SETUP_UNITTEST__ResourcePrefix", "test-prefix");
+        System.Environment.SetEnvironmentVariable("CLYPSE_SETUP_UNITTEST__Region", "eu-west-1");
+        System.Environment.SetEnvironmentVariable("CLYPSE_SETUP_UNITTEST__AccessId", "test-access-id");
+        System.Environment.SetEnvironmentVariable("CLYPSE_SETUP_UNITTEST__SecretAccessKey", "test-secret-key");
+        System.Environment.SetEnvironmentVariable("CLYPSE_SETUP_UNITTEST__ResourcePrefix", "test-prefix");
+
+        var mockEnvService = CreateMockEnvironmentService();
 
         try
         {
             // Act
-            var result = services.AddClypseSetupServices("CLYPSE_SETUP_UNITTEST");
+            var result = services.AddClypseSetupServices("CLYPSE_SETUP_UNITTEST", environmentService: mockEnvService.Object);
 
             // Assert
             Assert.NotNull(result);
@@ -123,10 +138,10 @@ public class ServiceCollectionExtensionsTests
         finally
         {
             // Cleanup
-            Environment.SetEnvironmentVariable("CLYPSE_SETUP_UNITTEST__Region", null);
-            Environment.SetEnvironmentVariable("CLYPSE_SETUP_UNITTEST__AccessId", null);
-            Environment.SetEnvironmentVariable("CLYPSE_SETUP_UNITTEST__SecretAccessKey", null);
-            Environment.SetEnvironmentVariable("CLYPSE_SETUP_UNITTEST__ResourcePrefix", null);
+            System.Environment.SetEnvironmentVariable("CLYPSE_SETUP_UNITTEST__Region", null);
+            System.Environment.SetEnvironmentVariable("CLYPSE_SETUP_UNITTEST__AccessId", null);
+            System.Environment.SetEnvironmentVariable("CLYPSE_SETUP_UNITTEST__SecretAccessKey", null);
+            System.Environment.SetEnvironmentVariable("CLYPSE_SETUP_UNITTEST__ResourcePrefix", null);
         }
     }
 
@@ -135,16 +150,18 @@ public class ServiceCollectionExtensionsTests
     {
         // Arrange
         var services = new ServiceCollection();
-        Environment.SetEnvironmentVariable("CLYPSE_SETUP_UNITTEST__Region", "us-west-2");
-        Environment.SetEnvironmentVariable("CLYPSE_SETUP_UNITTEST__AccessId", "test-access-id");
-        Environment.SetEnvironmentVariable("CLYPSE_SETUP_UNITTEST__SecretAccessKey", "test-secret-key");
-        Environment.SetEnvironmentVariable("CLYPSE_SETUP_UNITTEST__ResourcePrefix", "test-prefix");
-        Environment.SetEnvironmentVariable("CLYPSE_SETUP_UNITTEST__BaseUrl", "http://localhost:4566");
+        System.Environment.SetEnvironmentVariable("CLYPSE_SETUP_UNITTEST__Region", "us-west-2");
+        System.Environment.SetEnvironmentVariable("CLYPSE_SETUP_UNITTEST__AccessId", "test-access-id");
+        System.Environment.SetEnvironmentVariable("CLYPSE_SETUP_UNITTEST__SecretAccessKey", "test-secret-key");
+        System.Environment.SetEnvironmentVariable("CLYPSE_SETUP_UNITTEST__ResourcePrefix", "test-prefix");
+        System.Environment.SetEnvironmentVariable("CLYPSE_SETUP_UNITTEST__BaseUrl", "http://localhost:4566");
+
+        var mockEnvService = CreateMockEnvironmentService();
 
         try
         {
             // Act
-            services.AddClypseSetupServices("CLYPSE_SETUP_UNITTEST");
+            services.AddClypseSetupServices("CLYPSE_SETUP_UNITTEST", environmentService: mockEnvService.Object);
             var serviceProvider = services.BuildServiceProvider();
 
             // Assert
@@ -162,11 +179,91 @@ public class ServiceCollectionExtensionsTests
         finally
         {
             // Cleanup
-            Environment.SetEnvironmentVariable("CLYPSE_SETUP_UNITTEST__Region", null);
-            Environment.SetEnvironmentVariable("CLYPSE_SETUP_UNITTEST__AccessId", null);
-            Environment.SetEnvironmentVariable("CLYPSE_SETUP_UNITTEST__SecretAccessKey", null);
-            Environment.SetEnvironmentVariable("CLYPSE_SETUP_UNITTEST__ResourcePrefix", null);
-            Environment.SetEnvironmentVariable("CLYPSE_SETUP_UNITTEST__BaseUrl", null);
+            System.Environment.SetEnvironmentVariable("CLYPSE_SETUP_UNITTEST__Region", null);
+            System.Environment.SetEnvironmentVariable("CLYPSE_SETUP_UNITTEST__AccessId", null);
+            System.Environment.SetEnvironmentVariable("CLYPSE_SETUP_UNITTEST__SecretAccessKey", null);
+            System.Environment.SetEnvironmentVariable("CLYPSE_SETUP_UNITTEST__ResourcePrefix", null);
+            System.Environment.SetEnvironmentVariable("CLYPSE_SETUP_UNITTEST__BaseUrl", null);
+        }
+    }
+
+    [Fact]
+    public void GivenServiceCollection_WhenAddClypseSetupServicesWithNewEnvVars_ThenNewPropertiesAreSet()
+    {
+        // Arrange
+        var services = new ServiceCollection();
+        System.Environment.SetEnvironmentVariable("CLYPSE_SETUP_UNITTEST__Region", "us-east-1");
+        System.Environment.SetEnvironmentVariable("CLYPSE_SETUP_UNITTEST__AccessId", "test-access-id");
+        System.Environment.SetEnvironmentVariable("CLYPSE_SETUP_UNITTEST__SecretAccessKey", "test-secret-key");
+        System.Environment.SetEnvironmentVariable("CLYPSE_SETUP_UNITTEST__ResourcePrefix", "test-prefix");
+        System.Environment.SetEnvironmentVariable("CLYPSE_SETUP_UNITTEST__InitialUserEmail", "test@example.com");
+        System.Environment.SetEnvironmentVariable("CLYPSE_SETUP_UNITTEST__EnableUpgradeMode", "true");
+        System.Environment.SetEnvironmentVariable("CLYPSE_SETUP_UNITTEST__BuildPortal", "true");
+        System.Environment.SetEnvironmentVariable("CLYPSE_SETUP_UNITTEST__CloudFrontDistributionId", "E1234567890ABC");
+
+        var mockEnvService = CreateMockEnvironmentService();
+
+        try
+        {
+            // Act
+            services.AddClypseSetupServices("CLYPSE_SETUP_UNITTEST", environmentService: mockEnvService.Object);
+            var serviceProvider = services.BuildServiceProvider();
+
+            // Assert
+            var options = serviceProvider.GetService<SetupOptions>();
+            Assert.NotNull(options);
+            Assert.True(options.EnableUpgradeMode);
+            Assert.True(options.BuildPortal);
+            Assert.Equal("E1234567890ABC", options.CloudFrontDistributionId);
+        }
+        finally
+        {
+            // Cleanup
+            System.Environment.SetEnvironmentVariable("CLYPSE_SETUP_UNITTEST__Region", null);
+            System.Environment.SetEnvironmentVariable("CLYPSE_SETUP_UNITTEST__AccessId", null);
+            System.Environment.SetEnvironmentVariable("CLYPSE_SETUP_UNITTEST__SecretAccessKey", null);
+            System.Environment.SetEnvironmentVariable("CLYPSE_SETUP_UNITTEST__ResourcePrefix", null);
+            System.Environment.SetEnvironmentVariable("CLYPSE_SETUP_UNITTEST__InitialUserEmail", null);
+            System.Environment.SetEnvironmentVariable("CLYPSE_SETUP_UNITTEST__EnableUpgradeMode", null);
+            System.Environment.SetEnvironmentVariable("CLYPSE_SETUP_UNITTEST__BuildPortal", null);
+            System.Environment.SetEnvironmentVariable("CLYPSE_SETUP_UNITTEST__CloudFrontDistributionId", null);
+        }
+    }
+
+    [Fact]
+    public void GivenServiceCollection_WhenAddClypseSetupServicesWithBuildPortalFalse_ThenBuildPortalIsFalse()
+    {
+        // Arrange
+        var services = new ServiceCollection();
+        System.Environment.SetEnvironmentVariable("CLYPSE_SETUP_UNITTEST__Region", "us-east-1");
+        System.Environment.SetEnvironmentVariable("CLYPSE_SETUP_UNITTEST__AccessId", "test-access-id");
+        System.Environment.SetEnvironmentVariable("CLYPSE_SETUP_UNITTEST__SecretAccessKey", "test-secret-key");
+        System.Environment.SetEnvironmentVariable("CLYPSE_SETUP_UNITTEST__ResourcePrefix", "test-prefix");
+        System.Environment.SetEnvironmentVariable("CLYPSE_SETUP_UNITTEST__InitialUserEmail", "test@example.com");
+        System.Environment.SetEnvironmentVariable("CLYPSE_SETUP_UNITTEST__BuildPortal", "false");
+
+        var mockEnvService = CreateMockEnvironmentService();
+
+        try
+        {
+            // Act
+            services.AddClypseSetupServices("CLYPSE_SETUP_UNITTEST", environmentService: mockEnvService.Object);
+            var serviceProvider = services.BuildServiceProvider();
+
+            // Assert
+            var options = serviceProvider.GetService<SetupOptions>();
+            Assert.NotNull(options);
+            Assert.False(options.BuildPortal);
+        }
+        finally
+        {
+            // Cleanup
+            System.Environment.SetEnvironmentVariable("CLYPSE_SETUP_UNITTEST__Region", null);
+            System.Environment.SetEnvironmentVariable("CLYPSE_SETUP_UNITTEST__AccessId", null);
+            System.Environment.SetEnvironmentVariable("CLYPSE_SETUP_UNITTEST__SecretAccessKey", null);
+            System.Environment.SetEnvironmentVariable("CLYPSE_SETUP_UNITTEST__ResourcePrefix", null);
+            System.Environment.SetEnvironmentVariable("CLYPSE_SETUP_UNITTEST__InitialUserEmail", null);
+            System.Environment.SetEnvironmentVariable("CLYPSE_SETUP_UNITTEST__BuildPortal", null);
         }
     }
 

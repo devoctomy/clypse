@@ -61,6 +61,16 @@ public class SetupOptions
     public bool EnableUpgradeMode { get; set; } = false;
 
     /// <summary>
+    /// Gets or sets a value indicating whether to build the portal before proceeding with setup or upgrade.
+    /// </summary>
+    public bool BuildPortal { get; set; } = false;
+
+    /// <summary>
+    /// Gets or sets the CloudFront distribution ID to invalidate after deployment.
+    /// </summary>
+    public string CloudFrontDistributionId { get; set; } = string.Empty;
+
+    /// <summary>
     /// Gets or sets an optional override for the portal bucket name during upgrades.
     /// </summary>
     public string UpgradePortalBucketNameOverride { get; set; } = string.Empty;
