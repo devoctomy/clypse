@@ -198,7 +198,7 @@ public class SetupInteractiveMenuService(IPortalBuildService portalBuildService)
                     }
 
                 case "Continue":
-                    if (!options.IsValid())
+                    if (!options.IsValid(false))
                     {
                         AnsiConsole.MarkupLine("[red]Options are not valid.[/] Please set [yellow]AccessId[/], [yellow]SecretAccessKey[/], [yellow]Region[/], [yellow]ResourcePrefix[/], and [yellow]InitialUserEmail[/].");
                         AnsiConsole.MarkupLine("[grey]Press any key to continue...[/]");
@@ -209,7 +209,7 @@ public class SetupInteractiveMenuService(IPortalBuildService portalBuildService)
                     return SetupMode.FullCreate;
 
                 case "Upgrade":
-                    if (!options.IsValid())
+                    if (!options.IsValid(true))
                     {
                         AnsiConsole.MarkupLine("[red]Options are not valid.[/] Please set [yellow]AccessId[/], [yellow]SecretAccessKey[/], [yellow]Region[/], [yellow]ResourcePrefix[/], and [yellow]InitialUserEmail[/].");
                         AnsiConsole.MarkupLine("[grey]Press any key to continue...[/]");
