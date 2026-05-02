@@ -12,7 +12,7 @@ permissions:
 
 jobs:
   upgrade:
-    if: github.repository == 'devoctomy/clypse' && (github.event_name == 'workflow_dispatch' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main' && (github.event.workflow_run.event == 'push' || github.event.workflow_run.event == 'workflow_dispatch')))
+    if: github.repository == 'devoctomy/clypse' && github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main' && (github.event.workflow_run.event == 'push' || github.event.workflow_run.event == 'workflow_dispatch')
     runs-on: ubuntu-latest
     environment: production
 
@@ -20,9 +20,8 @@ jobs:
     - name: Checkout source at tested commit
       uses: actions/checkout@v4
       with:
-        repository: ${{ github.event_name == 'workflow_dispatch' && github.repository || github.event.workflow_run.repository.full_name }}
-        ref: ${{ github.event_name == 'workflow_dispatch' && github.sha || github.event.workflow_run.head_sha }}
-
+        repository: ${{ github.event.workflow_run.repository.full_name }}
+        ref: ${{ github.event.workflow_run.head_sha }}
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
@@ -59,14 +58,14 @@ jobs:
     - name: Run upgrade
       run: dotnet run --project clypse.portal.setup/clypse.portal.setup.csproj
       env:
-        CLYPSE_SETUP__AccessId: ${{ secrets.CLYPSE_PUBLISH_AWS_ACCESSKEY }}
-        CLYPSE_SETUP__SecretAccessKey: ${{ secrets.CLYPSE_PUBLISH_AWS_SECRETACCESSKEY }}
-        CLYPSE_SETUP__Region: ${{ secrets.CLYPSE_PUBLISH_AWS_BUCKETREGION }}
-        CLYPSE_SETUP__ResourcePrefix: ${{ secrets.CLYPSE_SETUP_RESOURCEPREFIX }}
+        CLYPSE_SETUP__AccessId: ${{ secrets.CLYPSE_SETUP__AccessId }}
+        CLYPSE_SETUP__SecretAccessKey: ${{ secrets.CLYPSE_SETUP__SecretAccessKey }}
+        CLYPSE_SETUP__Region: ${{ secrets.CLYPSE_SETUP__Region }}
+        CLYPSE_SETUP__ResourcePrefix: ${{ secrets.CLYPSE_SETUP__ResourcePrefix }}
         CLYPSE_SETUP__InteractiveMode: false
         CLYPSE_SETUP__EnableUpgradeMode: true
         CLYPSE_SETUP__BuildPortal: true
-        CLYPSE_SETUP__CloudFrontDistributionId: ${{ secrets.CLYPSE_PUBLISH_AWS_CLOUDFRONTDISTRIBUTIONID }}
+        CLYPSE_SETUP__CloudFrontDistributionId: ${{ secrets.CLYPSE_SETUP__CloudFrontDistributionId }}
 
     - name: Upgrade summary
       run: |
