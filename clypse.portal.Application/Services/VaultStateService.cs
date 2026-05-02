@@ -47,10 +47,7 @@ public class VaultStateService : IVaultStateService
     public void UpdateLoadedVault(IVault loadedVault)
     {
         LoadedVault = loadedVault;
-        if (CurrentVault != null)
-        {
-            CurrentVault.IndexEntries = loadedVault.Index.Entries.ToList();
-        }
+        CurrentVault?.IndexEntries = [.. loadedVault.Index.Entries];
 
         VaultStateChanged?.Invoke(this, EventArgs.Empty);
     }

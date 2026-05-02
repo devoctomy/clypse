@@ -40,4 +40,16 @@ public interface ICloudfrontService
         string websiteHost,
         string? alias,
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Invalidates the CloudFront distribution cache for the specified paths.
+    /// </summary>
+    /// <param name="distributionId">The CloudFront distribution ID.</param>
+    /// <param name="paths">Paths to invalidate. Defaults to all paths ("/*").</param>
+    /// <param name="cancellationToken">Token to cancel the operation.</param>
+    /// <returns><see langword="true"/> when invalidation is created; otherwise, <see langword="false"/>.</returns>
+    public Task<bool> InvalidateDistributionAsync(
+        string distributionId,
+        string[]? paths = null,
+        CancellationToken cancellationToken = default);
 }

@@ -16,7 +16,7 @@
                         <span class="version-number @(ViewModel.UpdateAvailable ? "update-available" : "")" 
                               @onclick="() => ViewModel.HandleVersionClickCommand.Execute(null)" 
                               title="Click to view version history">
-                            @ViewModel.AppSettings.Version
+                            @Globals.Version
                             @if (ViewModel.UpdateAvailable)
                             {
                                 <i class="bi bi-exclamation-circle text-warning ms-1"></i>
@@ -31,7 +31,7 @@
 
 <ChangesDialog Show="@ViewModel.ShowChangesDialog" 
 ShowUpdateButton="@ViewModel.UpdateAvailable" 
-AvailableVersion="@ViewModel.AvailableVersion"
+AvailableVersion="@Globals.Version"
 OnClose="@(() => ViewModel.HandleCloseChangesDialogCommand.Execute(null))"
 OnUpdate="@(() => ViewModel.HandleInstallUpdateCommand.Execute(null))" />
 

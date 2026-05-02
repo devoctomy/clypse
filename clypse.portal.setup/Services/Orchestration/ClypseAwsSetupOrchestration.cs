@@ -501,11 +501,17 @@ public class ClypseAwsSetupOrchestration(
         var deployedVersion = Version.Parse(Encoding.UTF8.GetString(deployedVersionBytes).Trim());
 
         Version buildVersion = await GetBuildVersionAsync(cancellationToken);
+        var versionMatch = buildVersion <= deployedVersion;
 
-        if (buildVersion <= deployedVersion)
+        if (!options.ForceUpgrade && versionMatch)
         {
             logger.LogInformation("No upgrade required, deployed version '{deployedVersion}' is up to date. Build version is '{buildVersion}'.", deployedVersion, buildVersion);
             return true;
+        }
+
+        if (options.ForceUpgrade && versionMatch)
+        {
+            logger.LogInformation("ForceUpgrade is enabled. Proceeding with upgrade even though deployed version '{deployedVersion}' matches build version '{buildVersion}'.", deployedVersion, buildVersion);
         }
 
         logger.LogInformation("Downloading existing configuration.");
@@ -515,7 +521,9 @@ public class ClypseAwsSetupOrchestration(
             cancellationToken);
 
         logger.LogInformation("Merging existing configuration with latest template.");
-        var templateSettings = await ioService.ReadAllTextAsync("Data/appsettings.json");
+        var appDir = ioService.GetApplicationDirectory();
+        var templatePath = ioService.CombinePath(appDir, "Data/appsettings.json");
+        var templateSettings = await ioService.ReadAllTextAsync(templatePath, cancellationToken);
         var merged = jsonMergerService.MergeJsonStrings(
             templateSettings,
             Encoding.UTF8.GetString(appSettings));
@@ -525,6 +533,28 @@ public class ClypseAwsSetupOrchestration(
             reconfigure: true,
             reconfiguredSettings: Encoding.UTF8.GetBytes(merged),
             cancellationToken: cancellationToken);
+
+        // Invalidate CloudFront distribution if configured
+        if (!string.IsNullOrWhiteSpace(options.CloudFrontDistributionId))
+        {
+            logger.LogInformation("CloudFront distribution ID provided. Invalidating distribution {DistributionId}.", options.CloudFrontDistributionId);
+            var invalidated = await cloudfrontService.InvalidateDistributionAsync(
+                options.CloudFrontDistributionId,
+                cancellationToken: cancellationToken);
+            
+            if (invalidated)
+            {
+                logger.LogInformation("CloudFront distribution invalidated successfully.");
+            }
+            else
+            {
+                logger.LogWarning("Failed to invalidate CloudFront distribution. You may need to manually invalidate the distribution.");
+            }
+        }
+        else
+        {
+            logger.LogWarning("No CloudFront distribution ID provided. If you have a CloudFront distribution, you may need to manually invalidate it.");
+        }
 
         var inventoryFilePath = $"{setupId}-update-inventory.json";
         inventoryService.Save(inventoryFilePath);
@@ -572,7 +602,7 @@ public class ClypseAwsSetupOrchestration(
             if(reconfigure)
             {
                 logger.LogInformation("Reconfiguring portal.");
-                MemoryStream? configStream = null;
+                MemoryStream? configStream;
 
                 if(reconfiguredSettings != null)
                 {
@@ -625,7 +655,8 @@ public class ClypseAwsSetupOrchestration(
 
                var updatedAppSettingsAsset = await serviceWorkerAssetHashUpdaterService.UpdateAssetAsync(
                     options.PortalBuildOutputPath,
-                    "appsettings.json");
+                    "appsettings.json",
+                    cancellationToken);
                 if(!updatedAppSettingsAsset)
                 {
                     logger.LogError("Failed to update service worker asset 'appsettings.json'.");

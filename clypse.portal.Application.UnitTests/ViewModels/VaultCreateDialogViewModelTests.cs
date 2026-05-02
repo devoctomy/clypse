@@ -5,12 +5,12 @@ namespace clypse.portal.Application.UnitTests.ViewModels;
 
 public class VaultCreateDialogViewModelTests
 {
-    private VaultCreateDialogViewModel CreateSut() => new();
+    private static VaultCreateDialogViewModel CreateSut() => new();
 
     [Fact]
     public void Constructor_SetsDefaultValues()
     {
-        var sut = this.CreateSut();
+        var sut = CreateSut();
         Assert.Equal(string.Empty, sut.VaultName);
         Assert.Equal(string.Empty, sut.VaultDescription);
         Assert.Equal(string.Empty, sut.VaultPassphrase);
@@ -28,7 +28,7 @@ public class VaultCreateDialogViewModelTests
     public void IsFormValid_WithVariousInputs_ReturnsExpected(
         string name, string desc, string pass, string confirm, bool expected)
     {
-        var sut = this.CreateSut();
+        var sut = CreateSut();
         sut.VaultName = name;
         sut.VaultDescription = desc;
         sut.VaultPassphrase = pass;
@@ -40,7 +40,7 @@ public class VaultCreateDialogViewModelTests
     [Fact]
     public void ClearForm_ResetsAllFields()
     {
-        var sut = this.CreateSut();
+        var sut = CreateSut();
         sut.VaultName = "Test";
         sut.VaultDescription = "Desc";
         sut.VaultPassphrase = "Pass1234";
@@ -57,7 +57,7 @@ public class VaultCreateDialogViewModelTests
     [Fact]
     public async Task CreateVaultCommand_WhenFormValid_InvokesCallback()
     {
-        var sut = this.CreateSut();
+        var sut = CreateSut();
         sut.VaultName = "MyVault";
         sut.VaultDescription = "Desc";
         sut.VaultPassphrase = "Pass1234";
@@ -75,7 +75,7 @@ public class VaultCreateDialogViewModelTests
     [Fact]
     public async Task CreateVaultCommand_WhenFormInvalid_DoesNotInvokeCallback()
     {
-        var sut = this.CreateSut();
+        var sut = CreateSut();
         var called = false;
         sut.OnCreateVaultCallback = _ => { called = true; return Task.CompletedTask; };
 
@@ -87,7 +87,7 @@ public class VaultCreateDialogViewModelTests
     [Fact]
     public async Task CancelCommand_InvokesCallback()
     {
-        var sut = this.CreateSut();
+        var sut = CreateSut();
         var called = false;
         sut.OnCancelCallback = () => { called = true; return Task.CompletedTask; };
 

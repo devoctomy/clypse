@@ -8,6 +8,7 @@ using clypse.portal.setup.Services;
 using clypse.portal.setup.Services.Build;
 using clypse.portal.setup.Services.Cloudfront;
 using clypse.portal.setup.Services.Cognito;
+using clypse.portal.setup.Services.Environment;
 using clypse.portal.setup.Services.Iam;
 using clypse.portal.setup.Services.Inventory;
 using clypse.portal.setup.Services.IO;
@@ -33,12 +34,13 @@ public static class ServiceCollectionExtensions
     /// </summary>
     /// <param name="services">The service collection to add services to.</param>
     /// <param name="environmentVariablePrefix">Environment variable prefix used to bind <see cref="SetupOptions"/>.</param>
-    /// <param name="logLevel">The log level to configure for setup orchestration.</param>
+    /// <param name="environmentService">Optional environment service for testability. If null, uses default implementation.</param>
     /// <returns>The updated service collection.</returns>
     public static IServiceCollection AddClypseSetupServices(
         this IServiceCollection services,
         string environmentVariablePrefix = "CLYPSE_SETUP",
-        Microsoft.Extensions.Logging.LogLevel logLevel = Microsoft.Extensions.Logging.LogLevel.Debug)
+        Microsoft.Extensions.Logging.LogLevel logLevel = Microsoft.Extensions.Logging.LogLevel.Debug,
+        IEnvironmentService? environmentService = null)
     {
         var configuration = new ConfigurationBuilder()
             .AddEnvironmentVariables()
@@ -49,8 +51,10 @@ public static class ServiceCollectionExtensions
             .GetSection(environmentVariablePrefix)
             .Bind(options);
 
-        ApplyWindowsUserEnvironmentFallback(options);
+        environmentService ??= new EnvironmentService();
+        ApplyWindowsUserEnvironmentFallback(options, environmentVariablePrefix, environmentService);
         services.AddSingleton(options);
+        services.AddSingleton<IEnvironmentService>(environmentService);
 
         services.AddLogging(logging =>
         {
@@ -187,40 +191,85 @@ public static class ServiceCollectionExtensions
         return services;
     }
 
-    private static void ApplyWindowsUserEnvironmentFallback(SetupOptions options)
+    private static void ApplyWindowsUserEnvironmentFallback(SetupOptions options, string environmentVariablePrefix, IEnvironmentService environmentService)
     {
-        if (!OperatingSystem.IsWindows())   // !!! TODO: This should be abstracted into a service to allow for proper unit testing
+        if (!environmentService.IsWindows)
         {
             return;
         }
 
         options.BaseUrl = PreferExisting(
             options.BaseUrl,
-            Environment.GetEnvironmentVariable("CLYPSE_SETUP__BaseUrl", EnvironmentVariableTarget.User));
+            environmentService.GetEnvironmentVariable("CLYPSE_SETUP__BaseUrl", EnvironmentVariableTarget.User));
         options.AccessId = PreferExisting(
             options.AccessId,
-            Environment.GetEnvironmentVariable("CLYPSE_SETUP__AccessId", EnvironmentVariableTarget.User));
+            environmentService.GetEnvironmentVariable("CLYPSE_SETUP__AccessId", EnvironmentVariableTarget.User));
         options.SecretAccessKey = PreferExisting(
             options.SecretAccessKey,
-            Environment.GetEnvironmentVariable("CLYPSE_SETUP__SecretAccessKey", EnvironmentVariableTarget.User));
+            environmentService.GetEnvironmentVariable("CLYPSE_SETUP__SecretAccessKey", EnvironmentVariableTarget.User));
         options.Region = PreferExisting(
             options.Region,
-            Environment.GetEnvironmentVariable("CLYPSE_SETUP__Region", EnvironmentVariableTarget.User));
+            environmentService.GetEnvironmentVariable("CLYPSE_SETUP__Region", EnvironmentVariableTarget.User));
         options.ResourcePrefix = PreferExisting(
             options.ResourcePrefix,
-            Environment.GetEnvironmentVariable("CLYPSE_SETUP__ResourcePrefix", EnvironmentVariableTarget.User));
+            environmentService.GetEnvironmentVariable("CLYPSE_SETUP__ResourcePrefix", EnvironmentVariableTarget.User));
         options.Alias = PreferExisting(
             options.Alias,
-            Environment.GetEnvironmentVariable("CLYPSE_SETUP__Alias", EnvironmentVariableTarget.User));
+            environmentService.GetEnvironmentVariable("CLYPSE_SETUP__Alias", EnvironmentVariableTarget.User));
         options.CertificateArn = PreferExisting(
             options.CertificateArn,
-            Environment.GetEnvironmentVariable("CLYPSE_SETUP__CertificateArn", EnvironmentVariableTarget.User));
+            environmentService.GetEnvironmentVariable("CLYPSE_SETUP__CertificateArn", EnvironmentVariableTarget.User));
         options.InitialUserEmail = PreferExisting(
             options.InitialUserEmail,
-            Environment.GetEnvironmentVariable("CLYPSE_SETUP__InitialUserEmail", EnvironmentVariableTarget.User));
+            environmentService.GetEnvironmentVariable("CLYPSE_SETUP__InitialUserEmail", EnvironmentVariableTarget.User));
         options.PortalBuildOutputPath = PreferExisting(
             options.PortalBuildOutputPath,
-            Environment.GetEnvironmentVariable("CLYPSE_SETUP__PortalBuildOutputPath", EnvironmentVariableTarget.User));
+            environmentService.GetEnvironmentVariable("CLYPSE_SETUP__PortalBuildOutputPath", EnvironmentVariableTarget.User));
+        options.CloudFrontDistributionId = PreferExisting(
+            options.CloudFrontDistributionId,
+            environmentService.GetEnvironmentVariable("CLYPSE_SETUP__CloudFrontDistributionId", EnvironmentVariableTarget.User));
+        
+        // Boolean properties - only override if explicitly set in user environment and not already set via configuration
+        // Check if process-level env var is set first to avoid overriding configuration binding
+        var processInteractiveMode = environmentService.GetEnvironmentVariable($"{environmentVariablePrefix}__InteractiveMode");
+        if (string.IsNullOrWhiteSpace(processInteractiveMode))
+        {
+            var interactiveModeEnv = environmentService.GetEnvironmentVariable("CLYPSE_SETUP__InteractiveMode", EnvironmentVariableTarget.User);
+            if (!string.IsNullOrWhiteSpace(interactiveModeEnv) && bool.TryParse(interactiveModeEnv, out var interactiveMode))
+            {
+                options.InteractiveMode = interactiveMode;
+            }
+        }
+
+        var processEnableUpgradeMode = environmentService.GetEnvironmentVariable($"{environmentVariablePrefix}__EnableUpgradeMode");
+        if (string.IsNullOrWhiteSpace(processEnableUpgradeMode))
+        {
+            var enableUpgradeModeEnv = environmentService.GetEnvironmentVariable("CLYPSE_SETUP__EnableUpgradeMode", EnvironmentVariableTarget.User);
+            if (!string.IsNullOrWhiteSpace(enableUpgradeModeEnv) && bool.TryParse(enableUpgradeModeEnv, out var enableUpgradeMode))
+            {
+                options.EnableUpgradeMode = enableUpgradeMode;
+            }
+        }
+
+        var processBuildPortal = environmentService.GetEnvironmentVariable($"{environmentVariablePrefix}__BuildPortal");
+        if (string.IsNullOrWhiteSpace(processBuildPortal))
+        {
+            var buildPortalEnv = environmentService.GetEnvironmentVariable("CLYPSE_SETUP__BuildPortal", EnvironmentVariableTarget.User);
+            if (!string.IsNullOrWhiteSpace(buildPortalEnv) && bool.TryParse(buildPortalEnv, out var buildPortal))
+            {
+                options.BuildPortal = buildPortal;
+            }
+        }
+
+        var processForceUpgrade = environmentService.GetEnvironmentVariable($"{environmentVariablePrefix}__ForceUpgrade");
+        if (string.IsNullOrWhiteSpace(processForceUpgrade))
+        {
+            var forceUpgradeEnv = environmentService.GetEnvironmentVariable("CLYPSE_SETUP__ForceUpgrade", EnvironmentVariableTarget.User);
+            if (!string.IsNullOrWhiteSpace(forceUpgradeEnv) && bool.TryParse(forceUpgradeEnv, out var forceUpgrade))
+            {
+                options.ForceUpgrade = forceUpgrade;
+            }
+        }
     }
 
     private static string PreferExisting(string currentValue, string? fallbackValue)

@@ -294,7 +294,7 @@ public class AwsCloudStorageProviderBase : ICloudStorageProvider, IAwsEncryptedC
         try
         {
             beforeGetObjectMetadataAsync?.Invoke(getObjectMetadata);
-            var getMetaDataResponse = await this.amazonS3Client.GetObjectMetadataAsync(getObjectMetadata, cancellationToken);
+            _ = await this.amazonS3Client.GetObjectMetadataAsync(getObjectMetadata, cancellationToken);
 
             beforeDeleteObjectAsync?.Invoke(deleteRequest);
             var deleteResponse = await this.amazonS3Client.DeleteObjectAsync(deleteRequest, cancellationToken);

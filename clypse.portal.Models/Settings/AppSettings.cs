@@ -1,5 +1,3 @@
-using System.Reflection;
-
 namespace clypse.portal.Models.Settings;
 
 /// <summary>
@@ -36,9 +34,4 @@ public class AppSettings
     /// Gets or sets the list of memorable password templates.
     /// </summary>
     public List<MemorablePasswordTemplateItem> MemorablePasswordTemplates { get; set; } = [];
-
-    /// <summary>
-    /// Gets the version of the executing assembly.
-    /// </summary>
-    public string Version => Assembly.GetExecutingAssembly().GetName().Version?.ToString() ?? "Unknown";
 }

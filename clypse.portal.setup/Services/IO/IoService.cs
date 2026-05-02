@@ -49,6 +49,12 @@ public class IoService : IIoService
     }
 
     /// <inheritdoc />
+    public string GetApplicationDirectory()
+    {
+        return AppContext.BaseDirectory;
+    }
+
+    /// <inheritdoc />
     public string? GetParentDirectory(string path)
     {
         return Directory.GetParent(path)?.FullName;

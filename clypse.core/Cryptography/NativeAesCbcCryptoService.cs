@@ -38,7 +38,7 @@ public class NativeAesCbcCryptoService : ICryptoService, IDisposable
         string? base64Key)
     {
         ArgumentNullException.ThrowIfNull(inputStream, nameof(inputStream));
-        ArgumentNullException.ThrowIfNull(outputStream, nameof(inputStream));
+        ArgumentNullException.ThrowIfNull(outputStream, nameof(outputStream));
         ArgumentException.ThrowIfNullOrEmpty(base64Key, nameof(base64Key));
 
         byte[] key = Convert.FromBase64String(base64Key);
@@ -69,7 +69,7 @@ public class NativeAesCbcCryptoService : ICryptoService, IDisposable
         string? base64Key)
     {
         ArgumentNullException.ThrowIfNull(inputStream, nameof(inputStream));
-        ArgumentNullException.ThrowIfNull(outputStream, nameof(inputStream));
+        ArgumentNullException.ThrowIfNull(outputStream, nameof(outputStream));
         ArgumentException.ThrowIfNullOrEmpty(base64Key, nameof(base64Key));
 
         byte[] key = Convert.FromBase64String(base64Key);

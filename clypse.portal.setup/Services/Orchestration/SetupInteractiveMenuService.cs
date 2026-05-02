@@ -283,7 +283,7 @@ public class SetupInteractiveMenuService(IPortalBuildService portalBuildService)
     private static void SetEnv(string key, string? value, EnvironmentVariableTarget target)
     {
         var normalized = string.IsNullOrWhiteSpace(value) ? null : value;
-        Environment.SetEnvironmentVariable(key, normalized, target);
+        System.Environment.SetEnvironmentVariable(key, normalized, target);
     }
 
     private static bool TrySetPortalBuildOutputPathToUserEnvironment(string? portalBuildOutputPath, out string message)

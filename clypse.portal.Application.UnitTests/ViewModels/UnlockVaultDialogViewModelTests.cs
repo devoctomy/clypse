@@ -5,12 +5,12 @@ namespace clypse.portal.Application.UnitTests.ViewModels;
 
 public class UnlockVaultDialogViewModelTests
 {
-    private UnlockVaultDialogViewModel CreateSut() => new();
+    private static UnlockVaultDialogViewModel CreateSut() => new();
 
     [Fact]
     public void Constructor_SetsDefaultValues()
     {
-        var sut = this.CreateSut();
+        var sut = CreateSut();
         Assert.Equal(string.Empty, sut.Passphrase);
         Assert.Null(sut.Vault);
     }
@@ -18,7 +18,7 @@ public class UnlockVaultDialogViewModelTests
     [Fact]
     public void ResetPassphrase_ClearsPassphrase()
     {
-        var sut = this.CreateSut();
+        var sut = CreateSut();
         sut.Passphrase = "secret";
 
         sut.ResetPassphrase();
@@ -29,7 +29,7 @@ public class UnlockVaultDialogViewModelTests
     [Fact]
     public async Task UnlockCommand_WithPassphrase_InvokesCallback()
     {
-        var sut = this.CreateSut();
+        var sut = CreateSut();
         sut.Passphrase = "mypassphrase";
         string? received = null;
         sut.OnUnlockCallback = p => { received = p; return Task.CompletedTask; };
@@ -42,7 +42,7 @@ public class UnlockVaultDialogViewModelTests
     [Fact]
     public async Task UnlockCommand_WithEmptyPassphrase_DoesNotInvokeCallback()
     {
-        var sut = this.CreateSut();
+        var sut = CreateSut();
         var called = false;
         sut.OnUnlockCallback = _ => { called = true; return Task.CompletedTask; };
 
@@ -54,7 +54,7 @@ public class UnlockVaultDialogViewModelTests
     [Fact]
     public async Task CancelCommand_ClearsPassphraseAndInvokesCallback()
     {
-        var sut = this.CreateSut();
+        var sut = CreateSut();
         sut.Passphrase = "secret";
         var called = false;
         sut.OnCancelCallback = () => { called = true; return Task.CompletedTask; };

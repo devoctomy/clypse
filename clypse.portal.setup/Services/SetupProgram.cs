@@ -1,4 +1,5 @@
-﻿using clypse.portal.setup.Services.Orchestration;
+﻿using clypse.portal.setup.Services.Build;
+using clypse.portal.setup.Services.Orchestration;
 using Microsoft.Extensions.Logging;
 
 namespace clypse.portal.setup.Services;
@@ -8,6 +9,7 @@ public class SetupProgram(
     SetupOptions options,
     ISetupInteractiveMenuService setupInteractiveMenuService,
     IClypseAwsSetupOrchestration clypseAwsSetupOrchestration,
+    IPortalBuildService portalBuildService,
     ILogger<SetupProgram> logger) : IProgram
 {
     /// <inheritdoc />
@@ -29,12 +31,21 @@ public class SetupProgram(
                 }
             }
 
-            ////var prepared = await clypseAwsSetupOrchestration.PrepareSetup(CancellationToken.None);
-            ////if(!prepared)
-            ////{
-            ////    logger.LogError("Setup preparation failed. Exiting.");
-            ////    return 1;
-            ////}
+            // Build portal if in non-interactive mode, upgrading, and BuildPortal is enabled
+            if (!options.InteractiveMode && mode == Enums.SetupMode.Upgrade && options.BuildPortal)
+            {
+                logger.LogInformation("BuildPortal is enabled. Building portal before upgrade.");
+                var buildResult = await portalBuildService.Run();
+                if (!buildResult.Success)
+                {
+                    logger.LogError("Portal build failed. Aborting upgrade.");
+                    return 1;
+                }
+                logger.LogInformation("Portal build succeeded. Output: {outputPath}", buildResult.OutputPath);
+                
+                // Update the portal build output path with the build result
+                options.PortalBuildOutputPath = buildResult.OutputPath;
+            }
 
             switch(mode)
             {
@@ -45,6 +56,10 @@ public class SetupProgram(
                 case Enums.SetupMode.Upgrade:
                     await clypseAwsSetupOrchestration.UpgradePortalAsync(CancellationToken.None);
                     break;
+
+                default:
+                    logger.LogError("Unsupported setup mode '{mode}'..", mode);
+                    return 1;
             }
 
             if (options.InteractiveMode)

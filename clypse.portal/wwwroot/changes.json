@@ -1,6 +1,15 @@
 {
   "versions": [
     {
+      "version": "1.1.0.0",
+      "changes": [
+        {
+          "type": "change",
+          "description": "Huge refactor job on entire portal codebase. Should be transparent upgrade to user, but will enable future enhancements."
+        }
+      ]
+    },    
+    {
       "version": "1.0.1.0",
       "changes": [
         {

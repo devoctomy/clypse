@@ -4,12 +4,12 @@ namespace clypse.portal.Application.UnitTests.ViewModels;
 
 public class TagListFieldViewModelTests
 {
-    private TagListFieldViewModel CreateSut() => new();
+    private static TagListFieldViewModel CreateSut() => new();
 
     [Fact]
     public void Constructor_SetsEmptyTags()
     {
-        var sut = this.CreateSut();
+        var sut = CreateSut();
         Assert.Empty(sut.Tags);
         Assert.Equal(string.Empty, sut.NewTag);
     }
@@ -17,7 +17,7 @@ public class TagListFieldViewModelTests
     [Fact]
     public async Task AddTagCommand_WithValidTag_AddsTags()
     {
-        var sut = this.CreateSut();
+        var sut = CreateSut();
         sut.NewTag = "apple";
         List<string>? callbackResult = null;
         sut.TagsChangedCallback = tags => { callbackResult = tags; return Task.CompletedTask; };
@@ -33,7 +33,7 @@ public class TagListFieldViewModelTests
     [Fact]
     public async Task AddTagCommand_WithEmptyInput_DoesNothing()
     {
-        var sut = this.CreateSut();
+        var sut = CreateSut();
         sut.NewTag = "   ";
 
         await sut.AddTagCommand.ExecuteAsync(null);
@@ -44,7 +44,7 @@ public class TagListFieldViewModelTests
     [Fact]
     public async Task AddTagCommand_WithDuplicateTag_DoesNotAdd()
     {
-        var sut = this.CreateSut();
+        var sut = CreateSut();
         sut.Tags = ["Apple"];
         sut.NewTag = "apple"; // case-insensitive duplicate
 
@@ -56,7 +56,7 @@ public class TagListFieldViewModelTests
     [Fact]
     public async Task RemoveTagCommand_RemovesExistingTag()
     {
-        var sut = this.CreateSut();
+        var sut = CreateSut();
         sut.Tags = ["apple", "banana"];
         List<string>? callbackResult = null;
         sut.TagsChangedCallback = tags => { callbackResult = tags; return Task.CompletedTask; };
@@ -71,7 +71,7 @@ public class TagListFieldViewModelTests
     [Fact]
     public async Task AddTagCommand_WhenReadOnly_DoesNothing()
     {
-        var sut = this.CreateSut();
+        var sut = CreateSut();
         sut.IsReadOnly = true;
         sut.NewTag = "apple";
 
@@ -83,7 +83,7 @@ public class TagListFieldViewModelTests
     [Fact]
     public async Task RemoveTagCommand_WhenReadOnly_DoesNothing()
     {
-        var sut = this.CreateSut();
+        var sut = CreateSut();
         sut.IsReadOnly = true;
         sut.Tags = ["apple"];
 

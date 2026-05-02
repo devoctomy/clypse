@@ -36,6 +36,12 @@ public class LoginPageTests : TestBase
         await Expect(Page.Locator(".card")).ToBeVisibleAsync();
         await Expect(Page.Locator(".card-header")).ToBeVisibleAsync();
         await Expect(Page.Locator(".card-body")).ToBeVisibleAsync();
+
+        // Check for version number in the footer
+        var expectedVersion = typeof(Services.BrowserInteropService).Assembly.GetName().Version!.ToString();
+        await Expect(Page.Locator(".version-number")).ToBeVisibleAsync();
+        var allVersionText = (await Page.Locator(".version-number").AllInnerTextsAsync()).ToList();
+        Assert.IsTrue(allVersionText.Any(text => text.Contains(expectedVersion)), $"Expected version number '{expectedVersion}' to be displayed in the footer");
     }
 
     [TestMethod]

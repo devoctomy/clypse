@@ -1058,4 +1058,179 @@ public class ClypseAwsSetupOrchestrationTests
         _mockInventoryService.Verify(s => s.RecordResource(It.IsAny<InventoryItem>()), Times.Exactly(inventoryCount));
         _mockInventoryService.Verify(s => s.Save(It.Is<string>(p => p.EndsWith("-inventory.json"))), Times.Once);
     }
+
+    [Fact]
+    public async Task GivenUpgradePortalAsync_WhenVersionsMatchAndForceUpgradeIsFalse_ThenReturnsEarlyWithTrue()
+    {
+        // Arrange
+        var options = new SetupOptions
+        {
+            BaseUrl = "http://localhost:4566",
+            Region = "us-east-1",
+            ResourcePrefix = "test-prefix",
+            AccessId = "test-access-id",
+            SecretAccessKey = "test-secret-key",
+            PortalBuildOutputPath = "/test",
+            InitialUserEmail = "test@example.com",
+            InteractiveMode = false,
+            ForceUpgrade = false
+        };
+        var sut = CreateSut(options);
+
+        _mockS3Service
+            .Setup(s => s.DoesBucketExistAsync("clypse.portal", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+
+        _mockS3Service
+            .Setup(s => s.DownloadObjectDataAsync("clypse.portal", "version.txt", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(System.Text.Encoding.UTF8.GetBytes("1.0.0"));
+
+        _mockIoService
+            .Setup(x => x.CombinePath(It.IsAny<string>(), It.Is<string>(y => y == "version.txt")))
+            .Returns("version.txt");
+
+        _mockIoService
+            .Setup(x => x.ReadAllTextAsync(It.Is<string>(y => y.EndsWith("version.txt")), It.IsAny<CancellationToken>()))
+            .ReturnsAsync("1.0.0");
+
+        // Act
+        var result = await sut.UpgradePortalAsync(CancellationToken.None);
+
+        // Assert
+        Assert.True(result);
+        _mockS3Service.Verify(s => s.DownloadObjectDataAsync(
+            "clypse.portal",
+            "appsettings.json",
+            It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task GivenUpgradePortalAsync_WhenVersionsMatchAndForceUpgradeIsTrue_ThenProceedsWithUpgrade()
+    {
+        // Arrange
+        var options = new SetupOptions
+        {
+            BaseUrl = "http://localhost:4566",
+            Region = "us-east-1",
+            ResourcePrefix = "test-prefix",
+            AccessId = "test-access-id",
+            SecretAccessKey = "test-secret-key",
+            PortalBuildOutputPath = "/test",
+            InitialUserEmail = "test@example.com",
+            InteractiveMode = false,
+            ForceUpgrade = true
+        };
+        var sut = CreateSut(options);
+
+        _mockS3Service
+            .Setup(s => s.DoesBucketExistAsync("clypse.portal", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+
+        _mockS3Service
+            .Setup(s => s.DownloadObjectDataAsync("clypse.portal", "version.txt", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(System.Text.Encoding.UTF8.GetBytes("1.0.0"));
+
+        _mockIoService
+            .Setup(x => x.CombinePath(It.IsAny<string>(), It.Is<string>(y => y == "version.txt")))
+            .Returns("version.txt");
+
+        _mockIoService
+            .Setup(x => x.ReadAllTextAsync(It.Is<string>(y => y.EndsWith("version.txt")), It.IsAny<CancellationToken>()))
+            .ReturnsAsync("1.0.0");
+
+        _mockS3Service
+            .Setup(s => s.DownloadObjectDataAsync("clypse.portal", "appsettings.json", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(System.Text.Encoding.UTF8.GetBytes("{\"key\":\"value\"}"));
+
+        _mockIoService
+            .Setup(x => x.GetApplicationDirectory())
+            .Returns("/app");
+
+        _mockIoService
+            .Setup(x => x.CombinePath("/app", "Data/appsettings.json"))
+            .Returns("/app/Data/appsettings.json");
+
+        _mockIoService
+            .Setup(s => s.ReadAllTextAsync("/app/Data/appsettings.json", It.IsAny<CancellationToken>()))
+            .ReturnsAsync("{\"template\":\"value\"}");
+
+        _mockJsonMergerService
+            .Setup(s => s.MergeJsonStrings(It.IsAny<string>(), It.IsAny<string>()))
+            .Returns("{\"merged\":\"value\"}");
+
+        // Act
+        var result = await sut.UpgradePortalAsync(CancellationToken.None);
+
+        // Assert
+        Assert.True(result);
+        _mockS3Service.Verify(s => s.DownloadObjectDataAsync(
+            "clypse.portal",
+            "appsettings.json",
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task GivenUpgradePortalAsync_WhenBuildVersionIsNewer_ThenProceedsWithUpgradeRegardlessOfForceUpgrade()
+    {
+        // Arrange
+        var options = new SetupOptions
+        {
+            BaseUrl = "http://localhost:4566",
+            Region = "us-east-1",
+            ResourcePrefix = "test-prefix",
+            AccessId = "test-access-id",
+            SecretAccessKey = "test-secret-key",
+            PortalBuildOutputPath = "/test",
+            InitialUserEmail = "test@example.com",
+            InteractiveMode = false,
+            ForceUpgrade = false
+        };
+        var sut = CreateSut(options);
+
+        _mockS3Service
+            .Setup(s => s.DoesBucketExistAsync("clypse.portal", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+
+        _mockS3Service
+            .Setup(s => s.DownloadObjectDataAsync("clypse.portal", "version.txt", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(System.Text.Encoding.UTF8.GetBytes("1.0.0"));
+
+        _mockIoService
+            .Setup(x => x.CombinePath(It.IsAny<string>(), It.Is<string>(y => y == "version.txt")))
+            .Returns("version.txt");
+
+        _mockIoService
+            .Setup(x => x.ReadAllTextAsync(It.Is<string>(y => y.EndsWith("version.txt")), It.IsAny<CancellationToken>()))
+            .ReturnsAsync("2.0.0");
+
+        _mockS3Service
+            .Setup(s => s.DownloadObjectDataAsync("clypse.portal", "appsettings.json", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(System.Text.Encoding.UTF8.GetBytes("{\"key\":\"value\"}"));
+
+        _mockIoService
+            .Setup(x => x.GetApplicationDirectory())
+            .Returns("/app");
+
+        _mockIoService
+            .Setup(x => x.CombinePath("/app", "Data/appsettings.json"))
+            .Returns("/app/Data/appsettings.json");
+
+        _mockIoService
+            .Setup(s => s.ReadAllTextAsync("/app/Data/appsettings.json", It.IsAny<CancellationToken>()))
+            .ReturnsAsync("{\"template\":\"value\"}");
+
+        _mockJsonMergerService
+            .Setup(s => s.MergeJsonStrings(It.IsAny<string>(), It.IsAny<string>()))
+            .Returns("{\"merged\":\"value\"}");
+
+        // Act
+        var result = await sut.UpgradePortalAsync(CancellationToken.None);
+
+        // Assert
+        Assert.True(result);
+        _mockS3Service.Verify(s => s.DownloadObjectDataAsync(
+            "clypse.portal",
+            "appsettings.json",
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
 }

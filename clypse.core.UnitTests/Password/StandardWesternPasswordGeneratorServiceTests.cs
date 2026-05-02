@@ -56,7 +56,7 @@ public class StandardWesternPasswordGeneratorServiceTests : IDisposable
             .ReturnsAsync((string name, Assembly asm, CancellationToken ct) =>
             {
                 var nameParts = name.Split('.');
-                return [nameParts[nameParts.Length - 2]];
+                return [nameParts[^2]];
             });
 
         // Act
