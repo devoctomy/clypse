@@ -1098,8 +1098,6 @@ public class ClypseAwsSetupOrchestrationTests
 
         // Assert
         Assert.True(result);
-        
-        // Verify that we stopped after version check - no further operations should be called
         _mockS3Service.Verify(s => s.DownloadObjectDataAsync(
             "clypse.portal",
             "appsettings.json",
@@ -1163,7 +1161,8 @@ public class ClypseAwsSetupOrchestrationTests
         // Act
         var result = await sut.UpgradePortalAsync(CancellationToken.None);
 
-        // Assert - Verify that we proceeded with upgrade operations despite version match
+        // Assert
+        Assert.True(result);
         _mockS3Service.Verify(s => s.DownloadObjectDataAsync(
             "clypse.portal",
             "appsettings.json",
@@ -1227,7 +1226,8 @@ public class ClypseAwsSetupOrchestrationTests
         // Act
         var result = await sut.UpgradePortalAsync(CancellationToken.None);
 
-        // Assert - Verify upgrade proceeded even with ForceUpgrade=false because version is newer
+        // Assert
+        Assert.True(result);
         _mockS3Service.Verify(s => s.DownloadObjectDataAsync(
             "clypse.portal",
             "appsettings.json",
