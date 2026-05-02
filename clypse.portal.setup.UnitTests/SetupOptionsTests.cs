@@ -63,9 +63,23 @@ public class SetupOptionsTests
         var sut = new SetupOptions();
 
         // Assert
+        Assert.True(sut.InteractiveMode); // InteractiveMode defaults to true
         Assert.False(sut.EnableUpgradeMode);
         Assert.False(sut.BuildPortal);
         Assert.False(sut.ForceUpgrade);
         Assert.Equal(string.Empty, sut.CloudFrontDistributionId);
+    }
+
+    [Fact]
+    public void GivenSetupOptions_WhenInteractiveModeSetToFalse_ThenInteractiveModeIsFalse()
+    {
+        // Arrange & Act
+        var sut = new SetupOptions
+        {
+            InteractiveMode = false
+        };
+
+        // Assert
+        Assert.False(sut.InteractiveMode);
     }
 }

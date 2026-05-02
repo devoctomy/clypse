@@ -501,7 +501,7 @@ public class ClypseAwsSetupOrchestration(
         var deployedVersion = Version.Parse(Encoding.UTF8.GetString(deployedVersionBytes).Trim());
 
         Version buildVersion = await GetBuildVersionAsync(cancellationToken);
-        var versionMatch = (buildVersion <= deployedVersion);
+        var versionMatch = buildVersion <= deployedVersion;
 
         if (!options.ForceUpgrade && versionMatch)
         {

@@ -231,6 +231,16 @@ public static class ServiceCollectionExtensions
         
         // Boolean properties - only override if explicitly set in user environment and not already set via configuration
         // Check if process-level env var is set first to avoid overriding configuration binding
+        var processInteractiveMode = environmentService.GetEnvironmentVariable($"{environmentVariablePrefix}__InteractiveMode");
+        if (string.IsNullOrWhiteSpace(processInteractiveMode))
+        {
+            var interactiveModeEnv = environmentService.GetEnvironmentVariable("CLYPSE_SETUP__InteractiveMode", EnvironmentVariableTarget.User);
+            if (!string.IsNullOrWhiteSpace(interactiveModeEnv) && bool.TryParse(interactiveModeEnv, out var interactiveMode))
+            {
+                options.InteractiveMode = interactiveMode;
+            }
+        }
+
         var processEnableUpgradeMode = environmentService.GetEnvironmentVariable($"{environmentVariablePrefix}__EnableUpgradeMode");
         if (string.IsNullOrWhiteSpace(processEnableUpgradeMode))
         {
