@@ -47,13 +47,6 @@ public class SetupProgram(
                 options.PortalBuildOutputPath = buildResult.OutputPath;
             }
 
-            ////var prepared = await clypseAwsSetupOrchestration.PrepareSetup(CancellationToken.None);
-            ////if(!prepared)
-            ////{
-            ////    logger.LogError("Setup preparation failed. Exiting.");
-            ////    return 1;
-            ////}
-
             switch(mode)
             {
                 case Enums.SetupMode.FullCreate:
@@ -63,6 +56,10 @@ public class SetupProgram(
                 case Enums.SetupMode.Upgrade:
                     await clypseAwsSetupOrchestration.UpgradePortalAsync(CancellationToken.None);
                     break;
+
+                default:
+                    logger.LogError("Unsupported setup mode '{mode}'..", mode);
+                    return 1;
             }
 
             if (options.InteractiveMode)
