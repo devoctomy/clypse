@@ -46,6 +46,22 @@ When deployed to AWS, Clypse requires the following AWS resources (all pay-as-yo
 
 The setup application will automatically create all required AWS resources, configure permissions, and deploy the portal. All configuration is managed through an interactive menu.
 
+### TODO
+
+The setup tool is ultimately designed to create everything for you and for it to be fully functional after completion.
+
+At current the following is implemented
+
+✅ S3 Bucket creation & configuration
+✅ Cognito creation & configuration
+✅ IAM Policy creation & configuration
+✅ IAM Role creation & configuration
+✅ Cloudfront distribution creation & configuration
+
+What's not done?
+
+⬛ Route53 Configuration
+
 ## Testing
 
 ### Unit Testing
@@ -107,32 +123,25 @@ dotnet serve -d ./clypse.portal/bin/Release/net10.0/publish/wwwroot -p 7153 --tl
 
 The client-side JavaScript code in `clypse.portal.ClientScripts` is fully tested and linted.
 
-**Linting** - Code quality is enforced using ESLint with industry-standard rules:
+**Linting**
 ```bash
 cd clypse.portal.ClientScripts
 npm run lint        # Check for issues
 npm run lint:fix    # Auto-fix issues
 ```
 
-**Testing** - 113 unit tests covering all client-side modules (S3, Cognito, WebAuthn, PWA, Mobile Viewport):
+**Testing** 
 ```bash
 cd clypse.portal.ClientScripts
 npm test            # Run tests
 npm run test:watch  # Run tests in watch mode
 ```
 
-**Coverage** - Code coverage is collected and reported to Codacy alongside .NET coverage:
+**Coverage**
 ```bash
 cd clypse.portal.ClientScripts
 npm run test:coverage  # Run tests with coverage report
 ```
-
-Current coverage: **98.97% statements**, **82.3% branches**, **98.38% functions**
-
-Tests follow the same patterns as .NET tests:
-- Gherkin naming convention (`GivenX_WhenY_ThenZ`)
-- Arrange/Act/Assert structure
-- No extraneous comments
 
 ## GitHub Workflows
 
