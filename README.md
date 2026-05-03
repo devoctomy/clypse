@@ -52,15 +52,15 @@ The setup tool is ultimately designed to create everything for you and for it to
 
 At current the following is implemented
 
-✅ S3 Bucket creation & configuration
-✅ Cognito creation & configuration
-✅ IAM Policy creation & configuration
-✅ IAM Role creation & configuration
-✅ Cloudfront distribution creation & configuration
+- ✅ S3 Bucket creation & configuration
+- ✅ Cognito creation & configuration
+- ✅ IAM Policy creation & configuration
+- ✅ IAM Role creation & configuration
+- ✅ Cloudfront distribution creation & configuration
 
 What's not done?
 
-⬛ Route53 Configuration
+- ⬛ Route53 Configuration
 
 ## Testing
 
