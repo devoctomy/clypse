@@ -788,7 +788,7 @@ public class ClypseAwsSetupOrchestrationTests
             It.IsAny<string>()))
             .Returns(new MemoryStream());
 
-        var expectedHost = "test-prefix.clypse.portal.s3-website-us-east-1.amazonaws.com";
+        var expectedHost = "test-prefix.clypse.portal.s3-website.us-east-1.amazonaws.com";
 
         // Act
         var result = await sut.SetupClypseOnAwsAsync(CancellationToken.None);

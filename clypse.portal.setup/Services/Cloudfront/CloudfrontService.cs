@@ -77,7 +77,8 @@ public class CloudfrontService(
                 {
                     ACMCertificateArn = certificateArn,
                     SSLSupportMethod = SSLSupportMethod.SniOnly,
-                    MinimumProtocolVersion = MinimumProtocolVersion.TLSv1_2016
+                    MinimumProtocolVersion = MinimumProtocolVersion.TLSv1_2016,
+                    CloudFrontDefaultCertificate = false
                 };
             }
 
