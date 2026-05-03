@@ -474,7 +474,7 @@ public class ClypseAwsSetupOrchestration(
 
         var setupId = Guid.NewGuid().ToString();
 
-        if (options.InteractiveMode)
+        if (!options.UnitTestMode && options.InteractiveMode)
         {
             logger.LogInformation("Press any key to begin.");
             Console.ReadKey();

@@ -30,6 +30,10 @@ public class SetupProgramTests
             mockPortalBuildService.Object,
             Mock.Of<ILogger<SetupProgram>>());
 
+        mockClypseAwsSetupOrchestration.Setup(x => x.SetupClypseOnAwsAsync(
+            It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+
         // Act
         var result = await sut.RunAsync();
 
@@ -41,8 +45,44 @@ public class SetupProgramTests
             Times.Once);
     }
 
-[Fact]
-    public async Task GivenProgram_WhenRunAsync_AndPrepareFailss_ThenErrorCodeReturned()
+    [Fact]
+    public async Task GivenProgram_WhenRunAsync_AndSetupFails_ThenOrchstrationIsCalled_And1Returned()
+    {
+        // Arrange
+        var options = new SetupOptions
+        {
+            BaseUrl = "https://example.com",
+            AccessId = "test-access-id",
+            InteractiveMode = false,
+            EnableUpgradeMode = false
+        };
+        var mockSetupInteractiveMenuService = new Mock<ISetupInteractiveMenuService>();
+        var mockClypseAwsSetupOrchestration = new Mock<IClypseAwsSetupOrchestration>();
+        var mockPortalBuildService = new Mock<IPortalBuildService>();
+        var sut = new SetupProgram(
+            options,
+            mockSetupInteractiveMenuService.Object,
+            mockClypseAwsSetupOrchestration.Object,
+            mockPortalBuildService.Object,
+            Mock.Of<ILogger<SetupProgram>>());
+
+        mockClypseAwsSetupOrchestration.Setup(x => x.SetupClypseOnAwsAsync(
+            It.IsAny<CancellationToken>()))
+            .ReturnsAsync(false);
+
+        // Act
+        var result = await sut.RunAsync();
+
+        // Assert
+        Assert.Equal(1, result);
+
+        mockClypseAwsSetupOrchestration.Verify(x => x.SetupClypseOnAwsAsync(
+            It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task GivenProgram_WhenRunAsync_AndPrepareFails_ThenErrorCodeReturned()
     {
         // Arrange
         var options = new SetupOptions
@@ -70,7 +110,7 @@ public class SetupProgramTests
 
         // Assert
         Assert.Equal(1, result);
-    }    
+    }
 
     [Fact]
     public async Task GivenProgram_WhenRunAsync_AndExceptionOccurs_ThenOrchstrationIsCalled_AndErrorCodeReturned()
@@ -118,12 +158,13 @@ public class SetupProgramTests
             InteractiveMode = false,
             EnableUpgradeMode = true,
             BuildPortal = true,
-            PortalBuildOutputPath = "/old/path"
+            PortalBuildOutputPath = "/old/path",
+            UnitTestMode = true
         };
         var mockSetupInteractiveMenuService = new Mock<ISetupInteractiveMenuService>();
         var mockClypseAwsSetupOrchestration = new Mock<IClypseAwsSetupOrchestration>();
         var mockPortalBuildService = new Mock<IPortalBuildService>();
-        
+
         var buildResult = new PortalBuildResult(true, "/new/build/path");
         mockPortalBuildService.Setup(x => x.Run()).ReturnsAsync(buildResult);
 
@@ -133,6 +174,10 @@ public class SetupProgramTests
             mockClypseAwsSetupOrchestration.Object,
             mockPortalBuildService.Object,
             Mock.Of<ILogger<SetupProgram>>());
+
+        mockClypseAwsSetupOrchestration.Setup(x => x.UpgradePortalAsync(
+            It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
 
         // Act
         var result = await sut.RunAsync();
@@ -162,7 +207,7 @@ public class SetupProgramTests
         var mockSetupInteractiveMenuService = new Mock<ISetupInteractiveMenuService>();
         var mockClypseAwsSetupOrchestration = new Mock<IClypseAwsSetupOrchestration>();
         var mockPortalBuildService = new Mock<IPortalBuildService>();
-        
+
         var buildResult = new PortalBuildResult(false, string.Empty);
         mockPortalBuildService.Setup(x => x.Run()).ReturnsAsync(buildResult);
 
@@ -186,7 +231,7 @@ public class SetupProgramTests
     }
 
     [Fact]
-    public async Task GivenProgram_WhenRunAsync_InNonInteractiveModeWithUpgrade_AndBuildPortalDisabled_ThenPortalIsNotBuilt()
+    public async Task GivenProgram_WhenRunAsync_InNonInteractiveModeWithUpgrade_AndBuildPortalDisabled_AndUpgradeFails_ThenPortalIsNotBuilt_And1Returned()
     {
         // Arrange
         var options = new SetupOptions
@@ -195,7 +240,8 @@ public class SetupProgramTests
             AccessId = "test-access-id",
             InteractiveMode = false,
             EnableUpgradeMode = true,
-            BuildPortal = false
+            BuildPortal = false,
+            UnitTestMode = true
         };
         var mockSetupInteractiveMenuService = new Mock<ISetupInteractiveMenuService>();
         var mockClypseAwsSetupOrchestration = new Mock<IClypseAwsSetupOrchestration>();
@@ -207,6 +253,50 @@ public class SetupProgramTests
             mockClypseAwsSetupOrchestration.Object,
             mockPortalBuildService.Object,
             Mock.Of<ILogger<SetupProgram>>());
+
+        mockClypseAwsSetupOrchestration.Setup(x => x.UpgradePortalAsync(
+            It.IsAny<CancellationToken>()))
+            .ReturnsAsync(false);
+
+        // Act
+        var result = await sut.RunAsync();
+
+        // Assert
+        Assert.Equal(1, result);
+
+        mockPortalBuildService.Verify(x => x.Run(), Times.Never);
+        mockClypseAwsSetupOrchestration.Verify(x => x.UpgradePortalAsync(
+            It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task GivenProgram_WhenRunAsync_InNonInteractiveModeWithUpgrade_AndBuildPortalDisabled_ThenPortalIsNotBuilt()
+    {
+        // Arrange
+        var options = new SetupOptions
+        {
+            BaseUrl = "https://example.com",
+            AccessId = "test-access-id",
+            InteractiveMode = false,
+            EnableUpgradeMode = true,
+            BuildPortal = false,
+            UnitTestMode = true
+        };
+        var mockSetupInteractiveMenuService = new Mock<ISetupInteractiveMenuService>();
+        var mockClypseAwsSetupOrchestration = new Mock<IClypseAwsSetupOrchestration>();
+        var mockPortalBuildService = new Mock<IPortalBuildService>();
+
+        var sut = new SetupProgram(
+            options,
+            mockSetupInteractiveMenuService.Object,
+            mockClypseAwsSetupOrchestration.Object,
+            mockPortalBuildService.Object,
+            Mock.Of<ILogger<SetupProgram>>());
+
+        mockClypseAwsSetupOrchestration.Setup(x => x.UpgradePortalAsync(
+            It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
 
         // Act
         var result = await sut.RunAsync();
@@ -232,17 +322,18 @@ public class SetupProgramTests
             Region = "us-east-1",
             ResourcePrefix = "test-prefix",
             InitialUserEmail = "test@example.com",
-            InteractiveMode = false,  // Changed to false to avoid Console.ReadKey()
-            EnableUpgradeMode = false,  // Changed to false - we'll use a mock to control mode
-            BuildPortal = true
+            InteractiveMode = true,
+            EnableUpgradeMode = true,
+            BuildPortal = true,
+            UnitTestMode = true,
         };
         var mockSetupInteractiveMenuService = new Mock<ISetupInteractiveMenuService>();
         mockSetupInteractiveMenuService.Setup(x => x.Run(It.IsAny<SetupOptions>())).Returns(SetupMode.Upgrade);
-        
+
         var mockClypseAwsSetupOrchestration = new Mock<IClypseAwsSetupOrchestration>();
         mockClypseAwsSetupOrchestration.Setup(x => x.UpgradePortalAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
-        
+
         var mockPortalBuildService = new Mock<IPortalBuildService>();
 
         var sut = new SetupProgram(
@@ -259,10 +350,9 @@ public class SetupProgramTests
         Assert.Equal(0, result);
 
         mockPortalBuildService.Verify(x => x.Run(), Times.Never);
-        mockSetupInteractiveMenuService.Verify(x => x.Run(It.IsAny<SetupOptions>()), Times.Never);  // Should not be called in non-interactive mode
-        // In non-interactive with EnableUpgradeMode=false, it should do FullCreate, not Upgrade
+        mockSetupInteractiveMenuService.Verify(x => x.Run(It.IsAny<SetupOptions>()), Times.Once);
         mockClypseAwsSetupOrchestration.Verify(x => x.UpgradePortalAsync(
             It.IsAny<CancellationToken>()),
-            Times.Never);
+            Times.Once);
     }
 }

@@ -81,6 +81,11 @@ public class SetupOptions
     public string UpgradePortalBucketNameOverride { get; set; } = string.Empty;
 
     /// <summary>
+    /// Gets or sets a value indicating whether the application is running in unit test mode.
+    /// </summary>
+    public bool UnitTestMode { get; set; }
+
+    /// <summary>
     /// Determines whether the options contain the required values.
     /// </summary>
     /// <returns><see langword="true"/> when required values are present; otherwise, <see langword="false"/>.</returns>
