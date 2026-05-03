@@ -25,6 +25,12 @@ public class IoService : IIoService
     }
 
     /// <inheritdoc />
+    public void DeleteDirectory(string path, bool recursive = false)
+    {
+        Directory.Delete(path, recursive);
+    }
+
+    /// <inheritdoc />
     public Stream OpenWrite(string path)
     {
         return File.OpenWrite(path);

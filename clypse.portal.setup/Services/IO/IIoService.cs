@@ -26,6 +26,13 @@ public interface IIoService
     public void Delete(string path);
 
     /// <summary>
+    /// Deletes the directory at the specified path.
+    /// </summary>
+    /// <param name="path">The directory path to delete.</param>
+    /// <param name="recursive">If true, deletes all subdirectories and files.</param>
+    public void DeleteDirectory(string path, bool recursive = false);
+
+    /// <summary>
     /// Gets the current working directory.
     /// </summary>
     public string GetCurrentDirectory();
