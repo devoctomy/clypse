@@ -30,6 +30,13 @@ public class PortalBuildService(
         }
 
         var (publishOutputPath, wwwrootOutputPath) = ResolvePublishPaths(repoRoot, options.PortalBuildOutputPath);
+        
+        if (ioService.DirectoryExists(publishOutputPath))
+        {
+            logger.LogInformation("Cleaning existing output directory '{publishOutput}'.", publishOutputPath);
+            ioService.DeleteDirectory(publishOutputPath, recursive: true);
+        }
+        
         ioService.CreateDirectory(publishOutputPath);
 
         logger.LogInformation(

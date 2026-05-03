@@ -383,7 +383,7 @@ public class ClypseAwsSetupOrchestration(
         var portalBucketUrl = $"https://{options.ResourcePrefix}.{portalBucketName}.s3.{options.Region}.amazonaws.com";
         logger.LogInformation("Portal Bucket Url : {bucketUrl}", portalBucketUrl);
 
-        var portalWebsiteUrl = $"http://{options.ResourcePrefix}.{portalBucketName}.s3-website-{options.Region}.amazonaws.com";
+        var portalWebsiteUrl = $"http://{options.ResourcePrefix}.{portalBucketName}.s3-website.{options.Region}.amazonaws.com";
         logger.LogInformation("Portal Website Url : {portalWebsiteUrl}", portalWebsiteUrl);
 
         logger.LogInformation("Creating CloudFront distribution.");
