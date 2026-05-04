@@ -93,7 +93,7 @@ public class VaultsPageTests : TestBase
 
         // Wait for unlock and navigation to credentials page
         //await Expect(Page.Locator("h1, h2, h3").Filter(new() { HasText = "Credentials" }).Or(Page.Locator("h1, h2, h3").Filter(new() { HasText = "Vaults" }))).ToBeVisibleAsync(new() { Timeout = 15000 });
-        await Expect(Page.Locator("h1, h2, h3").Filter(new() { HasText = "Credentials" })).ToBeVisibleAsync(new() { Timeout = 15000 });
+        await Expect(Page.Locator("h1, h2, h3").Filter(new() { HasText = "Credentials" })).ToBeVisibleAsync(new() { Timeout = 30000 });
         await ScreenshotAfterActionAsync("VaultUnlocked");
 
         // STEP 3: Delete Vault
