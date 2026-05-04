@@ -71,6 +71,7 @@ jobs:
           --verbosity normal \
           --filter "FullyQualifiedName~UnitTests" \
           --results-directory ./TestResults/UnitTests \
+          --logger "trx" \
           -p:CollectCoverage=true \
           -p:CoverletOutputFormat="json%2copencover" \
           -p:CoverletOutput="../coverage" \
