@@ -215,6 +215,7 @@ jobs:
     - name: Run UI Tests
       env:
         PLAYWRIGHT_BROWSERS_PATH: /ms-playwright
+        CLYPSE_UITEST_PROFILE: s24ultra
         CLYPSE_UITESTS_USERNAME: ${{ secrets.CLYPSE_UITESTS_USERNAME }}
         CLYPSE_UITESTS_PASSWORD: ${{ secrets.CLYPSE_UITESTS_PASSWORD }}
       run: |
@@ -228,3 +229,10 @@ jobs:
       with:
         name: ui-test-results
         path: ./TestResults/UITests
+    
+    - name: Upload UI test screenshots
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: ui-test-screenshots-s24ultra
+        path: ./clypse.portal.UITests/bin/Release/net10.0/TestResults/Screenshots/s24ultra/

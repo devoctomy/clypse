@@ -3,6 +3,7 @@ using Microsoft.Playwright.MSTest;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Diagnostics;
 using System.Reflection;
+using System.Text.Json;
 
 namespace clypse.portal.UITests;
 
@@ -11,21 +12,70 @@ public class TestBase : PageTest
 {
     private static Process? _serverProcess;
     protected static readonly string ServerUrl = "https://localhost:7153";
-    private static readonly string ScreenshotDirectory = Path.Combine(Directory.GetCurrentDirectory(), "TestResults", "Screenshots");
+    private static DeviceProfile? _currentProfile;
+    private static string _screenshotDirectory = string.Empty;
     private int _screenshotCounter = 0;
+
+    static TestBase()
+    {
+        LoadDeviceProfile();
+    }
+
+    private static void LoadDeviceProfile()
+    {
+        // Get profile name from environment variable or use default
+        var profileName = Environment.GetEnvironmentVariable("CLYPSE_UITEST_PROFILE") ?? "s24ultra";
+        
+        var assemblyLocation = Assembly.GetExecutingAssembly().Location;
+        var testProjectDir = Path.GetDirectoryName(assemblyLocation);
+        var profilePath = Path.Combine(testProjectDir!, "Profiles", $"{profileName}.json");
+
+        if (!File.Exists(profilePath))
+        {
+            throw new FileNotFoundException($"Device profile not found: {profilePath}. Set CLYPSE_UITEST_PROFILE environment variable to specify a profile.");
+        }
+
+        var json = File.ReadAllText(profilePath);
+        _currentProfile = JsonSerializer.Deserialize<DeviceProfile>(json, new JsonSerializerOptions
+        {
+            PropertyNameCaseInsensitive = true
+        });
+
+        if (_currentProfile == null)
+        {
+            throw new InvalidOperationException($"Failed to load device profile from: {profilePath}");
+        }
+
+        // Set up screenshot directory based on profile
+        _screenshotDirectory = Path.Combine(Directory.GetCurrentDirectory(), "TestResults", "Screenshots", _currentProfile.Name);
+        
+        Console.WriteLine($"Loaded device profile: {_currentProfile.Name}");
+        Console.WriteLine($"  Physical Resolution: {_currentProfile.ViewportWidth}x{_currentProfile.ViewportHeight}");
+        Console.WriteLine($"  Device Scale Factor: {_currentProfile.DeviceScaleFactor}");
+        Console.WriteLine($"  CSS Viewport: {_currentProfile.ViewportWidth / _currentProfile.DeviceScaleFactor}x{_currentProfile.ViewportHeight / _currentProfile.DeviceScaleFactor}");
+        Console.WriteLine($"  Screenshot Directory: {_screenshotDirectory}");
+    }
 
     public override BrowserNewContextOptions ContextOptions()
     {
+        if (_currentProfile == null)
+        {
+            throw new InvalidOperationException("Device profile not loaded");
+        }
+
+        // Calculate CSS viewport from physical resolution and scale factor
+        var cssWidth = (int)(_currentProfile.ViewportWidth / _currentProfile.DeviceScaleFactor);
+        var cssHeight = (int)(_currentProfile.ViewportHeight / _currentProfile.DeviceScaleFactor);
+
         return new BrowserNewContextOptions()
         {
             IgnoreHTTPSErrors = true,
-            // Samsung S24 Ultra portrait resolution (CSS pixels with 3x DPR)
             ViewportSize = new ViewportSize
             {
-                Width = 480,
-                Height = 1040
+                Width = cssWidth,
+                Height = cssHeight
             },
-            DeviceScaleFactor = 3.0f
+            DeviceScaleFactor = _currentProfile.DeviceScaleFactor
         };
     }
 
@@ -36,7 +86,7 @@ public class TestBase : PageTest
         _screenshotCounter = 0;
         
         // Ensure screenshot directory exists
-        Directory.CreateDirectory(ScreenshotDirectory);
+        Directory.CreateDirectory(_screenshotDirectory);
     }
 
     /// <summary>
@@ -47,7 +97,7 @@ public class TestBase : PageTest
         _screenshotCounter++;
         var testName = TestContext.TestName ?? "UnknownTest";
         var fileName = $"{testName}_{_screenshotCounter:D2}_Navigation_{pageName}.png";
-        var filePath = Path.Combine(ScreenshotDirectory, fileName);
+        var filePath = Path.Combine(_screenshotDirectory, fileName);
         
         await Page.ScreenshotAsync(new() { Path = filePath, FullPage = true });
         Console.WriteLine($"Screenshot saved: {fileName}");
@@ -61,7 +111,7 @@ public class TestBase : PageTest
         _screenshotCounter++;
         var testName = TestContext.TestName ?? "UnknownTest";
         var fileName = $"{testName}_{_screenshotCounter:D2}_Action_{SanitizeFileName(actionDescription)}.png";
-        var filePath = Path.Combine(ScreenshotDirectory, fileName);
+        var filePath = Path.Combine(_screenshotDirectory, fileName);
         
         await Page.ScreenshotAsync(new() { Path = filePath, FullPage = true });
         Console.WriteLine($"Screenshot saved: {fileName}");
@@ -75,7 +125,7 @@ public class TestBase : PageTest
         _screenshotCounter++;
         var testName = TestContext.TestName ?? "UnknownTest";
         var fileName = $"{testName}_{_screenshotCounter:D2}_EndOfScenario.png";
-        var filePath = Path.Combine(ScreenshotDirectory, fileName);
+        var filePath = Path.Combine(_screenshotDirectory, fileName);
         
         await Page.ScreenshotAsync(new() { Path = filePath, FullPage = true });
         Console.WriteLine($"Screenshot saved: {fileName}");

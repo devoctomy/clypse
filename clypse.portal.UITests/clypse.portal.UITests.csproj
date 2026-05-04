@@ -19,4 +19,9 @@
   <ItemGroup>
     <ProjectReference Include="..\clypse.portal\clypse.portal.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <None Update="Profiles\**\*.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
 </Project>
