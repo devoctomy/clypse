@@ -1,0 +1,48 @@
+# Build outputs
+bin/
+obj/
+TestResults/
+coverage/
+portal-output/
+*.ncrunchsolution.user
+*.ncrunchproject.user
+
+# Node modules
+node_modules/
+clypse.portal.ClientScripts/coverage/
+
+# IDE and editor files
+.vs/
+.vscode/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Test results and coverage
+*.trx
+coverage.json
+coverage.opencover.xml
+*.lcov
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# Documentation
+Documentation/
+README.md
+LICENSE
+
+# CI/CD
+.github/
+
+# AWS and deployment
+Cloudformation/
+*.yaml
+*.yml
+
+# Other
+*.log
+*.tmp
