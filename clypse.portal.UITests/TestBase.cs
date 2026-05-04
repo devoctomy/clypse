@@ -21,6 +21,20 @@ public class TestBase : PageTest
         LoadDeviceProfile();
     }
 
+    [TestCleanup]
+    public async Task BaseTestCleanup()
+    {
+        if (TestContext.CurrentTestOutcome == UnitTestOutcome.Failed)
+        {
+            var testName = TestContext.TestName ?? "UnknownTest";
+            var fileName = $"{testName}_FAILED.png";
+            var filePath = Path.Combine(_screenshotDirectory, fileName);
+            
+            await Page.ScreenshotAsync(new() { Path = filePath, FullPage = true });
+            Console.WriteLine($"Failure screenshot saved: {fileName}");
+        }
+    }   
+
     private static void LoadDeviceProfile()
     {
         // Get profile name from environment variable or use default
