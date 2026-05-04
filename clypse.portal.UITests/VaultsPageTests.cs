@@ -68,7 +68,7 @@ public class VaultsPageTests : TestBase
         await ScreenshotAfterActionAsync("ClickedCreateVaultSubmit");
 
         // Verify the vault list container is visible
-        await Expect(Page.Locator("#vaults-list")).ToBeVisibleAsync(new() { Timeout = 60000 });
+        await Expect(Page.Locator("#vaults-list")).ToBeVisibleAsync(new() { Timeout = TestGlobals.KeyDerivationOpTimeMs }); // Wait for vault creation which includes key derivation, plus some buffer
 
         // Verify the vault card is visible
         var vaultCard = Page.Locator("#vaults-list .vault-card-responsive").Filter(new() { HasText = vaultDescription });
@@ -93,7 +93,7 @@ public class VaultsPageTests : TestBase
 
         // Wait for unlock and navigation to credentials page
         //await Expect(Page.Locator("h1, h2, h3").Filter(new() { HasText = "Credentials" }).Or(Page.Locator("h1, h2, h3").Filter(new() { HasText = "Vaults" }))).ToBeVisibleAsync(new() { Timeout = 15000 });
-        await Expect(Page.Locator("h1, h2, h3").Filter(new() { HasText = "Credentials" })).ToBeVisibleAsync(new() { Timeout = 60000 });
+        await Expect(Page.Locator("h1, h2, h3").Filter(new() { HasText = "Credentials" })).ToBeVisibleAsync(new() { Timeout = TestGlobals.KeyDerivationOpTimeMs });
         await ScreenshotAfterActionAsync("VaultUnlocked");
 
         // STEP 3: Delete Vault
@@ -102,7 +102,7 @@ public class VaultsPageTests : TestBase
         await ScreenshotAfterActionAsync("ExpandedNavigationMenuForDelete");
 
         // Click Delete Vault button in navigation (should be available now that vault is unlocked)
-        await Expect(Page.Locator("#nav-delete-vault-button")).ToBeVisibleAsync(new() { Timeout = 60000 });
+        await Expect(Page.Locator("#nav-delete-vault-button")).ToBeVisibleAsync(new() { Timeout = 500 });
         await Page.Locator("#nav-delete-vault-button").ClickAsync();
         await ScreenshotAfterActionAsync("ClickedDeleteVaultButton");
 
@@ -133,11 +133,8 @@ public class VaultsPageTests : TestBase
         await Task.Delay(2000, TestContext.CancellationTokenSource.Token);
 
         // Now check the vault card is no longer visible
-        await Expect(vaultCard).Not.ToBeVisibleAsync(new() { Timeout = 60000 });
+        await Expect(vaultCard).Not.ToBeVisibleAsync(new() { Timeout = 5000 });
 
         await ScreenshotEndOfScenarioAsync();
-
-        //var hasNoVaultsMessage = await Page.Locator("#no-vaults-found").IsVisibleAsync();
-        //Assert.IsTrue(hasNoVaultsMessage, "Should show no vaults message after deletion and refresh");
     }
 }
