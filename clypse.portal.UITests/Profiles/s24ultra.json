@@ -1,7 +1,7 @@
 {
   "Name": "s24ultra",
-  "Description": "Samsung Galaxy S24 Ultra in portrait orientation",
-  "ViewportWidth": 1440,
-  "ViewportHeight": 3120,
+  "Description": "Samsung Galaxy S24 Ultra in portrait orientation using FHD+ resolution.",
+  "ViewportWidth": 1080,
+  "ViewportHeight": 2340,
   "DeviceScaleFactor": 3.0
 }
