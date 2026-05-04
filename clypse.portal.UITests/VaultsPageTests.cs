@@ -20,6 +20,8 @@ public class VaultsPageTests : TestBase
 
         // Navigate to the login page
         await Page.GotoAsync(ServerUrl);
+
+        await Expect(Page.Locator("button[type='submit']")).ToBeVisibleAsync(new() { Timeout = 10000 });
         await ScreenshotAfterNavigationAsync("LoginPage");
 
         // Fill in the login form
@@ -90,7 +92,8 @@ public class VaultsPageTests : TestBase
         await ScreenshotAfterActionAsync("ClickedUnlockButton");
 
         // Wait for unlock and navigation to credentials page
-        await Expect(Page.Locator("h1, h2, h3").Filter(new() { HasText = "Credentials" }).Or(Page.Locator("h1, h2, h3").Filter(new() { HasText = "Vaults" }))).ToBeVisibleAsync(new() { Timeout = 15000 });
+        //await Expect(Page.Locator("h1, h2, h3").Filter(new() { HasText = "Credentials" }).Or(Page.Locator("h1, h2, h3").Filter(new() { HasText = "Vaults" }))).ToBeVisibleAsync(new() { Timeout = 15000 });
+        await Expect(Page.Locator("h1, h2, h3").Filter(new() { HasText = "Credentials" })).ToBeVisibleAsync(new() { Timeout = 15000 });
         await ScreenshotAfterActionAsync("VaultUnlocked");
 
         // STEP 3: Delete Vault
@@ -123,6 +126,7 @@ public class VaultsPageTests : TestBase
 
         // Manually click the refresh button to ensure the vault list is updated
         await Page.Locator("#nav-refresh-button").ClickAsync();
+        await Task.Delay(2000, TestContext.CancellationTokenSource.Token);
         await ScreenshotAfterActionAsync("ClickedRefreshButton");
 
         // Wait a moment for the refresh to complete

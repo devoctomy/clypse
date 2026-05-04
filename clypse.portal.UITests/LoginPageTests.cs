@@ -11,7 +11,6 @@ public class LoginPageTests : TestBase
     {
         // Navigate to the login page (root redirects to login when not authenticated)
         await Page.GotoAsync(ServerUrl);
-        await ScreenshotAfterNavigationAsync("LoginPage");
 
         // Verify page title
         await Expect(Page).ToHaveTitleAsync("Clypse Portal - Login");
@@ -51,7 +50,6 @@ public class LoginPageTests : TestBase
     public async Task ShouldShowValidationErrorsForEmptyForm()
     {
         await Page.GotoAsync(ServerUrl);
-        await ScreenshotAfterNavigationAsync("LoginPage");
 
         // Try to submit empty form
         await Page.Locator("button[type='submit']").ClickAsync();
@@ -71,14 +69,12 @@ public class LoginPageTests : TestBase
     public async Task ShouldToggleTheme()
     {
         await Page.GotoAsync(ServerUrl);
-        await ScreenshotAfterNavigationAsync("LoginPage");
 
         // Get initial theme icon
         var initialIcon = await Page.Locator("button.theme-switcher i").GetAttributeAsync("class");
         
         // Click theme switcher
         await Page.Locator("button.theme-switcher").ClickAsync();
-        await ScreenshotAfterActionAsync("ClickThemeSwitcher");
         
         // Wait a bit for the theme change
         await Task.Delay(500);
@@ -107,7 +103,6 @@ public class LoginPageTests : TestBase
 
         // Navigate to the login page
         await Page.GotoAsync(ServerUrl);
-        await ScreenshotAfterNavigationAsync("LoginPage");
 
         // Fill in the login form
         await Page.Locator("input[placeholder='Enter your username']").FillAsync(username);
@@ -127,7 +122,9 @@ public class LoginPageTests : TestBase
         
         // Additional verification: ensure we're no longer on the login page
         await Expect(Page.Locator("input[placeholder='Enter your username']")).Not.ToBeVisibleAsync();
+        await Expect(Page.Locator("#vaults-list")).ToBeVisibleAsync(new() { Timeout = 60000 });
 
+        await Task.Delay(2000); // Give time for any vaults to be listed
         await ScreenshotEndOfScenarioAsync();
     }
 }
