@@ -32,7 +32,7 @@ public class VaultsPageTests : TestBase
         await Page.Locator("button[type='submit']").Filter(new() { HasText = "Login" }).ClickAsync();
 
         // Wait for successful login and navigation to vaults page
-        await Expect(Page.Locator("h1, h2, h3").Filter(new() { HasText = "Vaults" })).ToBeVisibleAsync(new() { Timeout = 10000 });
+        await Expect(Page.Locator("h1, h2, h3").Filter(new() { HasText = "Vaults" })).ToBeVisibleAsync(new() { Timeout = TestGlobals.LoginOpTimeMs });
         await ScreenshotAfterNavigationAsync("VaultsPage");
     }
 

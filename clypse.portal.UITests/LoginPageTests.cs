@@ -1,3 +1,4 @@
+using clypse.portal.Pages;
 using Microsoft.Playwright;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -122,7 +123,7 @@ public class LoginPageTests : TestBase
         
         // Additional verification: ensure we're no longer on the login page
         await Expect(Page.Locator("input[placeholder='Enter your username']")).Not.ToBeVisibleAsync();
-        await Expect(Page.Locator("#vaults-list")).ToBeVisibleAsync(new() { Timeout = 60000 });
+        await Expect(Page.Locator("h1, h2, h3").Filter(new() { HasText = "Vaults" })).ToBeVisibleAsync(new() { Timeout = TestGlobals.LoginOpTimeMs });
 
         await Task.Delay(2000); // Give time for any vaults to be listed
         await ScreenshotEndOfScenarioAsync();
