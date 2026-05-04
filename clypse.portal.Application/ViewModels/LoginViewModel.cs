@@ -634,5 +634,4 @@ public partial class LoginViewModel : ViewModelBase
         ShowUsersList = false;
         ShowRememberMe = false;
     }
-
 }
