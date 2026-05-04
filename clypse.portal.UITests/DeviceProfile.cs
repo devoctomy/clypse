@@ -21,6 +21,11 @@ public class DeviceProfile
     public int ViewportHeight { get; set; }
 
     /// <summary>
+    /// Gets or sets the status bar height in physical pixels to be subtracted from viewport height.
+    /// </summary>
+    public int StatusBarHeight { get; set; }
+
+    /// <summary>
     /// Gets or sets the device pixel ratio (scale factor).
     /// </summary>
     public float DeviceScaleFactor { get; set; }

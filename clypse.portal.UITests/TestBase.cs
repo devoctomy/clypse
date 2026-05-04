@@ -51,8 +51,10 @@ public class TestBase : PageTest
         
         Console.WriteLine($"Loaded device profile: {_currentProfile.Name}");
         Console.WriteLine($"  Physical Resolution: {_currentProfile.ViewportWidth}x{_currentProfile.ViewportHeight}");
+        Console.WriteLine($"  Status Bar Height: {_currentProfile.StatusBarHeight}px");
         Console.WriteLine($"  Device Scale Factor: {_currentProfile.DeviceScaleFactor}");
-        Console.WriteLine($"  CSS Viewport: {_currentProfile.ViewportWidth / _currentProfile.DeviceScaleFactor}x{_currentProfile.ViewportHeight / _currentProfile.DeviceScaleFactor}");
+        var effectiveHeight = _currentProfile.ViewportHeight - _currentProfile.StatusBarHeight;
+        Console.WriteLine($"  CSS Viewport: {_currentProfile.ViewportWidth / _currentProfile.DeviceScaleFactor}x{effectiveHeight / _currentProfile.DeviceScaleFactor}");
         Console.WriteLine($"  Screenshot Directory: {_screenshotDirectory}");
     }
 
@@ -64,8 +66,10 @@ public class TestBase : PageTest
         }
 
         // Calculate CSS viewport from physical resolution and scale factor
+        // Subtract status bar height from viewport height before applying scaling
+        var effectiveHeight = _currentProfile.ViewportHeight - _currentProfile.StatusBarHeight;
         var cssWidth = (int)(_currentProfile.ViewportWidth / _currentProfile.DeviceScaleFactor);
-        var cssHeight = (int)(_currentProfile.ViewportHeight / _currentProfile.DeviceScaleFactor);
+        var cssHeight = (int)(effectiveHeight / _currentProfile.DeviceScaleFactor);
 
         return new BrowserNewContextOptions()
         {
