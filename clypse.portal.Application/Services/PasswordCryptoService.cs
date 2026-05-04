@@ -4,7 +4,8 @@ using clypse.portal.Application.Services.Interfaces;
 namespace clypse.portal.Application.Services;
 
 /// <inheritdoc/>
-public class PasswordCryptoService(ICryptoService cryptoService) : IPasswordCryptoService
+public class PasswordCryptoService(ICryptoService cryptoService)
+    : IPasswordCryptoService
 {
     private readonly ICryptoService cryptoService = cryptoService ?? throw new ArgumentNullException(nameof(cryptoService));
 

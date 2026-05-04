@@ -8,14 +8,14 @@ jobs:
   unit-tests:
     runs-on: ubuntu-latest
     container:
-      image: mcr.microsoft.com/playwright/dotnet:v1.55.0-noble
+      image: squeezybeef/clypse-ci:latest
     
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
       
     - name: Setup Node.js
-      uses: actions/setup-node@v4
+      uses: actions/setup-node@v6
       with:
         node-version: '20'
       
@@ -38,24 +38,10 @@ jobs:
         npm run test:coverage
         echo "✅ JavaScript Unit Tests completed"
       
-    - name: Install Python (required for WASM build)
-      run: |
-        apt-get update
-        apt-get install -y python3 python3-pip
-        ln -sf /usr/bin/python3 /usr/bin/python
-      
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v4
-      with:
-        dotnet-version: '10.0.x'
-        
     - name: Setup HTTPS development certificates
       run: |
         dotnet dev-certs https --clean
         dotnet dev-certs https --trust || true
-        
-    - name: Install .NET workloads
-      run: dotnet workload install wasm-tools
         
     - name: Restore dependencies
       run: dotnet restore
@@ -71,6 +57,7 @@ jobs:
           --verbosity normal \
           --filter "FullyQualifiedName~UnitTests" \
           --results-directory ./TestResults/UnitTests \
+          --logger "trx" \
           -p:CollectCoverage=true \
           -p:CoverletOutputFormat="json%2copencover" \
           -p:CoverletOutput="../coverage" \
@@ -81,7 +68,7 @@ jobs:
         echo "✅ Unit Tests completed"
       
     - name: Upload unit test results
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       if: always()
       with:
         name: unit-test-results
@@ -111,35 +98,16 @@ jobs:
     needs: unit-tests
     runs-on: ubuntu-latest
     container:
-      image: mcr.microsoft.com/playwright/dotnet:v1.55.0-noble
+      image: squeezybeef/clypse-ci:latest
     
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
       
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '20'
-      
-    - name: Install Python (required for WASM build)
-      run: |
-        apt-get update
-        apt-get install -y python3 python3-pip
-        ln -sf /usr/bin/python3 /usr/bin/python
-      
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v4
-      with:
-        dotnet-version: '10.0.x'
-        
     - name: Setup HTTPS development certificates
       run: |
         dotnet dev-certs https --clean
         dotnet dev-certs https --trust || true
-        
-    - name: Install .NET workloads
-      run: dotnet workload install wasm-tools
         
     - name: Restore dependencies
       run: dotnet restore
@@ -159,7 +127,7 @@ jobs:
         echo "✅ Integration Tests completed"
       
     - name: Upload integration test results
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       if: always()
       with:
         name: integration-test-results
@@ -169,38 +137,19 @@ jobs:
     needs: integration-tests
     runs-on: ubuntu-latest
     container:
-      image: mcr.microsoft.com/playwright/dotnet:v1.55.0-noble
+      image: squeezybeef/clypse-ci:latest
     concurrency:
       group: ui-tests-sequential
       cancel-in-progress: false
     
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
       
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '20'
-      
-    - name: Install Python (required for WASM build)
-      run: |
-        apt-get update
-        apt-get install -y python3 python3-pip
-        ln -sf /usr/bin/python3 /usr/bin/python
-      
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v4
-      with:
-        dotnet-version: '10.0.x'
-        
     - name: Setup HTTPS development certificates
       run: |
         dotnet dev-certs https --clean
         dotnet dev-certs https --trust || true
-        
-    - name: Install .NET workloads
-      run: dotnet workload install wasm-tools
         
     - name: Restore dependencies
       run: dotnet restore
@@ -215,6 +164,7 @@ jobs:
     - name: Run UI Tests
       env:
         PLAYWRIGHT_BROWSERS_PATH: /ms-playwright
+        CLYPSE_UITEST_PROFILE: s24ultra
         CLYPSE_UITESTS_USERNAME: ${{ secrets.CLYPSE_UITESTS_USERNAME }}
         CLYPSE_UITESTS_PASSWORD: ${{ secrets.CLYPSE_UITESTS_PASSWORD }}
       run: |
@@ -223,8 +173,15 @@ jobs:
         echo "✅ UI Tests completed"
       
     - name: Upload UI test results
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       if: always()
       with:
         name: ui-test-results
         path: ./TestResults/UITests
+    
+    - name: Upload UI test screenshots
+      uses: actions/upload-artifact@v7
+      if: always()
+      with:
+        name: ui-test-screenshots-s24ultra
+        path: ./clypse.portal.UITests/bin/Release/net10.0/TestResults/Screenshots/s24ultra/

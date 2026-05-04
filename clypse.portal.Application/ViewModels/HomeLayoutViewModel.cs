@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Blazing.Mvvm.ComponentModel;
 using clypse.portal.Application.Helpers;
 using clypse.portal.Application.Services.Interfaces;
@@ -5,7 +6,6 @@ using clypse.portal.Models.Aws;
 using clypse.portal.Models.Navigation;
 using clypse.portal.Models.Settings;
 using CommunityToolkit.Mvvm.Input;
-using System.Text.Json;
 
 namespace clypse.portal.Application.ViewModels;
 

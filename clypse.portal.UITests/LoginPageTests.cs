@@ -1,3 +1,4 @@
+using clypse.portal.Pages;
 using Microsoft.Playwright;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -42,6 +43,8 @@ public class LoginPageTests : TestBase
         await Expect(Page.Locator(".version-number")).ToBeVisibleAsync();
         var allVersionText = (await Page.Locator(".version-number").AllInnerTextsAsync()).ToList();
         Assert.IsTrue(allVersionText.Any(text => text.Contains(expectedVersion)), $"Expected version number '{expectedVersion}' to be displayed in the footer");
+
+        await ScreenshotEndOfScenarioAsync();
     }
 
     [TestMethod]
@@ -51,6 +54,7 @@ public class LoginPageTests : TestBase
 
         // Try to submit empty form
         await Page.Locator("button[type='submit']").ClickAsync();
+        await ScreenshotAfterActionAsync("ClickSubmitWithEmptyForm");
 
         // Check if validation errors appear (Blazor's DataAnnotationsValidator should show these)
         // Note: This might vary based on your validation setup
@@ -58,6 +62,8 @@ public class LoginPageTests : TestBase
         
         // Verify form is still visible (login hasn't proceeded)
         await Expect(Page.Locator("input[placeholder='Enter your username']")).ToBeVisibleAsync();
+
+        await ScreenshotEndOfScenarioAsync();
     }
 
     [TestMethod]
@@ -79,6 +85,8 @@ public class LoginPageTests : TestBase
         
         // Verify icon changed
         Assert.AreNotEqual(initialIcon, newIcon, "Theme icon should change when theme switcher is clicked");
+
+        await ScreenshotEndOfScenarioAsync();
     }
 
     [TestMethod]
@@ -100,9 +108,11 @@ public class LoginPageTests : TestBase
         // Fill in the login form
         await Page.Locator("input[placeholder='Enter your username']").FillAsync(username);
         await Page.Locator("input[type='password'][placeholder='Enter your password']").FillAsync(password);
+        await ScreenshotAfterActionAsync("FilledLoginForm");
 
         // Submit the form
         await Page.Locator("button[type='submit']").Filter(new() { HasText = "Login" }).ClickAsync();
+        await ScreenshotAfterActionAsync("ClickedLoginButton");
 
         // Wait for successful login and navigation away from login page
         await Task.Delay(2000); // Give time for authentication and navigation
@@ -113,5 +123,9 @@ public class LoginPageTests : TestBase
         
         // Additional verification: ensure we're no longer on the login page
         await Expect(Page.Locator("input[placeholder='Enter your username']")).Not.ToBeVisibleAsync();
+        await Expect(Page.Locator("h1, h2, h3").Filter(new() { HasText = "Vaults" })).ToBeVisibleAsync(new() { Timeout = TestGlobals.LoginOpTimeMs });
+
+        await Task.Delay(2000); // Give time for any vaults to be listed
+        await ScreenshotEndOfScenarioAsync();
     }
 }
