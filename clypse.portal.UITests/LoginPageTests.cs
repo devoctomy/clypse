@@ -11,6 +11,7 @@ public class LoginPageTests : TestBase
     {
         // Navigate to the login page (root redirects to login when not authenticated)
         await Page.GotoAsync(ServerUrl);
+        await ScreenshotAfterNavigationAsync("LoginPage");
 
         // Verify page title
         await Expect(Page).ToHaveTitleAsync("Clypse Portal - Login");
@@ -42,15 +43,19 @@ public class LoginPageTests : TestBase
         await Expect(Page.Locator(".version-number")).ToBeVisibleAsync();
         var allVersionText = (await Page.Locator(".version-number").AllInnerTextsAsync()).ToList();
         Assert.IsTrue(allVersionText.Any(text => text.Contains(expectedVersion)), $"Expected version number '{expectedVersion}' to be displayed in the footer");
+
+        await ScreenshotEndOfScenarioAsync();
     }
 
     [TestMethod]
     public async Task ShouldShowValidationErrorsForEmptyForm()
     {
         await Page.GotoAsync(ServerUrl);
+        await ScreenshotAfterNavigationAsync("LoginPage");
 
         // Try to submit empty form
         await Page.Locator("button[type='submit']").ClickAsync();
+        await ScreenshotAfterActionAsync("ClickSubmitWithEmptyForm");
 
         // Check if validation errors appear (Blazor's DataAnnotationsValidator should show these)
         // Note: This might vary based on your validation setup
@@ -58,18 +63,22 @@ public class LoginPageTests : TestBase
         
         // Verify form is still visible (login hasn't proceeded)
         await Expect(Page.Locator("input[placeholder='Enter your username']")).ToBeVisibleAsync();
+
+        await ScreenshotEndOfScenarioAsync();
     }
 
     [TestMethod]
     public async Task ShouldToggleTheme()
     {
         await Page.GotoAsync(ServerUrl);
+        await ScreenshotAfterNavigationAsync("LoginPage");
 
         // Get initial theme icon
         var initialIcon = await Page.Locator("button.theme-switcher i").GetAttributeAsync("class");
         
         // Click theme switcher
         await Page.Locator("button.theme-switcher").ClickAsync();
+        await ScreenshotAfterActionAsync("ClickThemeSwitcher");
         
         // Wait a bit for the theme change
         await Task.Delay(500);
@@ -79,6 +88,8 @@ public class LoginPageTests : TestBase
         
         // Verify icon changed
         Assert.AreNotEqual(initialIcon, newIcon, "Theme icon should change when theme switcher is clicked");
+
+        await ScreenshotEndOfScenarioAsync();
     }
 
     [TestMethod]
@@ -96,13 +107,16 @@ public class LoginPageTests : TestBase
 
         // Navigate to the login page
         await Page.GotoAsync(ServerUrl);
+        await ScreenshotAfterNavigationAsync("LoginPage");
 
         // Fill in the login form
         await Page.Locator("input[placeholder='Enter your username']").FillAsync(username);
         await Page.Locator("input[type='password'][placeholder='Enter your password']").FillAsync(password);
+        await ScreenshotAfterActionAsync("FilledLoginForm");
 
         // Submit the form
         await Page.Locator("button[type='submit']").Filter(new() { HasText = "Login" }).ClickAsync();
+        await ScreenshotAfterActionAsync("ClickedLoginButton");
 
         // Wait for successful login and navigation away from login page
         await Task.Delay(2000); // Give time for authentication and navigation
@@ -113,5 +127,7 @@ public class LoginPageTests : TestBase
         
         // Additional verification: ensure we're no longer on the login page
         await Expect(Page.Locator("input[placeholder='Enter your username']")).Not.ToBeVisibleAsync();
+
+        await ScreenshotEndOfScenarioAsync();
     }
 }

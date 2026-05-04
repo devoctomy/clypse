@@ -20,6 +20,7 @@ public class VaultsPageTests : TestBase
 
         // Navigate to the login page
         await Page.GotoAsync(ServerUrl);
+        await ScreenshotAfterNavigationAsync("LoginPage");
 
         // Fill in the login form
         await Page.Locator("input[placeholder='Enter your username']").FillAsync(username);
@@ -30,6 +31,7 @@ public class VaultsPageTests : TestBase
 
         // Wait for successful login and navigation to vaults page
         await Expect(Page.Locator("h1, h2, h3").Filter(new() { HasText = "Vaults" })).ToBeVisibleAsync(new() { Timeout = 10000 });
+        await ScreenshotAfterNavigationAsync("VaultsPage");
     }
 
     [TestMethod]
@@ -41,8 +43,13 @@ public class VaultsPageTests : TestBase
         var passphrase = "TestPassphrase123!";
 
         // STEP 1: Create Vault
+        // Expand the navigation menu (mobile viewport auto-hides it)
+        await Page.Locator(".burger-btn").ClickAsync();
+        await ScreenshotAfterActionAsync("ExpandedNavigationMenu");
+
         // Click the Create Vault button in the navigation
         await Page.Locator("#nav-create-vault-button").ClickAsync();
+        await ScreenshotAfterActionAsync("ClickedCreateVaultButton");
 
         // Wait for create vault form to be visible
         await Expect(Page.Locator("#create-vault-button")).ToBeVisibleAsync(new() { Timeout = 10000 });
@@ -52,9 +59,11 @@ public class VaultsPageTests : TestBase
         await Page.Locator("#vaultDescription").FillAsync(vaultDescription);
         await Page.Locator("#vaultPassphrase").FillAsync(passphrase);
         await Page.Locator("#vaultPassphraseConfirm").FillAsync(passphrase);
+        await ScreenshotAfterActionAsync("FilledCreateVaultForm");
 
         // Click the create button
         await Page.Locator("#create-vault-button").ClickAsync();
+        await ScreenshotAfterActionAsync("ClickedCreateVaultSubmit");
 
         // Verify the vault list container is visible
         await Expect(Page.Locator("#vaults-list")).ToBeVisibleAsync(new() { Timeout = 60000 });
@@ -62,48 +71,67 @@ public class VaultsPageTests : TestBase
         // Verify the vault card is visible
         var vaultCard = Page.Locator("#vaults-list .vault-card-responsive").Filter(new() { HasText = vaultDescription });
         await Expect(vaultCard).ToBeVisibleAsync(new() { Timeout = 5000 });
+        await ScreenshotAfterActionAsync("VaultCardCreated");
 
         // STEP 2: Unlock Vault
         // Click on the specific vault card by matching the description text we just created (unique GUID)
         await vaultCard.ClickAsync();
+        await ScreenshotAfterActionAsync("ClickedVaultCard");
 
         // Verify unlock dialog is visible
         await Expect(Page.Locator(".modal").Filter(new() { HasText = "Unlock Vault" })).ToBeVisibleAsync();
 
         // Enter the passphrase
         await Page.Locator("#passphrase").FillAsync(passphrase);
+        await ScreenshotAfterActionAsync("FilledUnlockPassphrase");
 
         // Click unlock button
         await Page.Locator("#unlock-vault-button").ClickAsync();
+        await ScreenshotAfterActionAsync("ClickedUnlockButton");
 
         // Wait for unlock and navigation to credentials page
         await Expect(Page.Locator("h1, h2, h3").Filter(new() { HasText = "Credentials" }).Or(Page.Locator("h1, h2, h3").Filter(new() { HasText = "Vaults" }))).ToBeVisibleAsync(new() { Timeout = 15000 });
+        await ScreenshotAfterActionAsync("VaultUnlocked");
 
         // STEP 3: Delete Vault
+        // Expand the navigation menu
+        await Page.Locator(".burger-btn").ClickAsync();
+        await ScreenshotAfterActionAsync("ExpandedNavigationMenuForDelete");
+
         // Click Delete Vault button in navigation (should be available now that vault is unlocked)
         await Expect(Page.Locator("#nav-delete-vault-button")).ToBeVisibleAsync(new() { Timeout = 60000 });
         await Page.Locator("#nav-delete-vault-button").ClickAsync();
+        await ScreenshotAfterActionAsync("ClickedDeleteVaultButton");
 
         // Verify delete confirmation dialog is visible
         await Expect(Page.Locator(".modal").Filter(new() { HasText = "Delete Vault" })).ToBeVisibleAsync();
 
         // Enter the vault name to confirm deletion
         await Page.Locator("#confirmName").FillAsync(vaultName);
+        await ScreenshotAfterActionAsync("FilledDeleteConfirmation");
 
         // Click the delete confirmation button
         await Page.Locator("#confirm-delete-vault-button").ClickAsync();
+        await ScreenshotAfterActionAsync("ClickedDeleteConfirmButton");
 
         // Wait for deletion to complete and return to vaults page
         await Expect(Page.Locator("h1, h2, h3").Filter(new() { HasText = "Vaults" })).ToBeVisibleAsync(new() { Timeout = 15000 });
 
+        // Expand the navigation menu
+        await Page.Locator(".burger-btn").ClickAsync();
+        await ScreenshotAfterActionAsync("ExpandedNavigationMenuForRefresh");
+
         // Manually click the refresh button to ensure the vault list is updated
         await Page.Locator("#nav-refresh-button").ClickAsync();
+        await ScreenshotAfterActionAsync("ClickedRefreshButton");
 
         // Wait a moment for the refresh to complete
         await Task.Delay(2000, TestContext.CancellationTokenSource.Token);
 
         // Now check the vault card is no longer visible
         await Expect(vaultCard).Not.ToBeVisibleAsync(new() { Timeout = 60000 });
+
+        await ScreenshotEndOfScenarioAsync();
 
         //var hasNoVaultsMessage = await Page.Locator("#no-vaults-found").IsVisibleAsync();
         //Assert.IsTrue(hasNoVaultsMessage, "Should show no vaults message after deletion and refresh");

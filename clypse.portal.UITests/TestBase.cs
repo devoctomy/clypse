@@ -11,13 +11,81 @@ public class TestBase : PageTest
 {
     private static Process? _serverProcess;
     protected static readonly string ServerUrl = "https://localhost:7153";
+    private static readonly string ScreenshotDirectory = Path.Combine(Directory.GetCurrentDirectory(), "TestResults", "Screenshots");
+    private int _screenshotCounter = 0;
 
     public override BrowserNewContextOptions ContextOptions()
     {
         return new BrowserNewContextOptions()
         {
-            IgnoreHTTPSErrors = true
+            IgnoreHTTPSErrors = true,
+            // Samsung S24 Ultra portrait resolution (CSS pixels with 3x DPR)
+            ViewportSize = new ViewportSize
+            {
+                Width = 480,
+                Height = 1040
+            },
+            DeviceScaleFactor = 3.0f
         };
+    }
+
+    [TestInitialize]
+    public void BaseTestInitialize()
+    {
+        // Reset screenshot counter for each test
+        _screenshotCounter = 0;
+        
+        // Ensure screenshot directory exists
+        Directory.CreateDirectory(ScreenshotDirectory);
+    }
+
+    /// <summary>
+    /// Takes a screenshot after navigation/page load
+    /// </summary>
+    protected async Task ScreenshotAfterNavigationAsync(string pageName)
+    {
+        _screenshotCounter++;
+        var testName = TestContext.TestName ?? "UnknownTest";
+        var fileName = $"{testName}_{_screenshotCounter:D2}_Navigation_{pageName}.png";
+        var filePath = Path.Combine(ScreenshotDirectory, fileName);
+        
+        await Page.ScreenshotAsync(new() { Path = filePath, FullPage = true });
+        Console.WriteLine($"Screenshot saved: {fileName}");
+    }
+
+    /// <summary>
+    /// Takes a screenshot after an input/control action
+    /// </summary>
+    protected async Task ScreenshotAfterActionAsync(string actionDescription)
+    {
+        _screenshotCounter++;
+        var testName = TestContext.TestName ?? "UnknownTest";
+        var fileName = $"{testName}_{_screenshotCounter:D2}_Action_{SanitizeFileName(actionDescription)}.png";
+        var filePath = Path.Combine(ScreenshotDirectory, fileName);
+        
+        await Page.ScreenshotAsync(new() { Path = filePath, FullPage = true });
+        Console.WriteLine($"Screenshot saved: {fileName}");
+    }
+
+    /// <summary>
+    /// Takes a screenshot at the end of a test scenario
+    /// </summary>
+    protected async Task ScreenshotEndOfScenarioAsync()
+    {
+        _screenshotCounter++;
+        var testName = TestContext.TestName ?? "UnknownTest";
+        var fileName = $"{testName}_{_screenshotCounter:D2}_EndOfScenario.png";
+        var filePath = Path.Combine(ScreenshotDirectory, fileName);
+        
+        await Page.ScreenshotAsync(new() { Path = filePath, FullPage = true });
+        Console.WriteLine($"Screenshot saved: {fileName}");
+    }
+
+    private static string SanitizeFileName(string fileName)
+    {
+        var invalidChars = Path.GetInvalidFileNameChars();
+        var sanitized = string.Join("_", fileName.Split(invalidChars, StringSplitOptions.RemoveEmptyEntries));
+        return sanitized.Length > 50 ? sanitized.Substring(0, 50) : sanitized;
     }
 
     private static string GetProjectPath()
