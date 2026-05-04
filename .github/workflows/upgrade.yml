@@ -18,12 +18,12 @@ jobs:
 
     steps:
     - name: Checkout source at tested commit
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
       with:
         repository: ${{ github.event.workflow_run.repository.full_name }}
         ref: ${{ github.event.workflow_run.head_sha }}
     - name: Setup Node.js
-      uses: actions/setup-node@v4
+      uses: actions/setup-node@v5
       with:
         node-version: '20'
 
@@ -33,7 +33,7 @@ jobs:
         python-version: '3.x'
 
     - name: Setup .NET
-      uses: actions/setup-dotnet@v4
+      uses: actions/setup-dotnet@v5
       with:
         dotnet-version: '10.0.x'
 
