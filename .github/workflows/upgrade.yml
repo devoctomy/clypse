@@ -14,6 +14,8 @@ jobs:
   upgrade:
     if: github.repository == 'devoctomy/clypse' && github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main' && (github.event.workflow_run.event == 'push' || github.event.workflow_run.event == 'workflow_dispatch')
     runs-on: ubuntu-latest
+    container:
+      image: squeezybeef/clypse-ci:latest
     environment: production
 
     steps:
@@ -27,23 +29,10 @@ jobs:
       with:
         node-version: '20'
 
-    - name: Setup Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: '3.x'
-
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v5
-      with:
-        dotnet-version: '10.0.x'
-
     - name: Setup HTTPS development certificates
       run: |
         dotnet dev-certs https --clean
         dotnet dev-certs https --trust || true
-
-    - name: Install .NET workloads
-      run: dotnet workload restore
 
     - name: Restore dependencies
       run: dotnet restore
