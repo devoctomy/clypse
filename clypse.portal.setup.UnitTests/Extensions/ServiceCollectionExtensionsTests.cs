@@ -194,6 +194,9 @@ public class ServiceCollectionExtensionsTests
         Environment.SetEnvironmentVariable("CLYPSE_SETUP_UNITTEST__BuildPortal", "true");
         Environment.SetEnvironmentVariable("CLYPSE_SETUP_UNITTEST__ForceUpgrade", "true");
         Environment.SetEnvironmentVariable("CLYPSE_SETUP_UNITTEST__CloudFrontDistributionId", "E1234567890ABC");
+        Environment.SetEnvironmentVariable("CLYPSE_SETUP_UNITTEST__DeployedByUser", "Bob Jovis");
+        Environment.SetEnvironmentVariable("CLYPSE_SETUP_UNITTEST__DeployedAt", "19:04 on 05/05/2025");
+        Environment.SetEnvironmentVariable("CLYPSE_SETUP_UNITTEST__DeploymentActionUrl", "http://localhost");
 
         var mockEnvService = CreateMockEnvironmentService();
 
@@ -211,6 +214,9 @@ public class ServiceCollectionExtensionsTests
             Assert.True(options.BuildPortal);
             Assert.True(options.ForceUpgrade);
             Assert.Equal("E1234567890ABC", options.CloudFrontDistributionId);
+            Assert.Equal("Bob Jovis", options.DeployedByUser);
+            Assert.Equal("19:04 on 05/05/2025", options.DeployedAt);
+            Assert.Equal("http://localhost", options.DeploymentActionUrl);
         }
         finally
         {
@@ -224,6 +230,9 @@ public class ServiceCollectionExtensionsTests
             Environment.SetEnvironmentVariable("CLYPSE_SETUP_UNITTEST__BuildPortal", null);
             Environment.SetEnvironmentVariable("CLYPSE_SETUP_UNITTEST__ForceUpgrade", null);
             Environment.SetEnvironmentVariable("CLYPSE_SETUP_UNITTEST__CloudFrontDistributionId", null);
+            Environment.SetEnvironmentVariable("CLYPSE_SETUP_UNITTEST__DeployedByUser", null);
+            Environment.SetEnvironmentVariable("CLYPSE_SETUP_UNITTEST__DeployedAt", null);
+            Environment.SetEnvironmentVariable("CLYPSE_SETUP_UNITTEST__DeploymentActionUrl", null);
         }
     }
 
