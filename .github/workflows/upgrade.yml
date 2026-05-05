@@ -6,6 +6,8 @@ on:
       - Tests
     types:
       - completed
+    branches:
+      - main
 
 permissions:
   contents: read
@@ -37,6 +39,10 @@ jobs:
     - name: Restore dependencies
       run: dotnet restore
 
+    - name: Capture deployment timestamp
+      id: timestamp
+      run: echo "current_time=$(date -u +"%Y-%m-%dT%H:%M:%SZ")" >> $GITHUB_OUTPUT
+
     - name: Run upgrade
       run: dotnet run --project clypse.portal.setup/clypse.portal.setup.csproj
       env:
@@ -50,6 +56,9 @@ jobs:
         CLYPSE_SETUP__EnableUpgradeMode: true
         CLYPSE_SETUP__BuildPortal: true
         CLYPSE_SETUP__ForceUpgrade: true
+        CLYPSE_SETUP__DeployedByUser: ${{ github.actor }}
+        CLYPSE_SETUP__DeployedAt: ${{ steps.timestamp.outputs.current_time }}
+        CLYPSE_SETUP__DeploymentActionUrl: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
 
     - name: Upgrade summary
       run: |

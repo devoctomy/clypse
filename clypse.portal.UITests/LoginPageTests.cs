@@ -10,7 +10,7 @@ public class LoginPageTests : TestBase
     [TestMethod]
     public async Task ShouldDisplayLoginPageElements()
     {
-        // Navigate to the login page (root redirects to login when not authenticated)
+        // Navigate to root — the app redirects to login when not authenticated
         await Page.GotoAsync(ServerUrl);
 
         // Verify page title
@@ -85,6 +85,40 @@ public class LoginPageTests : TestBase
         
         // Verify icon changed
         Assert.AreNotEqual(initialIcon, newIcon, "Theme icon should change when theme switcher is clicked");
+
+        await ScreenshotEndOfScenarioAsync();
+    }
+
+    [TestMethod]
+    public async Task ShouldShowDeploymentMetadataInVersionHistoryDialog()
+    {
+        // Navigate to root — the app redirects to login when not authenticated
+        await Page.GotoAsync(ServerUrl);
+
+        // Click the version number in the footer to open the version history dialog
+        await Page.Locator(".version-number").ClickAsync();
+        await ScreenshotAfterActionAsync("ClickedVersionNumber");
+
+        // Wait for the changes dialog to appear
+        await Expect(Page.Locator(".changes-dialog")).ToBeVisibleAsync();
+        await ScreenshotAfterActionAsync("VersionHistoryDialogOpen");
+
+        // Verify the "Current Deployment" section header is visible
+        await Expect(Page.Locator(".current-deployment")).ToBeVisibleAsync();
+
+        // Verify deployed by user is shown with link to GitHub profile
+        var deployedByLink = Page.Locator(".current-deployment a[href='https://github.com/NickDevoctomy']");
+        await Expect(deployedByLink).ToBeVisibleAsync();
+        var linkText = await deployedByLink.InnerTextAsync();
+        Assert.IsTrue(linkText.Contains("NickDevoctomy"), $"Expected link text to contain 'NickDevoctomy', but got '{linkText}'");
+
+        // Verify deployed at is shown
+        var deployedAtItem = Page.Locator(".current-deployment .metadata-item").Filter(new() { HasText = "Deployed at: Unknown" });
+        await Expect(deployedAtItem).ToBeVisibleAsync();
+
+        // Verify deployment action URL link is shown
+        var deploymentActionLink = Page.Locator(".current-deployment a[href='https://github.com/devoctomy/clypse']");
+        await Expect(deploymentActionLink).ToBeVisibleAsync();
 
         await ScreenshotEndOfScenarioAsync();
     }

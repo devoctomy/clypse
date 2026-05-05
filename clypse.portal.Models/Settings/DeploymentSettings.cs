@@ -1,11 +1,11 @@
-﻿using System.Text.RegularExpressions;
+using System.Text.RegularExpressions;
 
-namespace clypse.portal.Models.Changes;
+namespace clypse.portal.Models.Settings;
 
 /// <summary>
-/// Represents a single version entry in the change log.
+/// Represents optional deployment metadata for the current portal deployment.
 /// </summary>
-public class VersionEntry
+public class DeploymentSettings
 {
     // GitHub usernames: alphanumeric and hyphens only, cannot start/end with hyphen, max 39 chars
     private static readonly Regex GitHubUsernameRegex = new(
@@ -13,18 +13,8 @@ public class VersionEntry
         RegexOptions.Compiled);
 
     /// <summary>
-    /// Gets or sets the version number.
-    /// </summary>
-    public string Version { get; set; } = string.Empty;
-
-    /// <summary>
-    /// Gets or sets the list of changes for this version.
-    /// </summary>
-    public List<ChangeEntry> Changes { get; set; } = [];
-
-    /// <summary>
     /// Gets or sets the GitHub username of the user who deployed this build.
-    /// Optional field. If provided, can be used to link to the user's GitHub profile.
+    /// Optional field. When present, links to the user's GitHub profile.
     /// </summary>
     public string? DeployedBy { get; set; }
 
@@ -39,6 +29,14 @@ public class VersionEntry
     /// Optional field.
     /// </summary>
     public string? DeploymentActionUrl { get; set; }
+
+    /// <summary>
+    /// Gets a value indicating whether any deployment metadata is available.
+    /// </summary>
+    public bool HasAnyData =>
+        !string.IsNullOrWhiteSpace(DeployedBy) ||
+        !string.IsNullOrWhiteSpace(DeployedAt) ||
+        !string.IsNullOrWhiteSpace(DeploymentActionUrl);
 
     /// <summary>
     /// Gets the validated GitHub profile URL for the deploying user, or null if the username

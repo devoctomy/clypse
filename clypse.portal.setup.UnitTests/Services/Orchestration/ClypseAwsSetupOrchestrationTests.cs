@@ -518,6 +518,9 @@ public class ClypseAwsSetupOrchestrationTests
                 It.IsAny<string>(),
                 It.IsAny<string>(),
                 It.IsAny<string>(),
+                It.IsAny<string?>(),
+                It.IsAny<string?>(),
+                It.IsAny<string?>(),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(new MemoryStream());
 
@@ -594,6 +597,9 @@ public class ClypseAwsSetupOrchestrationTests
                 It.IsAny<string>(),
                 It.IsAny<string>(),
                 It.IsAny<string>(),
+                It.IsAny<string?>(),
+                It.IsAny<string?>(),
+                It.IsAny<string?>(),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(new MemoryStream());
 
@@ -674,6 +680,9 @@ public class ClypseAwsSetupOrchestrationTests
                 It.IsAny<string>(),
                 It.IsAny<string>(),
                 It.IsAny<string>(),
+                It.IsAny<string?>(),
+                It.IsAny<string?>(),
+                It.IsAny<string?>(),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(new MemoryStream());
 
@@ -775,6 +784,9 @@ public class ClypseAwsSetupOrchestrationTests
                 It.IsAny<string>(),
                 It.IsAny<string>(),
                 It.IsAny<string>(),
+                It.IsAny<string?>(),
+                It.IsAny<string?>(),
+                It.IsAny<string?>(),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(new MemoryStream());
 
@@ -866,6 +878,9 @@ public class ClypseAwsSetupOrchestrationTests
                 It.IsAny<string>(),
                 It.IsAny<string>(),
                 It.IsAny<string>(),
+                It.IsAny<string?>(),
+                It.IsAny<string?>(),
+                It.IsAny<string?>(),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(new MemoryStream());
 

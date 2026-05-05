@@ -1,4 +1,5 @@
 using clypse.portal.Application.ViewModels;
+using clypse.portal.Models.Settings;
 using Microsoft.Extensions.Logging;
 using Moq;
 using System.Net;
@@ -9,10 +10,12 @@ namespace clypse.portal.Application.UnitTests.ViewModels;
 public class ChangesDialogViewModelTests
 {
     private readonly Mock<ILogger<ChangesDialogViewModel>> mockLogger;
+    private readonly AppSettings defaultAppSettings;
 
     public ChangesDialogViewModelTests()
     {
         this.mockLogger = new Mock<ILogger<ChangesDialogViewModel>>();
+        this.defaultAppSettings = new AppSettings();
     }
 
     private static HttpClient CreateHttpClientWithResponse(
@@ -33,10 +36,11 @@ public class ChangesDialogViewModelTests
         return new HttpClient(handler.Object) { BaseAddress = new Uri("http://localhost/") };
     }
 
-    private ChangesDialogViewModel CreateSut(HttpClient? httpClient = null)
+    private ChangesDialogViewModel CreateSut(HttpClient? httpClient = null, AppSettings? appSettings = null)
     {
         httpClient ??= CreateHttpClientWithResponse("{}");
-        return new ChangesDialogViewModel(httpClient, this.mockLogger.Object);
+        appSettings ??= this.defaultAppSettings;
+        return new ChangesDialogViewModel(httpClient, this.mockLogger.Object, appSettings);
     }
 
     [Fact]
@@ -129,5 +133,61 @@ public class ChangesDialogViewModelTests
 
         // Assert
         Assert.True(called);
+    }
+
+    [Fact]
+    public void GivenAppSettingsWithDeployment_WhenConstructed_ThenAppSettingsExposed()
+    {
+        // Arrange
+        var appSettings = new AppSettings
+        {
+            Deployment = new DeploymentSettings
+            {
+                DeployedBy = "testuser",
+                DeployedAt = "2026-05-05T07:00:00Z",
+                DeploymentActionUrl = "https://github.com/test/repo/actions/runs/123"
+            }
+        };
+        var sut = this.CreateSut(appSettings: appSettings);
+
+        // Assert
+        Assert.NotNull(sut.AppSettings);
+        Assert.NotNull(sut.AppSettings.Deployment);
+        Assert.Equal("testuser", sut.AppSettings.Deployment.DeployedBy);
+        Assert.Equal("2026-05-05T07:00:00Z", sut.AppSettings.Deployment.DeployedAt);
+        Assert.Equal("https://github.com/test/repo/actions/runs/123", sut.AppSettings.Deployment.DeploymentActionUrl);
+        Assert.True(sut.AppSettings.Deployment.HasAnyData);
+    }
+
+    [Fact]
+    public void GivenAppSettingsWithoutDeployment_WhenConstructed_ThenDeploymentIsNull()
+    {
+        // Arrange
+        var appSettings = new AppSettings();
+        var sut = this.CreateSut(appSettings: appSettings);
+
+        // Assert
+        Assert.NotNull(sut.AppSettings);
+        Assert.Null(sut.AppSettings.Deployment);
+    }
+
+    [Fact]
+    public void GivenDeploymentSettingsWithNoData_WhenHasAnyDataChecked_ThenReturnsFalse()
+    {
+        // Arrange
+        var deployment = new DeploymentSettings();
+
+        // Assert
+        Assert.False(deployment.HasAnyData);
+    }
+
+    [Fact]
+    public void GivenDeploymentSettingsWithDeployedByOnly_WhenHasAnyDataChecked_ThenReturnsTrue()
+    {
+        // Arrange
+        var deployment = new DeploymentSettings { DeployedBy = "testuser" };
+
+        // Assert
+        Assert.True(deployment.HasAnyData);
     }
 }

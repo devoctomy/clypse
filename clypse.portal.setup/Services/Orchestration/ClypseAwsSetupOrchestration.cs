@@ -634,6 +634,11 @@ public class ClypseAwsSetupOrchestration(
                         throw new Exception("identityPoolId required when reconfiguring portal settings without existing data.");
                     }
 
+                    // Get deployment metadata from options
+                    var deployedBy = !string.IsNullOrWhiteSpace(options.DeployedByUser) ? options.DeployedByUser : null;
+                    var deployedAt = !string.IsNullOrWhiteSpace(options.DeployedAt) ? options.DeployedAt : null;
+                    var deploymentActionUrl = !string.IsNullOrWhiteSpace(options.DeploymentActionUrl) ? options.DeploymentActionUrl : null;
+
                     configStream = await portalConfigService.ConfigureAsync(
                         "Data/appsettings.json",
                         dataBucketNameWithPrefix,
@@ -642,6 +647,9 @@ public class ClypseAwsSetupOrchestration(
                         userPoolClientId,
                         options.Region,
                         identityPoolId,
+                        deployedBy,
+                        deployedAt,
+                        deploymentActionUrl,
                         cancellationToken);
                 }
 

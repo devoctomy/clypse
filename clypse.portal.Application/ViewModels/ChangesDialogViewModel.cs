@@ -2,6 +2,7 @@ using System.Text.Json;
 using Blazing.Mvvm.ComponentModel;
 using clypse.portal.Application.Helpers;
 using clypse.portal.Models.Changes;
+using clypse.portal.Models.Settings;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.Logging;
 
@@ -19,6 +20,7 @@ public partial class ChangesDialogViewModel : ViewModelBase
 
     private readonly HttpClient httpClient;
     private readonly ILogger<ChangesDialogViewModel> logger;
+    private readonly AppSettings appSettings;
 
     private bool isLoading;
     private bool isUpdating;
@@ -30,10 +32,12 @@ public partial class ChangesDialogViewModel : ViewModelBase
     /// </summary>
     /// <param name="httpClient">The HTTP client used to fetch the changelog.</param>
     /// <param name="logger">The logger instance.</param>
-    public ChangesDialogViewModel(HttpClient httpClient, ILogger<ChangesDialogViewModel> logger)
+    /// <param name="appSettings">The application settings containing optional deployment metadata.</param>
+    public ChangesDialogViewModel(HttpClient httpClient, ILogger<ChangesDialogViewModel> logger, AppSettings appSettings)
     {
         this.httpClient = ValidationHelpers.VerifiedAssignent(httpClient);
         this.logger = ValidationHelpers.VerifiedAssignent(logger);
+        this.appSettings = ValidationHelpers.VerifiedAssignent(appSettings);
     }
 
     /// <summary>Gets a value indicating whether the changelog is loading.</summary>
@@ -47,6 +51,9 @@ public partial class ChangesDialogViewModel : ViewModelBase
 
     /// <summary>Gets the loaded changelog.</summary>
     public ChangeLog? ChangeLog { get => changeLog; private set => SetProperty(ref changeLog, value); }
+
+    /// <summary>Gets the application settings, including optional deployment metadata.</summary>
+    public AppSettings AppSettings => appSettings;
 
     /// <summary>Gets or sets the callback invoked when the dialog should close.</summary>
     public Func<Task>? OnCloseCallback { get; set; }

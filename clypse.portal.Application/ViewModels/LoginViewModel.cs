@@ -27,6 +27,7 @@ public partial class LoginViewModel : ViewModelBase
 
     private bool isLoading;
     private string? errorMessage;
+    private bool initializationFailed;
     private string currentTheme = "light";
     private string themeIcon = "bi-moon";
     private List<SavedUser> savedUsers = [];
@@ -87,6 +88,9 @@ public partial class LoginViewModel : ViewModelBase
 
     /// <summary>Gets or sets the error message to display.</summary>
     public string? ErrorMessage { get => errorMessage; set => SetProperty(ref errorMessage, value); }
+
+    /// <summary>Gets a value indicating whether the authentication service failed to initialise on startup.</summary>
+    public bool InitializationFailed { get => initializationFailed; private set => SetProperty(ref initializationFailed, value); }
 
     /// <summary>Gets or sets the current theme name.</summary>
     public string CurrentTheme { get => currentTheme; set => SetProperty(ref currentTheme, value); }
@@ -150,11 +154,20 @@ public partial class LoginViewModel : ViewModelBase
     {
         if (firstRender)
         {
-            await authService.Initialize();
+            try
+            {
+                await authService.Initialize();
+            }
+            catch (Exception)
+            {
+                InitializationFailed = true;
+                ErrorMessage = "Initialisation to Cognito failed, please check application settings.";
+            }
+
             await InitializeThemeAsync();
             await LoadSavedUsersAsync();
 
-            if (await authService.CheckAuthentication())
+            if (!InitializationFailed && await authService.CheckAuthentication())
             {
                 navigationService.NavigateTo("/");
             }

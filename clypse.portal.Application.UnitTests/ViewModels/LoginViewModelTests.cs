@@ -191,6 +191,40 @@ public class LoginViewModelTests
         this.mockAuthService.Verify(s => s.Initialize(), Times.Never);
     }
 
+    [Fact]
+    public async Task GivenInitializeThrows_WhenOnAfterRenderAsync_ThenInitializationFailedIsTrueAndErrorMessageIsSet()
+    {
+        // Arrange
+        var sut = CreateSut();
+        this.mockAuthService
+            .Setup(s => s.Initialize())
+            .ThrowsAsync(new Exception("Cognito SDK unavailable"));
+
+        // Act
+        await sut.OnAfterRenderAsync(firstRender: true);
+
+        // Assert
+        Assert.True(sut.InitializationFailed);
+        Assert.NotNull(sut.ErrorMessage);
+        Assert.Contains("Cognito", sut.ErrorMessage);
+    }
+
+    [Fact]
+    public async Task GivenInitializeThrows_WhenOnAfterRenderAsync_ThenCheckAuthenticationIsNotCalled()
+    {
+        // Arrange
+        var sut = CreateSut();
+        this.mockAuthService
+            .Setup(s => s.Initialize())
+            .ThrowsAsync(new Exception("Cognito SDK unavailable"));
+
+        // Act
+        await sut.OnAfterRenderAsync(firstRender: true);
+
+        // Assert
+        this.mockAuthService.Verify(s => s.CheckAuthentication(), Times.Never);
+    }
+
     // --- ToggleThemeAsync ---
 
     [Fact]
