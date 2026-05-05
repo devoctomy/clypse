@@ -33,7 +33,13 @@
                     </div>
                 </div>
                 <div class="card-body">
-                    @if (ViewModel.ShowUsersList && ViewModel.SavedUsers.Any())
+                    @if (ViewModel.InitializationFailed)
+                    {
+                        <div class="alert alert-danger mt-3 init-failure-error" role="alert">
+                            @ViewModel.ErrorMessage
+                        </div>
+                    }
+                    else if (ViewModel.ShowUsersList && ViewModel.SavedUsers.Any())
                     {
                         <!-- Saved Users List -->
                         <div class="mb-3">

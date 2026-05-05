@@ -179,6 +179,14 @@ public class TestBase : PageTest
         return projectPath;
     }
 
+    protected static string GetAppsettingsJsonPath()
+    {
+        var assemblyLocation = Assembly.GetExecutingAssembly().Location;
+        var testProjectDir = Path.GetDirectoryName(assemblyLocation);
+        var solutionRoot = (Directory.GetParent(testProjectDir!)?.Parent?.Parent?.Parent?.FullName) ?? throw new DirectoryNotFoundException("Could not locate solution root directory");
+        return Path.Combine(solutionRoot, "clypse.portal", "wwwroot", "appsettings.json");
+    }
+
     [AssemblyInitialize]
     public static async Task AssemblyInitialize(TestContext context)
     {
