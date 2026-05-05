@@ -92,8 +92,8 @@ public class LoginPageTests : TestBase
     [TestMethod]
     public async Task ShouldShowDeploymentMetadataInVersionHistoryDialog()
     {
-        // Navigate to the login page (version footer is part of MainLayout)
-        await Page.GotoAsync(ServerUrl);
+        // Navigate directly to the login page (root URL can render HomeLayout which lacks the version footer)
+        await Page.GotoAsync($"{ServerUrl}/login");
 
         // Click the version number in the footer to open the version history dialog
         await Page.Locator(".version-number").ClickAsync();
