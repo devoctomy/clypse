@@ -150,7 +150,17 @@ public partial class LoginViewModel : ViewModelBase
     {
         if (firstRender)
         {
-            await authService.Initialize();
+            try
+            {
+                await authService.Initialize();
+            }
+            catch (Exception)
+            {
+                // Auth service initialisation can fail when external dependencies (e.g. the
+                // AWS SDK) are unavailable.  The page remains usable; login attempts will
+                // surface their own errors at that point.
+            }
+
             await InitializeThemeAsync();
             await LoadSavedUsersAsync();
 
