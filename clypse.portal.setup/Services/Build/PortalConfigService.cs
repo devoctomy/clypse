@@ -17,6 +17,9 @@ public class PortalConfigService(
         string cognitoUserPoolClientId,
         string cognitoRegion,
         string cognitoIdentityPoolId,
+        string? deployedBy = null,
+        string? deployedAt = null,
+        string? deploymentActionUrl = null,
         CancellationToken cancellationToken = default)
     {
         var templateRaw = await ioService.ReadAllTextAsync(templatePath, cancellationToken);
@@ -30,6 +33,20 @@ public class PortalConfigService(
         templateJson["AwsCognito"]!["UserPoolClientId"] = cognitoUserPoolClientId;
         templateJson["AwsCognito"]!["Region"] = cognitoRegion;
         templateJson["AwsCognito"]!["IdentityPoolId"] = cognitoIdentityPoolId;
+
+        // Set deployment metadata if provided
+        if (!string.IsNullOrWhiteSpace(deployedBy))
+        {
+            templateJson["DeploymentMetadata"]!["DeployedBy"] = deployedBy;
+        }
+        if (!string.IsNullOrWhiteSpace(deployedAt))
+        {
+            templateJson["DeploymentMetadata"]!["DeployedAt"] = deployedAt;
+        }
+        if (!string.IsNullOrWhiteSpace(deploymentActionUrl))
+        {
+            templateJson["DeploymentMetadata"]!["DeploymentActionUrl"] = deploymentActionUrl;
+        }
 
         var outputStream = new MemoryStream();
         await using var outputJsonWriter = new Utf8JsonWriter(outputStream, new JsonWriterOptions

@@ -86,6 +86,24 @@ public class SetupOptions
     public bool UnitTestMode { get; set; }
 
     /// <summary>
+    /// Gets or sets the GitHub username of the user who deployed the build.
+    /// Optional field used to populate deployment metadata in the version history.
+    /// </summary>
+    public string DeployedByUser { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Gets or sets the date and time when the build was deployed.
+    /// Optional field used to populate deployment metadata in the version history.
+    /// </summary>
+    public string DeployedAt { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Gets or sets the URL to the GitHub Actions workflow run that deployed the build.
+    /// Optional field used to populate deployment metadata in the version history.
+    /// </summary>
+    public string DeploymentActionUrl { get; set; } = string.Empty;
+
+    /// <summary>
     /// Determines whether the options contain the required values.
     /// </summary>
     /// <returns><see langword="true"/> when required values are present; otherwise, <see langword="false"/>.</returns>

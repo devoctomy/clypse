@@ -15,6 +15,9 @@ public interface IPortalConfigService
     /// <param name="cognitoUserPoolClientId">Cognito user pool client identifier.</param>
     /// <param name="cognitoRegion">AWS region for Cognito resources.</param>
     /// <param name="cognitoIdentityPoolId">Cognito identity pool identifier.</param>
+    /// <param name="deployedBy">Optional GitHub username of the user who deployed the build.</param>
+    /// <param name="deployedAt">Optional date and time when the build was deployed.</param>
+    /// <param name="deploymentActionUrl">Optional URL to the GitHub Actions workflow run.</param>
     /// <param name="cancellationToken">Token to cancel the operation.</param>
     /// <returns>A memory stream containing the configured JSON content.</returns>
     public Task<MemoryStream> ConfigureAsync(
@@ -25,5 +28,8 @@ public interface IPortalConfigService
         string cognitoUserPoolClientId,
         string cognitoRegion,
         string cognitoIdentityPoolId,
+        string? deployedBy = null,
+        string? deployedAt = null,
+        string? deploymentActionUrl = null,
         CancellationToken cancellationToken = default);
 }
