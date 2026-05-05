@@ -30,7 +30,7 @@ public class TestBase : PageTest
             var fileName = $"{testName}_FAILED.png";
             var filePath = Path.Combine(_screenshotDirectory, fileName);
             
-            await Page.ScreenshotAsync(new() { Path = filePath, FullPage = true });
+            await Page.ScreenshotAsync(new() { Path = filePath, FullPage = false });
             Console.WriteLine($"Failure screenshot saved: {fileName}");
         }
     }   
@@ -122,7 +122,9 @@ public class TestBase : PageTest
     }
 
     /// <summary>
-    /// Takes a screenshot after an input/control action
+    /// Takes a screenshot after an input/control action.
+    /// Uses viewport-only capture (FullPage = false) so that fixed-position overlays
+    /// such as modals and dialogs are correctly included in the screenshot.
     /// </summary>
     protected async Task ScreenshotAfterActionAsync(string actionDescription)
     {
@@ -131,12 +133,14 @@ public class TestBase : PageTest
         var fileName = $"{testName}_{_screenshotCounter:D2}_Action_{SanitizeFileName(actionDescription)}.png";
         var filePath = Path.Combine(_screenshotDirectory, fileName);
         
-        await Page.ScreenshotAsync(new() { Path = filePath, FullPage = true });
+        await Page.ScreenshotAsync(new() { Path = filePath, FullPage = false });
         Console.WriteLine($"Screenshot saved: {fileName}");
     }
 
     /// <summary>
-    /// Takes a screenshot at the end of a test scenario
+    /// Takes a screenshot at the end of a test scenario.
+    /// Uses viewport-only capture (FullPage = false) so that fixed-position overlays
+    /// such as modals and dialogs are correctly included in the screenshot.
     /// </summary>
     protected async Task ScreenshotEndOfScenarioAsync()
     {
@@ -145,7 +149,7 @@ public class TestBase : PageTest
         var fileName = $"{testName}_{_screenshotCounter:D2}_EndOfScenario.png";
         var filePath = Path.Combine(_screenshotDirectory, fileName);
         
-        await Page.ScreenshotAsync(new() { Path = filePath, FullPage = true });
+        await Page.ScreenshotAsync(new() { Path = filePath, FullPage = false });
         Console.WriteLine($"Screenshot saved: {fileName}");
     }
 
