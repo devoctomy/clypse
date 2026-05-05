@@ -255,23 +255,15 @@ public static class ServiceCollectionExtensions
             options.ForceUpgrade = bool.TryParse(forceUpgradeValue, out var forceUpgrade) && forceUpgrade;
         }
 
-        var deployedByUserValue = GetFromEnvironmentIfProcessEnvVarNotPresent("DeployedByUser", environmentService);
-        if(deployedByUserValue != null)
-        {
-            options.DeployedByUser = deployedByUserValue;
-        }
-
-        var deployedAtValue = GetFromEnvironmentIfProcessEnvVarNotPresent("DeployedAt", environmentService);
-        if(deployedAtValue != null)
-        {
-            options.DeployedAt = deployedAtValue;
-        }
-
-        var deploymentActionUrlValue = GetFromEnvironmentIfProcessEnvVarNotPresent("DeploymentActionUrl", environmentService);
-        if(deploymentActionUrlValue != null)
-        {
-            options.DeploymentActionUrl = deploymentActionUrlValue;
-        }              
+        options.DeployedByUser = PreferExisting(
+            options.DeployedByUser,
+            environmentService.GetEnvironmentVariable("CLYPSE_SETUP__DeployedByUser", EnvironmentVariableTarget.User));
+        options.DeployedAt = PreferExisting(
+            options.DeployedAt,
+            environmentService.GetEnvironmentVariable("CLYPSE_SETUP__DeployedAt", EnvironmentVariableTarget.User));
+        options.DeploymentActionUrl = PreferExisting(
+            options.DeploymentActionUrl,
+            environmentService.GetEnvironmentVariable("CLYPSE_SETUP__DeploymentActionUrl", EnvironmentVariableTarget.User));
     }
 
     private static string? GetFromEnvironmentIfProcessEnvVarNotPresent(string environmentVariableName, IEnvironmentService environmentService)
