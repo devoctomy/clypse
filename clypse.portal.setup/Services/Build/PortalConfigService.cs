@@ -34,18 +34,18 @@ public class PortalConfigService(
         templateJson["AwsCognito"]!["Region"] = cognitoRegion;
         templateJson["AwsCognito"]!["IdentityPoolId"] = cognitoIdentityPoolId;
 
-        // Set deployment metadata if provided
+        // Set deployment metadata if provided, nested under AppSettings.Deployment
         if (!string.IsNullOrWhiteSpace(deployedBy))
         {
-            templateJson["DeploymentMetadata"]!["DeployedBy"] = deployedBy;
+            templateJson["AppSettings"]!["Deployment"]!["DeployedBy"] = deployedBy;
         }
         if (!string.IsNullOrWhiteSpace(deployedAt))
         {
-            templateJson["DeploymentMetadata"]!["DeployedAt"] = deployedAt;
+            templateJson["AppSettings"]!["Deployment"]!["DeployedAt"] = deployedAt;
         }
         if (!string.IsNullOrWhiteSpace(deploymentActionUrl))
         {
-            templateJson["DeploymentMetadata"]!["DeploymentActionUrl"] = deploymentActionUrl;
+            templateJson["AppSettings"]!["Deployment"]!["DeploymentActionUrl"] = deploymentActionUrl;
         }
 
         var outputStream = new MemoryStream();

@@ -34,4 +34,10 @@ public class AppSettings
     /// Gets or sets the list of memorable password templates.
     /// </summary>
     public List<MemorablePasswordTemplateItem> MemorablePasswordTemplates { get; set; } = [];
+
+    /// <summary>
+    /// Gets or sets optional deployment metadata for the current portal deployment.
+    /// When not configured, the deployment section is hidden in the version history dialog.
+    /// </summary>
+    public DeploymentSettings? Deployment { get; set; }
 }

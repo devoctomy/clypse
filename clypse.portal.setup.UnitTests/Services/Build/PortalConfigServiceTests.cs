@@ -27,10 +27,12 @@ public class PortalConfigServiceTests
                 "Region": "placeholder-cognito-region",
                 "IdentityPoolId": "placeholder-identity-pool-id"
               },
-              "DeploymentMetadata": {
-                "DeployedBy": "",
-                "DeployedAt": "",
-                "DeploymentActionUrl": ""
+              "AppSettings": {
+                "Deployment": {
+                  "DeployedBy": "",
+                  "DeployedAt": "",
+                  "DeploymentActionUrl": ""
+                }
               }
             }
             """;
@@ -157,10 +159,12 @@ public class PortalConfigServiceTests
                 "Region": "placeholder-cognito-region",
                 "IdentityPoolId": "placeholder-identity-pool-id"
               },
-              "DeploymentMetadata": {
-                "DeployedBy": "",
-                "DeployedAt": "",
-                "DeploymentActionUrl": ""
+              "AppSettings": {
+                "Deployment": {
+                  "DeployedBy": "",
+                  "DeployedAt": "",
+                  "DeploymentActionUrl": ""
+                }
               }
             }
             """;
@@ -212,10 +216,12 @@ public class PortalConfigServiceTests
                 "Region": "placeholder-cognito-region",
                 "IdentityPoolId": "placeholder-identity-pool-id"
               },
-              "DeploymentMetadata": {
-                "DeployedBy": "",
-                "DeployedAt": "",
-                "DeploymentActionUrl": ""
+              "AppSettings": {
+                "Deployment": {
+                  "DeployedBy": "",
+                  "DeployedAt": "",
+                  "DeploymentActionUrl": ""
+                }
               }
             }
             """;
@@ -259,10 +265,12 @@ public class PortalConfigServiceTests
                 "Region": "placeholder-cognito-region",
                 "IdentityPoolId": "placeholder-identity-pool-id"
               },
-              "DeploymentMetadata": {
-                "DeployedBy": "",
-                "DeployedAt": "",
-                "DeploymentActionUrl": ""
+              "AppSettings": {
+                "Deployment": {
+                  "DeployedBy": "",
+                  "DeployedAt": "",
+                  "DeploymentActionUrl": ""
+                }
               }
             }
             """;
@@ -316,10 +324,12 @@ public class PortalConfigServiceTests
                 "Region": "placeholder-cognito-region",
                 "IdentityPoolId": "placeholder-identity-pool-id"
               },
-              "DeploymentMetadata": {
-                "DeployedBy": "",
-                "DeployedAt": "",
-                "DeploymentActionUrl": ""
+              "AppSettings": {
+                "Deployment": {
+                  "DeployedBy": "",
+                  "DeployedAt": "",
+                  "DeploymentActionUrl": ""
+                }
               }
             }
             """;
@@ -351,9 +361,9 @@ public class PortalConfigServiceTests
         result.Seek(0, SeekOrigin.Begin);
         var resultJson = await JsonDocument.ParseAsync(result);
         
-        Assert.Equal(deployedBy, resultJson.RootElement.GetProperty("DeploymentMetadata").GetProperty("DeployedBy").GetString());
-        Assert.Equal(deployedAt, resultJson.RootElement.GetProperty("DeploymentMetadata").GetProperty("DeployedAt").GetString());
-        Assert.Equal(deploymentActionUrl, resultJson.RootElement.GetProperty("DeploymentMetadata").GetProperty("DeploymentActionUrl").GetString());
+        Assert.Equal(deployedBy, resultJson.RootElement.GetProperty("AppSettings").GetProperty("Deployment").GetProperty("DeployedBy").GetString());
+        Assert.Equal(deployedAt, resultJson.RootElement.GetProperty("AppSettings").GetProperty("Deployment").GetProperty("DeployedAt").GetString());
+        Assert.Equal(deploymentActionUrl, resultJson.RootElement.GetProperty("AppSettings").GetProperty("Deployment").GetProperty("DeploymentActionUrl").GetString());
     }
 
     [Fact]
@@ -375,10 +385,12 @@ public class PortalConfigServiceTests
                 "Region": "placeholder-cognito-region",
                 "IdentityPoolId": "placeholder-identity-pool-id"
               },
-              "DeploymentMetadata": {
-                "DeployedBy": "",
-                "DeployedAt": "",
-                "DeploymentActionUrl": ""
+              "AppSettings": {
+                "Deployment": {
+                  "DeployedBy": "",
+                  "DeployedAt": "",
+                  "DeploymentActionUrl": ""
+                }
               }
             }
             """;
@@ -403,9 +415,9 @@ public class PortalConfigServiceTests
         result.Seek(0, SeekOrigin.Begin);
         var resultJson = await JsonDocument.ParseAsync(result);
         
-        Assert.Equal("", resultJson.RootElement.GetProperty("DeploymentMetadata").GetProperty("DeployedBy").GetString());
-        Assert.Equal("", resultJson.RootElement.GetProperty("DeploymentMetadata").GetProperty("DeployedAt").GetString());
-        Assert.Equal("", resultJson.RootElement.GetProperty("DeploymentMetadata").GetProperty("DeploymentActionUrl").GetString());
+        Assert.Equal("", resultJson.RootElement.GetProperty("AppSettings").GetProperty("Deployment").GetProperty("DeployedBy").GetString());
+        Assert.Equal("", resultJson.RootElement.GetProperty("AppSettings").GetProperty("Deployment").GetProperty("DeployedAt").GetString());
+        Assert.Equal("", resultJson.RootElement.GetProperty("AppSettings").GetProperty("Deployment").GetProperty("DeploymentActionUrl").GetString());
     }
 
     [Fact]
@@ -427,10 +439,12 @@ public class PortalConfigServiceTests
                 "Region": "placeholder-cognito-region",
                 "IdentityPoolId": "placeholder-identity-pool-id"
               },
-              "DeploymentMetadata": {
-                "DeployedBy": "",
-                "DeployedAt": "",
-                "DeploymentActionUrl": ""
+              "AppSettings": {
+                "Deployment": {
+                  "DeployedBy": "",
+                  "DeployedAt": "",
+                  "DeploymentActionUrl": ""
+                }
               }
             }
             """;
@@ -460,8 +474,8 @@ public class PortalConfigServiceTests
         result.Seek(0, SeekOrigin.Begin);
         var resultJson = await JsonDocument.ParseAsync(result);
         
-        Assert.Equal(deployedBy, resultJson.RootElement.GetProperty("DeploymentMetadata").GetProperty("DeployedBy").GetString());
-        Assert.Equal("", resultJson.RootElement.GetProperty("DeploymentMetadata").GetProperty("DeployedAt").GetString());
-        Assert.Equal("", resultJson.RootElement.GetProperty("DeploymentMetadata").GetProperty("DeploymentActionUrl").GetString());
+        Assert.Equal(deployedBy, resultJson.RootElement.GetProperty("AppSettings").GetProperty("Deployment").GetProperty("DeployedBy").GetString());
+        Assert.Equal("", resultJson.RootElement.GetProperty("AppSettings").GetProperty("Deployment").GetProperty("DeployedAt").GetString());
+        Assert.Equal("", resultJson.RootElement.GetProperty("AppSettings").GetProperty("Deployment").GetProperty("DeploymentActionUrl").GetString());
     }
 }
