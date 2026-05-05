@@ -139,7 +139,7 @@ public class PortalConfigServiceTests
     }
 
     [Fact]
-    public async Task GivenCancellationToken_WhenConfigureAsync_ThenPassesCancellationToken()
+    public async Task GivenCancellationToken_WhenConfigureAsyncWithDeploymentMetadata_ThenPassesCancellationToken()
     {
         // Arrange
         var mockIoService = new Mock<IIoService>();
@@ -187,6 +187,62 @@ public class PortalConfigServiceTests
             null,
             null,
             null,
+            cancellationToken);
+
+        // Assert
+        Assert.NotNull(result);
+        mockIoService.Verify(io => io.ReadAllTextAsync(
+            It.IsAny<string>(),
+            cancellationToken),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task GivenCancellationToken_WhenConfigureAsyncWithoutDeploymentMetadata_ThenPassesCancellationToken()
+    {
+        // Arrange
+        var mockIoService = new Mock<IIoService>();
+        var sut = new PortalConfigService(mockIoService.Object);
+        var cancellationTokenSource = new CancellationTokenSource();
+        var cancellationToken = cancellationTokenSource.Token;
+
+        var templateJson = """
+            {
+              "AwsS3": {
+                "BucketName": "placeholder-bucket",
+                "Region": "placeholder-region"
+              },
+              "AwsCognito": {
+                "UserPoolId": "placeholder-pool-id",
+                "UserPoolClientId": "placeholder-client-id",
+                "Region": "placeholder-cognito-region",
+                "IdentityPoolId": "placeholder-identity-pool-id"
+              },
+              "AppSettings": {
+                "Deployment": {
+                  "DeployedBy": "",
+                  "DeployedAt": "",
+                  "DeploymentActionUrl": ""
+                }
+              }
+            }
+            """;
+
+        mockIoService
+            .Setup(io => io.ReadAllTextAsync(
+                It.IsAny<string>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(templateJson);
+
+        // Act
+        var result = await sut.ConfigureAsync(
+            "template.json",
+            "bucket",
+            "region",
+            "pool-id",
+            "client-id",
+            "region",
+            "identity-pool-id",
             cancellationToken);
 
         // Assert

@@ -9,6 +9,31 @@ public class PortalConfigService(
     IIoService ioService) : IPortalConfigService
 {
     /// <inheritdoc />
+    public Task<MemoryStream> ConfigureAsync(
+        string templatePath,
+        string s3DataBucketName,
+        string s3Region,
+        string cognitoUserPoolId,
+        string cognitoUserPoolClientId,
+        string cognitoRegion,
+        string cognitoIdentityPoolId,
+        CancellationToken cancellationToken = default)
+    {
+        return ConfigureAsync(
+            templatePath,
+            s3DataBucketName,
+            s3Region,
+            cognitoUserPoolId,
+            cognitoUserPoolClientId,
+            cognitoRegion,
+            cognitoIdentityPoolId,
+            null,
+            null,
+            null,
+            cancellationToken);
+    }
+
+    /// <inheritdoc />
     public async Task<MemoryStream> ConfigureAsync(
         string templatePath,
         string s3DataBucketName,
@@ -17,9 +42,9 @@ public class PortalConfigService(
         string cognitoUserPoolClientId,
         string cognitoRegion,
         string cognitoIdentityPoolId,
-        string? deployedBy = null,
-        string? deployedAt = null,
-        string? deploymentActionUrl = null,
+        string? deployedBy,
+        string? deployedAt,
+        string? deploymentActionUrl,
         CancellationToken cancellationToken = default)
     {
         var templateRaw = await ioService.ReadAllTextAsync(templatePath, cancellationToken);
