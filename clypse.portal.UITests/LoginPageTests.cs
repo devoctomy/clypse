@@ -10,7 +10,7 @@ public class LoginPageTests : TestBase
     [TestMethod]
     public async Task ShouldDisplayLoginPageElements()
     {
-        // Navigate to the login page (root redirects to login when not authenticated)
+        // Navigate to root — the app redirects to login when not authenticated
         await Page.GotoAsync(ServerUrl);
 
         // Verify page title
@@ -92,15 +92,15 @@ public class LoginPageTests : TestBase
     [TestMethod]
     public async Task ShouldShowDeploymentMetadataInVersionHistoryDialog()
     {
-        // Navigate directly to the login page (root URL can render HomeLayout which lacks the version footer)
-        await Page.GotoAsync($"{ServerUrl}/login");
+        // Navigate to root — the app redirects to login when not authenticated
+        await Page.GotoAsync(ServerUrl);
 
         // Click the version number in the footer to open the version history dialog
         await Page.Locator(".version-number").ClickAsync();
         await ScreenshotAfterActionAsync("ClickedVersionNumber");
 
         // Wait for the changes dialog to appear
-        await Expect(Page.Locator(".changes-dialog")).ToBeVisibleAsync(new() { Timeout = 5000 });
+        await Expect(Page.Locator(".changes-dialog")).ToBeVisibleAsync();
         await ScreenshotAfterActionAsync("VersionHistoryDialogOpen");
 
         // Verify the "Current Deployment" section header is visible

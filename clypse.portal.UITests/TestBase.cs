@@ -105,6 +105,10 @@ public class TestBase : PageTest
         
         // Ensure screenshot directory exists
         Directory.CreateDirectory(_screenshotDirectory);
+
+        // Blazor WASM apps can take time to download and initialise; allow 90 s before
+        // any single action or assertion times out.
+        Page.SetDefaultTimeout(90000);
     }
 
     /// <summary>
