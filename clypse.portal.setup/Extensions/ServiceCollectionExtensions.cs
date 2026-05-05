@@ -231,45 +231,59 @@ public static class ServiceCollectionExtensions
         
         // Boolean properties - only override if explicitly set in user environment and not already set via configuration
         // Check if process-level env var is set first to avoid overriding configuration binding
-        var processInteractiveMode = environmentService.GetEnvironmentVariable($"{environmentVariablePrefix}__InteractiveMode");
-        if (string.IsNullOrWhiteSpace(processInteractiveMode))
+        var processInteractiveModeValue = GetFromEnvironmentIfProcessEnvVarNotPresent("InteractiveMode", environmentService);
+        if(processInteractiveModeValue != null)
         {
-            var interactiveModeEnv = environmentService.GetEnvironmentVariable("CLYPSE_SETUP__InteractiveMode", EnvironmentVariableTarget.User);
-            if (!string.IsNullOrWhiteSpace(interactiveModeEnv) && bool.TryParse(interactiveModeEnv, out var interactiveMode))
-            {
-                options.InteractiveMode = interactiveMode;
-            }
+            options.InteractiveMode = bool.TryParse(processInteractiveModeValue, out var interactiveMode) && interactiveMode;
         }
 
-        var processEnableUpgradeMode = environmentService.GetEnvironmentVariable($"{environmentVariablePrefix}__EnableUpgradeMode");
-        if (string.IsNullOrWhiteSpace(processEnableUpgradeMode))
+        var enableUpgradeModeValue = GetFromEnvironmentIfProcessEnvVarNotPresent("EnableUpgradeMode", environmentService);
+        if(processInteractiveModeValue != null)
         {
-            var enableUpgradeModeEnv = environmentService.GetEnvironmentVariable("CLYPSE_SETUP__EnableUpgradeMode", EnvironmentVariableTarget.User);
-            if (!string.IsNullOrWhiteSpace(enableUpgradeModeEnv) && bool.TryParse(enableUpgradeModeEnv, out var enableUpgradeMode))
-            {
-                options.EnableUpgradeMode = enableUpgradeMode;
-            }
+            options.EnableUpgradeMode = bool.TryParse(enableUpgradeModeValue, out var enableUpgradeMode) && enableUpgradeMode;
         }
 
-        var processBuildPortal = environmentService.GetEnvironmentVariable($"{environmentVariablePrefix}__BuildPortal");
-        if (string.IsNullOrWhiteSpace(processBuildPortal))
+        var buildPortalValue = GetFromEnvironmentIfProcessEnvVarNotPresent("BuildPortal", environmentService);
+        if(buildPortalValue != null)
         {
-            var buildPortalEnv = environmentService.GetEnvironmentVariable("CLYPSE_SETUP__BuildPortal", EnvironmentVariableTarget.User);
-            if (!string.IsNullOrWhiteSpace(buildPortalEnv) && bool.TryParse(buildPortalEnv, out var buildPortal))
-            {
-                options.BuildPortal = buildPortal;
-            }
+            options.BuildPortal = bool.TryParse(buildPortalValue, out var buildPortal) && buildPortal;
         }
 
-        var processForceUpgrade = environmentService.GetEnvironmentVariable($"{environmentVariablePrefix}__ForceUpgrade");
-        if (string.IsNullOrWhiteSpace(processForceUpgrade))
+        var forceUpgradeValue = GetFromEnvironmentIfProcessEnvVarNotPresent("ForceUpgrade", environmentService);
+        if(forceUpgradeValue != null)
         {
-            var forceUpgradeEnv = environmentService.GetEnvironmentVariable("CLYPSE_SETUP__ForceUpgrade", EnvironmentVariableTarget.User);
-            if (!string.IsNullOrWhiteSpace(forceUpgradeEnv) && bool.TryParse(forceUpgradeEnv, out var forceUpgrade))
-            {
-                options.ForceUpgrade = forceUpgrade;
-            }
+            options.ForceUpgrade = bool.TryParse(forceUpgradeValue, out var forceUpgrade) && forceUpgrade;
         }
+
+        var deployedByUserValue = GetFromEnvironmentIfProcessEnvVarNotPresent("DeployedByUser", environmentService);
+        if(deployedByUserValue != null)
+        {
+            options.DeployedByUser = deployedByUserValue;
+        }
+
+        var deployedAtValue = GetFromEnvironmentIfProcessEnvVarNotPresent("DeployedAt", environmentService);
+        if(deployedAtValue != null)
+        {
+            options.DeployedAt = deployedAtValue;
+        }
+
+        var deploymentActionUrlValue = GetFromEnvironmentIfProcessEnvVarNotPresent("DeploymentActionUrl", environmentService);
+        if(deploymentActionUrlValue != null)
+        {
+            options.DeploymentActionUrl = deploymentActionUrlValue;
+        }              
+    }
+
+    private static string? GetFromEnvironmentIfProcessEnvVarNotPresent(string environmentVariableName, IEnvironmentService environmentService)
+    {
+        var currentValue = environmentService.GetEnvironmentVariable($"CLYPSE_SETUP__{environmentVariableName}");
+        if (!string.IsNullOrWhiteSpace(currentValue))
+        {
+            return null;
+        }
+
+        var envValue = environmentService.GetEnvironmentVariable($"CLYPSE_SETUP__{environmentVariableName}", EnvironmentVariableTarget.User);
+        return string.IsNullOrWhiteSpace(envValue) ? null : envValue;
     }
 
     private static string PreferExisting(string currentValue, string? fallbackValue)
