@@ -26,6 +26,11 @@ public class PortalConfigServiceTests
                 "UserPoolClientId": "placeholder-client-id",
                 "Region": "placeholder-cognito-region",
                 "IdentityPoolId": "placeholder-identity-pool-id"
+              },
+              "DeploymentMetadata": {
+                "DeployedBy": "",
+                "DeployedAt": "",
+                "DeploymentActionUrl": ""
               }
             }
             """;
@@ -151,6 +156,11 @@ public class PortalConfigServiceTests
                 "UserPoolClientId": "placeholder-client-id",
                 "Region": "placeholder-cognito-region",
                 "IdentityPoolId": "placeholder-identity-pool-id"
+              },
+              "DeploymentMetadata": {
+                "DeployedBy": "",
+                "DeployedAt": "",
+                "DeploymentActionUrl": ""
               }
             }
             """;
@@ -170,6 +180,9 @@ public class PortalConfigServiceTests
             "client-id",
             "region",
             "identity-pool-id",
+            null,
+            null,
+            null,
             cancellationToken);
 
         // Assert
@@ -198,6 +211,11 @@ public class PortalConfigServiceTests
                 "UserPoolClientId": "placeholder-client-id",
                 "Region": "placeholder-cognito-region",
                 "IdentityPoolId": "placeholder-identity-pool-id"
+              },
+              "DeploymentMetadata": {
+                "DeployedBy": "",
+                "DeployedAt": "",
+                "DeploymentActionUrl": ""
               }
             }
             """;
@@ -240,6 +258,11 @@ public class PortalConfigServiceTests
                 "UserPoolClientId": "placeholder-client-id",
                 "Region": "placeholder-cognito-region",
                 "IdentityPoolId": "placeholder-identity-pool-id"
+              },
+              "DeploymentMetadata": {
+                "DeployedBy": "",
+                "DeployedAt": "",
+                "DeploymentActionUrl": ""
               }
             }
             """;
@@ -272,5 +295,173 @@ public class PortalConfigServiceTests
         // Verify it's indented (contains newlines and spaces)
         Assert.Contains("\n", outputText);
         Assert.Contains("  ", outputText);
+    }
+
+    [Fact]
+    public async Task GivenDeploymentMetadata_WhenConfigureAsync_ThenDeploymentMetadataIsPopulated()
+    {
+        // Arrange
+        var mockIoService = new Mock<IIoService>();
+        var sut = new PortalConfigService(mockIoService.Object);
+
+        var templateJson = """
+            {
+              "AwsS3": {
+                "BucketName": "placeholder-bucket",
+                "Region": "placeholder-region"
+              },
+              "AwsCognito": {
+                "UserPoolId": "placeholder-pool-id",
+                "UserPoolClientId": "placeholder-client-id",
+                "Region": "placeholder-cognito-region",
+                "IdentityPoolId": "placeholder-identity-pool-id"
+              },
+              "DeploymentMetadata": {
+                "DeployedBy": "",
+                "DeployedAt": "",
+                "DeploymentActionUrl": ""
+              }
+            }
+            """;
+
+        mockIoService
+            .Setup(io => io.ReadAllTextAsync(
+                It.IsAny<string>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(templateJson);
+
+        var deployedBy = "testuser";
+        var deployedAt = "2026-05-05T07:00:00Z";
+        var deploymentActionUrl = "https://github.com/test/repo/actions/runs/123";
+
+        // Act
+        var result = await sut.ConfigureAsync(
+            "template.json",
+            "bucket",
+            "us-west-2",
+            "pool-id",
+            "client-id",
+            "us-east-1",
+            "identity-pool-id",
+            deployedBy,
+            deployedAt,
+            deploymentActionUrl);
+
+        // Assert
+        result.Seek(0, SeekOrigin.Begin);
+        var resultJson = await JsonDocument.ParseAsync(result);
+        
+        Assert.Equal(deployedBy, resultJson.RootElement.GetProperty("DeploymentMetadata").GetProperty("DeployedBy").GetString());
+        Assert.Equal(deployedAt, resultJson.RootElement.GetProperty("DeploymentMetadata").GetProperty("DeployedAt").GetString());
+        Assert.Equal(deploymentActionUrl, resultJson.RootElement.GetProperty("DeploymentMetadata").GetProperty("DeploymentActionUrl").GetString());
+    }
+
+    [Fact]
+    public async Task GivenNoDeploymentMetadata_WhenConfigureAsync_ThenDeploymentMetadataIsEmpty()
+    {
+        // Arrange
+        var mockIoService = new Mock<IIoService>();
+        var sut = new PortalConfigService(mockIoService.Object);
+
+        var templateJson = """
+            {
+              "AwsS3": {
+                "BucketName": "placeholder-bucket",
+                "Region": "placeholder-region"
+              },
+              "AwsCognito": {
+                "UserPoolId": "placeholder-pool-id",
+                "UserPoolClientId": "placeholder-client-id",
+                "Region": "placeholder-cognito-region",
+                "IdentityPoolId": "placeholder-identity-pool-id"
+              },
+              "DeploymentMetadata": {
+                "DeployedBy": "",
+                "DeployedAt": "",
+                "DeploymentActionUrl": ""
+              }
+            }
+            """;
+
+        mockIoService
+            .Setup(io => io.ReadAllTextAsync(
+                It.IsAny<string>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(templateJson);
+
+        // Act
+        var result = await sut.ConfigureAsync(
+            "template.json",
+            "bucket",
+            "us-west-2",
+            "pool-id",
+            "client-id",
+            "us-east-1",
+            "identity-pool-id");
+
+        // Assert
+        result.Seek(0, SeekOrigin.Begin);
+        var resultJson = await JsonDocument.ParseAsync(result);
+        
+        Assert.Equal("", resultJson.RootElement.GetProperty("DeploymentMetadata").GetProperty("DeployedBy").GetString());
+        Assert.Equal("", resultJson.RootElement.GetProperty("DeploymentMetadata").GetProperty("DeployedAt").GetString());
+        Assert.Equal("", resultJson.RootElement.GetProperty("DeploymentMetadata").GetProperty("DeploymentActionUrl").GetString());
+    }
+
+    [Fact]
+    public async Task GivenPartialDeploymentMetadata_WhenConfigureAsync_ThenOnlyProvidedFieldsArePopulated()
+    {
+        // Arrange
+        var mockIoService = new Mock<IIoService>();
+        var sut = new PortalConfigService(mockIoService.Object);
+
+        var templateJson = """
+            {
+              "AwsS3": {
+                "BucketName": "placeholder-bucket",
+                "Region": "placeholder-region"
+              },
+              "AwsCognito": {
+                "UserPoolId": "placeholder-pool-id",
+                "UserPoolClientId": "placeholder-client-id",
+                "Region": "placeholder-cognito-region",
+                "IdentityPoolId": "placeholder-identity-pool-id"
+              },
+              "DeploymentMetadata": {
+                "DeployedBy": "",
+                "DeployedAt": "",
+                "DeploymentActionUrl": ""
+              }
+            }
+            """;
+
+        mockIoService
+            .Setup(io => io.ReadAllTextAsync(
+                It.IsAny<string>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(templateJson);
+
+        var deployedBy = "testuser";
+
+        // Act
+        var result = await sut.ConfigureAsync(
+            "template.json",
+            "bucket",
+            "us-west-2",
+            "pool-id",
+            "client-id",
+            "us-east-1",
+            "identity-pool-id",
+            deployedBy,
+            null,
+            null);
+
+        // Assert
+        result.Seek(0, SeekOrigin.Begin);
+        var resultJson = await JsonDocument.ParseAsync(result);
+        
+        Assert.Equal(deployedBy, resultJson.RootElement.GetProperty("DeploymentMetadata").GetProperty("DeployedBy").GetString());
+        Assert.Equal("", resultJson.RootElement.GetProperty("DeploymentMetadata").GetProperty("DeployedAt").GetString());
+        Assert.Equal("", resultJson.RootElement.GetProperty("DeploymentMetadata").GetProperty("DeploymentActionUrl").GetString());
     }
 }
