@@ -1,10 +1,17 @@
-﻿namespace clypse.portal.Models.Changes;
+﻿using System.Text.RegularExpressions;
+
+namespace clypse.portal.Models.Changes;
 
 /// <summary>
 /// Represents a single version entry in the change log.
 /// </summary>
 public class VersionEntry
 {
+    // GitHub usernames: alphanumeric and hyphens only, cannot start/end with hyphen, max 39 chars
+    private static readonly Regex GitHubUsernameRegex = new(
+        @"^[a-zA-Z0-9]([a-zA-Z0-9\-]{0,37}[a-zA-Z0-9])?$",
+        RegexOptions.Compiled);
+
     /// <summary>
     /// Gets or sets the version number.
     /// </summary>
@@ -32,4 +39,13 @@ public class VersionEntry
     /// Optional field.
     /// </summary>
     public string? DeploymentActionUrl { get; set; }
+
+    /// <summary>
+    /// Gets the validated GitHub profile URL for the deploying user, or null if the username
+    /// is not set or does not conform to the GitHub username format.
+    /// </summary>
+    public string? GitHubProfileUrl =>
+        !string.IsNullOrWhiteSpace(DeployedBy) && GitHubUsernameRegex.IsMatch(DeployedBy)
+            ? $"https://github.com/{DeployedBy}"
+            : null;
 }

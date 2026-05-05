@@ -26,9 +26,16 @@
                                 <div class="metadata-item">
                                     <i class="bi bi-person-fill me-1"></i>
                                     <span>Deployed by: </span>
-                                    <a href="https://github.com/@ViewModel.AppSettings.Deployment.DeployedBy" target="_blank" rel="noopener noreferrer" class="text-decoration-none">
-                                        @@@ViewModel.AppSettings.Deployment.DeployedBy
-                                    </a>
+                                    @if (ViewModel.AppSettings.Deployment.GitHubProfileUrl != null)
+                                    {
+                                        <a href="@ViewModel.AppSettings.Deployment.GitHubProfileUrl" target="_blank" rel="noopener noreferrer" class="text-decoration-none">
+                                            @@@ViewModel.AppSettings.Deployment.DeployedBy
+                                        </a>
+                                    }
+                                    else
+                                    {
+                                        <span>@ViewModel.AppSettings.Deployment.DeployedBy</span>
+                                    }
                                 </div>
                             }
                             @if (!string.IsNullOrWhiteSpace(ViewModel.AppSettings.Deployment.DeployedAt))
@@ -76,9 +83,16 @@
                                                 <div class="metadata-item">
                                                     <i class="bi bi-person-fill me-1"></i>
                                                     <span>Deployed by: </span>
-                                                    <a href="https://github.com/@version.DeployedBy" target="_blank" rel="noopener noreferrer" class="text-decoration-none">
-                                                        @@@version.DeployedBy
-                                                    </a>
+                                                    @if (version.GitHubProfileUrl != null)
+                                                    {
+                                                        <a href="@version.GitHubProfileUrl" target="_blank" rel="noopener noreferrer" class="text-decoration-none">
+                                                            @@@version.DeployedBy
+                                                        </a>
+                                                    }
+                                                    else
+                                                    {
+                                                        <span>@version.DeployedBy</span>
+                                                    }
                                                 </div>
                                             }
                                             @if (!string.IsNullOrWhiteSpace(version.DeployedAt))

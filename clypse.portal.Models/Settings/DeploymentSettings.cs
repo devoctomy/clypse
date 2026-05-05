@@ -1,3 +1,5 @@
+using System.Text.RegularExpressions;
+
 namespace clypse.portal.Models.Settings;
 
 /// <summary>
@@ -5,6 +7,11 @@ namespace clypse.portal.Models.Settings;
 /// </summary>
 public class DeploymentSettings
 {
+    // GitHub usernames: alphanumeric and hyphens only, cannot start/end with hyphen, max 39 chars
+    private static readonly Regex GitHubUsernameRegex = new(
+        @"^[a-zA-Z0-9]([a-zA-Z0-9\-]{0,37}[a-zA-Z0-9])?$",
+        RegexOptions.Compiled);
+
     /// <summary>
     /// Gets or sets the GitHub username of the user who deployed this build.
     /// Optional field. When present, links to the user's GitHub profile.
@@ -30,4 +37,13 @@ public class DeploymentSettings
         !string.IsNullOrWhiteSpace(DeployedBy) ||
         !string.IsNullOrWhiteSpace(DeployedAt) ||
         !string.IsNullOrWhiteSpace(DeploymentActionUrl);
+
+    /// <summary>
+    /// Gets the validated GitHub profile URL for the deploying user, or null if the username
+    /// is not set or does not conform to the GitHub username format.
+    /// </summary>
+    public string? GitHubProfileUrl =>
+        !string.IsNullOrWhiteSpace(DeployedBy) && GitHubUsernameRegex.IsMatch(DeployedBy)
+            ? $"https://github.com/{DeployedBy}"
+            : null;
 }
