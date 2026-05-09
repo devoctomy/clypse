@@ -13,6 +13,7 @@ using Microsoft.Extensions.Logging;
 using System.Reflection;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 
 namespace clypse.portal.setup.Services.Orchestration;
 
@@ -519,6 +520,8 @@ public class ClypseAwsSetupOrchestration(
             portalBucketName,
             "appsettings.json",
             cancellationToken);
+        appSettings = ReplaceDeploymentSection(appSettings);
+        var appSettingsJsonString = Encoding.UTF8.GetString(appSettings);
 
         logger.LogInformation("Merging existing configuration with latest template.");
         var appDir = ioService.GetApplicationDirectory();
@@ -526,7 +529,7 @@ public class ClypseAwsSetupOrchestration(
         var templateSettings = await ioService.ReadAllTextAsync(templatePath, cancellationToken);
         var merged = jsonMergerService.MergeJsonStrings(
             templateSettings,
-            Encoding.UTF8.GetString(appSettings));
+            appSettingsJsonString);
 
         await DeployPortal(
             portalBucketName,
@@ -697,6 +700,20 @@ public class ClypseAwsSetupOrchestration(
             logger.LogWarning("Skipping portal deployment as build output path '{portalBuildOutputPath}' does not exist.", options.PortalBuildOutputPath);
             return false;
         }
+    }
+
+    private byte[] ReplaceDeploymentSection(byte[] appSettingsBytes)
+    {
+        var deployedBy = options.DeployedByUser;
+        var deployedAt = options.DeployedAt;
+        var deploymentActionUrl = options.DeploymentActionUrl;
+
+        var node = JsonNode.Parse(Encoding.UTF8.GetString(appSettingsBytes))!;
+        node["AppSettings"]!["Deployment"]!["DeployedBy"] = deployedBy;
+        node["AppSettings"]!["Deployment"]!["DeployedAt"] = deployedAt;
+        node["AppSettings"]!["Deployment"]!["DeploymentActionUrl"] = deploymentActionUrl;
+
+        return Encoding.UTF8.GetBytes(node.ToJsonString(new JsonSerializerOptions { WriteIndented = true }));
     }
 
     private static string GetTrustPolicyJson(string identityPoolId)
