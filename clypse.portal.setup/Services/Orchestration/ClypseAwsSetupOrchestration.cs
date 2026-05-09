@@ -704,14 +704,28 @@ public class ClypseAwsSetupOrchestration(
 
     private byte[] ReplaceDeploymentSection(byte[] appSettingsBytes)
     {
+        var appSettingsJsonString = Encoding.UTF8.GetString(appSettingsBytes);
         var deployedBy = options.DeployedByUser;
         var deployedAt = options.DeployedAt;
         var deploymentActionUrl = options.DeploymentActionUrl;
 
-        var node = JsonNode.Parse(Encoding.UTF8.GetString(appSettingsBytes))!;
-        node["AppSettings"]!["Deployment"]!["DeployedBy"] = deployedBy;
-        node["AppSettings"]!["Deployment"]!["DeployedAt"] = deployedAt;
-        node["AppSettings"]!["Deployment"]!["DeploymentActionUrl"] = deploymentActionUrl;
+        var node = JsonNode.Parse(appSettingsJsonString)!;
+
+        if (node["AppSettings"] is not JsonObject appSettingsNode)
+        {
+            appSettingsNode = new JsonObject();
+            node["AppSettings"] = appSettingsNode;
+        }
+
+        if (appSettingsNode["Deployment"] is not JsonObject deploymentNode)
+        {
+            deploymentNode = new JsonObject();
+            appSettingsNode["Deployment"] = deploymentNode;
+        }
+
+        deploymentNode["DeployedBy"] = deployedBy;
+        deploymentNode["DeployedAt"] = deployedAt;
+        deploymentNode["DeploymentActionUrl"] = deploymentActionUrl;
 
         return Encoding.UTF8.GetBytes(node.ToJsonString(new JsonSerializerOptions { WriteIndented = true }));
     }
