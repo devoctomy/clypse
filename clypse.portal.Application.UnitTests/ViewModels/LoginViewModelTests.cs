@@ -35,6 +35,7 @@ public class LoginViewModelTests
         this.mockBrowserInteropService.Setup(s => s.SetThemeAsync(It.IsAny<string>())).Returns(Task.CompletedTask);
         this.mockLocalStorageService.Setup(s => s.GetItemAsync(It.IsAny<string>())).ReturnsAsync((string?)null);
         this.mockLocalStorageService.Setup(s => s.SetItemAsync(It.IsAny<string>(), It.IsAny<string>())).Returns(Task.CompletedTask);
+        this.mockLocalStorageService.Setup(s => s.ClearUserSpecificDataAsync(It.IsAny<string>())).Returns(Task.CompletedTask);
         this.mockAuthService.Setup(s => s.Initialize()).Returns(Task.CompletedTask);
     }
 
@@ -352,6 +353,32 @@ public class LoginViewModelTests
         Assert.Empty(sut.SavedUsers);
         Assert.False(sut.ShowUsersList);
         Assert.True(sut.ShowRememberMe);
+    }
+
+    [Fact]
+    public async Task GivenUser_WhenRemoveUserAsync_ThenClearsUserSpecificVaultData()
+    {
+        // Arrange
+        var sut = CreateSut();
+        var email = "alice@test.com";
+        var usersData = new SavedUsersData
+        {
+            Users = new List<SavedUser> { new() { Email = email } },
+        };
+        this.mockLocalStorageService
+            .Setup(s => s.GetItemAsync("users"))
+            .ReturnsAsync(JsonSerializer.Serialize(usersData));
+        this.mockAuthService.Setup(s => s.CheckAuthentication()).ReturnsAsync(false);
+        await sut.OnAfterRenderAsync(firstRender: true);
+        var user = sut.SavedUsers[0];
+
+        // Act
+        await sut.RemoveUserCommand.ExecuteAsync(user);
+
+        // Assert - vault metadata for this user should be cleared
+        this.mockLocalStorageService.Verify(
+            s => s.ClearUserSpecificDataAsync(email),
+            Times.Once);
     }
 
     // --- ShowLoginForm / ShowUsersListCommand ---

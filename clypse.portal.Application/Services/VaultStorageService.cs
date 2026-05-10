@@ -9,7 +9,7 @@ namespace clypse.portal.Application.Services;
 public class VaultStorageService(IJSRuntime jsRuntime)
     : IVaultStorageService
 {
-    private const string VaultsLocalStorageKey = "clypse_vaults";
+    private const string DefaultVaultsLocalStorageKey = "clypse_vaults";
     private static readonly JsonSerializerOptions JsonSerializerOptions = new ()
     {
         WriteIndented = true,
@@ -18,13 +18,24 @@ public class VaultStorageService(IJSRuntime jsRuntime)
     };
 
     private readonly IJSRuntime jsRuntime = jsRuntime ?? throw new ArgumentNullException(nameof(jsRuntime));
+    private string? currentUser;
+
+    private string CurrentKey => this.currentUser != null
+        ? $"clypse_vaults_{this.currentUser}"
+        : DefaultVaultsLocalStorageKey;
+
+    /// <inheritdoc/>
+    public void SetCurrentUser(string? username)
+    {
+        this.currentUser = username;
+    }
 
     /// <inheritdoc/>
     public async Task<List<VaultMetadata>> GetVaultsAsync()
     {
         try
         {
-            var vaultsJson = await this.jsRuntime.InvokeAsync<string>("localStorage.getItem", VaultsLocalStorageKey);
+            var vaultsJson = await this.jsRuntime.InvokeAsync<string>("localStorage.getItem", this.CurrentKey);
 
             if (string.IsNullOrEmpty(vaultsJson))
             {
@@ -51,7 +62,7 @@ public class VaultStorageService(IJSRuntime jsRuntime)
                 vaultStorage,
                 JsonSerializerOptions);
 
-            await this.jsRuntime.InvokeVoidAsync("localStorage.setItem", VaultsLocalStorageKey, vaultsJson);
+            await this.jsRuntime.InvokeVoidAsync("localStorage.setItem", this.CurrentKey, vaultsJson);
         }
         catch (Exception ex)
         {
@@ -110,7 +121,7 @@ public class VaultStorageService(IJSRuntime jsRuntime)
     {
         try
         {
-            await this.jsRuntime.InvokeVoidAsync("localStorage.removeItem", VaultsLocalStorageKey);
+            await this.jsRuntime.InvokeVoidAsync("localStorage.removeItem", this.CurrentKey);
         }
         catch (Exception ex)
         {

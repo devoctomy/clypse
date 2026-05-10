@@ -326,4 +326,99 @@ public class VaultStorageServiceTests
         var exception = await Record.ExceptionAsync(() => sut.ClearVaultsAsync());
         Assert.Null(exception);
     }
+
+    // --- SetCurrentUser (per-user key) ---
+
+    [Fact]
+    public async Task GivenCurrentUserSet_WhenGetVaultsAsync_ThenUsesPerUserKey()
+    {
+        // Arrange
+        const string username = "alice@example.com";
+        const string perUserKey = $"clypse_vaults_{username}";
+        var vaults = new List<VaultMetadata> { new() { Id = "vault-1", Name = "Alice's Vault" } };
+        var storage = new VaultStorage { Vaults = vaults };
+        var json = JsonSerializer.Serialize(storage, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
+
+        this.mockJsRuntime
+            .Setup(x => x.InvokeAsync<string>("localStorage.getItem", It.Is<object?[]>(args => (string?)args[0] == perUserKey)))
+            .ReturnsAsync(json);
+
+        var sut = this.CreateSut();
+        sut.SetCurrentUser(username);
+
+        // Act
+        var result = await sut.GetVaultsAsync();
+
+        // Assert
+        Assert.Single(result);
+        Assert.Equal("vault-1", result[0].Id);
+        this.mockJsRuntime.Verify(
+            x => x.InvokeAsync<string>("localStorage.getItem", It.Is<object?[]>(args => (string?)args[0] == perUserKey)),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task GivenCurrentUserSet_WhenSaveVaultsAsync_ThenUsesPerUserKey()
+    {
+        // Arrange
+        const string username = "alice@example.com";
+        const string perUserKey = $"clypse_vaults_{username}";
+
+        string? capturedKey = null;
+        this.mockJsRuntime
+            .Setup(x => x.InvokeAsync<IJSVoidResult>("localStorage.setItem", It.IsAny<object?[]>()))
+            .Callback<string, object?[]>((_, args) => capturedKey = args[0] as string)
+            .ReturnsAsync(Mock.Of<IJSVoidResult>());
+
+        var sut = this.CreateSut();
+        sut.SetCurrentUser(username);
+
+        // Act
+        await sut.SaveVaultsAsync([new VaultMetadata { Id = "vault-1" }]);
+
+        // Assert
+        Assert.Equal(perUserKey, capturedKey);
+    }
+
+    [Fact]
+    public async Task GivenCurrentUserSet_WhenClearVaultsAsync_ThenUsesPerUserKey()
+    {
+        // Arrange
+        const string username = "alice@example.com";
+        const string perUserKey = $"clypse_vaults_{username}";
+
+        this.mockJsRuntime
+            .Setup(x => x.InvokeAsync<IJSVoidResult>("localStorage.removeItem", It.IsAny<object?[]>()))
+            .ReturnsAsync(Mock.Of<IJSVoidResult>());
+
+        var sut = this.CreateSut();
+        sut.SetCurrentUser(username);
+
+        // Act
+        await sut.ClearVaultsAsync();
+
+        // Assert
+        this.mockJsRuntime.Verify(
+            x => x.InvokeAsync<IJSVoidResult>("localStorage.removeItem", It.Is<object?[]>(args => (string?)args[0] == perUserKey)),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task GivenCurrentUserClearedAfterSet_WhenGetVaultsAsync_ThenUsesDefaultKey()
+    {
+        // Arrange - set user then clear it
+        this.SetupGetVaults(null);
+
+        var sut = this.CreateSut();
+        sut.SetCurrentUser("alice@example.com");
+        sut.SetCurrentUser(null);
+
+        // Act
+        await sut.GetVaultsAsync();
+
+        // Assert - uses default key
+        this.mockJsRuntime.Verify(
+            x => x.InvokeAsync<string>("localStorage.getItem", It.Is<object?[]>(args => (string?)args[0] == VaultsKey)),
+            Times.Once);
+    }
 }

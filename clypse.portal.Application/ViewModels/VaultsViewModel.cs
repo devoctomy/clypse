@@ -1,4 +1,3 @@
-using System.Text.Json;
 using Blazing.Mvvm.ComponentModel;
 using clypse.core.Vault;
 using clypse.portal.Application.Helpers;
@@ -18,6 +17,7 @@ public partial class VaultsViewModel : ViewModelBase, IRecipient<RefreshVaultsMe
     private readonly IVaultStorageService vaultStorage;
     private readonly IVaultManagerBootstrapperFactoryService vaultManagerBootstrapperFactory;
     private readonly ILocalStorageService localStorageService;
+    private readonly IAuthenticationService authService;
     private readonly IVaultStateService vaultStateService;
     private readonly IJsS3InvokerProvider jsS3InvokerProvider;
     private readonly Models.Aws.AwsS3Config awsS3Config;
@@ -44,6 +44,7 @@ public partial class VaultsViewModel : ViewModelBase, IRecipient<RefreshVaultsMe
     /// <param name="jsS3InvokerProvider">The JavaScript S3 invoker provider.</param>
     /// <param name="awsS3Config">The AWS S3 configuration.</param>
     /// <param name="messenger">The messenger used for cross-component communication.</param>
+    /// <param name="authService">The authentication service.</param>
     public VaultsViewModel(
         IVaultStorageService vaultStorage,
         IVaultManagerBootstrapperFactoryService vaultManagerBootstrapperFactory,
@@ -51,7 +52,8 @@ public partial class VaultsViewModel : ViewModelBase, IRecipient<RefreshVaultsMe
         IVaultStateService vaultStateService,
         IJsS3InvokerProvider jsS3InvokerProvider,
         Models.Aws.AwsS3Config awsS3Config,
-        IMessenger messenger)
+        IMessenger messenger,
+        IAuthenticationService authService)
     {
         this.vaultStorage = ValidationHelpers.VerifiedAssignent(vaultStorage);
         this.vaultManagerBootstrapperFactory = ValidationHelpers.VerifiedAssignent(vaultManagerBootstrapperFactory);
@@ -60,6 +62,7 @@ public partial class VaultsViewModel : ViewModelBase, IRecipient<RefreshVaultsMe
         this.jsS3InvokerProvider = ValidationHelpers.VerifiedAssignent(jsS3InvokerProvider);
         this.awsS3Config = ValidationHelpers.VerifiedAssignent(awsS3Config);
         this.messenger = ValidationHelpers.VerifiedAssignent(messenger);
+        this.authService = ValidationHelpers.VerifiedAssignent(authService);
         this.messenger.Register(this);
     }
 
@@ -303,16 +306,15 @@ public partial class VaultsViewModel : ViewModelBase, IRecipient<RefreshVaultsMe
     {
         try
         {
-            var credentialsJson = await localStorageService.GetItemAsync("clypse_credentials");
+            var credentials = await authService.GetStoredCredentials();
 
-            if (string.IsNullOrEmpty(credentialsJson))
+            if (credentials == null)
             {
                 Console.WriteLine("No stored credentials found");
                 return null;
             }
 
-            var credentials = JsonSerializer.Deserialize<Models.Aws.StoredCredentials>(credentialsJson);
-            if (credentials?.AwsCredentials == null)
+            if (credentials.AwsCredentials == null)
             {
                 Console.WriteLine("Invalid stored credentials - AwsCredentials is null");
                 return null;

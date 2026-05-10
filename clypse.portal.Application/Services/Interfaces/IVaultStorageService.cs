@@ -39,4 +39,10 @@ public interface IVaultStorageService
     /// </summary>
     /// <returns>Nothing.</returns>
     Task ClearVaultsAsync();
+
+    /// <summary>
+    /// Sets the current user so vault metadata is stored under a per-user key.
+    /// </summary>
+    /// <param name="username">The username (email) of the current user, or <c>null</c> to reset to the default key.</param>
+    void SetCurrentUser(string? username);
 }

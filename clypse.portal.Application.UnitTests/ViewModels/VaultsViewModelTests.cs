@@ -1,4 +1,3 @@
-using System.Text.Json;
 using clypse.core.Vault;
 using clypse.portal.Application.Services.Interfaces;
 using clypse.portal.Application.ViewModels;
@@ -17,6 +16,7 @@ public class VaultsViewModelTests : IDisposable
     private readonly Mock<ILocalStorageService> mockLocalStorage;
     private readonly Mock<IVaultStateService> mockVaultStateService;
     private readonly Mock<IJsS3InvokerProvider> mockJsS3InvokerProvider;
+    private readonly Mock<IAuthenticationService> mockAuthService;
     private readonly AwsS3Config awsS3Config;
     private readonly WeakReferenceMessenger messenger;
 
@@ -27,6 +27,7 @@ public class VaultsViewModelTests : IDisposable
         this.mockLocalStorage = new Mock<ILocalStorageService>();
         this.mockVaultStateService = new Mock<IVaultStateService>();
         this.mockJsS3InvokerProvider = new Mock<IJsS3InvokerProvider>();
+        this.mockAuthService = new Mock<IAuthenticationService>();
         this.awsS3Config = new AwsS3Config { Region = "us-east-1", BucketName = "test-bucket" };
         this.messenger = new WeakReferenceMessenger();
     }
@@ -40,7 +41,8 @@ public class VaultsViewModelTests : IDisposable
             this.mockVaultStateService.Object,
             this.mockJsS3InvokerProvider.Object,
             this.awsS3Config,
-            this.messenger);
+            this.messenger,
+            this.mockAuthService.Object);
     }
 
     // --- Constructor ---
@@ -62,7 +64,8 @@ public class VaultsViewModelTests : IDisposable
             this.mockVaultStateService.Object,
             this.mockJsS3InvokerProvider.Object,
             this.awsS3Config,
-            this.messenger));
+            this.messenger,
+            this.mockAuthService.Object));
     }
 
     [Fact]
@@ -75,7 +78,8 @@ public class VaultsViewModelTests : IDisposable
             this.mockVaultStateService.Object,
             this.mockJsS3InvokerProvider.Object,
             this.awsS3Config,
-            this.messenger));
+            this.messenger,
+            this.mockAuthService.Object));
     }
 
     [Fact]
@@ -88,7 +92,8 @@ public class VaultsViewModelTests : IDisposable
             this.mockVaultStateService.Object,
             this.mockJsS3InvokerProvider.Object,
             this.awsS3Config,
-            this.messenger));
+            this.messenger,
+            this.mockAuthService.Object));
     }
 
     [Fact]
@@ -101,7 +106,8 @@ public class VaultsViewModelTests : IDisposable
             null!,
             this.mockJsS3InvokerProvider.Object,
             this.awsS3Config,
-            this.messenger));
+            this.messenger,
+            this.mockAuthService.Object));
     }
 
     [Fact]
@@ -114,7 +120,8 @@ public class VaultsViewModelTests : IDisposable
             this.mockVaultStateService.Object,
             null!,
             this.awsS3Config,
-            this.messenger));
+            this.messenger,
+            this.mockAuthService.Object));
     }
 
     [Fact]
@@ -127,7 +134,8 @@ public class VaultsViewModelTests : IDisposable
             this.mockVaultStateService.Object,
             this.mockJsS3InvokerProvider.Object,
             null!,
-            this.messenger));
+            this.messenger,
+            this.mockAuthService.Object));
     }
 
     [Fact]
@@ -140,6 +148,21 @@ public class VaultsViewModelTests : IDisposable
             this.mockVaultStateService.Object,
             this.mockJsS3InvokerProvider.Object,
             this.awsS3Config,
+            null!,
+            this.mockAuthService.Object));
+    }
+
+    [Fact]
+    public void GivenNullAuthService_WhenConstructing_ThenThrowsArgumentNullException()
+    {
+        Assert.Throws<ArgumentNullException>(() => new VaultsViewModel(
+            this.mockVaultStorage.Object,
+            this.mockBootstrapperFactory.Object,
+            this.mockLocalStorage.Object,
+            this.mockVaultStateService.Object,
+            this.mockJsS3InvokerProvider.Object,
+            this.awsS3Config,
+            this.messenger,
             null!));
     }
 
@@ -168,9 +191,9 @@ public class VaultsViewModelTests : IDisposable
     {
         // Arrange
         var sut = CreateSut();
-        this.mockLocalStorage
-            .Setup(x => x.GetItemAsync("clypse_credentials"))
-            .ReturnsAsync((string?)null);
+        this.mockAuthService
+            .Setup(x => x.GetStoredCredentials())
+            .ReturnsAsync((StoredCredentials?)null);
 
         // Act
         await sut.OnInitializedAsync();
@@ -187,9 +210,9 @@ public class VaultsViewModelTests : IDisposable
     {
         // Arrange
         var sut = CreateSut();
-        this.mockLocalStorage
-            .Setup(x => x.GetItemAsync("clypse_credentials"))
-            .ReturnsAsync((string?)null);
+        this.mockAuthService
+            .Setup(x => x.GetStoredCredentials())
+            .ReturnsAsync((StoredCredentials?)null);
 
         // Act
         await sut.OnAfterRenderAsync(firstRender: true);
@@ -209,7 +232,7 @@ public class VaultsViewModelTests : IDisposable
 
         // Assert - IsLoading stays at its initial true value
         Assert.True(sut.IsLoading);
-        this.mockLocalStorage.Verify(x => x.GetItemAsync(It.IsAny<string>()), Times.Never);
+        this.mockAuthService.Verify(x => x.GetStoredCredentials(), Times.Never);
     }
 
     // --- ShowPassphrasePanelFor / HidePassphrasePanel ---
@@ -295,9 +318,9 @@ public class VaultsViewModelTests : IDisposable
     public async Task GivenNoCredentials_WhenLoadVaults_ThenVaultsAreEmptyAndLoadingIsFalse()
     {
         var sut = CreateSut();
-        this.mockLocalStorage
-            .Setup(x => x.GetItemAsync("clypse_credentials"))
-            .ReturnsAsync((string?)null);
+        this.mockAuthService
+            .Setup(x => x.GetStoredCredentials())
+            .ReturnsAsync((StoredCredentials?)null);
 
         await sut.LoadVaultsAsync();
 
@@ -389,32 +412,9 @@ public class VaultsViewModelTests : IDisposable
         // Arrange - exercises the `credentials?.AwsCredentials == null` branch
         var sut = CreateSut();
         var credentials = new StoredCredentials { AwsCredentials = null };
-        this.mockLocalStorage
-            .Setup(x => x.GetItemAsync("clypse_credentials"))
-            .ReturnsAsync(JsonSerializer.Serialize(credentials));
-
-        await sut.LoadVaultsAsync();
-
-        Assert.Empty(sut.Vaults);
-        Assert.False(sut.IsLoading);
-        this.mockBootstrapperFactory.Verify(
-            x => x.CreateForBlazor(
-                It.IsAny<clypse.core.Cloud.Aws.S3.IJavaScriptS3Invoker>(),
-                It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(),
-                It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()),
-            Times.Never);
-    }
-
-
-    [Fact]
-    public async Task GivenJsonDeserializesToNull_WhenLoadVaults_ThenBootstrapperIsNotCreated()
-    {
-        // Arrange - exercises the `credentials == null` sub-branch of `credentials?.AwsCredentials == null`
-        // When the stored JSON is the literal "null", Deserialize returns null
-        var sut = CreateSut();
-        this.mockLocalStorage
-            .Setup(x => x.GetItemAsync("clypse_credentials"))
-            .ReturnsAsync("null");
+        this.mockAuthService
+            .Setup(x => x.GetStoredCredentials())
+            .ReturnsAsync(credentials);
 
         await sut.LoadVaultsAsync();
 
@@ -443,9 +443,9 @@ public class VaultsViewModelTests : IDisposable
                 IdentityId = string.Empty,
             },
         };
-        this.mockLocalStorage
-            .Setup(x => x.GetItemAsync("clypse_credentials"))
-            .ReturnsAsync(JsonSerializer.Serialize(credentials));
+        this.mockAuthService
+            .Setup(x => x.GetStoredCredentials())
+            .ReturnsAsync(credentials);
 
         await sut.LoadVaultsAsync();
 
@@ -460,13 +460,13 @@ public class VaultsViewModelTests : IDisposable
     }
 
     [Fact]
-    public async Task GivenGetItemAsyncThrows_WhenLoadVaults_ThenBootstrapperIsNotCreated()
+    public async Task GivenGetStoredCredentialsThrows_WhenLoadVaults_ThenBootstrapperIsNotCreated()
     {
         // Arrange - exercises the catch block in CreateBootstrapperServiceAsync
         var sut = CreateSut();
-        this.mockLocalStorage
-            .Setup(x => x.GetItemAsync("clypse_credentials"))
-            .ThrowsAsync(new Exception("storage error"));
+        this.mockAuthService
+            .Setup(x => x.GetStoredCredentials())
+            .ThrowsAsync(new Exception("auth error"));
 
         await sut.LoadVaultsAsync();
 
@@ -503,9 +503,9 @@ public class VaultsViewModelTests : IDisposable
         // Arrange - bootstrapperService stays null (no credentials loaded)
         var sut = CreateSut();
         sut.ShowPassphrasePanelForCommand.Execute(new VaultMetadata { Id = "vault-1" });
-        this.mockLocalStorage
-            .Setup(x => x.GetItemAsync("clypse_credentials"))
-            .ReturnsAsync((string?)null);
+        this.mockAuthService
+            .Setup(x => x.GetStoredCredentials())
+            .ReturnsAsync((StoredCredentials?)null);
 
         await sut.HandleUnlockVaultCommand.ExecuteAsync("passphrase");
 
@@ -627,9 +627,9 @@ public class VaultsViewModelTests : IDisposable
     public async Task GivenRefreshVaultsMessage_WhenReceived_ThenLoadVaultsIsInvoked()
     {
         var sut = CreateSut();
-        this.mockLocalStorage
-            .Setup(x => x.GetItemAsync("clypse_credentials"))
-            .ReturnsAsync((string?)null);
+        this.mockAuthService
+            .Setup(x => x.GetStoredCredentials())
+            .ReturnsAsync((StoredCredentials?)null);
 
         this.messenger.Send(new RefreshVaultsMessage());
         await Task.Delay(100);
@@ -690,9 +690,9 @@ public class VaultsViewModelTests : IDisposable
                 IdentityId = "identity-id",
             },
         };
-        this.mockLocalStorage
-            .Setup(x => x.GetItemAsync("clypse_credentials"))
-            .ReturnsAsync(JsonSerializer.Serialize(credentials));
+        this.mockAuthService
+            .Setup(x => x.GetStoredCredentials())
+            .ReturnsAsync(credentials);
         this.mockJsS3InvokerProvider
             .Setup(x => x.GetInvoker())
             .Returns(new Mock<clypse.core.Cloud.Aws.S3.IJavaScriptS3Invoker>().Object);

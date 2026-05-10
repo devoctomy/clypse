@@ -218,6 +218,9 @@ public partial class LoginViewModel : ViewModelBase
             var usersData = new SavedUsersData { Users = savedUsers };
             await localStorageService.SetItemAsync(SavedUsersStorageKey, JsonSerializer.Serialize(usersData));
 
+            // Remove this user's vault metadata from localStorage
+            await localStorageService.ClearUserSpecificDataAsync(user.Email);
+
             if (savedUsers.Count == 0)
             {
                 ShowUsersList = false;

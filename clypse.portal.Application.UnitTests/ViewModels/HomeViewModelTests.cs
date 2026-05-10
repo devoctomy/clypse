@@ -112,6 +112,7 @@ public class HomeViewModelTests : IDisposable
         var sut = CreateSut();
         this.mockAuthService.Setup(s => s.Initialize()).Returns(Task.CompletedTask);
         this.mockAuthService.Setup(s => s.CheckAuthentication()).ReturnsAsync(true);
+        this.mockAuthService.Setup(s => s.GetStoredCredentials()).ReturnsAsync((StoredCredentials?)null);
 
         // Act
         await sut.OnAfterRenderAsync(firstRender: true);

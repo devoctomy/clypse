@@ -1,4 +1,3 @@
-using System.Text.Json;
 using clypse.portal.Application.Services.Interfaces;
 using clypse.portal.Models.Aws;
 using clypse.portal.Models.Login;
@@ -18,6 +17,7 @@ public class AwsCognitoAuthenticationService(
     private readonly ILocalStorageService localStorage = localStorage ?? throw new ArgumentNullException(nameof(localStorage));
     private bool isInitialized;
     private bool justLoggedIn;
+    private StoredCredentials? inMemoryCredentials;
 
     /// <inheritdoc/>
     public async Task Initialize()
@@ -68,7 +68,7 @@ public class AwsCognitoAuthenticationService(
         {
             if (expirationTime <= DateTime.UtcNow)
             {
-                await this.ClearStoredCredentials();
+                this.ClearStoredCredentials();
                 return false;
             }
         }
@@ -101,8 +101,8 @@ public class AwsCognitoAuthenticationService(
 
             if (result.Success)
             {
-                Console.WriteLine("AwsCognitoAuthenticationService.Login: Storing credentials");
-                await this.StoreCredentials(result);
+                Console.WriteLine("AwsCognitoAuthenticationService.Login: Storing credentials in memory");
+                this.StoreCredentials(result, username);
                 this.justLoggedIn = true; // Set flag to avoid double credential refresh
                 Console.WriteLine("AwsCognitoAuthenticationService.Login: Set _justLoggedIn flag to prevent double AWS API calls");
             }
@@ -125,27 +125,13 @@ public class AwsCognitoAuthenticationService(
     public async Task Logout()
     {
         await this.jsRuntime.InvokeVoidAsync("CognitoAuth.logout");
-        await this.ClearStoredCredentials();
+        this.ClearStoredCredentials();
     }
 
     /// <inheritdoc/>
-    public async Task<StoredCredentials?> GetStoredCredentials()
+    public Task<StoredCredentials?> GetStoredCredentials()
     {
-        try
-        {
-            var credentialsJson = await this.jsRuntime.InvokeAsync<string>("localStorage.getItem", "clypse_credentials");
-
-            if (string.IsNullOrEmpty(credentialsJson))
-            {
-                return null;
-            }
-
-            return JsonSerializer.Deserialize<StoredCredentials>(credentialsJson);
-        }
-        catch
-        {
-            return null;
-        }
+        return Task.FromResult(this.inMemoryCredentials);
     }
 
     /// <inheritdoc/>
@@ -164,8 +150,8 @@ public class AwsCognitoAuthenticationService(
 
             if (result.Success)
             {
-                Console.WriteLine("AwsCognitoAuthenticationService.CompletePasswordReset: Storing credentials");
-                await this.StoreCredentials(result);
+                Console.WriteLine("AwsCognitoAuthenticationService.CompletePasswordReset: Storing credentials in memory");
+                this.StoreCredentials(result, username);
                 this.justLoggedIn = true;
                 Console.WriteLine("AwsCognitoAuthenticationService.CompletePasswordReset: Set _justLoggedIn flag to prevent double AWS API calls");
             }
@@ -252,25 +238,25 @@ public class AwsCognitoAuthenticationService(
             {
                 freshAwsCredentials.IdentityId = credentials.AwsCredentials?.IdentityId ?? string.Empty;
                 credentials.AwsCredentials = freshAwsCredentials;
-                var credentialsJson = JsonSerializer.Serialize(credentials);
-                await this.jsRuntime.InvokeVoidAsync("localStorage.setItem", "clypse_credentials", credentialsJson);
+                this.inMemoryCredentials = credentials;
             }
 
             return true;
         }
         catch
         {
-            await this.ClearStoredCredentials();
+            this.ClearStoredCredentials();
             return false;
         }
     }
 
-    private async Task StoreCredentials(LoginResult result)
+    private void StoreCredentials(LoginResult result, string username)
     {
-        Console.WriteLine("AwsCognitoAuthenticationService.StoreCredentials: Storing credentials to localStorage");
+        Console.WriteLine("AwsCognitoAuthenticationService.StoreCredentials: Storing credentials in memory");
 
-        var credentials = new StoredCredentials
+        this.inMemoryCredentials = new StoredCredentials
         {
+            Username = username,
             AccessToken = result.AccessToken,
             IdToken = result.IdToken,
             AwsCredentials = result.AwsCredentials,
@@ -280,19 +266,14 @@ public class AwsCognitoAuthenticationService(
 
         if (result.AwsCredentials != null)
         {
-            Console.WriteLine($"AwsCognitoAuthenticationService.StoreCredentials: Storing AWS Credentials with IdentityId: '{result.AwsCredentials.IdentityId}'");
+            Console.WriteLine($"AwsCognitoAuthenticationService.StoreCredentials: Stored AWS Credentials with IdentityId: '{result.AwsCredentials.IdentityId}'");
         }
 
-        var credentialsJson = JsonSerializer.Serialize(credentials);
-        Console.WriteLine($"AwsCognitoAuthenticationService.StoreCredentials: Serialized credentials length: {credentialsJson.Length}");
-
-        await this.jsRuntime.InvokeVoidAsync("localStorage.setItem", "clypse_credentials", credentialsJson);
-        Console.WriteLine("AwsCognitoAuthenticationService.StoreCredentials: Credentials stored successfully");
+        Console.WriteLine("AwsCognitoAuthenticationService.StoreCredentials: Credentials stored in memory successfully");
     }
 
-    private async Task ClearStoredCredentials()
+    private void ClearStoredCredentials()
     {
-        // Clear all localStorage data except persistent user settings and saved users
-        await this.localStorage.ClearAllExceptPersistentSettingsAsync();
+        this.inMemoryCredentials = null;
     }
 }
