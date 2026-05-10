@@ -109,6 +109,22 @@ public class TestBase : PageTest
         // Blazor WASM apps can take time to download and initialise; allow 90 s before
         // any single action or assertion times out.
         Page.SetDefaultTimeout(90000);
+
+        // Playwright's Expect(...) assertions have a separate timeout (default 5 s).
+        // Set it to match the page default so that assertions don't time out before
+        // the Blazor app finishes loading and executing its first OnAfterRenderAsync.
+        Assertions.SetDefaultExpectTimeout(90000);
+    }
+
+    /// <summary>
+    /// Navigates to the server root and waits for the Blazor app to redirect to /login.
+    /// The unauthenticated redirect happens asynchronously in OnAfterRenderAsync, so this
+    /// helper waits up to the page default timeout before proceeding.
+    /// </summary>
+    protected async Task NavigateAndWaitForLoginAsync()
+    {
+        await Page.GotoAsync(ServerUrl);
+        await Page.WaitForURLAsync("**/login");
     }
 
     /// <summary>

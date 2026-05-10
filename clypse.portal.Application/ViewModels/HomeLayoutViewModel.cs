@@ -165,9 +165,10 @@ public partial class HomeLayoutViewModel : ViewModelBase
                 }
             }
         }
-        catch
+        catch (Exception ex)
         {
             // If credentials cannot be retrieved, proceed with logout regardless
+            Console.WriteLine($"HomeLayoutViewModel.HandleLogoutAsync: Error retrieving credentials during logout: {ex.Message}");
         }
 
         await authService.Logout();
