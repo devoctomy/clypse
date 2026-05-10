@@ -1,6 +1,23 @@
 {
   "versions": [
     {
+      "version": "1.2.0.0",
+      "changes": [
+        {
+          "type": "fix",
+          "description": "When remembered user logs out, their vault meta data is no longer cleared."
+        },
+        {
+          "type": "fix",
+          "description": "Cognito credentials are no longer stored in local storage, they are ephemeral."
+        },
+        {
+          "type": "fix",
+          "description": "Issue with multiple remembered users not being handled correctly."
+        }        
+      ]
+    },     
+    {
       "version": "1.1.0.0",
       "changes": [
         {
