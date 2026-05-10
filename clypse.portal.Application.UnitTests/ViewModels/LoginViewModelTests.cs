@@ -104,6 +104,7 @@ public class LoginViewModelTests
 
         // Assert
         Assert.False(sut.IsLoading);
+        Assert.Null(sut.LoadingUser);
         Assert.Null(sut.ErrorMessage);
         Assert.Equal("light", sut.CurrentTheme);
         Assert.Equal("bi-moon", sut.ThemeIcon);
@@ -276,6 +277,20 @@ public class LoginViewModelTests
         Assert.False(sut.ShowRememberMe);
     }
 
+    [Fact]
+    public async Task GivenUserWithNoWebAuthn_WhenSelectUserAsync_ThenLoadingUserIsNull()
+    {
+        // Arrange
+        var sut = CreateSut();
+        var user = new SavedUser { Email = "user@test.com", WebAuthnCredential = null };
+
+        // Act
+        await sut.SelectUserCommand.ExecuteAsync(user);
+
+        // Assert – non-WebAuthn path never sets LoadingUser, so the spinner is never shown
+        Assert.Null(sut.LoadingUser);
+    }
+
     // --- SelectUserAsync (with WebAuthn, failed authenticate) ---
 
     [Fact]
@@ -299,6 +314,69 @@ public class LoginViewModelTests
         Assert.Equal("user@test.com", sut.Username);
         Assert.False(sut.ShowUsersList);
         Assert.NotNull(sut.ErrorMessage);
+    }
+
+    [Fact]
+    public async Task GivenUserWithWebAuthnAndAuthFails_WhenSelectUserAsync_ThenLoadingUserClearedAfterCompletion()
+    {
+        // Arrange
+        var sut = CreateSut();
+        var user = new SavedUser
+        {
+            Email = "user@test.com",
+            WebAuthnCredential = new WebAuthnStoredCredential { CredentialID = "cred1", EncryptedPassword = "enc" },
+        };
+        this.mockWebAuthnService
+            .Setup(w => w.AuthenticateAsync("cred1"))
+            .ReturnsAsync(new WebAuthnAuthenticateResult { Success = false, Error = "auth failed" });
+
+        // Act
+        await sut.SelectUserCommand.ExecuteAsync(user);
+
+        // Assert – LoadingUser must be null after the call completes so the spinner is hidden
+        Assert.Null(sut.LoadingUser);
+        Assert.False(sut.IsLoading);
+    }
+
+    [Fact]
+    public async Task GivenTwoSavedUsers_WhenSelectingOneWithWebAuthn_ThenLoadingUserIsOnlyThatUser()
+    {
+        // Arrange
+        var sut = CreateSut();
+        var userA = new SavedUser
+        {
+            Email = "userA@test.com",
+            WebAuthnCredential = new WebAuthnStoredCredential { CredentialID = "credA", EncryptedPassword = "encA" },
+        };
+        var userB = new SavedUser
+        {
+            Email = "userB@test.com",
+            WebAuthnCredential = new WebAuthnStoredCredential { CredentialID = "credB", EncryptedPassword = "encB" },
+        };
+
+        SavedUser? capturedLoadingUser = null;
+
+        // Capture LoadingUser mid-flight by completing the authenticate call only after we read it
+        var tcs = new TaskCompletionSource<WebAuthnAuthenticateResult>();
+        this.mockWebAuthnService
+            .Setup(w => w.AuthenticateAsync("credA"))
+            .Returns(() =>
+            {
+                capturedLoadingUser = sut.LoadingUser;
+                tcs.SetResult(new WebAuthnAuthenticateResult { Success = false, Error = "fail" });
+                return tcs.Task;
+            });
+
+        // Act
+        await sut.SelectUserCommand.ExecuteAsync(userA);
+
+        // Assert – during authentication of userA the LoadingUser was userA (not userB or null)
+        Assert.Equal(userA, capturedLoadingUser);
+        Assert.NotEqual(userB, capturedLoadingUser);
+
+        // After completion both flags must be cleared
+        Assert.Null(sut.LoadingUser);
+        Assert.False(sut.IsLoading);
     }
 
     // --- RemoveUserAsync ---

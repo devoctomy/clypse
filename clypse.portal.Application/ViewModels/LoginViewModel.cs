@@ -26,6 +26,7 @@ public partial class LoginViewModel : ViewModelBase
     private readonly AppSettings appSettings;
 
     private bool isLoading;
+    private SavedUser? loadingUser;
     private string? errorMessage;
     private bool initializationFailed;
     private string currentTheme = "light";
@@ -85,6 +86,9 @@ public partial class LoginViewModel : ViewModelBase
 
     /// <summary>Gets or sets a value indicating whether an operation is in progress.</summary>
     public bool IsLoading { get => isLoading; set => SetProperty(ref isLoading, value); }
+
+    /// <summary>Gets or sets the user currently being authenticated, or <see langword="null"/> when no user-specific load is in progress.</summary>
+    public SavedUser? LoadingUser { get => loadingUser; set => SetProperty(ref loadingUser, value); }
 
     /// <summary>Gets or sets the error message to display.</summary>
     public string? ErrorMessage { get => errorMessage; set => SetProperty(ref errorMessage, value); }
@@ -601,6 +605,7 @@ public partial class LoginViewModel : ViewModelBase
     private async Task AttemptWebAuthnLoginAsync(SavedUser user)
     {
         IsLoading = true;
+        LoadingUser = user;
         ErrorMessage = null;
 
         try
@@ -639,6 +644,7 @@ public partial class LoginViewModel : ViewModelBase
         finally
         {
             IsLoading = false;
+            LoadingUser = null;
         }
     }
 
