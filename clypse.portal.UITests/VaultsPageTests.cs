@@ -19,7 +19,7 @@ public class VaultsPageTests : TestBase
         }
 
         // Navigate to the login page
-        await Page.GotoAsync(ServerUrl);
+        await NavigateAndWaitForLoginAsync();
 
         await Expect(Page.Locator("button[type='submit']")).ToBeVisibleAsync(new() { Timeout = 10000 });
         await ScreenshotAfterNavigationAsync("LoginPage");

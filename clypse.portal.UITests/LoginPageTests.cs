@@ -11,7 +11,7 @@ public class LoginPageTests : TestBase
     public async Task ShouldDisplayLoginPageElements()
     {
         // Navigate to root — the app redirects to login when not authenticated
-        await Page.GotoAsync(ServerUrl);
+        await NavigateAndWaitForLoginAsync();
 
         // Verify page title
         await Expect(Page).ToHaveTitleAsync("Clypse Portal - Login");
@@ -50,7 +50,7 @@ public class LoginPageTests : TestBase
     [TestMethod]
     public async Task ShouldShowValidationErrorsForEmptyForm()
     {
-        await Page.GotoAsync(ServerUrl);
+        await NavigateAndWaitForLoginAsync();
 
         // Try to submit empty form
         await Page.Locator("button[type='submit']").ClickAsync();
@@ -69,7 +69,7 @@ public class LoginPageTests : TestBase
     [TestMethod]
     public async Task ShouldToggleTheme()
     {
-        await Page.GotoAsync(ServerUrl);
+        await NavigateAndWaitForLoginAsync();
 
         // Get initial theme icon
         var initialIcon = await Page.Locator("button.theme-switcher i").GetAttributeAsync("class");
@@ -93,7 +93,7 @@ public class LoginPageTests : TestBase
     public async Task ShouldShowDeploymentMetadataInVersionHistoryDialog()
     {
         // Navigate to root — the app redirects to login when not authenticated
-        await Page.GotoAsync(ServerUrl);
+        await NavigateAndWaitForLoginAsync();
 
         // Click the version number in the footer to open the version history dialog
         await Page.Locator(".version-number").ClickAsync();
@@ -137,7 +137,7 @@ public class LoginPageTests : TestBase
         }
 
         // Navigate to the login page
-        await Page.GotoAsync(ServerUrl);
+        await NavigateAndWaitForLoginAsync();
 
         // Fill in the login form
         await Page.Locator("input[placeholder='Enter your username']").FillAsync(username);

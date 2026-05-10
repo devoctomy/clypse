@@ -45,4 +45,10 @@ public class LocalStorageService(IJSRuntime jsRuntime)
             keysToRemove.forEach(key => localStorage.removeItem(key));";
         await this.jsRuntime.InvokeVoidAsync("eval", clearStorageScript);
     }
+
+    /// <inheritdoc/>
+    public async Task ClearUserSpecificDataAsync(string username)
+    {
+        await this.jsRuntime.InvokeVoidAsync("localStorage.removeItem", $"clypse_vaults_{username}");
+    }
 }

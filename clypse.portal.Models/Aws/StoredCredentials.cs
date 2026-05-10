@@ -36,4 +36,10 @@ public class StoredCredentials
     /// </summary>
     [JsonPropertyName("storedAt")]
     public DateTime StoredAt { get; set; }
+
+    /// <summary>
+    /// Gets or sets the username (email) associated with these credentials.
+    /// </summary>
+    [JsonPropertyName("username")]
+    public string? Username { get; set; }
 }

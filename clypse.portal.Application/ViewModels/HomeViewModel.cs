@@ -124,6 +124,12 @@ public partial class HomeViewModel : ViewModelBase
                 return;
             }
 
+            var credentials = await authService.GetStoredCredentials();
+            if (credentials?.Username != null)
+            {
+                vaultStorage.SetCurrentUser(credentials.Username);
+            }
+
             UpdateNavigationItems();
         }
     }

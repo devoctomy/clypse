@@ -48,7 +48,7 @@
                                 {
                                     <div class="input-group">
                                         <button type="button" class="btn btn-outline-primary d-flex align-items-center flex-grow-1" @onclick="() => ViewModel.SelectUserCommand.Execute(user)" disabled="@ViewModel.IsLoading">
-                                            @if (ViewModel.IsLoading)
+                                            @if (ViewModel.LoadingUser == user)
                                             {
                                                 <span class="spinner-border spinner-border-sm me-3" role="status" aria-hidden="true"></span>
                                             }

@@ -32,4 +32,11 @@ public interface ILocalStorageService
     /// </summary>
     /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     Task ClearAllExceptPersistentSettingsAsync();
+
+    /// <summary>
+    /// Removes only the data in local storage that pertains to the specified user (e.g. their vault metadata).
+    /// </summary>
+    /// <param name="username">The username (email) whose data should be removed.</param>
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
+    Task ClearUserSpecificDataAsync(string username);
 }

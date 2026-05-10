@@ -157,4 +157,28 @@ public class LocalStorageServiceTests
         Assert.Contains("users", capturedScript);
         Assert.Contains("clypse_user_settings", capturedScript);
     }
+
+    // --- ClearUserSpecificDataAsync ---
+
+    [Fact]
+    public async Task GivenUsername_WhenClearUserSpecificDataAsync_ThenRemovesPerUserVaultKey()
+    {
+        // Arrange
+        const string username = "alice@example.com";
+        const string expectedKey = $"clypse_vaults_{username}";
+
+        this.mockJsRuntime
+            .Setup(x => x.InvokeAsync<IJSVoidResult>("localStorage.removeItem", It.IsAny<object?[]>()))
+            .ReturnsAsync(Mock.Of<IJSVoidResult>());
+
+        var sut = this.CreateSut();
+
+        // Act
+        await sut.ClearUserSpecificDataAsync(username);
+
+        // Assert
+        this.mockJsRuntime.Verify(
+            x => x.InvokeAsync<IJSVoidResult>("localStorage.removeItem", It.Is<object?[]>(args => (string?)args[0] == expectedKey)),
+            Times.Once);
+    }
 }

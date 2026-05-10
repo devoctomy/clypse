@@ -32,7 +32,9 @@ public class HomeLayoutViewModelTests
         this.mockUserSettingsService.Setup(s => s.SetThemeAsync(It.IsAny<string>())).Returns(Task.CompletedTask);
         this.mockBrowserInteropService.Setup(s => s.SetThemeAsync(It.IsAny<string>())).Returns(Task.CompletedTask);
         this.mockLocalStorageService.Setup(s => s.GetItemAsync(It.IsAny<string>())).ReturnsAsync((string?)null);
+        this.mockLocalStorageService.Setup(s => s.ClearUserSpecificDataAsync(It.IsAny<string>())).Returns(Task.CompletedTask);
         this.mockAuthService.Setup(s => s.Logout()).Returns(Task.CompletedTask);
+        this.mockAuthService.Setup(s => s.GetStoredCredentials()).ReturnsAsync((StoredCredentials?)null);
     }
 
     private HomeLayoutViewModel CreateSut()
@@ -351,7 +353,7 @@ public class HomeLayoutViewModelTests
     {
         // Arrange
         var sut = CreateSut();
-        this.mockLocalStorageService.Setup(s => s.GetItemAsync("clypse_credentials")).ReturnsAsync((string?)null);
+        this.mockAuthService.Setup(s => s.GetStoredCredentials()).ReturnsAsync((StoredCredentials?)null);
 
         // Act
         await sut.OnAfterRenderAsync(firstRender: true);
@@ -368,9 +370,9 @@ public class HomeLayoutViewModelTests
         var sut = CreateSut();
         var futureExpiry = DateTime.UtcNow.AddHours(1).ToString("o");
         var credentials = new StoredCredentials { ExpirationTime = futureExpiry };
-        this.mockLocalStorageService
-            .Setup(s => s.GetItemAsync("clypse_credentials"))
-            .ReturnsAsync(JsonSerializer.Serialize(credentials));
+        this.mockAuthService
+            .Setup(s => s.GetStoredCredentials())
+            .ReturnsAsync(credentials);
 
         // Act
         await sut.OnAfterRenderAsync(firstRender: true);
@@ -387,9 +389,9 @@ public class HomeLayoutViewModelTests
         var sut = CreateSut();
         var pastExpiry = DateTime.UtcNow.AddHours(-1).ToString("o");
         var credentials = new StoredCredentials { ExpirationTime = pastExpiry };
-        this.mockLocalStorageService
-            .Setup(s => s.GetItemAsync("clypse_credentials"))
-            .ReturnsAsync(JsonSerializer.Serialize(credentials));
+        this.mockAuthService
+            .Setup(s => s.GetStoredCredentials())
+            .ReturnsAsync(credentials);
 
         // Act
         await sut.OnAfterRenderAsync(firstRender: true);
@@ -400,13 +402,13 @@ public class HomeLayoutViewModelTests
     }
 
     [Fact]
-    public async Task GivenGetItemAsyncThrows_WhenOnAfterRenderAsync_ThenLogoutIsCalled()
+    public async Task GivenGetStoredCredentialsThrows_WhenOnAfterRenderAsync_ThenLogoutIsCalled()
     {
         // Arrange
         var sut = CreateSut();
-        this.mockLocalStorageService
-            .Setup(s => s.GetItemAsync("clypse_credentials"))
-            .ThrowsAsync(new Exception("storage error"));
+        this.mockAuthService
+            .Setup(s => s.GetStoredCredentials())
+            .ThrowsAsync(new Exception("auth error"));
 
         // Act
         await sut.OnAfterRenderAsync(firstRender: true);

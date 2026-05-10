@@ -3,6 +3,7 @@ using Blazing.Mvvm.ComponentModel;
 using clypse.portal.Application.Helpers;
 using clypse.portal.Application.Services.Interfaces;
 using clypse.portal.Models.Aws;
+using clypse.portal.Models.Login;
 using clypse.portal.Models.Navigation;
 using clypse.portal.Models.Settings;
 using CommunityToolkit.Mvvm.Input;
@@ -144,6 +145,32 @@ public partial class HomeLayoutViewModel : ViewModelBase
     [RelayCommand]
     public async Task HandleLogoutAsync()
     {
+        // Clear vault metadata for the current user only if they are not in the saved-users list
+        try
+        {
+            var credentials = await authService.GetStoredCredentials();
+            if (credentials?.Username != null)
+            {
+                var usersJson = await localStorageService.GetItemAsync("users");
+                var isRemembered = false;
+                if (!string.IsNullOrEmpty(usersJson))
+                {
+                    var usersData = JsonSerializer.Deserialize<SavedUsersData>(usersJson);
+                    isRemembered = usersData?.Users?.Any(u => u.Email.Equals(credentials.Username, StringComparison.OrdinalIgnoreCase)) == true;
+                }
+
+                if (!isRemembered)
+                {
+                    await localStorageService.ClearUserSpecificDataAsync(credentials.Username);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            // If credentials cannot be retrieved, proceed with logout regardless
+            Console.WriteLine($"HomeLayoutViewModel.HandleLogoutAsync: Error retrieving credentials during logout: {ex.Message}");
+        }
+
         await authService.Logout();
         navigationService.NavigateTo("/login");
     }
@@ -215,12 +242,10 @@ public partial class HomeLayoutViewModel : ViewModelBase
     {
         try
         {
-            var credentialsJson = await localStorageService.GetItemAsync("clypse_credentials");
+            var credentials = await authService.GetStoredCredentials();
 
-            if (!string.IsNullOrEmpty(credentialsJson))
+            if (credentials != null)
             {
-                var credentials = JsonSerializer.Deserialize<StoredCredentials>(credentialsJson);
-
                 bool valid = ValidateCredentialsExpiry(credentials);
                 if (!valid)
                 {
