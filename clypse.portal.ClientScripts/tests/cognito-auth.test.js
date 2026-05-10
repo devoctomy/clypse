@@ -273,7 +273,8 @@ describe('CognitoAuth.getAwsCredentials', () => {
             sessionToken: 'test-session-token',
             expireTime: new Date('2026-12-31T23:59:59Z'),
             identityId: 'us-east-1:test-identity-id',
-            refresh: mockRefresh
+            refresh: mockRefresh,
+            clearCachedId: jest.fn()
         };
 
         global.AWS.CognitoIdentityCredentials.mockReturnValue(mockCredentials);
@@ -328,6 +329,41 @@ describe('CognitoAuth.getAwsCredentials', () => {
         // Act & Assert
         await expect(window.CognitoAuth.getAwsCredentials('test-id-token')).rejects.toThrow('Refresh failed');
     });
+
+    test('GivenAnyIdToken_WhenGetAwsCredentials_ThenClearsCachedIdBeforeRefresh', async () => {
+        // Arrange – track call order so we can verify clearCachedId happens before refresh
+        const callOrder = [];
+        mockCredentials.clearCachedId.mockImplementation(() => callOrder.push('clearCachedId'));
+        mockRefresh.mockImplementation((callback) => {
+            callOrder.push('refresh');
+            callback(null);
+        });
+
+        // Act
+        await window.CognitoAuth.getAwsCredentials('test-id-token');
+
+        // Assert
+        expect(mockCredentials.clearCachedId).toHaveBeenCalledTimes(1);
+        expect(callOrder).toEqual(['clearCachedId', 'refresh']);
+    });
+
+    test('GivenPreviousUserCachedIdentity_WhenGetAwsCredentials_ThenCachedIdClearedSoFreshIdentityIsUsed', async () => {
+        // Arrange – simulate the bug scenario: AWS SDK has a stale identityId cached from
+        // a previous user. clearCachedId() must be called so refresh() resolves a new identity.
+        let identityAfterClear = 'us-east-1:user-a-identity';
+        mockCredentials.clearCachedId.mockImplementation(() => {
+            identityAfterClear = 'us-east-1:user-b-identity'; // cache evicted, SDK will fetch fresh
+        });
+        mockRefresh.mockImplementation((callback) => callback(null));
+        // Simulate what the SDK returns after a fresh lookup
+        mockCredentials.identityId = identityAfterClear;
+
+        // Act
+        await window.CognitoAuth.getAwsCredentials('user-b-id-token');
+
+        // Assert – clearCachedId was called, so we would have received user B's identity
+        expect(mockCredentials.clearCachedId).toHaveBeenCalled();
+    });
 });
 
 describe('CognitoAuth.logout', () => {
@@ -340,7 +376,7 @@ describe('CognitoAuth.logout', () => {
             signOut: mockSignOut,
             getSignInUserSession: () => ({ isValid: () => true })
         };
-        global.AWS.config.credentials = { accessKeyId: 'test' };
+        global.AWS.config.credentials = { accessKeyId: 'test', clearCachedId: jest.fn() };
     });
 
     test('GivenAuthenticatedUser_WhenLogout_ThenCallsSignOut', () => {
@@ -379,6 +415,63 @@ describe('CognitoAuth.logout', () => {
 
         // Act & Assert
         expect(() => window.CognitoAuth.logout()).not.toThrow();
+    });
+
+    test('GivenAuthenticatedUser_WhenLogout_ThenClearsCachedIdentityBeforeNullingCredentials', () => {
+        // Arrange
+        const mockClearCachedId = jest.fn();
+        global.AWS.config.credentials = { accessKeyId: 'test', clearCachedId: mockClearCachedId };
+
+        // Act
+        window.CognitoAuth.logout();
+
+        // Assert – clearCachedId must be called so the next user gets a fresh identity
+        expect(mockClearCachedId).toHaveBeenCalledTimes(1);
+        expect(global.AWS.config.credentials).toBe(null);
+    });
+
+    test('GivenCredentialsWithoutClearCachedId_WhenLogout_ThenDoesNotThrow', () => {
+        // Arrange – credentials object that has no clearCachedId method (e.g. legacy / null)
+        global.AWS.config.credentials = { accessKeyId: 'test' };
+
+        // Act & Assert
+        expect(() => window.CognitoAuth.logout()).not.toThrow();
+    });
+
+    test('GivenUserALoggedOut_WhenUserBLogsIn_ThenUserBGetsFreshIdentityNotUserAs', async () => {
+        // Arrange – this is the full multi-user scenario from the bug report.
+        // After User A logs out, User B should never receive User A's cached identityId.
+        const userAClearCachedId = jest.fn();
+        global.AWS.config.credentials = { accessKeyId: 'userA-key', clearCachedId: userAClearCachedId };
+
+        // Step 1: User A logs out
+        window.CognitoAuth.logout();
+        expect(userAClearCachedId).toHaveBeenCalledTimes(1); // identity evicted at logout
+        expect(global.AWS.config.credentials).toBe(null);
+
+        // Step 2: User B calls getAwsCredentials (exercised via the mock used in login tests)
+        // We verify clearCachedId is called on the *new* credentials object created for User B
+        const userBClearCachedId = jest.fn();
+        const userBRefresh = jest.fn((cb) => cb(null));
+        const userBCredentials = {
+            accessKeyId: 'userB-key',
+            secretAccessKey: 'userB-secret',
+            sessionToken: 'userB-token',
+            expireTime: new Date('2099-01-01'),
+            identityId: 'us-east-1:user-b-identity',
+            clearCachedId: userBClearCachedId,
+            refresh: userBRefresh
+        };
+        global.AWS.CognitoIdentityCredentials.mockReturnValue(userBCredentials);
+        window.CognitoAuth.userPool = { getUserPoolId: () => 'us-east-1_TestPool' };
+        global.AWS.config.region = 'us-east-1';
+
+        await window.CognitoAuth.getAwsCredentials('user-b-id-token');
+
+        // Assert – User B's credentials had clearCachedId called before refresh, ensuring
+        // no stale identity from User A contaminates User B's credential exchange.
+        expect(userBClearCachedId).toHaveBeenCalledTimes(1);
+        expect(userBRefresh).toHaveBeenCalledTimes(1);
     });
 });
 

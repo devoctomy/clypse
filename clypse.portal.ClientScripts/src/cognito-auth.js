@@ -99,6 +99,11 @@ window.CognitoAuth = {
                 Logins: loginData
             });
 
+            // Clear any identity cached from a previous user's session. Without this the
+            // AWS SDK reuses the prior user's identityId, pairing it with the new user's
+            // tokens and causing a 400 Bad Request from the Cognito Identity service.
+            AWS.config.credentials.clearCachedId();
+
             AWS.config.credentials.refresh((error) => {
                 if (error) {
                     console.error('CognitoAuth.getAwsCredentials: Error during refresh:', error);
@@ -121,6 +126,11 @@ window.CognitoAuth = {
     logout: function() {
         if (this.cognitoUser) {
             this.cognitoUser.signOut();
+        }
+        // Evict the cached Cognito identity so the next user always gets a fresh
+        // identity lookup rather than inheriting this user's identityId.
+        if (AWS.config.credentials && typeof AWS.config.credentials.clearCachedId === 'function') {
+            AWS.config.credentials.clearCachedId();
         }
         AWS.config.credentials = null;
 
