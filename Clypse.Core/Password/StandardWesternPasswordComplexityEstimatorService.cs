@@ -1,0 +1,159 @@
+﻿using Clypse.Core.Enums;
+
+namespace Clypse.Core.Password;
+
+/// <summary>
+/// Service for estimating the complexity of passwords.
+/// </summary>
+/// <param name="weakKnownPasswordsService">Checks passwords against the list of weak known passwords.</param>
+public class StandardWesternPasswordComplexityEstimatorService(
+    IWeakKnownPasswordsService weakKnownPasswordsService)
+    : IPasswordComplexityEstimatorService
+{
+    /// <summary>
+    /// Estimates the entropy of the given password.
+    /// </summary>
+    /// <param name="password">The password to estimate.</param>
+    /// <returns>A double value representing the estimated entropy.</returns>
+    public double EstimateEntropy(string password)
+    {
+        if (string.IsNullOrEmpty(password))
+        {
+            return 0;
+        }
+
+        var charsByGroup = GetCharsByGroup();
+        var charCountsByGroup = GetCharCountsByGroup(password, charsByGroup);
+        if (charCountsByGroup == null)
+        {
+            return -1;
+        }
+
+        var possibleCharsPerChar = 0;
+        foreach (var curGroup in charCountsByGroup.Keys)
+        {
+            var charsInGroup = charsByGroup[curGroup].Length;
+            possibleCharsPerChar += charsInGroup;
+        }
+
+        var entropy = password.Length * Math.Log(possibleCharsPerChar, 2);
+        return entropy;
+    }
+
+    /// <summary>
+    /// Estimates the complexity of the given password.
+    /// </summary>
+    /// <param name="password">The password to estimate.</param>
+    /// <param name="checkForPwnedPasswords">Whether to check the password against a database of known compromised passwords.</param>
+    /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
+    /// <returns>A <see cref="PasswordComplexityEstimatorResults"/> value representing the estimated complexity and any additional information.</returns>    /// <exception cref="ArgumentNullException">Thrown if the password is null.</exception>
+    public async Task<PasswordComplexityEstimatorResults> EstimateAsync(
+        string password,
+        bool checkForPwnedPasswords,
+        CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrEmpty(password))
+        {
+            return new PasswordComplexityEstimatorResults
+            {
+                EstimatedEntropy = 0,
+                ComplexityEstimation = PasswordComplexityEstimation.None,
+                AdditionalInfo = "No password was provided.",
+            };
+        }
+
+        var entropy = (int)Math.Round(this.EstimateEntropy(password), 0);
+        if (checkForPwnedPasswords && await weakKnownPasswordsService.ContainsAsync(password, cancellationToken))
+        {
+            return new PasswordComplexityEstimatorResults
+            {
+                EstimatedEntropy = entropy,
+                ComplexityEstimation = PasswordComplexityEstimation.VeryWeak,
+                AdditionalInfo = "This password is found in a list of weak known passwords.",
+            };
+        }
+
+        var complexity = CalculateComplexity(entropy);
+        return new PasswordComplexityEstimatorResults
+        {
+            EstimatedEntropy = entropy,
+            ComplexityEstimation = complexity,
+            AdditionalInfo = string.Empty,
+        };
+    }
+
+    private static PasswordComplexityEstimation CalculateComplexity(int entropy)
+    {
+        var complexity = PasswordComplexityEstimation.Unknown;
+
+        if (entropy < 0)
+        {
+            complexity = PasswordComplexityEstimation.Unknown;
+        }
+        else if (entropy <= 75)
+        {
+            complexity = PasswordComplexityEstimation.VeryWeak;
+        }
+        else if (entropy <= 91)
+        {
+            complexity = PasswordComplexityEstimation.Weak;
+        }
+        else if (entropy <= 95)
+        {
+            complexity = PasswordComplexityEstimation.Medium;
+        }
+        else if (entropy <= 105)
+        {
+            complexity = PasswordComplexityEstimation.Strong;
+        }
+        else if (entropy > 105)
+        {
+            complexity = PasswordComplexityEstimation.VeryStrong;
+        }
+
+        return complexity;
+    }
+
+    private static Dictionary<CharacterGroup, string> GetCharsByGroup()
+    {
+        var charsByGroup = new Dictionary<CharacterGroup, string>();
+        var allGroups = Enum.GetValues<CharacterGroup>();
+        foreach (var group in allGroups)
+        {
+            if (group == CharacterGroup.None)
+            {
+                continue;
+            }
+
+            var chars = CharacterGroups.GetGroup(group);
+            charsByGroup.Add(group, chars);
+        }
+
+        return charsByGroup;
+    }
+
+    private static Dictionary<CharacterGroup, int>? GetCharCountsByGroup(
+        string password,
+        Dictionary<CharacterGroup, string> charsByGroup)
+    {
+        var charCountsByGroup = new Dictionary<CharacterGroup, int>();
+        foreach (var curChar in password)
+        {
+            var group = charsByGroup.FirstOrDefault(x => x.Value.Contains(curChar)).Key;
+            if (group == CharacterGroup.None)
+            {
+                return null;
+            }
+
+            if (!charCountsByGroup.TryGetValue(group, out int value))
+            {
+                value = 0;
+                charCountsByGroup[group] = value;
+            }
+
+            charCountsByGroup[group] = ++value;
+        }
+
+        return charCountsByGroup;
+    }
+}

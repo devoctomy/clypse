@@ -1,0 +1,29 @@
+<Solution>
+  <Folder Name="/Solution Items/">
+    <File Path=".editorconfig" />
+    <File Path="analyzers.globalconfig" />
+    <File Path=".gitattributes" />
+    <File Path=".gitignore" />
+    <File Path="Directory.Build.props" />
+    <File Path="Directory.Packages.props" />
+    <File Path="global.json" />
+    <File Path="README.md" />
+  </Folder>
+  <Folder Name="/cloudformation/">
+    <File Path="cloudformation/app.yaml" />
+    <File Path="cloudformation/base-stack.ps1" />
+    <File Path="cloudformation/deploy.ps1" />
+    <File Path="cloudformation/README.md" />
+    <File Path="cloudformation/remove.ps1" />
+    <File Path="cloudformation/test-auth.ps1" />
+  </Folder>
+  <Folder Name="/Tests/">
+    <Project Path="Clypse.Core.UnitTests/Clypse.Core.UnitTests.csproj" />
+    <Project Path="Clypse.Portal.Application.UnitTests/Clypse.Portal.Application.UnitTests.csproj" />
+    <Project Path="Clypse.Portal.UITests/Clypse.Portal.UITests.csproj" />
+  </Folder>
+  <Project Path="Clypse.Core/Clypse.Core.csproj" />
+  <Project Path="Clypse.Portal.Application/Clypse.Portal.Application.csproj" />
+  <Project Path="Clypse.Portal.Models/Clypse.Portal.Models.csproj" />
+  <Project Path="Clypse.Portal/Clypse.Portal.csproj" />
+</Solution>

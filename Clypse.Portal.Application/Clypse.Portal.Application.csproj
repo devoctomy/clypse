@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Devoctomy.Blazwiz.UI" />
+    <PackageReference Include="Devoctomy.Blazwiz.Auth.Cognito" />
+    <PackageReference Include="Devoctomy.Blazwiz.UI.Sync" />
+    <PackageReference Include="Blazing.Mvvm" />
+    <PackageReference Include="CommunityToolkit.Mvvm" />
+    <PackageReference Include="StyleCop.Analyzers">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Clypse.Core\Clypse.Core.csproj" />
+    <ProjectReference Include="..\Clypse.Portal.Models\Clypse.Portal.Models.csproj" />
+  </ItemGroup>
+</Project>
