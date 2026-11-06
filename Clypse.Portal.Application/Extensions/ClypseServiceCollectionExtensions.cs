@@ -3,6 +3,7 @@ using Clypse.Portal.Application.Services.Interfaces;
 using Clypse.Portal.Application.Text;
 using Clypse.Portal.Models.Settings;
 using Devoctomy.Blazwiz.Auth.Extensions;
+using Devoctomy.Blazwiz.Core.Extensions;
 using Devoctomy.Blazwiz.UI.Extensions;
 using Devoctomy.Blazwiz.UI.Models;
 using Microsoft.Extensions.Configuration;
@@ -32,10 +33,15 @@ public static class ClypseServiceCollectionExtensions
         var settings = configuration.GetSection(ClypseSettings.SectionName).Get<ClypseSettings>() ?? new ClypseSettings();
         services.AddSingleton(settings);
         services.AddErrorText<ClypseText>();
+
+        // The sync module says "protected profiles" and "files"; clypse says "vaults" and "secrets".
+        services.AddBlazwizText(text => text.AddOverrides<ClypseSyncText>());
         services.AddScoped<IVaultService, VaultService>();
         services.AddScoped<ISecretServiceFactory, SecretServiceFactory>();
         services.AddScoped<IVaultSession, VaultSession>();
         services.AddScoped<IPasswordStrengthService, PasswordStrengthService>();
+        services.AddScoped<ISecretCopyService, SecretCopyService>();
+        services.AddScoped<IPasswordGeneratorPreferencesService, PasswordGeneratorPreferencesService>();
         services.AddSessionLifecycleHandler<VaultLabelHandler>();
         services.TryAddSingleton(TimeProvider.System);
         services.AddNavigationItem(new NavigationItem

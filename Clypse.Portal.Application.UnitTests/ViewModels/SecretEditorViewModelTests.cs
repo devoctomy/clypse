@@ -17,6 +17,7 @@ public class SecretEditorViewModelTests
     private readonly FrameworkText text = new(typeof(ClypseText));
     private readonly Mock<IVaultSession> mockSession = new();
     private readonly Mock<IPasswordStrengthService> mockStrength = new();
+    private readonly Mock<ISecretCopyService> mockCopy = new();
     private readonly List<Secret> secrets = [];
     private Secret? saved;
 
@@ -35,9 +36,10 @@ public class SecretEditorViewModelTests
     public void GivenNullDependencies_WhenConstructing_ThenThrowsArgumentNullException()
     {
         // Act & Assert
-        Assert.Equal("session", Assert.Throws<ArgumentNullException>(() => new SecretEditorViewModel(null!, mockStrength.Object, text.Errors)).ParamName);
-        Assert.Equal("strengthService", Assert.Throws<ArgumentNullException>(() => new SecretEditorViewModel(mockSession.Object, null!, text.Errors)).ParamName);
-        Assert.Equal("errorText", Assert.Throws<ArgumentNullException>(() => new SecretEditorViewModel(mockSession.Object, mockStrength.Object, null!)).ParamName);
+        Assert.Equal("session", Assert.Throws<ArgumentNullException>(() => new SecretEditorViewModel(null!, mockStrength.Object, text.Errors, mockCopy.Object)).ParamName);
+        Assert.Equal("strengthService", Assert.Throws<ArgumentNullException>(() => new SecretEditorViewModel(mockSession.Object, null!, text.Errors, mockCopy.Object)).ParamName);
+        Assert.Equal("errorText", Assert.Throws<ArgumentNullException>(() => new SecretEditorViewModel(mockSession.Object, mockStrength.Object, null!, mockCopy.Object)).ParamName);
+        Assert.Equal("copyService", Assert.Throws<ArgumentNullException>(() => new SecretEditorViewModel(mockSession.Object, mockStrength.Object, text.Errors, null!)).ParamName);
     }
 
     [Fact]
@@ -308,5 +310,38 @@ public class SecretEditorViewModelTests
         Assert.Null(sut.GeneratingFor);
     }
 
-    private SecretEditorViewModel CreateSut() => new(mockSession.Object, mockStrength.Object, text.Errors);
+    [Fact]
+    public async Task GivenFields_WhenCopied_ThenSecretValuesAreCopiedAsSecretsAndOthersAreNot()
+    {
+        // Arrange
+        var sut = CreateSut();
+        await sut.LoadAsync(null);
+        await sut.SetValueAsync("UserName", "bob");
+        await sut.SetValueAsync("Password", "hunter2");
+
+        // Act
+        await sut.CopyAsync("UserName");
+        await sut.CopyAsync("Password");
+
+        // Assert
+        mockCopy.Verify(x => x.CopyAsync("UserName", "bob", false), Times.Once);
+        mockCopy.Verify(x => x.CopyAsync("Password", "hunter2", true), Times.Once);
+    }
+
+    [Fact]
+    public async Task GivenAnAwsSecret_WhenLoaded_ThenItsSecretAccessKeyIsASecretValue()
+    {
+        // Arrange
+        var sut = CreateSut();
+        await sut.LoadAsync(null);
+
+        // Act
+        sut.SelectType(SecretType.Aws);
+
+        // Assert
+        Assert.True(sut.Fields.Single(f => f.Name == "SecretAccessKey").IsSecretValue);
+        Assert.False(sut.Fields.Single(f => f.Name == "AccessKeyId").IsSecretValue);
+    }
+
+    private SecretEditorViewModel CreateSut() => new(mockSession.Object, mockStrength.Object, text.Errors, mockCopy.Object);
 }

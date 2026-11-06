@@ -79,6 +79,23 @@ public class SecretExtensionsTests
         Assert.True(fieldNames.SequenceEqual(expectedOrder));
     }
 
+    [Fact]
+    public void GivenSecretsOfEachKind_WhenGettingTheirFields_ThenOnlyPasswordsAndTheAwsSecretKeyAreSecretValues()
+    {
+        // Arrange
+        var secrets = new Secret[] { new Secret(), new WebSecret(), new AwsCredentials() };
+
+        // Act
+        var secretValues = secrets
+            .SelectMany(s => s.GetOrderedSecretFields()!)
+            .Where(f => f.Value.IsSecretValue)
+            .Select(f => f.Key.Name)
+            .ToList();
+
+        // Assert
+        Assert.Equal(["Password", "SecretAccessKey"], secretValues);
+    }
+
     [Theory]
     [InlineData(SecretType.None, typeof(Secret))]
     [InlineData(SecretType.Web, typeof(WebSecret))]

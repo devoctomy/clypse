@@ -14,4 +14,10 @@ public class ClypseSettings
     /// Gets or sets the templates the password generator offers for memorable passwords.
     /// </summary>
     public List<MemorablePasswordTemplate> MemorablePasswordTemplates { get; set; } = [];
+
+    /// <summary>
+    /// Gets or sets how long, in seconds, a copied password or other secret value stays on the clipboard before it is
+    /// cleared.
+    /// </summary>
+    public int ClipboardClearSeconds { get; set; } = 30;
 }

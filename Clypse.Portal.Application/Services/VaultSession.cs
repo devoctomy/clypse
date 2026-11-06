@@ -16,15 +16,17 @@ namespace Clypse.Portal.Application.Services;
 public sealed class VaultSession : IVaultSession, IDisposable
 {
     /// <summary>
-    /// How many secrets are read between notifications while loading, so a large vault does not re-render the page for
-    /// every secret.
+    /// How many secrets are read between telling the page while loading. Each time it is told, the page sorts and
+    /// filters the list again, so telling it after every secret makes loading a large vault many times slower.
     /// </summary>
-    public const int NotifyEvery = 25;
+    public const int ReadBatchSize = 100;
 
     private readonly ISecretServiceFactory secretServiceFactory;
     private readonly IE2eProtectedProfileManager manager;
     private readonly ISyncService syncService;
     private readonly Dictionary<string, Secret> secrets = [];
+    private readonly Lock gate = new Lock();
+    private int unreadableCount;
 
     private ISecretService? secretService;
     private CancellationTokenSource? loading;
@@ -52,7 +54,16 @@ public sealed class VaultSession : IVaultSession, IDisposable
     public Vault? Vault { get; private set; }
 
     /// <inheritdoc/>
-    public IReadOnlyList<Secret> Secrets => snapshot ??= secrets.Values.ToList();
+    public IReadOnlyList<Secret> Secrets
+    {
+        get
+        {
+            lock (gate)
+            {
+                return snapshot ??= secrets.Values.ToList();
+            }
+        }
+    }
 
     /// <inheritdoc/>
     public bool IsLoading { get; private set; }
@@ -64,7 +75,24 @@ public sealed class VaultSession : IVaultSession, IDisposable
     public int TotalCount { get; private set; }
 
     /// <inheritdoc/>
-    public int UnreadableCount { get; private set; }
+    public int UnreadableCount
+    {
+        get
+        {
+            lock (gate)
+            {
+                return unreadableCount;
+            }
+        }
+
+        private set
+        {
+            lock (gate)
+            {
+                unreadableCount = value;
+            }
+        }
+    }
 
     private bool IsUnlocked => Vault != null && manager.IsUnlocked(new E2eKeyScope(Vault.Id));
 
@@ -147,8 +175,12 @@ public sealed class VaultSession : IVaultSession, IDisposable
         loading = source;
         var token = source.Token;
 
-        secrets.Clear();
-        snapshot = null;
+        lock (gate)
+        {
+            secrets.Clear();
+            snapshot = null;
+        }
+
         LoadedCount = 0;
         TotalCount = 0;
         UnreadableCount = 0;
@@ -158,15 +190,12 @@ public sealed class VaultSession : IVaultSession, IDisposable
             var ids = await service.ListIdsAsync(token);
             TotalCount = ids.Count;
             Notify();
-            foreach (var id in ids)
+            foreach (var batch in ids.Chunk(ReadBatchSize))
             {
                 token.ThrowIfCancellationRequested();
-                await ReadAsync(service, id, token);
-                LoadedCount++;
-                if (LoadedCount % NotifyEvery == 0)
-                {
-                    Notify();
-                }
+                await Task.WhenAll(batch.Select(id => ReadAsync(service, id, token)));
+                LoadedCount += batch.Length;
+                Notify();
             }
         }
         catch (OperationCanceledException) when (token.IsCancellationRequested)
@@ -213,21 +242,30 @@ public sealed class VaultSession : IVaultSession, IDisposable
         catch (ClypseException ex) when (ex.Code == ClypseErrorCodes.SecretUnreadable)
         {
             Remove(id);
-            UnreadableCount++;
+            lock (gate)
+            {
+                unreadableCount++;
+            }
         }
     }
 
     private void Set(Secret secret)
     {
-        secrets[secret.Id] = secret;
-        snapshot = null;
+        lock (gate)
+        {
+            secrets[secret.Id] = secret;
+            snapshot = null;
+        }
     }
 
     private void Remove(string id)
     {
-        if (secrets.Remove(id))
+        lock (gate)
         {
-            snapshot = null;
+            if (secrets.Remove(id))
+            {
+                snapshot = null;
+            }
         }
     }
 
@@ -235,8 +273,12 @@ public sealed class VaultSession : IVaultSession, IDisposable
     {
         loading?.Cancel();
         loading = null;
-        secrets.Clear();
-        snapshot = null;
+        lock (gate)
+        {
+            secrets.Clear();
+            snapshot = null;
+        }
+
         IsLoading = false;
         LoadedCount = 0;
         TotalCount = 0;

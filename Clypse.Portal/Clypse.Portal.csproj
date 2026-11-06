@@ -12,13 +12,17 @@
     <AssemblyMetadata Include="BuildTimeUtc" Value="$([System.DateTime]::UtcNow.ToString('yyyy-MM-dd HH:mm'))" />
   </ItemGroup>
   <!--
-    Uncomment for smaller / faster production builds once the wasm-tools workload is installed
-    (dotnet workload install wasm-tools). AOT makes publishing considerably slower.
-  <PropertyGroup Condition="'$(RuntimeIdentifier)' == 'browser-wasm'">
+    Release builds are compiled ahead of time to WebAssembly when published (needs the wasm-tools workload:
+    dotnet workload install wasm-tools), as the original clypse was. Argon2id, AES-GCM and loading a large vault run
+    many times faster than in the interpreted builds of dotnet run and the UI tests. The SDK only AOT compiles on
+    publish; a Release build relinks the native runtime instead, so after changing these, build clean, or the old
+    output fails at runtime ("function signature mismatch"). AOT makes publishing considerably slower.
+    InvariantGlobalization (which the original also set) is not: the app's languages and plural forms need ICU.
+  -->
+  <PropertyGroup Condition="'$(Configuration)' == 'Release'">
     <RunAOTCompilation>true</RunAOTCompilation>
     <WasmEnableSIMD>true</WasmEnableSIMD>
   </PropertyGroup>
-  -->
   <ItemGroup>
     <PackageReference Include="Blazing.Mvvm" />
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" />

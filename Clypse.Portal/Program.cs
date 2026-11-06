@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using Clypse.Core.Extensions;
 using Clypse.Portal;
+using Clypse.Portal.Components;
 using Clypse.Portal.Application;
 using Clypse.Portal.Application.Extensions;
 using Clypse.Portal.Application.ViewModels;
@@ -27,9 +28,16 @@ builder.Services.AddBlazwizUi(builder.Configuration);
 builder.Services.AddBlazwizCognito(builder.Configuration);
 
 // Sync and end to end encryption, and the Sync page, with the settings from sync.json (embedded in this project).
-// Clypse defines no sync profiles in code: every vault is a protected profile the user creates.
+// Clypse defines no sync profiles in code: every vault is a protected profile the user creates. A vault locks itself
+// after 5 minutes without use unless the user chooses otherwise in its settings, and may be unlocked with the passkey
+// once the user turns that on for it on a device.
 builder.Services.AddBlazwizSyncModule(builder.Configuration, sync => sync
-    .UseEmbeddedConfiguration(typeof(Program).Assembly, "sync.json"));
+    .UseEmbeddedConfiguration(typeof(Program).Assembly, "sync.json")
+    .UseProfileDefaults(vault =>
+    {
+        vault.IdleTimeout = TimeSpan.FromMinutes(5);
+        vault.AllowDeviceUnlock = true;
+    }));
 
 // The clypse domain: password generation and complexity estimation, the embedded text lists, and secret import.
 // The full weak known passwords list (over five million entries) is far too slow to load in a Debug WebAssembly build,
@@ -45,6 +53,7 @@ builder.Services.AddClypseCore(textLists =>
 // section of wwwroot/appsettings.json. Replace or turn off framework pages here too, e.g.
 // builder.Services.ReplacePage<MyLogin>(BlazwizPages.Login) or builder.Services.DisablePage(BlazwizPages.Sync).
 builder.Services.AddClypse(builder.Configuration);
+builder.Services.AddSettingsSection<PasswordGeneratorSettingsSection>(order: 300);
 
 // The app's view models: all of them in the application assembly are registered automatically.
 builder.Services.AddMvvm(options =>

@@ -15,6 +15,7 @@ public class VaultViewModelTests
     private readonly FrameworkText text = new(typeof(ClypseText));
     private readonly Mock<IVaultService> mockVaults = new();
     private readonly Mock<IVaultSession> mockSession = new();
+    private readonly Mock<ISecretCopyService> mockCopy = new();
     private readonly Vault vault = new() { Id = "v1", Root = "profiles/v1/", Name = "Personal", Description = "Logins", IsUnlocked = true };
     private List<Secret> secrets = [];
     private Vault? open;
@@ -37,11 +38,12 @@ public class VaultViewModelTests
         var t = text.For<ClypseText>();
 
         // Act & Assert
-        Assert.Equal("vaultService", Assert.Throws<ArgumentNullException>(() => new VaultViewModel(null!, mockSession.Object, text.Errors, text.Plurals, t)).ParamName);
-        Assert.Equal("session", Assert.Throws<ArgumentNullException>(() => new VaultViewModel(mockVaults.Object, null!, text.Errors, text.Plurals, t)).ParamName);
-        Assert.Equal("errorText", Assert.Throws<ArgumentNullException>(() => new VaultViewModel(mockVaults.Object, mockSession.Object, null!, text.Plurals, t)).ParamName);
-        Assert.Equal("plurals", Assert.Throws<ArgumentNullException>(() => new VaultViewModel(mockVaults.Object, mockSession.Object, text.Errors, null!, t)).ParamName);
-        Assert.Equal("text", Assert.Throws<ArgumentNullException>(() => new VaultViewModel(mockVaults.Object, mockSession.Object, text.Errors, text.Plurals, null!)).ParamName);
+        Assert.Equal("vaultService", Assert.Throws<ArgumentNullException>(() => new VaultViewModel(null!, mockSession.Object, text.Errors, text.Plurals, t, mockCopy.Object)).ParamName);
+        Assert.Equal("session", Assert.Throws<ArgumentNullException>(() => new VaultViewModel(mockVaults.Object, null!, text.Errors, text.Plurals, t, mockCopy.Object)).ParamName);
+        Assert.Equal("errorText", Assert.Throws<ArgumentNullException>(() => new VaultViewModel(mockVaults.Object, mockSession.Object, null!, text.Plurals, t, mockCopy.Object)).ParamName);
+        Assert.Equal("plurals", Assert.Throws<ArgumentNullException>(() => new VaultViewModel(mockVaults.Object, mockSession.Object, text.Errors, null!, t, mockCopy.Object)).ParamName);
+        Assert.Equal("text", Assert.Throws<ArgumentNullException>(() => new VaultViewModel(mockVaults.Object, mockSession.Object, text.Errors, text.Plurals, null!, mockCopy.Object)).ParamName);
+        Assert.Equal("copyService", Assert.Throws<ArgumentNullException>(() => new VaultViewModel(mockVaults.Object, mockSession.Object, text.Errors, text.Plurals, t, null!)).ParamName);
     }
 
     [Fact]
@@ -335,6 +337,22 @@ public class VaultViewModelTests
         Assert.Null(VaultViewModel.GetSummary(new WebSecret { Name = "a" }));
     }
 
+    [Fact]
+    public void GivenAField_WhenGettingItsCopyLabel_ThenItNamesTheField()
+    {
+        // Arrange
+        var sut = CreateSut();
+
+        // Act
+        var first = sut.GetCopyLabel("Password");
+        var again = sut.GetCopyLabel("Password");
+
+        // Assert
+        Assert.Equal("Copy Password", first);
+        Assert.Same(first, again);
+        Assert.Equal("Copy User name", sut.GetCopyLabel("UserName"));
+    }
+
     private static WebSecret Web(string name, string user, string tags, string? website = null)
     {
         var secret = new WebSecret { Name = name, UserName = user, WebsiteUrl = website };
@@ -351,5 +369,58 @@ public class VaultViewModelTests
         }
     }
 
-    private VaultViewModel CreateSut() => new(mockVaults.Object, mockSession.Object, text.Errors, text.Plurals, text.For<ClypseText>());
+    [Fact]
+    public void GivenSecretsOfEachKind_WhenGettingTheirQuickCopyFields_ThenTheirIdentityAndSecretWhenSet()
+    {
+        // Act & Assert
+        Assert.Equal(["UserName", "Password"], VaultViewModel.GetQuickCopyFields(new WebSecret { Name = "a", UserName = "bob", Password = "pw" }));
+        Assert.Equal(["Password"], VaultViewModel.GetQuickCopyFields(new WebSecret { Name = "a", Password = "pw" }));
+        Assert.Equal(["AccessKeyId", "SecretAccessKey"], VaultViewModel.GetQuickCopyFields(new AwsCredentials { Name = "a", AccessKeyId = "AKIA", SecretAccessKey = "s" }));
+        Assert.Empty(VaultViewModel.GetQuickCopyFields(new Secret { Name = "a", Description = "notes" }));
+        Assert.Equal("bi-person", VaultViewModel.GetCopyIcon("UserName"));
+        Assert.Equal("bi-key", VaultViewModel.GetCopyIcon("SecretAccessKey"));
+        Assert.Equal("bi-copy", VaultViewModel.GetCopyIcon("Comments"));
+    }
+
+    [Fact]
+    public async Task GivenASecret_WhenAFieldIsCopiedFromTheList_ThenSecretValuesAreCopiedAsSecrets()
+    {
+        // Arrange
+        var web = new WebSecret { Name = "Gmail", UserName = "bob", Password = "hunter2" };
+        var aws = new AwsCredentials { Name = "Deploy", SecretAccessKey = "wJalr" };
+        secrets = [web, aws];
+        var sut = CreateSut();
+        await sut.LoadAsync("v1");
+
+        // Act
+        await sut.CopyAsync(web.Id, "UserName");
+        await sut.CopyAsync(web.Id, "Password");
+        await sut.CopyAsync(aws.Id, "SecretAccessKey");
+        await sut.CopyAsync("gone", "Password");
+
+        // Assert
+        mockCopy.Verify(x => x.CopyAsync("UserName", "bob", false), Times.Once);
+        mockCopy.Verify(x => x.CopyAsync("Password", "hunter2", true), Times.Once);
+        mockCopy.Verify(x => x.CopyAsync("SecretAccessKey", "wJalr", true), Times.Once);
+        mockCopy.VerifyNoOtherCalls();
+    }
+
+    [Fact]
+    public async Task GivenAnOpenVault_WhenItsSettingsAreShownAndClosed_ThenTheDialogFollows()
+    {
+        // Arrange
+        var sut = CreateSut();
+        await sut.LoadAsync("v1");
+        var changed = new List<string?>();
+        sut.PropertyChanged += (_, e) => changed.Add(e.PropertyName);
+
+        // Act & Assert
+        sut.ShowSettingsCommand.Execute(null);
+        Assert.Equal(VaultViewModel.VaultDialog.Settings, sut.ActiveDialog);
+        sut.CloseSettingsCommand.Execute(null);
+        Assert.Equal(VaultViewModel.VaultDialog.None, sut.ActiveDialog);
+        Assert.Contains(nameof(VaultViewModel.Title), changed);
+    }
+
+    private VaultViewModel CreateSut() => new(mockVaults.Object, mockSession.Object, text.Errors, text.Plurals, text.For<ClypseText>(), mockCopy.Object);
 }

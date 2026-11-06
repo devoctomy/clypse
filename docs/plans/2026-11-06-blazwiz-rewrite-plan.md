@@ -48,7 +48,7 @@ The template's notebooks feature is the model to follow, almost one to one:
 
 **Not done:**
 - **Deploying the stacks.** This needs the maintainer (AGENTS.md rule 6).
-- **The D3 and Argon2id spikes.** They need the Phase 2 services and a phone.
+- **The phone half of the spikes.** The desktop results are under "Spike results" below.
 
 ### Phase 1: `Clypse.Core`
 
@@ -97,7 +97,7 @@ The template's notebooks feature is the model to follow, almost one to one:
 
 **Not done:**
 - **Two-browser sync and the S3 listing check.** They need a deployed stack.
-- **Creating a vault and filling it from the browser.** That comes with the Phase 3 pages, and gets a UI test there.
+- ~~Creating a vault and filling it from the browser.~~ Done: covered by the Phase 3 pages and their UI tests.
 
 ### Phase 3: new UI
 
@@ -145,14 +145,32 @@ The template's notebooks feature is the model to follow, almost one to one:
   - new `VaultTests` UI tests: create, list, search and tag filter, edit and delete, validation, generator (random and
     memorable), lock and unlock, reload, KeePass import and a missing vault.
 
-**Not done yet in Phase 3:**
-- Settings sections for the generator's templates and for vault security (idle timeout, device unlock, Argon2 costs).
-- Renaming a vault (`VaultService.UpdateAsync` exists; there is no UI for it).
-- Deciding about the framework's `E2eProfilesSection`, which lists vaults by GUID in Settings.
+**Finished afterwards (the leftovers, before Phase 4):**
+- **Copying:**
+  - copy buttons on every single-line field in the editor;
+  - quick copy on each secret row (a login's user name and password, an AWS key id and secret key);
+  - `SecretCopyService` uses blazwiz's new clipboard service and toasts;
+  - a secret value (a password, or a field marked `IsSensitive` in `SecretFieldAttribute` — the AWS secret access key)
+    is cleared from the clipboard after `Clypse:ClipboardClearSeconds`, 30 by default, and masked in the editor until
+    shown.
+- **Vault settings** (a dialog on the vault page):
+  - rename and describe (`VaultService.UpdateAsync`);
+  - auto-lock after 1, 5, 15, 30 or 60 minutes or never, kept with the vault on every device through blazwiz's new
+    per-profile idle timeout;
+  - delete once the vault's name is typed exactly.
 
-**Framework gaps seen:**
-- A second `ModalDialog` (the generator over the editor) does not dim the first.
-- blazwiz's theme preview swatch hard-codes the purple gradient (`blazwiz.css`, `.theme-preview span:nth-child(2)`).
+  clypse's vault defaults are set with `UseProfileDefaults`: auto-lock after 5 minutes, and passkey unlock allowed (each
+  vault still opts in on each device, in Settings).
+- **Password generator settings** (a Settings section, kept on the device by `PasswordGeneratorPreferencesService`):
+  - what the generator starts with (mode, length, kinds of character, template);
+  - the user's own memorable templates, each tried before it is added.
+- **The framework's profile list in Settings is kept.** It is the place to change a vault's passphrase, turn on passkey
+  unlock and delete a locked vault. Its wording is overridden to say "vaults" and "secrets" (`ClypseSyncText.resx`,
+  checked against the framework by `ClypseSyncTextTests`).
+- **The logo** is `images/logo.png` (the clypse PNG) through blazwiz's new `AppSettings.LogoUrl`. The SVG wrapper is
+  gone.
+- **Tests:** 214 application unit tests, 126 core, and 56 UI tests (new ones for copying, vault settings, deleting, the
+  generator settings and the logo). All pass on the local blazwiz build.
 
 ### Changes made in blazwiz
 
@@ -171,12 +189,67 @@ source: `eng/use-local-blazwiz.ps1` packs every package with a unique `-local.<t
 `.blazwiz/packages` (git ignored), sets `BlazwizVersion`, and `nuget.config` adds the folder as a source (see
 AGENTS.md). The 5 UI tests that were `[Ignore]`d waiting for fixes 1 and 2 run again and pass.
 
+4. **Clipboard** (`IClipboardService`, Browser): copy, and clear again later unless something else was copied since;
+   waits for focus if it has to.
+5. **Toasts** (`IToastService`, `ToastHost` in the shell's overlays).
+6. **`AppSettings.LogoUrl`**, defaulting to `images/icon.svg`.
+7. **A storage for the device:** `ISyncStorageResolver.Get/SetDeviceDefaultKindAsync`. Profiles without a storage of
+   their own use it. Settings offers the choice with no profiles yet, and a move also records it. This replaces the old
+   "no default storage before the first profile exists" gap.
+8. **A protected profile's own idle timeout**, kept in the profile index (`idleTimeoutSeconds`) and applied on every
+   device: `ISyncProtectedProfileService.SetIdleTimeoutAsync`, `IE2eIdleLock.Refresh`.
+9. **CSS fixes:**
+   - a dialog over another dims the one beneath;
+   - the theme preview and range sliders use the app's accent.
+
+The full blazwiz suite passes with these: unit, integration (`@aws` skipped), UI (57) and the template pack test.
+
 ### Framework gaps found, not fixed
 
-- **The logo path is hard-coded.** blazwiz's `MainLayout`, `LoginView` and `ForgotPasswordView` show
-  `images/icon.svg`, so an app can't use a PNG logo. For now, clypse's `images/icon.svg` is a wrapper that embeds
-  `icon-colour-192.png` as a data URI. Proposed fix: a logo path setting in `AppSettings`.
-- **No default storage before the first profile exists** (see D8).
+None outstanding from Phases 0–3.
+
+### Spike results
+
+Desktop only (Chromium through Playwright, on the development machine). Same flow each time:
+- sign in with the placeholder sign-in;
+- create a vault;
+- import 1,000 logins from a CSV;
+- lock, then unlock and wait until all 1,000 are read;
+- search for one.
+
+Both runs use the release Argon2id costs (512 MiB, 2 iterations, the framework's defaults).
+
+| Step | Interpreted (`dotnet run -c Release`) | AOT (`dotnet publish -c Release`, served statically) |
+|------|------|------|
+| Create a vault (Argon2id plus the first write) | 2.4 s | 2.0 s |
+| Import 1,000 secrets | 4.1 s | 1.9 s |
+| Unlock (until the page shows) | 2.0 s | 1.7 s |
+| Unlock until all 1,000 are read | 6.0 s | 2.3 s |
+| Search 1,000 | 27 ms | 7 ms |
+
+No errors in the console in either run.
+
+**What made the difference.** Before the fixes below, an interpreted build had read only 650 of 1,000 after 5
+minutes. The cost was not decryption or storage: it was rendering. Every row looked its text up through the localizer,
+and every refresh re-sorted the list with culture-aware comparisons. The fixes:
+- **blazwiz:** `OverridingStringLocalizer` keeps each lookup per culture and name (see "Changes made in blazwiz").
+- **clypse:**
+  - the vault page virtualizes the list (`<Virtualize>`);
+  - `VaultViewModel` keeps the filtered list and tags until the secrets or filter change, and keeps each secret's copy
+    labels;
+  - comparisons are ordinal and ignore case;
+  - `VaultSession` reads secrets in parallel batches of 100 and tells the page once per batch.
+
+**AOT.** `Clypse.Portal.csproj` turns on `RunAOTCompilation` and `WasmEnableSIMD` for Release builds, as the original
+clypse did. It needs the `wasm-tools` workload.
+- The SDK only AOT compiles on publish, so it applies to the plain `dotnet publish -c Release` that deploy runs. Its
+  native wasm is 37 MB, against 2.9 MB without AOT; it is compressed when served.
+- A Release `dotnet run` (and so the UI tests) stays interpreted, but relinks the native runtime. After changing
+  these settings, build clean: stale output failed at runtime with "function signature mismatch".
+- The original also set `InvariantGlobalization`. clypse does not: blazwiz's language choice and plural forms need
+  ICU.
+
+**Still to do:** the same flow on a phone, once the stacks are deployed.
 
 ## What changes conceptually
 
@@ -443,6 +516,20 @@ is a deliberate choice, and the view model tests pass.
    - MP4: nothing prevents store clashes between profiles;
    - concurrent writes of the profile index secret, for example creating vaults on two devices at once;
    - Secrets Manager deletes skip the recovery window.
+6. **Backlog, not required for Phase 4:** make the blazwiz packages trimmable.
+   - **Today.** Blazor publishes with `TrimMode=partial`, which trims only assemblies marked trimmable. The blazwiz
+     assemblies are not marked, so they ship whole. That is safe, just larger.
+   - **What it needs.** `IsTrimmable` on the browser packages (not `Testing` or `Aws`). Every trim analyzer warning must
+     then really be fixed, because the assemblies would then be trimmed:
+     - Tried on 2026-11-06: 12 errors (IL2026, reflection-based `System.Text.Json`) in `Browser` and `Encryption`
+       alone. About 20 more files in `Sync`, `UI` and `Auth.Cognito` call reflection-sensitive APIs and are not
+       checked yet.
+     - The fix is source-generated JSON contexts in each package.
+     - It also breaks public API: `ILocalStorageService`'s generic get and set would take a `JsonTypeInfo<T>`, so
+       apps (clypse's password generator preferences included) pass their own context.
+   - **The AOT analyzer is not needed.** WebAssembly AOT runs on Mono, which falls back to its interpreter, so
+     `IsAotCompatible` (aimed at NativeAOT) does not apply.
+   - **Check:** a published AOT build runs the 1,000-secret spike with no errors.
 
 **Done when:** a security checklist passes: key handling, clipboard clearing, CSP, lock behaviour, and no plaintext in
 local storage or S3.

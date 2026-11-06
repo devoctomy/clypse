@@ -21,4 +21,10 @@ public class SecretField
     /// Gets a value indicating whether the secret needs a value for it.
     /// </summary>
     public bool IsRequired { get; init; }
+
+    /// <summary>
+    /// Gets a value indicating whether the field's value is itself a secret (a password or an access key): hidden until
+    /// asked for, and cleared from the clipboard after it is copied.
+    /// </summary>
+    public bool IsSecretValue { get; init; }
 }

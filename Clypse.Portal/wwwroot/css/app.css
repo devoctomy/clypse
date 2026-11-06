@@ -236,11 +236,18 @@
     border-top: 1px solid var(--bw-border);
 }
 
-.secret-row {
+.secret-item {
     display: flex;
     align-items: center;
+    gap: 0.5rem;
+}
+
+.secret-row {
+    display: flex;
+    flex: 1;
+    align-items: center;
     gap: 0.875rem;
-    width: 100%;
+    min-width: 0;
     padding: 0.75rem 0.5rem;
     border: 0;
     border-radius: 0.5rem;
@@ -309,8 +316,10 @@
     font-size: 0.75rem;
 }
 
-.secret-chevron {
-    color: var(--bw-text-muted);
+.secret-actions {
+    display: flex;
+    flex-shrink: 0;
+    gap: 0.25rem;
 }
 
 /* ---------- Secret editor ---------- */
@@ -388,26 +397,18 @@
     gap: 0.25rem 1rem;
 }
 
-.form-range::-webkit-slider-thumb {
-    background-color: var(--bw-accent);
+/* ---------- Vault settings ---------- */
+
+.vault-danger-zone {
+    padding: 1rem;
+    border: 1px solid rgba(var(--bs-danger-rgb), 0.35);
+    border-radius: 0.75rem;
+    background: rgba(var(--bs-danger-rgb), 0.04);
 }
 
-.form-range::-webkit-slider-thumb:active {
-    background-color: var(--bw-accent-2);
-}
-
-.form-range::-moz-range-thumb {
-    background-color: var(--bw-accent);
-}
-
-.form-range::-moz-range-thumb:active {
-    background-color: var(--bw-accent-2);
-}
-
-.form-range:focus::-webkit-slider-thumb {
-    box-shadow: 0 0 0 1px var(--bw-bg), 0 0 0 0.25rem rgba(var(--bw-accent-rgb), 0.25);
-}
-
-.form-range:focus::-moz-range-thumb {
-    box-shadow: 0 0 0 1px var(--bw-bg), 0 0 0 0.25rem rgba(var(--bw-accent-rgb), 0.25);
+.vault-danger-title {
+    margin-bottom: 0.25rem;
+    color: var(--bs-danger);
+    font-size: 1rem;
+    font-weight: 700;
 }

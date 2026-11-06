@@ -212,6 +212,132 @@ public class VaultTests : TestBase
     }
 
     [TestMethod]
+    public async Task GivenALogin_WhenItsPasswordIsCopiedFromTheList_ThenItIsOnTheClipboard_AndAToastSaysSo()
+    {
+        await Context.GrantPermissionsAsync(["clipboard-read", "clipboard-write"], new() { Origin = ServerUrl });
+        await LoginAsync();
+        await CreateVaultAsync("Personal");
+        await AddLoginAsync("Gmail", "bob", "hunter2hunter2");
+
+        await Page.Locator(".secret-quick-copy[data-field='Password']").ClickAsync();
+
+        await Expect(Page.Locator("#toasts .bw-toast")).ToContainTextAsync("Password copied. It is cleared from the clipboard in 30 seconds.");
+        Assert.AreEqual("hunter2hunter2", await Page.EvaluateAsync<string>("() => navigator.clipboard.readText()"));
+        await ScreenshotAsync("Copied");
+
+        await Page.Locator(".secret-quick-copy[data-field='UserName']").ClickAsync();
+        await Expect(Page.Locator("#toasts")).ToContainTextAsync("User name copied.");
+        Assert.AreEqual("bob", await Page.EvaluateAsync<string>("() => navigator.clipboard.readText()"));
+    }
+
+    [TestMethod]
+    public async Task GivenTheSecretEditor_WhenTheUserNameIsCopied_ThenItIsOnTheClipboard()
+    {
+        await Context.GrantPermissionsAsync(["clipboard-read", "clipboard-write"], new() { Origin = ServerUrl });
+        await LoginAsync();
+        await CreateVaultAsync("Personal");
+        await Page.Locator("#new-secret-button").ClickAsync();
+        await Page.Locator("#secret-field-UserName").FillAsync("bob");
+
+        await Page.Locator(".secret-copy[data-field='UserName']").ClickAsync();
+
+        await Expect(Page.Locator("#toasts")).ToContainTextAsync("User name copied.");
+        Assert.AreEqual("bob", await Page.EvaluateAsync<string>("() => navigator.clipboard.readText()"));
+    }
+
+    [TestMethod]
+    public async Task GivenAnAwsSecret_WhenEdited_ThenItsSecretAccessKeyIsHiddenUntilShown()
+    {
+        await LoginAsync();
+        await CreateVaultAsync("Personal");
+        await Page.Locator("#new-secret-button").ClickAsync();
+
+        await Page.Locator(".secret-type-option[data-type='Aws']").ClickAsync();
+
+        await Expect(Page.Locator("#secret-field-SecretAccessKey")).ToHaveAttributeAsync("type", "password");
+        await Expect(Page.Locator("#secret-field-AccessKeyId")).ToHaveAttributeAsync("type", "text");
+        await Expect(Page.Locator(".secret-generate")).ToHaveCountAsync(0);
+    }
+
+    [TestMethod]
+    public async Task GivenAVault_WhenRenamedInItsSettings_ThenItsNewNameIsShownHereAndInTheList()
+    {
+        await LoginAsync();
+        var id = await CreateVaultAsync("Personal", "Logins");
+
+        await Page.Locator("#vault-settings-button").ClickAsync();
+        await Expect(Page.Locator("#vault-settings-name")).ToHaveValueAsync("Personal");
+        await Expect(Page.Locator("#vault-settings-auto-lock")).ToHaveValueAsync("5");
+        await ScreenshotAsync("VaultSettings");
+        await Page.Locator("#vault-settings-name").FillAsync("Home");
+        await Page.Locator("#vault-settings-description").FillAsync("Shared at home");
+        await Page.Locator("#vault-settings-auto-lock").SelectOptionAsync(string.Empty);
+        await Page.Locator("#vault-settings-save").ClickAsync();
+
+        await Expect(Page.Locator("#vault-settings-dialog")).ToHaveCountAsync(0);
+        await Expect(Page.Locator("#toasts")).ToContainTextAsync("Vault settings saved.");
+        await Expect(Page.Locator("h1.page-title")).ToContainTextAsync("Home");
+        await Expect(Page.Locator(".page-subtitle")).ToHaveTextAsync("Shared at home");
+        await Page.Locator("#vault-settings-button").ClickAsync();
+        await Expect(Page.Locator("#vault-settings-auto-lock")).ToHaveValueAsync(string.Empty);
+        await Page.Locator("#vault-settings-dialog .btn-secondary").ClickAsync();
+        await Page.Locator("#nav-vaults").ClickAsync();
+        await Expect(Page.Locator($".vault-card[data-vault='{id}'] .vault-card-name")).ToHaveTextAsync("Home");
+    }
+
+    [TestMethod]
+    public async Task GivenAVault_WhenDeletedFromItsSettings_ThenItIsGoneOnlyOnceItsNameIsTyped()
+    {
+        await LoginAsync();
+        await CreateVaultAsync("Personal");
+        await Page.Locator("#vault-settings-button").ClickAsync();
+
+        await Page.Locator("#vault-delete-confirmation").FillAsync("personal");
+        await Page.Locator("#vault-delete-button").ClickAsync();
+        await Expect(Page.Locator("#vault-settings-error")).ToHaveTextAsync("Type the vault's name exactly to delete it.");
+        await Page.Locator("#vault-delete-confirmation").FillAsync("Personal");
+        await Page.Locator("#vault-delete-button").ClickAsync();
+
+        await Expect(Page.Locator("#no-vaults")).ToBeVisibleAsync();
+        await Expect(Page.Locator("#toasts")).ToContainTextAsync("Personal deleted.");
+    }
+
+    [TestMethod]
+    public async Task GivenAnOwnTemplate_WhenAddedInSettings_ThenTheGeneratorOffersIt()
+    {
+        await LoginAsync();
+        await Page.Locator("#nav-settings").ClickAsync();
+        await Expect(Page.Locator("#generator-settings")).ToBeVisibleAsync();
+        await Page.Locator("#generator-template-name").FillAsync("Two words");
+        await Page.Locator("#generator-template-pattern").FillAsync("{dict(adjective):initialupper}{dict(noun):initialupper}");
+        await Page.Locator("#generator-template-try").ClickAsync();
+        await Expect(Page.Locator("#generator-template-example")).ToContainTextAsync(new Regex(@"Example: [A-Z]\S+"));
+        await Page.Locator("#generator-template-add").ClickAsync();
+        await Expect(Page.Locator(".generator-template[data-template='Two words']")).ToBeVisibleAsync();
+        await Page.Locator("#generator-settings-memorable").ClickAsync();
+        await Page.Locator("#generator-settings-template").SelectOptionAsync("Two words");
+        await Page.Locator("#generator-settings-save").ClickAsync();
+        await Expect(Page.Locator("#toasts")).ToContainTextAsync("Password generator settings saved.");
+        await ScreenshotAsync("GeneratorSettings");
+
+        await CreateVaultAsync("Personal");
+        await Page.Locator("#new-secret-button").ClickAsync();
+        await Page.Locator(".secret-generate").ClickAsync();
+
+        await Expect(Page.Locator("#generator-mode-memorable")).ToHaveAttributeAsync("aria-pressed", "true");
+        await Expect(Page.Locator("#generator-template")).ToHaveValueAsync("Two words");
+        await Expect(Page.Locator(".generated-password-text")).ToHaveTextAsync(new Regex(@"^[A-Z]\S+$"));
+    }
+
+    [TestMethod]
+    public async Task GivenTheShell_WhenShown_ThenTheLogoIsClypsesPng()
+    {
+        await LoginAsync();
+
+        await Expect(Page.Locator("img.brand-icon")).ToHaveAttributeAsync("src", "images/logo.png");
+    }
+
+    [TestMethod]
     public async Task GivenAnIdThatIsNoVault_WhenOpened_ThenItSaysSo()
     {
         await LoginAsync();

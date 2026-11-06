@@ -24,6 +24,7 @@ public partial class SecretEditorViewModel : ViewModelBase
     private readonly IVaultSession session;
     private readonly IPasswordStrengthService strengthService;
     private readonly IErrorText errorText;
+    private readonly ISecretCopyService copyService;
     private readonly Dictionary<string, string> values = [];
     private readonly Dictionary<string, PasswordStrength> strengths = [];
     private readonly HashSet<string> revealed = [];
@@ -42,11 +43,17 @@ public partial class SecretEditorViewModel : ViewModelBase
     /// <param name="session">The open vault, which saves and deletes the secret.</param>
     /// <param name="strengthService">Estimates passwords' strength.</param>
     /// <param name="errorText">Describes errors.</param>
-    public SecretEditorViewModel(IVaultSession session, IPasswordStrengthService strengthService, IErrorText errorText)
+    /// <param name="copyService">Copies fields to the clipboard.</param>
+    public SecretEditorViewModel(
+        IVaultSession session,
+        IPasswordStrengthService strengthService,
+        IErrorText errorText,
+        ISecretCopyService copyService)
     {
         this.session = session ?? throw new ArgumentNullException(nameof(session));
         this.strengthService = strengthService ?? throw new ArgumentNullException(nameof(strengthService));
         this.errorText = errorText ?? throw new ArgumentNullException(nameof(errorText));
+        this.copyService = copyService ?? throw new ArgumentNullException(nameof(copyService));
         Fields = FieldsOf(SecretType.Web);
     }
 
@@ -220,6 +227,17 @@ public partial class SecretEditorViewModel : ViewModelBase
     }
 
     /// <summary>
+    /// Copies a field's value to the clipboard. A secret value is cleared from it again after a while.
+    /// </summary>
+    /// <param name="field">The field's name.</param>
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
+    public Task CopyAsync(string field)
+    {
+        var isSecret = Fields.FirstOrDefault(f => f.Name == field)?.IsSecretValue ?? false;
+        return copyService.CopyAsync(field, GetValue(field), isSecret);
+    }
+
+    /// <summary>
     /// Opens the password generator for a field.
     /// </summary>
     /// <param name="field">The field's name.</param>
@@ -328,6 +346,7 @@ public partial class SecretEditorViewModel : ViewModelBase
                 Name = f.Key.Name,
                 FieldType = f.Value.FieldType,
                 IsRequired = f.Key.GetCustomAttributes(typeof(RequiredDataAttribute), true).Length > 0,
+                IsSecretValue = f.Value.IsSecretValue,
             })
             .ToList();
     }

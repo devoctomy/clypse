@@ -1,6 +1,6 @@
-using System.Globalization;
 using Blazing.Mvvm.ComponentModel;
 using Clypse.Core.Enums;
+using Clypse.Core.Extensions;
 using Clypse.Core.Secrets;
 using Clypse.Portal.Application.Services.Interfaces;
 using Clypse.Portal.Application.Text;
@@ -24,6 +24,8 @@ public partial class VaultViewModel : ViewModelBase
     private readonly IErrorText errorText;
     private readonly ITextPlurals plurals;
     private readonly IStringLocalizer<ClypseText> text;
+    private readonly ISecretCopyService copyService;
+    private readonly Dictionary<string, string> copyLabels = new Dictionary<string, string>(StringComparer.Ordinal);
 
     private string? vaultId;
     private bool isMissing;
@@ -32,6 +34,8 @@ public partial class VaultViewModel : ViewModelBase
     private VaultDialog activeDialog;
     private string? editingSecretId;
     private string? errorMessage;
+    private IReadOnlyList<Secret> secrets = [];
+    private IReadOnlyList<string> tags = [];
 
     /// <summary>
     /// Initializes a new instance of the <see cref="VaultViewModel"/> class.
@@ -41,13 +45,16 @@ public partial class VaultViewModel : ViewModelBase
     /// <param name="errorText">Describes errors.</param>
     /// <param name="plurals">Words counts.</param>
     /// <param name="text">Clypse's text.</param>
+    /// <param name="copyService">Copies secrets' fields to the clipboard.</param>
     public VaultViewModel(
         IVaultService vaultService,
         IVaultSession session,
         IErrorText errorText,
         ITextPlurals plurals,
-        IStringLocalizer<ClypseText> text)
+        IStringLocalizer<ClypseText> text,
+        ISecretCopyService copyService)
     {
+        this.copyService = copyService ?? throw new ArgumentNullException(nameof(copyService));
         this.vaultService = vaultService ?? throw new ArgumentNullException(nameof(vaultService));
         this.session = session ?? throw new ArgumentNullException(nameof(session));
         this.errorText = errorText ?? throw new ArgumentNullException(nameof(errorText));
@@ -75,6 +82,11 @@ public partial class VaultViewModel : ViewModelBase
         /// Import from a CSV file.
         /// </summary>
         Import,
+
+        /// <summary>
+        /// The vault's settings: its name, when it locks itself, and deleting it.
+        /// </summary>
+        Settings,
     }
 
     /// <summary>
@@ -116,7 +128,7 @@ public partial class VaultViewModel : ViewModelBase
         {
             if (SetProperty(ref search, value ?? string.Empty))
             {
-                OnPropertyChanged(nameof(Secrets));
+                RefreshSecrets();
             }
         }
     }
@@ -131,29 +143,21 @@ public partial class VaultViewModel : ViewModelBase
         {
             if (SetProperty(ref selectedTag, value))
             {
-                OnPropertyChanged(nameof(Secrets));
+                RefreshSecrets();
             }
         }
     }
 
     /// <summary>
-    /// Gets every tag used in the vault, in order.
+    /// Gets every tag used in the vault, in order. Worked out once each time the secrets change, not on every render.
     /// </summary>
-    public IReadOnlyList<string> Tags => session.Secrets
-        .SelectMany(s => s.Tags)
-        .Select(t => t.Trim())
-        .Where(t => t.Length > 0)
-        .Distinct(StringComparer.CurrentCultureIgnoreCase)
-        .Order(StringComparer.CurrentCultureIgnoreCase)
-        .ToList();
+    public IReadOnlyList<string> Tags => tags;
 
     /// <summary>
-    /// Gets the secrets that match the search and the tag, by name.
+    /// Gets the secrets that match the search and the tag, by name. Worked out once each time the secrets, the search or
+    /// the tag change, not on every render: a large vault would otherwise be sorted again for every render.
     /// </summary>
-    public IReadOnlyList<Secret> Secrets => session.Secrets
-        .Where(Matches)
-        .OrderBy(s => s.Name, StringComparer.CurrentCultureIgnoreCase)
-        .ToList();
+    public IReadOnlyList<Secret> Secrets => secrets;
 
     /// <summary>
     /// Gets how many secrets the vault has, read so far.
@@ -244,6 +248,72 @@ public partial class VaultViewModel : ViewModelBase
     }
 
     /// <summary>
+    /// Gets the fields of a secret that can be copied straight from the list (e.g. a login's user name and password),
+    /// if they have a value.
+    /// </summary>
+    /// <param name="secret">The secret.</param>
+    /// <returns>The fields' names, in order.</returns>
+    public static IReadOnlyList<string> GetQuickCopyFields(Secret secret)
+    {
+        ArgumentNullException.ThrowIfNull(secret);
+
+        string[] fields = secret switch
+        {
+            WebSecret => [nameof(WebSecret.UserName), nameof(WebSecret.Password)],
+            AwsCredentials => [nameof(AwsCredentials.AccessKeyId), nameof(AwsCredentials.SecretAccessKey)],
+            _ => [],
+        };
+        return fields.Where(f => !string.IsNullOrEmpty(secret.GetData(f))).ToList();
+    }
+
+    /// <summary>
+    /// Gets the icon of a field's copy button.
+    /// </summary>
+    /// <param name="field">The field's name.</param>
+    /// <returns>The Bootstrap icon's class.</returns>
+    public static string GetCopyIcon(string field) => field switch
+    {
+        nameof(WebSecret.UserName) => "bi-person",
+        nameof(AwsCredentials.AccessKeyId) => "bi-person-badge",
+        nameof(WebSecret.Password) or nameof(AwsCredentials.SecretAccessKey) => "bi-key",
+        _ => "bi-copy",
+    };
+
+    /// <summary>
+    /// Gets the label of a field's copy button, e.g. "Copy Password". Looked up once per field: every row shows them.
+    /// </summary>
+    /// <param name="field">The field's name.</param>
+    /// <returns>The label.</returns>
+    public string GetCopyLabel(string field)
+    {
+        if (!copyLabels.TryGetValue(field, out var label))
+        {
+            label = text["Copy.Button", text["Secret.Field." + field]];
+            copyLabels[field] = label;
+        }
+
+        return label;
+    }
+
+    /// <summary>
+    /// Copies one of a secret's fields to the clipboard. A secret value is cleared from it again after a while.
+    /// </summary>
+    /// <param name="secretId">The secret's id.</param>
+    /// <param name="field">The field's name.</param>
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
+    public Task CopyAsync(string secretId, string field)
+    {
+        var secret = session.Secrets.FirstOrDefault(s => s.Id == secretId);
+        if (secret == null)
+        {
+            return Task.CompletedTask;
+        }
+
+        var isSecretValue = secret.GetOrderedSecretFields()?.FirstOrDefault(f => f.Key.Name == field).Value?.IsSecretValue ?? false;
+        return copyService.CopyAsync(field, secret.GetData(field), isSecretValue);
+    }
+
+    /// <summary>
     /// Opens a vault: finds it, and reads its secrets once it is unlocked.
     /// </summary>
     /// <param name="id">The vault's id.</param>
@@ -279,7 +349,7 @@ public partial class VaultViewModel : ViewModelBase
     [RelayCommand]
     public void SelectTag(string? tag)
     {
-        SelectedTag = tag == null || string.Equals(tag, SelectedTag, StringComparison.CurrentCultureIgnoreCase) ? null : tag;
+        SelectedTag = tag == null || string.Equals(tag, SelectedTag, StringComparison.OrdinalIgnoreCase) ? null : tag;
     }
 
     /// <summary>
@@ -316,6 +386,25 @@ public partial class VaultViewModel : ViewModelBase
     {
         EditingSecretId = id;
         ActiveDialog = VaultDialog.Editor;
+    }
+
+    /// <summary>
+    /// Opens the vault's settings.
+    /// </summary>
+    [RelayCommand]
+    public void ShowSettings()
+    {
+        ActiveDialog = VaultDialog.Settings;
+    }
+
+    /// <summary>
+    /// Closes the vault's settings, showing any change to its name or description.
+    /// </summary>
+    [RelayCommand]
+    public void CloseSettings()
+    {
+        CloseDialog();
+        RaiseVaultChanged();
     }
 
     /// <summary>
@@ -372,12 +461,14 @@ public partial class VaultViewModel : ViewModelBase
             : url;
     }
 
+    // Ordinal comparisons throughout: culture-aware ones are many times slower in WebAssembly, and the list is sorted
+    // and searched again on every change.
     private static bool Contains(string? value, string search) =>
-        value != null && CultureInfo.CurrentCulture.CompareInfo.IndexOf(value, search, CompareOptions.IgnoreCase) >= 0;
+        value != null && value.Contains(search, StringComparison.OrdinalIgnoreCase);
 
     private bool Matches(Secret secret)
     {
-        if (SelectedTag != null && !secret.Tags.Any(t => string.Equals(t.Trim(), SelectedTag, StringComparison.CurrentCultureIgnoreCase)))
+        if (SelectedTag != null && !secret.Tags.Any(t => string.Equals(t.Trim(), SelectedTag, StringComparison.OrdinalIgnoreCase)))
         {
             return false;
         }
@@ -408,7 +499,8 @@ public partial class VaultViewModel : ViewModelBase
 
     private void OnSessionChanged(object? sender, EventArgs e)
     {
-        if (SelectedTag != null && !Tags.Contains(SelectedTag, StringComparer.CurrentCultureIgnoreCase))
+        RefreshTags();
+        if (SelectedTag != null && !tags.Contains(SelectedTag, StringComparer.OrdinalIgnoreCase))
         {
             selectedTag = null;
         }
@@ -422,15 +514,36 @@ public partial class VaultViewModel : ViewModelBase
         RaiseVaultChanged();
     }
 
+    private void RefreshTags()
+    {
+        tags = session.Secrets
+            .SelectMany(s => s.Tags)
+            .Select(t => t.Trim())
+            .Where(t => t.Length > 0)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .Order(StringComparer.OrdinalIgnoreCase)
+            .ToList();
+    }
+
+    private void RefreshSecrets()
+    {
+        secrets = session.Secrets
+            .Where(Matches)
+            .OrderBy(s => s.Name, StringComparer.OrdinalIgnoreCase)
+            .ToList();
+        OnPropertyChanged(nameof(Secrets));
+    }
+
     private void RaiseVaultChanged()
     {
+        RefreshTags();
+        RefreshSecrets();
         OnPropertyChanged(nameof(Vault));
         OnPropertyChanged(nameof(IsUnlocked));
         OnPropertyChanged(nameof(Title));
         OnPropertyChanged(nameof(Subtitle));
         OnPropertyChanged(nameof(Tags));
         OnPropertyChanged(nameof(SelectedTag));
-        OnPropertyChanged(nameof(Secrets));
         OnPropertyChanged(nameof(SecretCount));
         OnPropertyChanged(nameof(IsLoading));
         OnPropertyChanged(nameof(LoadingPercent));

@@ -21,6 +21,18 @@
   <data name="Common.Loading" xml:space="preserve">
     <value>Loading...</value>
   </data>
+  <data name="Copy.Button" xml:space="preserve">
+    <value>Copy {0}</value>
+  </data>
+  <data name="Copy.Copied" xml:space="preserve">
+    <value>{0} copied.</value>
+  </data>
+  <data name="Copy.CopiedSecret" xml:space="preserve">
+    <value>{0} copied. It is cleared from the clipboard in {1} seconds.</value>
+  </data>
+  <data name="Copy.Failed" xml:space="preserve">
+    <value>{0} could not be copied.</value>
+  </data>
   <data name="Error.Clypse.ImportNothingFound" xml:space="preserve">
     <value>No secrets were found in that file.</value>
   </data>
@@ -86,6 +98,54 @@
   </data>
   <data name="Generator.Use" xml:space="preserve">
     <value>Use this password</value>
+  </data>
+  <data name="GeneratorSettings.Save" xml:space="preserve">
+    <value>Save</value>
+  </data>
+  <data name="GeneratorSettings.Saved" xml:space="preserve">
+    <value>Password generator settings saved.</value>
+  </data>
+  <data name="GeneratorSettings.StartWith" xml:space="preserve">
+    <value>Start with</value>
+  </data>
+  <data name="GeneratorSettings.Template.Add" xml:space="preserve">
+    <value>Add template</value>
+  </data>
+  <data name="GeneratorSettings.Template.Example" xml:space="preserve">
+    <value>Example: {0}</value>
+  </data>
+  <data name="GeneratorSettings.Template.Invalid" xml:space="preserve">
+    <value>That template could not make a password.</value>
+  </data>
+  <data name="GeneratorSettings.Template.Name" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="GeneratorSettings.Template.NameRequired" xml:space="preserve">
+    <value>Give the template a name.</value>
+  </data>
+  <data name="GeneratorSettings.Template.NameTaken" xml:space="preserve">
+    <value>There is already a template called {0}.</value>
+  </data>
+  <data name="GeneratorSettings.Template.Pattern" xml:space="preserve">
+    <value>Template</value>
+  </data>
+  <data name="GeneratorSettings.Template.Remove" xml:space="preserve">
+    <value>Remove</value>
+  </data>
+  <data name="GeneratorSettings.Templates" xml:space="preserve">
+    <value>Memorable password templates</value>
+  </data>
+  <data name="GeneratorSettings.Templates.BuiltIn" xml:space="preserve">
+    <value>Built in</value>
+  </data>
+  <data name="GeneratorSettings.Templates.Help" xml:space="preserve">
+    <value>Words: {dict(adjective)}, {dict(noun)} or {dict(verb)}. Random characters: {randstr(0123456789,2)}. Add :upper, :lower, :initialupper or :random inside the braces to change the case.</value>
+  </data>
+  <data name="GeneratorSettings.Text" xml:space="preserve">
+    <value>What the password generator starts with, and your own templates for memorable passwords. Kept on this device.</value>
+  </data>
+  <data name="GeneratorSettings.Title" xml:space="preserve">
+    <value>Password generator</value>
   </data>
   <data name="Import.Done.One" xml:space="preserve">
     <value>{0} secret imported.</value>
@@ -296,6 +356,51 @@
   </data>
   <data name="Vault.Unreadable.Other" xml:space="preserve">
     <value>{0} secrets in this vault could not be read.</value>
+  </data>
+  <data name="VaultSettings.AutoLock" xml:space="preserve">
+    <value>Lock automatically after</value>
+  </data>
+  <data name="VaultSettings.AutoLock.Hint" xml:space="preserve">
+    <value>The vault locks when it has not been used for this long, on every device.</value>
+  </data>
+  <data name="VaultSettings.AutoLock.Minutes.One" xml:space="preserve">
+    <value>{0} minute</value>
+  </data>
+  <data name="VaultSettings.AutoLock.Minutes.Other" xml:space="preserve">
+    <value>{0} minutes</value>
+  </data>
+  <data name="VaultSettings.AutoLock.Never" xml:space="preserve">
+    <value>Never</value>
+  </data>
+  <data name="VaultSettings.Button" xml:space="preserve">
+    <value>Settings</value>
+  </data>
+  <data name="VaultSettings.Delete.Button" xml:space="preserve">
+    <value>Delete vault</value>
+  </data>
+  <data name="VaultSettings.Delete.Confirm" xml:space="preserve">
+    <value>Type the vault's name to confirm</value>
+  </data>
+  <data name="VaultSettings.Delete.Mismatch" xml:space="preserve">
+    <value>Type the vault's name exactly to delete it.</value>
+  </data>
+  <data name="VaultSettings.Delete.Text" xml:space="preserve">
+    <value>Deletes the vault and all its secrets on every device, and its keys, so they can never be decrypted. It cannot be undone.</value>
+  </data>
+  <data name="VaultSettings.Delete.Title" xml:space="preserve">
+    <value>Delete this vault</value>
+  </data>
+  <data name="VaultSettings.Deleted" xml:space="preserve">
+    <value>{0} deleted.</value>
+  </data>
+  <data name="VaultSettings.Save" xml:space="preserve">
+    <value>Save</value>
+  </data>
+  <data name="VaultSettings.Saved" xml:space="preserve">
+    <value>Vault settings saved.</value>
+  </data>
+  <data name="VaultSettings.Title" xml:space="preserve">
+    <value>Vault settings</value>
   </data>
   <data name="Vaults.Create.Acknowledge" xml:space="preserve">
     <value>I understand that if I forget this passphrase, this vault cannot be recovered.</value>

@@ -30,6 +30,8 @@ public class ClypseServiceCollectionExtensionsTests
         AssertScoped<ISecretServiceFactory, SecretServiceFactory>(services);
         AssertScoped<IVaultSession, VaultSession>(services);
         AssertScoped<IPasswordStrengthService, PasswordStrengthService>(services);
+        AssertScoped<ISecretCopyService, SecretCopyService>(services);
+        AssertScoped<IPasswordGeneratorPreferencesService, PasswordGeneratorPreferencesService>(services);
         Assert.Contains(services, d => d.ServiceType == typeof(ISessionLifecycleHandler) && d.ImplementationType == typeof(VaultLabelHandler));
         Assert.Contains(services, d => d.ImplementationInstance is ErrorTextSource source && source.ResourceType == typeof(ClypseText));
         Assert.Contains(services, d => d.ServiceType == typeof(TimeProvider));

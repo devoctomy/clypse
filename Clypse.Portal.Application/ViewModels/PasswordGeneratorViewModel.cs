@@ -11,7 +11,9 @@ namespace Clypse.Portal.Application.ViewModels;
 
 /// <summary>
 /// ViewModel for the password generator: a random password from chosen kinds of character, or a memorable one from a
-/// template (<see cref="ClypseSettings.MemorablePasswordTemplates"/>). A new password is made whenever an option changes.
+/// template (the built in <see cref="ClypseSettings.MemorablePasswordTemplates"/> and the user's own). It starts with
+/// the user's preferences (<see cref="IPasswordGeneratorPreferencesService"/>), and makes a new password whenever an
+/// option changes.
 /// </summary>
 public partial class PasswordGeneratorViewModel : ViewModelBase
 {
@@ -33,10 +35,12 @@ public partial class PasswordGeneratorViewModel : ViewModelBase
 
     private readonly IPasswordGeneratorService generator;
     private readonly IPasswordStrengthService strengthService;
+    private readonly IPasswordGeneratorPreferencesService preferencesService;
     private readonly IStringLocalizer<ClypseText> text;
 
+    private IReadOnlyList<MemorablePasswordTemplate> templates = [];
     private bool isMemorable;
-    private int length = 20;
+    private int length = PasswordGeneratorPreferences.DefaultLength;
     private CharacterGroup groups = CharacterGroup.Lowercase | CharacterGroup.Uppercase | CharacterGroup.Digits | CharacterGroup.Special;
     private bool atLeastOneOfEach = true;
     private string? template;
@@ -50,26 +54,34 @@ public partial class PasswordGeneratorViewModel : ViewModelBase
     /// </summary>
     /// <param name="generator">Makes passwords.</param>
     /// <param name="strengthService">Estimates their strength.</param>
-    /// <param name="settings">Clypse's settings, with the memorable templates.</param>
+    /// <param name="preferencesService">What the generator starts with, and the templates.</param>
     /// <param name="text">Clypse's text.</param>
     public PasswordGeneratorViewModel(
         IPasswordGeneratorService generator,
         IPasswordStrengthService strengthService,
-        ClypseSettings settings,
+        IPasswordGeneratorPreferencesService preferencesService,
         IStringLocalizer<ClypseText> text)
     {
         this.generator = generator ?? throw new ArgumentNullException(nameof(generator));
         this.strengthService = strengthService ?? throw new ArgumentNullException(nameof(strengthService));
-        ArgumentNullException.ThrowIfNull(settings);
+        this.preferencesService = preferencesService ?? throw new ArgumentNullException(nameof(preferencesService));
         this.text = text ?? throw new ArgumentNullException(nameof(text));
-        Templates = settings.MemorablePasswordTemplates.Where(t => !string.IsNullOrWhiteSpace(t.Template)).ToList();
-        template = Templates.FirstOrDefault()?.Name;
     }
 
     /// <summary>
-    /// Gets the templates for memorable passwords.
+    /// Gets the templates for memorable passwords: the built in ones, then the user's own.
     /// </summary>
-    public IReadOnlyList<MemorablePasswordTemplate> Templates { get; }
+    public IReadOnlyList<MemorablePasswordTemplate> Templates
+    {
+        get => templates;
+        private set
+        {
+            if (SetProperty(ref templates, value))
+            {
+                OnPropertyChanged(nameof(CanMakeMemorable));
+            }
+        }
+    }
 
     /// <summary>
     /// Gets a value indicating whether memorable passwords can be made (there is a template).
@@ -165,7 +177,18 @@ public partial class PasswordGeneratorViewModel : ViewModelBase
     public string LengthText => text["Generator.Length", Length];
 
     /// <inheritdoc/>
-    public override Task OnInitializedAsync() => GenerateAsync();
+    public override async Task OnInitializedAsync()
+    {
+        var preferences = await preferencesService.GetAsync();
+        Templates = preferencesService.GetTemplates(preferences);
+        Length = Math.Clamp(preferences.Length, MinimumLength, MaximumLength);
+        groups = preferences.Groups;
+        AtLeastOneOfEach = preferences.AtLeastOneOfEach;
+        Template = Templates.FirstOrDefault(t => t.Name == preferences.Template)?.Name ?? Templates.FirstOrDefault()?.Name;
+        IsMemorable = preferences.IsMemorable && CanMakeMemorable;
+        OnPropertyChanged(nameof(LengthText));
+        await GenerateAsync();
+    }
 
     /// <summary>
     /// Gets a value indicating whether a kind of character is used in random passwords.

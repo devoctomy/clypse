@@ -30,7 +30,7 @@ public class AwsCredentials : Secret
     /// <summary>
     /// Gets or sets SecretAccessKey for this secret.
     /// </summary>
-    [SecretField(DisplayOrder = 40, FieldType = SecretFieldType.SingleLineText)]
+    [SecretField(DisplayOrder = 40, FieldType = SecretFieldType.SingleLineText, IsSensitive = true)]
     [JsonIgnore]
     public string? SecretAccessKey
     {

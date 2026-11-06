@@ -7,6 +7,9 @@
         <button type="button" class="btn btn-outline-secondary" id="lock-vault-button" @onclick="() => ViewModel.LockCommand.Execute(null)">
             <i class="bi bi-lock me-1"></i>@T["Vault.Lock"]
         </button>
+        <button type="button" class="btn btn-outline-secondary" id="vault-settings-button" @onclick="() => ViewModel.ShowSettingsCommand.Execute(null)">
+            <i class="bi bi-sliders me-1"></i>@T["VaultSettings.Button"]
+        </button>
         <button type="button" class="btn btn-outline-primary" id="import-button" @onclick="() => ViewModel.ShowImportCommand.Execute(null)">
             <i class="bi bi-box-arrow-in-down me-1"></i>@T["Vault.Import"]
         </button>
@@ -87,7 +90,7 @@ else if (ViewModel.Vault != null)
                                 @onclick="() => ViewModel.SelectTagCommand.Execute(null)">@T["Vault.Tags.All"]</button>
                         @foreach (var tag in ViewModel.Tags)
                         {
-                            <button type="button" class="tag-filter @(string.Equals(ViewModel.SelectedTag, tag, StringComparison.CurrentCultureIgnoreCase) ? "active" : null)"
+                            <button type="button" class="tag-filter @(string.Equals(ViewModel.SelectedTag, tag, StringComparison.OrdinalIgnoreCase) ? "active" : null)"
                                     data-tag="@tag" data-user-content @onclick="() => ViewModel.SelectTagCommand.Execute(tag)">@tag</button>
                         }
                     </div>
@@ -100,11 +103,11 @@ else if (ViewModel.Vault != null)
                 else
                 {
                     <ul class="secret-list" id="secrets">
-                        @foreach (var secret in ViewModel.Secrets)
-                        {
-                            var summary = VaultViewModel.GetSummary(secret);
-                            <li>
-                                <button type="button" class="secret-row" data-secret="@secret.Id" @onclick="() => ViewModel.EditSecretCommand.Execute(secret.Id)">
+                        @* Only the rows on screen are rendered, so a large vault stays quick. *@
+                        <Virtualize Items="@((ICollection<Secret>)ViewModel.Secrets)" Context="secret" ItemSize="65" OverscanCount="5" SpacerElement="li">
+                            @{ var summary = VaultViewModel.GetSummary(secret); }
+                            <li class="secret-item" data-secret="@secret.Id">
+                                <button type="button" class="secret-row" @onclick="() => ViewModel.EditSecretCommand.Execute(secret.Id)">
                                     <span class="secret-icon secret-type-@secret.SecretType.ToString().ToLowerInvariant()"><i class="bi @VaultViewModel.GetIcon(secret.SecretType)"></i></span>
                                     <span class="secret-body">
                                         <span data-user-content class="secret-name">@secret.Name</span>
@@ -122,10 +125,20 @@ else if (ViewModel.Vault != null)
                                             }
                                         </span>
                                     }
-                                    <i class="bi bi-chevron-right secret-chevron"></i>
                                 </button>
+                                <span class="secret-actions">
+                                    @foreach (var field in VaultViewModel.GetQuickCopyFields(secret))
+                                    {
+                                        var copyText = ViewModel.GetCopyLabel(field);
+                                        <button type="button" class="btn btn-sm btn-outline-secondary secret-quick-copy" data-field="@field" title="@copyText"
+                                                @onclick="() => ViewModel.CopyAsync(secret.Id, field)">
+                                            <i class="bi @VaultViewModel.GetCopyIcon(field)"></i>
+                                            <span class="visually-hidden">@copyText</span>
+                                        </button>
+                                    }
+                                </span>
                             </li>
-                        }
+                        </Virtualize>
                     </ul>
                 }
             }
@@ -140,5 +153,8 @@ else if (ViewModel.Vault != null)
         break;
     case VaultViewModel.VaultDialog.Import:
         <ImportSecretsDialog OnClose="() => ViewModel.CloseDialogCommand.Execute(null)" />
+        break;
+    case VaultViewModel.VaultDialog.Settings when ViewModel.Vault != null:
+        <VaultSettingsDialog Vault="@ViewModel.Vault" OnClose="() => ViewModel.CloseSettingsCommand.Execute(null)" />
         break;
 }

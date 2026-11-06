@@ -79,7 +79,7 @@ public class VaultSessionTests
 
         // Assert
         Assert.Equal(60, sut.Secrets.Count);
-        Assert.Equal(1 + 1 + (60 / VaultSession.NotifyEvery) + 1, changes);
+        Assert.Equal(1 + 1 + (int)Math.Ceiling(60.0 / VaultSession.ReadBatchSize) + 1, changes);
     }
 
     [Fact]

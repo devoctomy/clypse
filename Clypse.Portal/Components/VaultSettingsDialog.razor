@@ -1,0 +1,59 @@
+@inherits MvvmComponentBase<VaultSettingsViewModel>
+
+<ModalDialog Id="vault-settings-dialog" Title="@T["VaultSettings.Title"]" Icon="bi-sliders" OnClose="CloseAsync">
+    <ChildContent>
+        <form id="vault-settings-form" @onsubmit="SaveAsync" @onsubmit:preventDefault>
+            <div class="mb-3">
+                <label class="form-label" for="vault-settings-name">@T["Vaults.Create.Name"]</label>
+                <input type="text" class="form-control" id="vault-settings-name" autocomplete="off" disabled="@ViewModel.IsWorking"
+                       @bind="ViewModel.Name" @bind:event="oninput" />
+            </div>
+            <div class="mb-3">
+                <label class="form-label" for="vault-settings-description">@T["Vaults.Create.Description"]</label>
+                <input type="text" class="form-control" id="vault-settings-description" autocomplete="off" disabled="@ViewModel.IsWorking"
+                       @bind="ViewModel.Description" @bind:event="oninput" />
+            </div>
+            <div class="mb-0">
+                <label class="form-label" for="vault-settings-auto-lock">@T["VaultSettings.AutoLock"]</label>
+                <select class="form-select" id="vault-settings-auto-lock" disabled="@ViewModel.IsWorking"
+                        value="@(ViewModel.AutoLock?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? string.Empty)"
+                        @onchange="e => ViewModel.AutoLock = int.TryParse(e.Value?.ToString(), System.Globalization.CultureInfo.InvariantCulture, out var minutes) ? minutes : null">
+                    @foreach (var minutes in ViewModel.AutoLockOptions)
+                    {
+                        <option value="@(minutes?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? string.Empty)">@ViewModel.GetAutoLockText(minutes)</option>
+                    }
+                </select>
+                <div class="form-text">@T["VaultSettings.AutoLock.Hint"]</div>
+            </div>
+        </form>
+
+        <div class="vault-danger-zone mt-4" id="vault-delete">
+            <h3 class="vault-danger-title">@T["VaultSettings.Delete.Title"]</h3>
+            <p class="small mb-2">@T["VaultSettings.Delete.Text"]</p>
+            <label class="form-label small" for="vault-delete-confirmation">@T["VaultSettings.Delete.Confirm"]</label>
+            <div class="d-flex flex-wrap gap-2">
+                <input type="text" class="form-control flex-grow-1 w-auto" id="vault-delete-confirmation" autocomplete="off" disabled="@ViewModel.IsWorking"
+                       @bind="ViewModel.DeleteConfirmation" @bind:event="oninput" />
+                <button type="button" class="btn btn-outline-danger" id="vault-delete-button" disabled="@(ViewModel.IsWorking || string.IsNullOrWhiteSpace(ViewModel.DeleteConfirmation))"
+                        @onclick="DeleteAsync">
+                    <i class="bi bi-trash me-1"></i>@T["VaultSettings.Delete.Button"]
+                </button>
+            </div>
+        </div>
+
+        @if (!string.IsNullOrEmpty(ViewModel.Error))
+        {
+            <div class="text-danger mt-3" id="vault-settings-error">@ViewModel.Error</div>
+        }
+    </ChildContent>
+    <Footer>
+        <button type="button" class="btn btn-secondary" disabled="@ViewModel.IsWorking" @onclick="CloseAsync">@T["Common.Cancel"]</button>
+        <button type="submit" form="vault-settings-form" class="btn btn-primary" id="vault-settings-save" disabled="@ViewModel.IsWorking">
+            @if (ViewModel.IsWorking)
+            {
+                <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+            }
+            @T["VaultSettings.Save"]
+        </button>
+    </Footer>
+</ModalDialog>

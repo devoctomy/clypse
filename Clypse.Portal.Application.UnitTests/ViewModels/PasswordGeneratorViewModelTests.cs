@@ -1,10 +1,12 @@
 using Clypse.Core.Enums;
 using Clypse.Core.Password;
+using Clypse.Portal.Application.Services;
 using Clypse.Portal.Application.Services.Interfaces;
 using Clypse.Portal.Application.Text;
 using Clypse.Portal.Application.ViewModels;
 using Clypse.Portal.Models.Settings;
 using Clypse.Portal.Models.Vaults;
+using Devoctomy.Blazwiz.Browser.Services.Interfaces;
 using Devoctomy.Blazwiz.Testing;
 using Moq;
 
@@ -17,6 +19,9 @@ public class PasswordGeneratorViewModelTests
     private readonly FrameworkText text = new(typeof(ClypseText));
     private readonly Mock<IPasswordGeneratorService> mockGenerator = new();
     private readonly Mock<IPasswordStrengthService> mockStrength = new();
+    private readonly Mock<ILocalStorageService> mockStorage = new();
+    private PasswordGeneratorPreferences? stored;
+
     private readonly ClypseSettings settings = new()
     {
         MemorablePasswordTemplates =
@@ -36,6 +41,7 @@ public class PasswordGeneratorViewModelTests
         mockStrength.Setup(x => x.EstimateAsync(It.IsAny<string?>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new PasswordStrength { Estimation = PasswordComplexityEstimation.Strong, Entropy = 99 });
         mockStrength.Setup(x => x.Describe(It.IsAny<PasswordStrength>())).Returns("Strong");
+        mockStorage.Setup(x => x.GetObjectAsync<PasswordGeneratorPreferences>(PasswordGeneratorPreferencesService.StorageName)).ReturnsAsync(() => stored);
     }
 
     [Fact]
@@ -45,10 +51,10 @@ public class PasswordGeneratorViewModelTests
         var t = text.For<ClypseText>();
 
         // Act & Assert
-        Assert.Equal("generator", Assert.Throws<ArgumentNullException>(() => new PasswordGeneratorViewModel(null!, mockStrength.Object, settings, t)).ParamName);
-        Assert.Equal("strengthService", Assert.Throws<ArgumentNullException>(() => new PasswordGeneratorViewModel(mockGenerator.Object, null!, settings, t)).ParamName);
-        Assert.Equal("settings", Assert.Throws<ArgumentNullException>(() => new PasswordGeneratorViewModel(mockGenerator.Object, mockStrength.Object, null!, t)).ParamName);
-        Assert.Equal("text", Assert.Throws<ArgumentNullException>(() => new PasswordGeneratorViewModel(mockGenerator.Object, mockStrength.Object, settings, null!)).ParamName);
+        Assert.Equal("generator", Assert.Throws<ArgumentNullException>(() => new PasswordGeneratorViewModel(null!, mockStrength.Object, Preferences(), t)).ParamName);
+        Assert.Equal("strengthService", Assert.Throws<ArgumentNullException>(() => new PasswordGeneratorViewModel(mockGenerator.Object, null!, Preferences(), t)).ParamName);
+        Assert.Equal("preferencesService", Assert.Throws<ArgumentNullException>(() => new PasswordGeneratorViewModel(mockGenerator.Object, mockStrength.Object, null!, t)).ParamName);
+        Assert.Equal("text", Assert.Throws<ArgumentNullException>(() => new PasswordGeneratorViewModel(mockGenerator.Object, mockStrength.Object, Preferences(), null!)).ParamName);
     }
 
     [Fact]
@@ -70,10 +76,13 @@ public class PasswordGeneratorViewModelTests
     }
 
     [Fact]
-    public void GivenTemplates_WhenConstructed_ThenOnlyThoseWithATemplateAreOffered_TheFirstChosen()
+    public async Task GivenTemplates_WhenInitialized_ThenOnlyThoseWithATemplateAreOffered_TheFirstChosen()
     {
-        // Act
+        // Arrange
         var sut = CreateSut();
+
+        // Act
+        await sut.OnInitializedAsync();
 
         // Assert
         Assert.True(sut.CanMakeMemorable);
@@ -138,6 +147,7 @@ public class PasswordGeneratorViewModelTests
     {
         // Arrange
         var sut = CreateSut();
+        await sut.OnInitializedAsync();
 
         // Act
         await sut.SetMemorableAsync(true);
@@ -155,6 +165,7 @@ public class PasswordGeneratorViewModelTests
     {
         // Arrange
         var sut = CreateSut();
+        await sut.OnInitializedAsync();
         await sut.SetMemorableAsync(true);
 
         // Act
@@ -170,6 +181,7 @@ public class PasswordGeneratorViewModelTests
         // Arrange
         settings.MemorablePasswordTemplates.Clear();
         var sut = CreateSut();
+        await sut.OnInitializedAsync();
 
         // Act
         await sut.SetMemorableAsync(true);
@@ -180,5 +192,36 @@ public class PasswordGeneratorViewModelTests
         Assert.Equal(new string('x', 20), sut.Password);
     }
 
-    private PasswordGeneratorViewModel CreateSut() => new(mockGenerator.Object, mockStrength.Object, settings, text.For<ClypseText>());
+    [Fact]
+    public async Task GivenSavedPreferences_WhenInitialized_ThenTheGeneratorStartsWithThem_AndTheUsersTemplatesAreOffered()
+    {
+        // Arrange
+        stored = new PasswordGeneratorPreferences
+        {
+            IsMemorable = true,
+            Length = 32,
+            Groups = CharacterGroup.Digits,
+            AtLeastOneOfEach = false,
+            Template = "Mine",
+            UserTemplates = [new MemorablePasswordTemplate { Name = "Mine", Template = "{dict(verb):random}" }],
+        };
+        var sut = CreateSut();
+
+        // Act
+        await sut.OnInitializedAsync();
+
+        // Assert
+        Assert.True(sut.IsMemorable);
+        Assert.Equal(["Words", "Long", "Mine"], sut.Templates.Select(t => t.Name));
+        Assert.Equal("Mine", sut.Template);
+        Assert.Equal("{dict(verb):random}|False", sut.Password);
+        await sut.SetMemorableAsync(false);
+        Assert.Equal(32, sut.Length);
+        Assert.False(sut.AtLeastOneOfEach);
+        mockGenerator.Verify(x => x.GenerateRandomPassword(CharacterGroup.Digits, 32, false), Times.Once);
+    }
+
+    private PasswordGeneratorPreferencesService Preferences() => new(mockStorage.Object, settings);
+
+    private PasswordGeneratorViewModel CreateSut() => new(mockGenerator.Object, mockStrength.Object, Preferences(), text.For<ClypseText>());
 }
