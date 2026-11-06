@@ -1,7 +1,8 @@
 # Plan: rewrite clypse on blazwiz
 
 **Date:** 2026-11-06
-**Status:** Phase 0 mostly done (deploy and spikes outstanding); Phase 1 done. See [Progress](#progress).
+**Status:** Phase 0 mostly done (deploy and spikes outstanding); Phases 1 and 2 done (Phase 2's two-browser check
+needs a deployed stack). See [Progress](#progress).
 **Source app:** `E:\Source\GitHub\clypse` (v1.2.0.0)
 **Framework:** `E:\Source\Misc\blazwiz` (0.4.0, `Devoctomy.Blazwiz.*` on NuGet)
 **New app:** `E:\clypse`
@@ -62,9 +63,44 @@ The template's notebooks feature is the model to follow, almost one to one:
 - **Release-only full text list** (see the note under clypse.core).
 - **Wiring.** `Clypse.Portal.Application` references `Clypse.Core`, and `Program.cs` calls `AddClypseCore`.
 
+### Phase 2: vaults and secrets
+
+**Done** (services and unit tests; the UI comes in Phase 3):
+- **Models.** `Vault` (Id, Root, Name, Description, IsUnlocked) and `VaultDetails`, the content of the `.vault` file, in
+  `Clypse.Portal.Models/Vaults`.
+- **`VaultService`.** List, find, create (with Argon2id progress), update the name and description, delete and lock.
+  - Every user-created protected profile is a vault.
+  - A locked vault shows its device label, or its id.
+  - The name is re-labelled whenever it is read while unlocked.
+- **`SecretService`** and its factory:
+  - Each secret is `profiles/{id}/secrets/{secretId}.json`, holding `Secret.Data` exactly as clypse stores it (D4).
+  - Ids must be GUIDs, so a name can never reach a path.
+  - Saving validates with `ClypseObjectValidator` and sets `LastUpdatedAt` from `TimeProvider`.
+  - Import validates every secret before writing any.
+  - Reading casts to the secret's own type.
+- **`VaultSession`.** The open vault's secrets in memory (D3). It:
+  - reads them one by one after unlock, notifying every 25;
+  - counts unreadable files;
+  - clears them on lock;
+  - applies `FilesChanged` from sync;
+  - discards a stale load when another vault is opened.
+- **`VaultLabelHandler`.** Labels a vault whenever it is unlocked.
+- **Errors.** `ClypseException`, a `BlazwizException` with codes from `ClypseErrorCodes`, with text in
+  `Text/ClypseText.resx` registered through `AddErrorText<ClypseText>()`.
+- **Wiring.** `AddClypse()` registers it all, and `Program.cs` calls it.
+- **Fixes along the way:**
+  - `ClypseObject` formatted its dates with the current culture; it now uses the invariant culture.
+  - `ImportAsync` returned 0 when no progress reporter was passed: the count was incremented inside `progress?.Report(...)`.
+    Fixed, with a regression test.
+- **Tests.** 77 new unit tests, 97 in the application project in all.
+
+**Not done:**
+- **Two-browser sync and the S3 listing check.** They need a deployed stack.
+- **Creating a vault and filling it from the browser.** That comes with the Phase 3 pages, and gets a UI test there.
+
 ### Changes made in blazwiz
 
-All on branch `clypseupdates`, uncommitted, with unit tests and CHANGELOG entries:
+All on branch `clypseupdates`, with unit tests and CHANGELOG entries:
 
 1. **`SyncScheduler` checks connectivity when there are no sync profiles.** Before, the status said "Checking"
    forever.
@@ -295,8 +331,9 @@ E:\clypse
 1. **Vaults.** A `Vault` model (Id, Name, Description, IsUnlocked, HasPassphrase) and `IVaultService` / `VaultService`.
    It mirrors `NotebookService`: list, find, create (name, description, passphrase, progress), edit the name and
    description (rewrites `.vault`), and delete through `ISyncProtectedProfileService.DeleteAsync`.
-2. **Secrets.** `ISecretService` / `SecretService` over `registry.GetFileStore(vault.Name)`:
-   - `LoadAllAsync(progress, cancellationToken)` streams the secrets as they are decrypted (D3);
+2. **Secrets.** `ISecretService` / `SecretService` over `registry.GetFileStore(vault.Id)`:
+   - `ListIdsAsync()` lists the secret ids. The vault session then reads them one by one, so the list fills in as they
+     are decrypted (D3);
    - `GetAsync(id)`;
    - `SaveAsync(secret)` sets `LastUpdatedAt` and validates with `ClypseObjectValidator`;
    - `DeleteAsync(id)`;

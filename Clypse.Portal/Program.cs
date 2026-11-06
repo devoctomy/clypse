@@ -44,6 +44,9 @@ builder.Services.AddClypseCore(textLists =>
 #endif
 });
 
+// Vaults (each a protected sync profile the user creates) and their secrets.
+builder.Services.AddClypse();
+
 // The app's own services and pages. Replace or turn off framework pages here too, e.g.
 // builder.Services.ReplacePage<MyLogin>(BlazwizPages.Login) or builder.Services.DisablePage(BlazwizPages.Sync).
 builder.Services.AddAppServices();

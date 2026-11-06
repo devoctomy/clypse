@@ -50,7 +50,7 @@ public class ClypseObject
 
         set
         {
-            this.SetData(nameof(this.CreatedAt), value.ToString("dd-MM-yyyyTHH:mm:ss"));
+            this.SetData(nameof(this.CreatedAt), value.ToString("dd-MM-yyyyTHH:mm:ss", System.Globalization.CultureInfo.InvariantCulture));
         }
     }
 
@@ -69,7 +69,7 @@ public class ClypseObject
 
         set
         {
-            this.SetData(nameof(this.LastUpdatedAt), value.ToString("dd-MM-yyyyTHH:mm:ss"));
+            this.SetData(nameof(this.LastUpdatedAt), value.ToString("dd-MM-yyyyTHH:mm:ss", System.Globalization.CultureInfo.InvariantCulture));
         }
     }
 
