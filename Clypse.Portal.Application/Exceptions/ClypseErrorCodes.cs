@@ -34,4 +34,14 @@ public static class ClypseErrorCodes
     /// No vault is open.
     /// </summary>
     public const string NoVaultOpen = "Clypse.NoVaultOpen";
+
+    /// <summary>
+    /// An import file held no secrets.
+    /// </summary>
+    public const string ImportNothingFound = "Clypse.ImportNothingFound";
+
+    /// <summary>
+    /// An import file could not be read in the format chosen. Argument: the format's name.
+    /// </summary>
+    public const string ImportUnreadable = "Clypse.ImportUnreadable";
 }

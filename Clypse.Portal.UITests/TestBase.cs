@@ -178,7 +178,7 @@ public class TestBase : PageTest
     }
 
     /// <summary>
-    /// Signs in with the placeholder authentication and waits for the dashboard.
+    /// Signs in with the placeholder authentication and waits for the vaults page (the home page).
     /// </summary>
     /// <param name="username">The username to sign in with.</param>
     /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
@@ -188,7 +188,7 @@ public class TestBase : PageTest
         await Page.Locator("#username").FillAsync(username);
         await Page.Locator("#password").FillAsync("password123");
         await Page.Locator("#login-button").ClickAsync();
-        await Expect(Page.Locator("#dashboard-greeting")).ToBeVisibleAsync();
+        await Expect(Page.Locator("#vaults-page")).ToBeVisibleAsync();
     }
 
     /// <summary>
@@ -202,6 +202,45 @@ public class TestBase : PageTest
         await EnterNewPassphraseAsync();
         await CloseFinishedDialogAsync();
         await Expect(Page.Locator("#e2e-created-profiles .e2e-profile")).ToHaveCountAsync(1);
+    }
+
+    /// <summary>
+    /// Creates a vault from the vaults page, which opens it unlocked.
+    /// </summary>
+    /// <param name="name">The vault's name.</param>
+    /// <param name="description">The vault's description.</param>
+    /// <returns>The vault's id.</returns>
+    protected async Task<string> CreateVaultAsync(string name, string description = "")
+    {
+        await Page.Locator("#nav-vaults").ClickAsync();
+        await Page.Locator("#new-vault-button, #create-first-vault-button").First.ClickAsync();
+        await Page.Locator("#vault-name").FillAsync(name);
+        await Page.Locator("#vault-description").FillAsync(description);
+        await Page.Locator("#vault-passphrase").FillAsync(Passphrase);
+        await Page.Locator("#vault-confirm-passphrase").FillAsync(Passphrase);
+        await Page.Locator("#vault-acknowledge").CheckAsync();
+        await Page.Locator("#vault-create").ClickAsync();
+        await Expect(Page.Locator("#vault-page")).ToBeVisibleAsync();
+        return Page.Url[(Page.Url.LastIndexOf('/') + 1)..];
+    }
+
+    /// <summary>
+    /// Adds a login to the open vault with the secret editor.
+    /// </summary>
+    /// <param name="name">The login's name.</param>
+    /// <param name="userName">Its user name.</param>
+    /// <param name="password">Its password.</param>
+    /// <param name="tags">Its tags, comma separated.</param>
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
+    protected async Task AddLoginAsync(string name, string userName, string password, string tags = "")
+    {
+        await Page.Locator("#new-secret-button").ClickAsync();
+        await Page.Locator("#secret-field-Name").FillAsync(name);
+        await Page.Locator("#secret-field-UserName").FillAsync(userName);
+        await Page.Locator("#secret-field-Password").FillAsync(password);
+        await Page.Locator("#secret-field-Tags").FillAsync(tags);
+        await Page.Locator("#secret-save").ClickAsync();
+        await Expect(Page.Locator("#secret-dialog")).ToHaveCountAsync(0);
     }
 
     /// <summary>

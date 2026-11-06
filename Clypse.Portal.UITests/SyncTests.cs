@@ -10,7 +10,6 @@ namespace Clypse.Portal.UITests;
 public class SyncTests : TestBase
 {
     [TestMethod]
-    [Ignore("Needs the blazwiz fix that checks connectivity when there are no sync profiles (blazwiz CHANGELOG, Unreleased). Remove once clypse is on a release with it.")]
     public async Task GivenNoCloud_WhenSignedIn_ThenPillSaysOfflineNoCredentialsAndSyncNowIsDisabled()
     {
         await LoginAsync();
@@ -26,7 +25,6 @@ public class SyncTests : TestBase
     }
 
     [TestMethod]
-    [Ignore("Needs the blazwiz fix that checks connectivity when there are no sync profiles (blazwiz CHANGELOG, Unreleased). Remove once clypse is on a release with it.")]
     public async Task GivenNoCloud_WhenSyncSwitchedOff_ThenPillSaysSyncOffAndItSurvivesAReload()
     {
         await LoginAsync();
@@ -62,7 +60,7 @@ public class SyncTests : TestBase
         await Page.Locator("#username").FillAsync("bob.hoskins@example.com");
         await Page.Locator("#password").FillAsync("password123");
         await Page.Locator("#login-button").ClickAsync();
-        await Expect(Page.Locator("#dashboard-greeting")).ToBeVisibleAsync();
+        await Expect(Page.Locator("#vaults-page")).ToBeVisibleAsync();
 
         await Expect(Page.Locator("#sync-status-pill")).ToHaveAttributeAsync("title", new Regex("Offline: no credentials"));
     }
@@ -135,7 +133,6 @@ public class SyncTests : TestBase
     }
 
     [TestMethod]
-    [Ignore("Needs the blazwiz fix that checks connectivity when there are no sync profiles (blazwiz CHANGELOG, Unreleased). Remove once clypse is on a release with it.")]
     public async Task GivenSyncPage_WhenOpened_ThenConnectivityEventsCanBeSearchedFilteredAndSurviveAReload()
     {
         await LoginAsync();
@@ -168,7 +165,6 @@ public class SyncTests : TestBase
     }
 
     [TestMethod]
-    [Ignore("Needs the blazwiz fix that loads the storage choice again when a profile is created (blazwiz CHANGELOG, Unreleased). Remove once clypse is on a release with it.")]
     public async Task GivenStorageChoiceOpen_WhenCancelled_ThenNothingMoves()
     {
         await LoginAsync();
@@ -186,13 +182,12 @@ public class SyncTests : TestBase
 
 
     [TestMethod]
-    [Ignore("Needs the blazwiz fix that loads the storage choice again when a profile is created (blazwiz CHANGELOG, Unreleased). Remove once clypse is on a release with it.")]
     public async Task GivenTwoTabs_WhenOneMovesTheFiles_ThenOnlyTheOtherReloads()
     {
         await LoginAsync();
         var other = await Context.NewPageAsync();
         await GoToAsync(other);
-        await Expect(other.Locator("#dashboard-greeting")).ToBeVisibleAsync();
+        await Expect(other.Locator("#vaults-page")).ToBeVisibleAsync();
         await other.EvaluateAsync("() => window.notReloaded = true");
         await Page.EvaluateAsync("() => window.notReloaded = true");
 
@@ -203,7 +198,7 @@ public class SyncTests : TestBase
         await Expect(Page.Locator("#storage-option-opfs")).ToHaveClassAsync(new Regex("active"));
 
         await other.WaitForFunctionAsync("() => window.notReloaded === undefined");
-        await Expect(other.Locator("#dashboard-greeting")).ToBeVisibleAsync();
+        await Expect(other.Locator("#vaults-page")).ToBeVisibleAsync();
         Assert.IsTrue(await Page.EvaluateAsync<bool>("() => window.notReloaded === true"));
     }
 

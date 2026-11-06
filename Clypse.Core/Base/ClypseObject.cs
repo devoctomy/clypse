@@ -104,14 +104,14 @@ public class ClypseObject
     {
         ArgumentException.ThrowIfNullOrEmpty(key, nameof(key));
 
-        if (string.IsNullOrEmpty(value) &&
-            this.Data.ContainsKey(key))
+        // An empty value is no value: stored, it would pass as a required field.
+        if (string.IsNullOrEmpty(value))
         {
             this.Data.Remove(key);
         }
         else
         {
-            this.Data[key] = value!;
+            this.Data[key] = value;
         }
     }
 

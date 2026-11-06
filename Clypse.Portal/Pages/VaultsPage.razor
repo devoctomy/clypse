@@ -1,0 +1,118 @@
+@page "/"
+@page "/vaults"
+@inherits MvvmComponentBase<VaultsViewModel>
+
+<PageHeader Title="@T["Vaults.Title"]" Icon="bi-safe2" Subtitle="@T["Vaults.Subtitle"]">
+    @if (!ViewModel.IsLoading && ViewModel.Vaults.Count > 0)
+    {
+        <button type="button" class="btn btn-primary" id="new-vault-button" @onclick="() => ViewModel.ShowCreateDialogCommand.Execute(null)">
+            <i class="bi bi-plus-lg me-1"></i>@T["Vaults.New"]
+        </button>
+    }
+</PageHeader>
+
+<div id="vaults-page">
+    @if (ViewModel.IsLoading)
+    {
+        <div class="panel text-body-secondary" id="vaults-loading">
+            <div class="spinner-border spinner-border-sm text-primary me-2" role="status"></div>@T["Vaults.Loading"]
+        </div>
+    }
+    else if (ViewModel.Vaults.Count == 0)
+    {
+        <div class="panel empty-state" id="no-vaults">
+            <span class="empty-state-icon"><i class="bi bi-safe2"></i></span>
+            <h2 class="empty-state-title">@T["Vaults.Empty.Title"]</h2>
+            <p class="empty-state-text">@T["Vaults.Empty.Text"]</p>
+            <button type="button" class="btn btn-primary" id="create-first-vault-button" @onclick="() => ViewModel.ShowCreateDialogCommand.Execute(null)">
+                <i class="bi bi-plus-lg me-1"></i>@T["Vaults.Empty.Create"]
+            </button>
+        </div>
+    }
+    else
+    {
+        <div class="vault-grid" id="vaults">
+            @foreach (var vault in ViewModel.Vaults)
+            {
+                <div class="vault-card @(vault.IsUnlocked ? "is-unlocked" : "is-locked")" data-vault="@vault.Id">
+                    <button type="button" class="vault-card-main" @onclick="() => ViewModel.OpenCommand.Execute(vault.Id)">
+                        <span class="vault-card-icon"><i class="bi @(vault.IsUnlocked ? "bi-unlock-fill" : "bi-lock-fill")"></i></span>
+                        <span class="vault-card-body">
+                            <span data-user-content class="vault-card-name @(VaultsViewModel.IsShownById(vault) ? "is-id" : null)">@vault.Name</span>
+                            @if (!string.IsNullOrWhiteSpace(vault.Description))
+                            {
+                                <span data-user-content class="vault-card-description">@vault.Description</span>
+                            }
+                            <span class="vault-card-state">@(vault.IsUnlocked ? T["Vaults.State.Unlocked"] : T["Vaults.State.Locked"])</span>
+                        </span>
+                        <i class="bi bi-chevron-right vault-card-chevron"></i>
+                    </button>
+                    @if (vault.IsUnlocked)
+                    {
+                        <button type="button" class="btn btn-sm btn-outline-secondary vault-card-lock" title="@T["Vaults.Lock"]"
+                                @onclick="() => ViewModel.LockCommand.Execute(vault.Id)">
+                            <i class="bi bi-lock"></i><span class="visually-hidden">@T["Vaults.Lock"]</span>
+                        </button>
+                    }
+                </div>
+            }
+        </div>
+        <p class="panel-text small mt-3 mb-0">
+            <i class="bi bi-info-circle me-1"></i>@T["Vaults.IdHint"]
+        </p>
+    }
+</div>
+
+@if (ViewModel.IsCreateDialogOpen)
+{
+    <ModalDialog Id="vault-dialog" Title="@T["Vaults.Create.Title"]" Icon="bi-safe2" OnClose="() => ViewModel.CloseCreateDialogCommand.Execute(null)">
+        <ChildContent>
+            <form id="vault-form" @onsubmit="() => ViewModel.CreateCommand.ExecuteAsync(null)" @onsubmit:preventDefault>
+                <div class="alert alert-warning" role="alert">
+                    <i class="bi bi-exclamation-triangle me-1"></i><strong>@T["Vaults.Create.NoRecovery"]</strong>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label" for="vault-name">@T["Vaults.Create.Name"]</label>
+                    <input type="text" class="form-control" id="vault-name" autocomplete="off" disabled="@ViewModel.IsWorking"
+                           placeholder="@T["Vaults.Create.Name.Placeholder"]"
+                           @bind="ViewModel.Name" @bind:event="oninput" />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label" for="vault-description">@T["Vaults.Create.Description"]</label>
+                    <input type="text" class="form-control" id="vault-description" autocomplete="off" disabled="@ViewModel.IsWorking"
+                           @bind="ViewModel.Description" @bind:event="oninput" />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label" for="vault-passphrase">@T["Vaults.Create.Passphrase"]</label>
+                    <input type="password" class="form-control" id="vault-passphrase" autocomplete="new-password" disabled="@ViewModel.IsWorking"
+                           @bind="ViewModel.Passphrase" @bind:event="oninput" />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label" for="vault-confirm-passphrase">@T["Vaults.Create.ConfirmPassphrase"]</label>
+                    <input type="password" class="form-control" id="vault-confirm-passphrase" autocomplete="new-password" disabled="@ViewModel.IsWorking"
+                           @bind="ViewModel.ConfirmPassphrase" @bind:event="oninput" />
+                </div>
+                <div class="form-check mb-0">
+                    <input class="form-check-input" type="checkbox" id="vault-acknowledge" disabled="@ViewModel.IsWorking" @bind="ViewModel.AcknowledgedNoRecovery" />
+                    <label class="form-check-label" for="vault-acknowledge">@T["Vaults.Create.Acknowledge"]</label>
+                </div>
+            </form>
+            @if (ViewModel.IsWorking)
+            {
+                <div class="text-body-secondary small mt-3" id="vault-working">
+                    <span class="spinner-border spinner-border-sm text-primary me-2" role="status" aria-hidden="true"></span>@T["Vaults.Create.Working"]
+                </div>
+            }
+            @if (!string.IsNullOrEmpty(ViewModel.DialogError))
+            {
+                <div class="text-danger mt-3" id="vault-error">@ViewModel.DialogError</div>
+            }
+        </ChildContent>
+        <Footer>
+            <button type="button" class="btn btn-secondary" disabled="@ViewModel.IsWorking" @onclick="() => ViewModel.CloseCreateDialogCommand.Execute(null)">@T["Common.Cancel"]</button>
+            <button type="submit" form="vault-form" class="btn btn-primary" id="vault-create" disabled="@ViewModel.IsWorking">
+                @T["Vaults.Create.Create"]
+            </button>
+        </Footer>
+    </ModalDialog>
+}

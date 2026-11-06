@@ -30,7 +30,7 @@ public class ShellTests : TestBase
         await Page.Locator("#theme-toggle").ClickAsync();
         await Expect(Page.Locator("html")).ToHaveAttributeAsync("data-bs-theme", "dark");
         await Page.WaitForTimeoutAsync(500); // let the colour transition finish before capturing
-        await ScreenshotAsync("DashboardDark");
+        await ScreenshotAsync("VaultsDark");
 
         await ReloadAsync();
         await Expect(Page.Locator("html")).ToHaveAttributeAsync("data-bs-theme", "dark");
@@ -47,8 +47,8 @@ public class ShellTests : TestBase
         await Page.Locator("#nav-profile").ClickAsync();
         await Expect(Page.Locator("#profile-name")).ToHaveTextAsync("Bob Hoskins");
 
-        await Page.Locator("#nav-dashboard").ClickAsync();
-        await Expect(Page.Locator("#dashboard-greeting")).ToBeVisibleAsync();
+        await Page.Locator("#nav-vaults").ClickAsync();
+        await Expect(Page.Locator("#vaults-page")).ToBeVisibleAsync();
     }
 
     [TestMethod]

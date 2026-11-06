@@ -29,14 +29,14 @@ public class LoginPageTests : TestBase
     }
 
     [TestMethod]
-    public async Task GivenAnyCredentials_WhenSigningIn_ThenDashboardGreetsUser()
+    public async Task GivenAnyCredentials_WhenSigningIn_ThenTheVaultsPageIsShownForTheUser()
     {
         await LoginAsync("bob.hoskins@example.com");
 
-        await Expect(Page.Locator("#dashboard-greeting")).ToContainTextAsync("Bob Hoskins");
+        await Expect(Page.Locator("#vaults-page")).ToBeVisibleAsync();
         await Expect(Page.Locator("#nav-profile")).ToContainTextAsync("Bob Hoskins");
 
-        await ScreenshotAsync("Dashboard");
+        await ScreenshotAsync("Vaults");
     }
 
     [TestMethod]

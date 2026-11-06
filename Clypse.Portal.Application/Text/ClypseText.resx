@@ -12,6 +12,21 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="Common.Cancel" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="Common.Close" xml:space="preserve">
+    <value>Close</value>
+  </data>
+  <data name="Common.Loading" xml:space="preserve">
+    <value>Loading...</value>
+  </data>
+  <data name="Error.Clypse.ImportNothingFound" xml:space="preserve">
+    <value>No secrets were found in that file.</value>
+  </data>
+  <data name="Error.Clypse.ImportUnreadable" xml:space="preserve">
+    <value>That file could not be read as {0}.</value>
+  </data>
   <data name="Error.Clypse.NoVaultOpen" xml:space="preserve">
     <value>Open a vault first.</value>
   </data>
@@ -29,5 +44,332 @@
   </data>
   <data name="Error.Clypse.VaultNotFound" xml:space="preserve">
     <value>That vault no longer exists.</value>
+  </data>
+  <data name="Generator.AtLeastOne" xml:space="preserve">
+    <value>At least one of each</value>
+  </data>
+  <data name="Generator.Group.Digits" xml:space="preserve">
+    <value>Digits (0-9)</value>
+  </data>
+  <data name="Generator.Group.Lowercase" xml:space="preserve">
+    <value>Lowercase (a-z)</value>
+  </data>
+  <data name="Generator.Group.Special" xml:space="preserve">
+    <value>Symbols</value>
+  </data>
+  <data name="Generator.Group.Uppercase" xml:space="preserve">
+    <value>Uppercase (A-Z)</value>
+  </data>
+  <data name="Generator.Length" xml:space="preserve">
+    <value>Length: {0}</value>
+  </data>
+  <data name="Generator.Mode.Memorable" xml:space="preserve">
+    <value>Memorable</value>
+  </data>
+  <data name="Generator.Mode.Random" xml:space="preserve">
+    <value>Random</value>
+  </data>
+  <data name="Generator.NoGroups" xml:space="preserve">
+    <value>Choose at least one kind of character.</value>
+  </data>
+  <data name="Generator.Regenerate" xml:space="preserve">
+    <value>Generate another</value>
+  </data>
+  <data name="Generator.Shuffle" xml:space="preserve">
+    <value>Shuffle the words</value>
+  </data>
+  <data name="Generator.Template" xml:space="preserve">
+    <value>Template</value>
+  </data>
+  <data name="Generator.Title" xml:space="preserve">
+    <value>Generate a password</value>
+  </data>
+  <data name="Generator.Use" xml:space="preserve">
+    <value>Use this password</value>
+  </data>
+  <data name="Import.Done.One" xml:space="preserve">
+    <value>{0} secret imported.</value>
+  </data>
+  <data name="Import.Done.Other" xml:space="preserve">
+    <value>{0} secrets imported.</value>
+  </data>
+  <data name="Import.File" xml:space="preserve">
+    <value>CSV file</value>
+  </data>
+  <data name="Import.Format" xml:space="preserve">
+    <value>File format</value>
+  </data>
+  <data name="Import.Format.Cachy1_x" xml:space="preserve">
+    <value>Cachy CSV (1.x)</value>
+  </data>
+  <data name="Import.Format.KeePassCsv1_x" xml:space="preserve">
+    <value>KeePass CSV (1.x)</value>
+  </data>
+  <data name="Import.Found.One" xml:space="preserve">
+    <value>{0} secret found.</value>
+  </data>
+  <data name="Import.Found.Other" xml:space="preserve">
+    <value>{0} secrets found.</value>
+  </data>
+  <data name="Import.Import" xml:space="preserve">
+    <value>Import</value>
+  </data>
+  <data name="Import.Intro" xml:space="preserve">
+    <value>Import logins from a CSV file exported by another password manager. They are added to this vault as new secrets.</value>
+  </data>
+  <data name="Import.Title" xml:space="preserve">
+    <value>Import secrets</value>
+  </data>
+  <data name="Import.Warning" xml:space="preserve">
+    <value>The file holds your passwords unencrypted. Delete it once the import has finished.</value>
+  </data>
+  <data name="Nav.Vaults" xml:space="preserve">
+    <value>Vaults</value>
+  </data>
+  <data name="Nav.Vaults.Description" xml:space="preserve">
+    <value>Your vaults, each with its own passphrase.</value>
+  </data>
+  <data name="Secret.Delete" xml:space="preserve">
+    <value>Delete</value>
+  </data>
+  <data name="Secret.Delete.Confirm" xml:space="preserve">
+    <value>Delete this secret? This cannot be undone.</value>
+  </data>
+  <data name="Secret.Delete.No" xml:space="preserve">
+    <value>Keep it</value>
+  </data>
+  <data name="Secret.Delete.Yes" xml:space="preserve">
+    <value>Delete it</value>
+  </data>
+  <data name="Secret.Edit" xml:space="preserve">
+    <value>Edit secret</value>
+  </data>
+  <data name="Secret.Field.AccessKeyId" xml:space="preserve">
+    <value>Access key id</value>
+  </data>
+  <data name="Secret.Field.Comments" xml:space="preserve">
+    <value>Comments</value>
+  </data>
+  <data name="Secret.Field.Description" xml:space="preserve">
+    <value>Description</value>
+  </data>
+  <data name="Secret.Field.EmailAddress" xml:space="preserve">
+    <value>Email address</value>
+  </data>
+  <data name="Secret.Field.LoginUrl" xml:space="preserve">
+    <value>Login page</value>
+  </data>
+  <data name="Secret.Field.Name" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="Secret.Field.Password" xml:space="preserve">
+    <value>Password</value>
+  </data>
+  <data name="Secret.Field.SecretAccessKey" xml:space="preserve">
+    <value>Secret access key</value>
+  </data>
+  <data name="Secret.Field.Tags" xml:space="preserve">
+    <value>Tags</value>
+  </data>
+  <data name="Secret.Field.Tags.Hint" xml:space="preserve">
+    <value>Separate tags with commas.</value>
+  </data>
+  <data name="Secret.Field.UserName" xml:space="preserve">
+    <value>User name</value>
+  </data>
+  <data name="Secret.Field.WebsiteUrl" xml:space="preserve">
+    <value>Website</value>
+  </data>
+  <data name="Secret.LastUpdated" xml:space="preserve">
+    <value>Last updated {0}</value>
+  </data>
+  <data name="Secret.New" xml:space="preserve">
+    <value>New secret</value>
+  </data>
+  <data name="Secret.Password.Generate" xml:space="preserve">
+    <value>Generate a password</value>
+  </data>
+  <data name="Secret.Password.Hide" xml:space="preserve">
+    <value>Hide password</value>
+  </data>
+  <data name="Secret.Password.Show" xml:space="preserve">
+    <value>Show password</value>
+  </data>
+  <data name="Secret.Save" xml:space="preserve">
+    <value>Save</value>
+  </data>
+  <data name="Secret.Type" xml:space="preserve">
+    <value>What kind of secret is it?</value>
+  </data>
+  <data name="SecretType.Aws" xml:space="preserve">
+    <value>AWS credentials</value>
+  </data>
+  <data name="SecretType.Aws.Description" xml:space="preserve">
+    <value>An access key for Amazon Web Services.</value>
+  </data>
+  <data name="SecretType.None" xml:space="preserve">
+    <value>Other</value>
+  </data>
+  <data name="SecretType.None.Description" xml:space="preserve">
+    <value>Anything else you want to keep secret.</value>
+  </data>
+  <data name="SecretType.Web" xml:space="preserve">
+    <value>Login</value>
+  </data>
+  <data name="SecretType.Web.Description" xml:space="preserve">
+    <value>A user name and password for a website.</value>
+  </data>
+  <data name="Strength.Described" xml:space="preserve">
+    <value>{0}, about {1} bits</value>
+  </data>
+  <data name="Strength.Medium" xml:space="preserve">
+    <value>Medium</value>
+  </data>
+  <data name="Strength.Strong" xml:space="preserve">
+    <value>Strong</value>
+  </data>
+  <data name="Strength.Unknown" xml:space="preserve">
+    <value>Strength unknown: it uses characters the estimate does not cover.</value>
+  </data>
+  <data name="Strength.VeryStrong" xml:space="preserve">
+    <value>Very strong</value>
+  </data>
+  <data name="Strength.VeryWeak" xml:space="preserve">
+    <value>Very weak</value>
+  </data>
+  <data name="Strength.Weak" xml:space="preserve">
+    <value>Weak</value>
+  </data>
+  <data name="Vault.BackToVaults" xml:space="preserve">
+    <value>Back to vaults</value>
+  </data>
+  <data name="Vault.Count.One" xml:space="preserve">
+    <value>{0} secret</value>
+  </data>
+  <data name="Vault.Count.Other" xml:space="preserve">
+    <value>{0} secrets</value>
+  </data>
+  <data name="Vault.Empty.Text" xml:space="preserve">
+    <value>Add your first secret, or import secrets from a CSV file.</value>
+  </data>
+  <data name="Vault.Empty.Title" xml:space="preserve">
+    <value>This vault has no secrets yet</value>
+  </data>
+  <data name="Vault.Import" xml:space="preserve">
+    <value>Import</value>
+  </data>
+  <data name="Vault.Loading.One" xml:space="preserve">
+    <value>Decrypting {1} of {0} secret...</value>
+  </data>
+  <data name="Vault.Loading.Other" xml:space="preserve">
+    <value>Decrypting {1} of {0} secrets...</value>
+  </data>
+  <data name="Vault.Lock" xml:space="preserve">
+    <value>Lock</value>
+  </data>
+  <data name="Vault.Missing" xml:space="preserve">
+    <value>This vault does not exist. It may have been deleted.</value>
+  </data>
+  <data name="Vault.NewSecret" xml:space="preserve">
+    <value>New secret</value>
+  </data>
+  <data name="Vault.NoMatches" xml:space="preserve">
+    <value>No secrets match your search.</value>
+  </data>
+  <data name="Vault.Search" xml:space="preserve">
+    <value>Search secrets</value>
+  </data>
+  <data name="Vault.Search.Placeholder" xml:space="preserve">
+    <value>Search by name, user name, website or tag</value>
+  </data>
+  <data name="Vault.Subtitle" xml:space="preserve">
+    <value>Your secrets in this vault, encrypted with its own keys.</value>
+  </data>
+  <data name="Vault.Tags.All" xml:space="preserve">
+    <value>All</value>
+  </data>
+  <data name="Vault.Title" xml:space="preserve">
+    <value>Vault</value>
+  </data>
+  <data name="Vault.Unreadable.One" xml:space="preserve">
+    <value>{0} secret in this vault could not be read.</value>
+  </data>
+  <data name="Vault.Unreadable.Other" xml:space="preserve">
+    <value>{0} secrets in this vault could not be read.</value>
+  </data>
+  <data name="Vaults.Create.Acknowledge" xml:space="preserve">
+    <value>I understand that if I forget this passphrase, this vault cannot be recovered.</value>
+  </data>
+  <data name="Vaults.Create.AcknowledgeRequired" xml:space="preserve">
+    <value>Confirm you understand there is no passphrase recovery.</value>
+  </data>
+  <data name="Vaults.Create.ConfirmPassphrase" xml:space="preserve">
+    <value>Enter the passphrase again</value>
+  </data>
+  <data name="Vaults.Create.Create" xml:space="preserve">
+    <value>Create vault</value>
+  </data>
+  <data name="Vaults.Create.Description" xml:space="preserve">
+    <value>Description (optional)</value>
+  </data>
+  <data name="Vaults.Create.Name" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="Vaults.Create.Name.Placeholder" xml:space="preserve">
+    <value>e.g. Personal</value>
+  </data>
+  <data name="Vaults.Create.NoRecovery" xml:space="preserve">
+    <value>There is no passphrase recovery. If you forget it, nobody can open this vault, including us.</value>
+  </data>
+  <data name="Vaults.Create.Passphrase" xml:space="preserve">
+    <value>Passphrase</value>
+  </data>
+  <data name="Vaults.Create.PassphraseMismatch" xml:space="preserve">
+    <value>The passphrases do not match.</value>
+  </data>
+  <data name="Vaults.Create.PassphraseRequired" xml:space="preserve">
+    <value>Enter a passphrase.</value>
+  </data>
+  <data name="Vaults.Create.Title" xml:space="preserve">
+    <value>New vault</value>
+  </data>
+  <data name="Vaults.Create.Working" xml:space="preserve">
+    <value>Protecting your vault. This can take a few seconds.</value>
+  </data>
+  <data name="Vaults.Empty.Create" xml:space="preserve">
+    <value>Create your first vault</value>
+  </data>
+  <data name="Vaults.Empty.Text" xml:space="preserve">
+    <value>Create a vault to start keeping your secrets. Each vault has its own passphrase, so you can keep work and personal secrets apart.</value>
+  </data>
+  <data name="Vaults.Empty.Title" xml:space="preserve">
+    <value>You have no vaults yet</value>
+  </data>
+  <data name="Vaults.IdHint" xml:space="preserve">
+    <value>A vault shows its id on this device until it has been unlocked here. Change a vault's passphrase or delete it in Settings.</value>
+  </data>
+  <data name="Vaults.Loading" xml:space="preserve">
+    <value>Loading your vaults...</value>
+  </data>
+  <data name="Vaults.Lock" xml:space="preserve">
+    <value>Lock</value>
+  </data>
+  <data name="Vaults.New" xml:space="preserve">
+    <value>New vault</value>
+  </data>
+  <data name="Vaults.Open" xml:space="preserve">
+    <value>Open</value>
+  </data>
+  <data name="Vaults.State.Locked" xml:space="preserve">
+    <value>Locked</value>
+  </data>
+  <data name="Vaults.State.Unlocked" xml:space="preserve">
+    <value>Unlocked</value>
+  </data>
+  <data name="Vaults.Subtitle" xml:space="preserve">
+    <value>Each vault has its own passphrase, and its secrets are encrypted with its own keys.</value>
+  </data>
+  <data name="Vaults.Title" xml:space="preserve">
+    <value>Vaults</value>
   </data>
 </root>

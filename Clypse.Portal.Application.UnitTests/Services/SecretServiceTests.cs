@@ -198,6 +198,22 @@ public class SecretServiceTests
         Assert.Empty(await files.ListAsync());
     }
 
+    [Theory]
+    [InlineData("")]
+    [InlineData(null)]
+    public async Task GivenASecretWithAnEmptyName_WhenSaved_ThenThrowsSecretInvalid(string? name)
+    {
+        // Arrange
+        var secret = new WebSecret { Name = name, Password = "hunter2" };
+
+        // Act
+        var ex = await Assert.ThrowsAsync<ClypseException>(() => CreateSut().SaveAsync(secret));
+
+        // Assert
+        Assert.Equal(ClypseErrorCodes.SecretInvalid, ex.Code);
+        Assert.Empty(await files.ListAsync());
+    }
+
     [Fact]
     public async Task GivenOtherFiles_WhenListingIds_ThenOnlyThisVaultsSecrets()
     {

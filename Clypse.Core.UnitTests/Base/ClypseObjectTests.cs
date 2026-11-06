@@ -54,4 +54,49 @@ public class ClypseObjectTests
         var validator = new ClypseObjectValidator(sut);
         validator.Validate();
     }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    public void GivenNoValueForANewKey_WhenSetData_ThenNothingIsStored(string? value)
+    {
+        // Arrange
+        var sut = new ClypseObject();
+
+        // Act
+        sut.SetData("Name", value);
+
+        // Assert
+        Assert.False(sut.Data.ContainsKey("Name"));
+        Assert.Null(sut.GetData("Name"));
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    public void GivenNoValueForAnExistingKey_WhenSetData_ThenTheKeyIsRemoved(string? value)
+    {
+        // Arrange
+        var sut = new ClypseObject();
+        sut.SetData("Name", "Gmail");
+
+        // Act
+        sut.SetData("Name", value);
+
+        // Assert
+        Assert.False(sut.Data.ContainsKey("Name"));
+    }
+
+    [Fact]
+    public void GivenAValue_WhenSetData_ThenItIsStored()
+    {
+        // Arrange
+        var sut = new ClypseObject();
+
+        // Act
+        sut.SetData("Name", "Gmail");
+
+        // Assert
+        Assert.Equal("Gmail", sut.GetData("Name"));
+    }
 }

@@ -60,6 +60,7 @@ Layout:
 - `Clypse.Portal.Models`: models.
 - `Clypse.Portal.Application.UnitTests` and `Clypse.Portal.UITests`: tests.
 - `cloudformation/`: the app's AWS stack, on top of the blazwiz base stack.
+- `eng/`: build scripts, e.g. `use-local-blazwiz.ps1` (see "blazwiz packages").
 - `Resources/Art`: icons and logos. **Use only the PNGs.** The SVGs render with the wrong font (Montserrat Black is
   not embedded); see the plan.
 
@@ -101,14 +102,15 @@ These follow blazwiz's rules, so the app and the framework read the same.
 - **Generic gaps go into blazwiz, not into clypse.** Clipboard with auto-clear, toasts and conflict resolution belong
   in the framework.
   - Make those changes in the blazwiz repository (rule 2), with tests there.
-  - clypse picks them up once they are published.
-  - Until then, note the dependency in the plan rather than copying framework code into clypse.
+  - clypse picks them up from a local build of blazwiz (see "blazwiz packages" below), never by copying framework code
+    into clypse.
 
 ## Build and test
 
-Prerequisites: the .NET SDK pinned in `global.json`.
+Prerequisites: the .NET SDK pinned in `global.json`, and a blazwiz working tree (see "blazwiz packages").
 
 ```powershell
+./eng/use-local-blazwiz.ps1 -BlazwizPath <blazwiz working tree>   # or set BLAZWIZ_SOURCE
 dotnet build Clypse.slnx
 dotnet test Clypse.slnx --no-build --filter "FullyQualifiedName~UnitTests"
 dotnet test Clypse.slnx --no-build --filter "FullyQualifiedName~UITests"
@@ -126,5 +128,21 @@ dotnet test Clypse.slnx --no-build --filter "FullyQualifiedName~UITests"
   - Don't build while they run.
 - **Static web assets compression failures.** If a build fails in that step ("An item with the same key has already
   been added"), build again with `MSBUILDDISABLENODEREUSE=1`.
-- **The blazwiz version** is pinned in `Directory.Packages.props` (`BlazwizVersion`). Change it only to take up a
-  published release.
+
+## blazwiz packages
+
+Until this rewrite is finished, no blazwiz changes are released to nuget.org. clypse uses blazwiz packages packed
+locally from the blazwiz working tree:
+
+- `eng/use-local-blazwiz.ps1` does all of it:
+  - packs every `Devoctomy.Blazwiz.*` package into `.blazwiz/packages` (git ignored), with a version unique to the run
+    (`<VersionPrefix>-local.<timestamp>`), so the NuGet cache never serves an older build;
+  - sets `BlazwizVersion` in `Directory.Packages.props` to that version;
+  - removes older local builds;
+  - restores.
+
+  `nuget.config` adds `.blazwiz/packages` as a package source.
+- Run it after changing blazwiz, before building or testing clypse against the change, and in a fresh clone before the
+  first restore.
+- Never edit `BlazwizVersion` by hand, and never point clypse at blazwiz project references.
+- Before work is done, rebuild the packages from the current blazwiz tree and run clypse's full test suite on them.

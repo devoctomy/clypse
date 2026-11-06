@@ -2,7 +2,8 @@
 
 **Date:** 2026-11-06
 **Status:** Phase 0 mostly done (deploy and spikes outstanding); Phases 1 and 2 done (Phase 2's two-browser check
-needs a deployed stack). See [Progress](#progress).
+needs a deployed stack); Phase 3 mostly done (settings sections and vault rename outstanding). See
+[Progress](#progress).
 **Source app:** `E:\Source\GitHub\clypse` (v1.2.0.0)
 **Framework:** `E:\Source\Misc\blazwiz` (0.4.0, `Devoctomy.Blazwiz.*` on NuGet)
 **New app:** `E:\clypse`
@@ -98,6 +99,61 @@ The template's notebooks feature is the model to follow, almost one to one:
 - **Two-browser sync and the S3 listing check.** They need a deployed stack.
 - **Creating a vault and filling it from the browser.** That comes with the Phase 3 pages, and gets a UI test there.
 
+### Phase 3: new UI
+
+**Done:**
+- **Theme.** The accent is the exact orange of the PNG artwork, `#ff6600` (sampled from `icon-colour-1024.png`), in light
+  and dark modes, through the `--bw-*` tokens in `wwwroot/css/app.css`. The range slider thumb is restyled to match.
+- **Removed from the template.** The template's dashboard, greeting service and their tests are gone.
+- **Vaults page,** the home page (`/` and `/vaults`, `VaultsViewModel`):
+  - an empty state that offers to create the first vault;
+  - vault cards, locked or unlocked, shown by device label or id;
+  - a lock button on unlocked cards;
+  - the new-vault dialog: name, description, passphrase twice, and the no-recovery acknowledgement.
+- **Vault page** (`/vaults/{id}`, `VaultViewModel`), inside `E2eUnlockPanel`:
+  - decrypting progress and an unreadable-secrets warning;
+  - search across name, description, tags, user name, email and website;
+  - tag filter chips, and the secret list with a type icon and summary line;
+  - lock, import and new secret;
+  - leaving the page closes the vault session.
+- **Secret editor** (`SecretEditorDialog`, `SecretEditorViewModel`):
+  - choosing the type for a new secret (login, AWS credentials, other);
+  - fields from `GetOrderedSecretFields`, with required markers;
+  - password fields with show/hide, the generator and a strength meter;
+  - tags as comma-separated text;
+  - delete with confirmation.
+
+  It edits a copy, so nothing changes until saved. Passwords and multi-line text are stored exactly as typed.
+- **Password generator** (`PasswordGeneratorDialog`, `PasswordGeneratorViewModel`):
+  - random passwords (length 8–64, character groups, at least one of each);
+  - memorable passwords from the templates in the `Clypse` section of `appsettings.json` (`ClypseSettings`).
+- **Strength.** `PasswordStrengthService` uses the complexity estimator *without* the weak-password list, so typing stays
+  fast. The list check is still planned for Phase 4.
+- **CSV import** (`ImportSecretsDialog`, `ImportSecretsViewModel`):
+  - KeePass and Cachy formats;
+  - a file of the wrong format, or one with rows missing a name, is refused when read, not at import.
+- **Text.** All text is in `ClypseText.resx` (generated from one table), and the Vaults navigation item uses
+  `TextResource`.
+- **Pseudo-localisation.** User data in the pages is marked `data-user-content`, so the pseudo-localisation UI test now
+  covers clypse's own pages and dialogs too.
+- **Checked by hand in the browser.** Create, add with generator, save, lock, unlock, and reload; the vault shows by name
+  while locked. IndexedDB holds only `E2EE` ciphertext and GUID keys. Dark mode and phone width look right.
+- **Fix in `Clypse.Core`.** `ClypseObject.SetData` stored an empty string for a new key, so an empty name passed
+  validation. It now removes the key for any empty value, as its doc comment says.
+- **Tests:**
+  - unit tests for every new view model and the strength service: 169 application unit tests, 125 core;
+  - new `VaultTests` UI tests: create, list, search and tag filter, edit and delete, validation, generator (random and
+    memorable), lock and unlock, reload, KeePass import and a missing vault.
+
+**Not done yet in Phase 3:**
+- Settings sections for the generator's templates and for vault security (idle timeout, device unlock, Argon2 costs).
+- Renaming a vault (`VaultService.UpdateAsync` exists; there is no UI for it).
+- Deciding about the framework's `E2eProfilesSection`, which lists vaults by GUID in Settings.
+
+**Framework gaps seen:**
+- A second `ModalDialog` (the generator over the editor) does not dim the first.
+- blazwiz's theme preview swatch hard-codes the purple gradient (`blazwiz.css`, `.theme-preview span:nth-child(2)`).
+
 ### Changes made in blazwiz
 
 All on branch `clypseupdates`, with unit tests and CHANGELOG entries:
@@ -110,8 +166,10 @@ All on branch `clypseupdates`, with unit tests and CHANGELOG entries:
 3. **The template's `MyApp.slnx` lists the files actually in `template/cloudformation`.** Before, it listed the base
    stack's files, which generated apps don't have.
 
-clypse uses the NuGet packages, so its 5 UI tests that depend on fixes 1 and 2 are `[Ignore]`d. Remove the `[Ignore]`
-once a blazwiz release has the fixes.
+**No blazwiz changes are released until this rewrite is finished.** clypse builds against blazwiz packed locally from
+source: `eng/use-local-blazwiz.ps1` packs every package with a unique `-local.<timestamp>` version into
+`.blazwiz/packages` (git ignored), sets `BlazwizVersion`, and `nuget.config` adds the folder as a source (see
+AGENTS.md). The 5 UI tests that were `[Ignore]`d waiting for fixes 1 and 2 run again and pass.
 
 ### Framework gaps found, not fixed
 

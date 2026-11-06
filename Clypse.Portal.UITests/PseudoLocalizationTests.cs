@@ -15,8 +15,9 @@ public class PseudoLocalizationTests : TestBase
     // The signed-in user's name and initials, worked out from the email address: data, not text.
     private static readonly string[] UserText = [Username, "Bob Hoskins", "BH"];
 
-    // The app's own sidebar items: app text, not the framework's.
-    private const string AppContent = "#nav-dashboard, #nav-showcase, #nav-notebooks";
+    // What the user typed or made (vault and secret names, tags, a generated password), which clypse marks with
+    // data-user-content: data, not text.
+    private const string UserContent = "[data-user-content]";
 
     // Filled in as the settings files are served. They are fetched at the same time, so the handlers run on different
     // threads: lock while adding or reading.
@@ -77,8 +78,7 @@ public class PseudoLocalizationTests : TestBase
         // Arrange
         await LoginAsync(Username);
 
-        // Act & Assert: the shell (sidebar, top bar, banners) is checked on every framework page; the dashboard is the
-        // app's own page.
+        // Act & Assert: the shell (sidebar, top bar, banners) is checked on every framework page.
         await Page.Locator("#nav-settings").ClickAsync();
         await Expect(Page.Locator("h1.page-title")).ToContainTextAsync("[!!");
         await AssertNoHardCodedTextAsync("settings page");
@@ -92,6 +92,50 @@ public class PseudoLocalizationTests : TestBase
         await AssertNoHardCodedTextAsync("sync page");
     }
 
+    [TestMethod]
+    public async Task GivenPseudoLocalization_WhenUsingAVault_ThenAllTextIsFromResources()
+    {
+        // Arrange
+        await LoginAsync(Username);
+
+        // Act & Assert: clypse's own pages and dialogs.
+        await Expect(Page.Locator("#no-vaults")).ToBeVisibleAsync();
+        await AssertNoHardCodedTextAsync("vaults page");
+
+        await Page.Locator("#create-first-vault-button").ClickAsync();
+        await Expect(Page.Locator("#vault-dialog")).ToBeVisibleAsync();
+        await AssertNoHardCodedTextAsync("new vault dialog");
+
+        await Page.Locator("#vault-name").FillAsync("Personal");
+        await Page.Locator("#vault-passphrase").FillAsync(Passphrase);
+        await Page.Locator("#vault-confirm-passphrase").FillAsync(Passphrase);
+        await Page.Locator("#vault-acknowledge").CheckAsync();
+        await Page.Locator("#vault-create").ClickAsync();
+        await Expect(Page.Locator("#no-secrets")).ToBeVisibleAsync();
+        await AssertNoHardCodedTextAsync("empty vault page", "Personal");
+
+        await Page.Locator("#new-secret-button").ClickAsync();
+        await Page.Locator("#secret-field-Password").FillAsync("hunter2hunter2");
+        await AssertNoHardCodedTextAsync("secret editor", "Personal");
+
+        await Page.Locator(".secret-generate").ClickAsync();
+        await Expect(Page.Locator("#generator-dialog")).ToBeVisibleAsync();
+        await AssertNoHardCodedTextAsync("password generator", "Personal");
+        await Page.Locator("#generator-mode-memorable").ClickAsync();
+        await AssertNoHardCodedTextAsync("memorable password generator", "Personal");
+        await Page.Locator("#generator-use").ClickAsync();
+
+        await Page.Locator("#secret-field-Name").FillAsync("Gmail");
+        await Page.Locator("#secret-field-Tags").FillAsync("email");
+        await Page.Locator("#secret-save").ClickAsync();
+        await Expect(Page.Locator("#secrets .secret-row")).ToHaveCountAsync(1);
+        await AssertNoHardCodedTextAsync("vault page", "Personal");
+
+        await Page.Locator("#import-button").ClickAsync();
+        await Expect(Page.Locator("#import-dialog")).ToBeVisibleAsync();
+        await AssertNoHardCodedTextAsync("import dialog", "Personal");
+    }
+
     // Version numbers, such as the framework's 0.1.0-preview.1: data, not text.
     private static bool IsVersion(string text) =>
         System.Text.RegularExpressions.Regex.IsMatch(text, @"^\d+\.\d+\.\d+(\.\d+)?(-[0-9A-Za-z.]+)?$");
@@ -101,7 +145,7 @@ public class PseudoLocalizationTests : TestBase
         DateTime.TryParse(text, System.Globalization.CultureInfo.GetCultureInfo("en-GB"), System.Globalization.DateTimeStyles.AllowWhiteSpaces, out _) ||
         DateTime.TryParse(text, System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.AllowWhiteSpaces, out _);
 
-    private async Task AssertNoHardCodedTextAsync(string where)
+    private async Task AssertNoHardCodedTextAsync(string where, params string[] data)
     {
         // Let the page settle: some text is filled in after the first render.
         await Page.WaitForTimeoutAsync(500);
@@ -126,12 +170,12 @@ public class PseudoLocalizationTests : TestBase
 
                 return found;
             }",
-            AppContent);
+            UserContent);
 
         HashSet<string> allowed;
         lock (appSettingsText)
         {
-            allowed = new HashSet<string>(appSettingsText.Concat(UserText), StringComparer.Ordinal);
+            allowed = new HashSet<string>(appSettingsText.Concat(UserText).Concat(data), StringComparer.Ordinal);
         }
 
         var hardCoded = texts

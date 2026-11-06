@@ -9,4 +9,7 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Clypse.Core\Clypse.Core.csproj" />
+  </ItemGroup>
 </Project>

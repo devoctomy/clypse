@@ -14,7 +14,6 @@
     </PackageReference>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Clypse.Core\Clypse.Core.csproj" />
     <ProjectReference Include="..\Clypse.Portal.Models\Clypse.Portal.Models.csproj" />
   </ItemGroup>
 </Project>

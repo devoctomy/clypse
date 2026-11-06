@@ -1,0 +1,144 @@
+@page "/vaults/{Id}"
+@inherits MvvmComponentBase<VaultViewModel>
+
+<PageHeader Title="@ViewModel.Title" Icon="bi-safe2" Subtitle="@ViewModel.Subtitle">
+    @if (ViewModel.IsUnlocked)
+    {
+        <button type="button" class="btn btn-outline-secondary" id="lock-vault-button" @onclick="() => ViewModel.LockCommand.Execute(null)">
+            <i class="bi bi-lock me-1"></i>@T["Vault.Lock"]
+        </button>
+        <button type="button" class="btn btn-outline-primary" id="import-button" @onclick="() => ViewModel.ShowImportCommand.Execute(null)">
+            <i class="bi bi-box-arrow-in-down me-1"></i>@T["Vault.Import"]
+        </button>
+        <button type="button" class="btn btn-primary" id="new-secret-button" @onclick="() => ViewModel.NewSecretCommand.Execute(null)">
+            <i class="bi bi-plus-lg me-1"></i>@T["Vault.NewSecret"]
+        </button>
+    }
+</PageHeader>
+
+@if (ViewModel.IsMissing)
+{
+    <div class="panel" id="vault-not-found">
+        <p class="panel-text">@T["Vault.Missing"]</p>
+        <a class="btn btn-primary" href="@VaultsViewModel.Url"><i class="bi bi-arrow-left me-1"></i>@T["Vault.BackToVaults"]</a>
+    </div>
+}
+else if (ViewModel.Vault != null)
+{
+    <E2eUnlockPanel Profile="@ViewModel.Vault.Id">
+        @if (ViewModel.ErrorMessage != null)
+        {
+            <div class="alert alert-danger alert-dismissible" role="alert" id="vault-error">
+                <i class="bi bi-exclamation-triangle me-2"></i>@ViewModel.ErrorMessage
+                <button type="button" class="btn-close" aria-label="@T["Common.Close"]" @onclick="() => ViewModel.DismissErrorCommand.Execute(null)"></button>
+            </div>
+        }
+
+        @if (ViewModel.UnreadableText != null)
+        {
+            <div class="alert alert-warning" role="alert" id="vault-unreadable">
+                <i class="bi bi-exclamation-triangle me-2"></i>@ViewModel.UnreadableText
+            </div>
+        }
+
+        <div class="panel secrets-panel" id="vault-page">
+            @if (ViewModel.IsLoading)
+            {
+                <div class="secrets-loading" id="secrets-loading">
+                    <div class="small text-body-secondary mb-1">@ViewModel.LoadingText</div>
+                    <div class="progress" role="progressbar" aria-valuenow="@ViewModel.LoadingPercent" aria-valuemin="0" aria-valuemax="100">
+                        <div class="progress-bar" style="width: @(ViewModel.LoadingPercent)%"></div>
+                    </div>
+                </div>
+            }
+
+            @if (ViewModel.SecretCount == 0 && !ViewModel.IsLoading)
+            {
+                <div class="empty-state" id="no-secrets">
+                    <span class="empty-state-icon"><i class="bi bi-key"></i></span>
+                    <h2 class="empty-state-title">@T["Vault.Empty.Title"]</h2>
+                    <p class="empty-state-text">@T["Vault.Empty.Text"]</p>
+                    <div class="d-flex flex-wrap gap-2 justify-content-center">
+                        <button type="button" class="btn btn-primary" @onclick="() => ViewModel.NewSecretCommand.Execute(null)">
+                            <i class="bi bi-plus-lg me-1"></i>@T["Vault.NewSecret"]
+                        </button>
+                        <button type="button" class="btn btn-outline-primary" @onclick="() => ViewModel.ShowImportCommand.Execute(null)">
+                            <i class="bi bi-box-arrow-in-down me-1"></i>@T["Vault.Import"]
+                        </button>
+                    </div>
+                </div>
+            }
+            else if (ViewModel.SecretCount > 0)
+            {
+                <div class="secrets-toolbar">
+                    <div class="secrets-search">
+                        <i class="bi bi-search"></i>
+                        <input type="search" class="form-control" id="secret-search" autocomplete="off"
+                               aria-label="@T["Vault.Search"]" placeholder="@T["Vault.Search.Placeholder"]"
+                               @bind="ViewModel.Search" @bind:event="oninput" />
+                    </div>
+                    <span class="secrets-count text-body-secondary small" id="secrets-count">@ViewModel.CountText</span>
+                </div>
+
+                @if (ViewModel.Tags.Count > 0)
+                {
+                    <div class="tag-filters" id="tag-filters">
+                        <button type="button" class="tag-filter @(ViewModel.SelectedTag == null ? "active" : null)" data-tag=""
+                                @onclick="() => ViewModel.SelectTagCommand.Execute(null)">@T["Vault.Tags.All"]</button>
+                        @foreach (var tag in ViewModel.Tags)
+                        {
+                            <button type="button" class="tag-filter @(string.Equals(ViewModel.SelectedTag, tag, StringComparison.CurrentCultureIgnoreCase) ? "active" : null)"
+                                    data-tag="@tag" data-user-content @onclick="() => ViewModel.SelectTagCommand.Execute(tag)">@tag</button>
+                        }
+                    </div>
+                }
+
+                @if (ViewModel.Secrets.Count == 0)
+                {
+                    <p class="panel-text mb-0" id="no-matches">@T["Vault.NoMatches"]</p>
+                }
+                else
+                {
+                    <ul class="secret-list" id="secrets">
+                        @foreach (var secret in ViewModel.Secrets)
+                        {
+                            var summary = VaultViewModel.GetSummary(secret);
+                            <li>
+                                <button type="button" class="secret-row" data-secret="@secret.Id" @onclick="() => ViewModel.EditSecretCommand.Execute(secret.Id)">
+                                    <span class="secret-icon secret-type-@secret.SecretType.ToString().ToLowerInvariant()"><i class="bi @VaultViewModel.GetIcon(secret.SecretType)"></i></span>
+                                    <span class="secret-body">
+                                        <span data-user-content class="secret-name">@secret.Name</span>
+                                        @if (!string.IsNullOrWhiteSpace(summary))
+                                        {
+                                            <span data-user-content class="secret-summary">@summary</span>
+                                        }
+                                    </span>
+                                    @if (secret.Tags.Count > 0)
+                                    {
+                                        <span class="secret-tags">
+                                            @foreach (var tag in secret.Tags)
+                                            {
+                                                <span data-user-content class="secret-tag">@tag</span>
+                                            }
+                                        </span>
+                                    }
+                                    <i class="bi bi-chevron-right secret-chevron"></i>
+                                </button>
+                            </li>
+                        }
+                    </ul>
+                }
+            }
+        </div>
+    </E2eUnlockPanel>
+}
+
+@switch (ViewModel.ActiveDialog)
+{
+    case VaultViewModel.VaultDialog.Editor:
+        <SecretEditorDialog SecretId="@ViewModel.EditingSecretId" OnClose="() => ViewModel.CloseDialogCommand.Execute(null)" />
+        break;
+    case VaultViewModel.VaultDialog.Import:
+        <ImportSecretsDialog OnClose="() => ViewModel.CloseDialogCommand.Execute(null)" />
+        break;
+}
