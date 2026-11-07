@@ -5,10 +5,11 @@
 
 ## The problem
 
-The `clypse-github-deploy` role, created with IAM's **Web identity** wizard, gets a trust policy condition like:
+The `clypse-github-deploy` role's trust policy allows any workflow in the repository. GitHub's token names the
+repository with numeric ids (shown by the workflows' "Show the OIDC token's claims" step), so the condition is:
 
 ```json
-"StringLike": { "token.actions.githubusercontent.com:sub": "repo:devoctomy/clypse:*" }
+"StringLike": { "token.actions.githubusercontent.com:sub": "repo:devoctomy@14939242/clypse@1448521013:*" }
 ```
 
 That lets any workflow run in the repository assume the role: any workflow, on any branch, including one added on a
@@ -18,13 +19,13 @@ branch later. The role has the full `clypse-deploy` policy, so such a run could 
 
 On the role's **Trust relationships** tab, limit the condition to the GitHub environments the Deploy, Upgrade and
 Destroy workflows run in. Their jobs set `environment:`, so GitHub's token says
-`repo:devoctomy/clypse:environment:<name>`:
+`repo:devoctomy@14939242/clypse@1448521013:environment:<name>`:
 
 ```json
-"StringLike": { "token.actions.githubusercontent.com:sub": "repo:devoctomy/clypse:environment:*" }
+"StringLike": { "token.actions.githubusercontent.com:sub": "repo:devoctomy@14939242/clypse@1448521013:environment:*" }
 ```
 
-or one environment only, e.g. `repo:devoctomy/clypse:environment:test`.
+or one environment only, e.g. `repo:devoctomy@14939242/clypse@1448521013:environment:test`.
 
 ## GitHub environment protection rules
 

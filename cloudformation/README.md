@@ -256,14 +256,21 @@ Once per AWS account:
          "Action": "sts:AssumeRoleWithWebIdentity",
          "Condition": {
            "StringEquals": { "token.actions.githubusercontent.com:aud": "sts.amazonaws.com" },
-           "StringLike": { "token.actions.githubusercontent.com:sub": "repo:devoctomy/clypse:environment:*" }
+           "StringLike": { "token.actions.githubusercontent.com:sub": "repo:devoctomy@14939242/clypse@1448521013:environment:*" }
          }
        }
      ]
    }
    ```
 
-   To allow only some environments, list them instead of `*`, e.g. `repo:devoctomy/clypse:environment:test`.
+   - **The subject contains numeric ids.** GitHub's token names the repository with its owner's and its own numeric ids
+     (`devoctomy@14939242/clypse@1448521013`), so a repository later renamed or recreated with the same name doesn't
+     match.
+   - **The IAM wizard writes it wrong.** It writes `repo:devoctomy/clypse:*`, without the ids, which never matches: AWS
+     refuses with "Not authorized to perform sts:AssumeRoleWithWebIdentity".
+   - **To see what GitHub sends,** read the Deploy, Upgrade and Destroy workflows' "Show the OIDC token's claims" step.
+   - **To allow only some environments,** list them instead of `*`, e.g.
+     `repo:devoctomy@14939242/clypse@1448521013:environment:test`.
 
 Then, in the repository's **Settings, Environments**, add one GitHub environment for each AWS environment, named the same (e.g. `test`). Give it:
 
