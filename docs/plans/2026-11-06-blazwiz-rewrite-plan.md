@@ -283,8 +283,13 @@ All on branch `clypseupdates`, with unit tests and CHANGELOG entries:
 3. **The template's `MyApp.slnx` lists the files actually in `template/cloudformation`.** Before, it listed the base
    stack's files, which generated apps don't have.
 
-**No blazwiz changes are released until this rewrite is finished.** clypse builds against blazwiz packed locally from
-source: `eng/use-local-blazwiz.ps1` packs every package with a unique `-local.<timestamp>` version into
+**Blazwiz releases (changed 2026-11-07).** At first no blazwiz change was to be released until this rewrite was finished.
+blazwiz **0.5.0** was released on 2026-11-07, with everything above, so that CI and the deploy workflows can restore
+it. clypse now uses it (`eng/use-released-blazwiz.ps1 -Version 0.5.0`). Its full suite passes on the released
+packages: 131 core, 247 application and 60 UI tests.
+
+While a blazwiz change is being made, clypse still builds against blazwiz packed locally from source:
+`eng/use-local-blazwiz.ps1` packs every package with a unique `-local.<timestamp>` version into
 `.blazwiz/packages` (git ignored), sets `BlazwizVersion`, and `nuget.config` adds the folder as a source (see
 AGENTS.md). The 5 UI tests that were `[Ignore]`d waiting for fixes 1 and 2 run again and pass.
 

@@ -432,5 +432,9 @@ Clypse.Portal/wwwroot/appsettings.Production.json
 # Playwright MCP output (browser checks while developing)
 .playwright-mcp/
 
-# blazwiz packed locally from source (eng/use-local-blazwiz.ps1)
-.blazwiz/
+# blazwiz packed locally from source (eng/use-local-blazwiz.ps1). The empty packages folder is kept (.gitkeep):
+# nuget.config lists it as a package source, and NuGet fails a restore when a local source folder is missing.
+.blazwiz/*
+!.blazwiz/packages/
+.blazwiz/packages/*
+!.blazwiz/packages/.gitkeep

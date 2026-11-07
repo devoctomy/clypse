@@ -107,10 +107,11 @@ These follow blazwiz's rules, so the app and the framework read the same.
 
 ## Build and test
 
-Prerequisites: the .NET SDK pinned in `global.json`, and a blazwiz working tree (see "blazwiz packages").
+Prerequisites: the .NET SDK pinned in `global.json`, the `wasm-tools` workload, and a blazwiz working tree only while
+clypse uses a local blazwiz build (see "blazwiz packages").
 
 ```powershell
-./eng/use-local-blazwiz.ps1 -BlazwizPath <blazwiz working tree>   # or set BLAZWIZ_SOURCE
+./eng/use-local-blazwiz.ps1 -BlazwizPath <blazwiz working tree>   # only on a local blazwiz build; or set BLAZWIZ_SOURCE
 dotnet build Clypse.slnx
 dotnet test Clypse.slnx --no-build --filter "FullyQualifiedName~UnitTests"
 dotnet test Clypse.slnx --no-build --filter "FullyQualifiedName~UITests"
@@ -131,18 +132,23 @@ dotnet test Clypse.slnx --no-build --filter "FullyQualifiedName~UITests"
 
 ## blazwiz packages
 
-Until this rewrite is finished, no blazwiz changes are released to nuget.org. clypse uses blazwiz packages packed
-locally from the blazwiz working tree:
+clypse uses either a released blazwiz from nuget.org, or blazwiz packed locally from the blazwiz working tree while a
+blazwiz change is being made:
 
-- `eng/use-local-blazwiz.ps1` does all of it:
-  - packs every `Devoctomy.Blazwiz.*` package into `.blazwiz/packages` (git ignored), with a version unique to the run
+- **`eng/use-local-blazwiz.ps1`** switches to the local working tree. It:
+  - packs every `Devoctomy.Blazwiz.*` package into `.blazwiz/packages`, with a version unique to the run
     (`<VersionPrefix>-local.<timestamp>`), so the NuGet cache never serves an older build;
   - sets `BlazwizVersion` in `Directory.Packages.props` to that version;
   - removes older local builds;
   - restores.
 
-  `nuget.config` adds `.blazwiz/packages` as a package source.
-- Run it after changing blazwiz, before building or testing clypse against the change, and in a fresh clone before the
-  first restore.
-- Never edit `BlazwizVersion` by hand, and never point clypse at blazwiz project references.
-- Before work is done, rebuild the packages from the current blazwiz tree and run clypse's full test suite on them.
+  `nuget.config` adds `.blazwiz/packages` as a package source. The folder is in git, empty (`.gitkeep`), because NuGet
+  fails a restore when a local source folder is missing. The packages in it are git ignored.
+- **When to run it:** after changing blazwiz, before building or testing clypse against the change.
+- **`eng/use-released-blazwiz.ps1 -Version <version>`** switches back to a released version. It sets `BlazwizVersion`,
+  removes the local builds and restores.
+- **What can run on a local build:** the CI, deploy and upgrade workflows only run on a released version
+  (`eng/check-blazwiz-version.ps1`). A commit with a `-local.` version fails CI.
+- **Never edit `BlazwizVersion` by hand,** and never point clypse at blazwiz project references.
+- **Before work that changed blazwiz is done,** rebuild the packages from the current blazwiz tree and run clypse's full
+  test suite on them.
