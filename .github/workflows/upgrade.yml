@@ -72,6 +72,22 @@ jobs:
       - name: Install the wasm-tools workload
         run: dotnet workload install wasm-tools
 
+      # What GitHub's OIDC token says, so a refused sign-in can be matched against the role's trust policy. Prints
+      # the token's claims only, never the token, which is short-lived and only accepted with this audience.
+      - name: Show the OIDC token's claims
+        shell: pwsh
+        run: |
+          $response = Invoke-RestMethod -Uri "$env:ACTIONS_ID_TOKEN_REQUEST_URL&audience=sts.amazonaws.com" -Headers @{ Authorization = "bearer $env:ACTIONS_ID_TOKEN_REQUEST_TOKEN" }
+          $payload = $response.value.Split('.')[1].Replace('-', '+').Replace('_', '/')
+          $payload += '=' * ((4 - $payload.Length % 4) % 4)
+          $claims = [Text.Encoding]::UTF8.GetString([Convert]::FromBase64String($payload)) | ConvertFrom-Json
+          Write-Host "sub:         $($claims.sub)"
+          Write-Host "aud:         $($claims.aud)"
+          Write-Host "iss:         $($claims.iss)"
+          Write-Host "repository:  $($claims.repository)"
+          Write-Host "environment: $($claims.environment)"
+          Write-Host "ref:         $($claims.ref)"
+
       - uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
