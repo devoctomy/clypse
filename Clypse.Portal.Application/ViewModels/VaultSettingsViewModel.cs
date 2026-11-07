@@ -208,7 +208,8 @@ public partial class VaultSettingsViewModel : ViewModelBase
     }
 
     /// <summary>
-    /// Deletes the vault, once its name has been typed exactly, and goes back to the vaults.
+    /// Deletes the vault, once its name has been typed exactly, and goes back to the vaults. If it fails once the vault
+    /// is already gone (e.g. some of its files could not be removed), it still goes back to the vaults, and says so.
     /// </summary>
     /// <returns>True if it was deleted.</returns>
     public async Task<bool> DeleteAsync()
@@ -235,6 +236,13 @@ public partial class VaultSettingsViewModel : ViewModelBase
         }
         catch (Exception ex)
         {
+            if (await vaultService.FindAsync(vault.Id) == null)
+            {
+                toasts.Show(text["VaultSettings.Deleted.Incomplete", vault.Name, errorText.Describe(ex)], ToastTone.Warning);
+                navigationService.NavigateTo(VaultsViewModel.Url);
+                return true;
+            }
+
             Error = errorText.Describe(ex);
             return false;
         }

@@ -169,14 +169,17 @@ public class VaultTests : TestBase
     }
 
     [TestMethod]
-    public async Task GivenAnUnlockedVault_WhenLockedAndUnlockedAgain_ThenItsSecretsAreBack()
+    public async Task GivenAnUnlockedVault_WhenLocked_ThenTheVaultsPageShowsItLocked_AndItsSecretsAreBackOnceUnlocked()
     {
         await LoginAsync();
-        await CreateVaultAsync("Personal");
+        var id = await CreateVaultAsync("Personal");
         await AddLoginAsync("Gmail", "bob", "hunter2hunter2");
 
         await Page.Locator("#lock-vault-button").ClickAsync();
-        await Expect(Page.Locator("#e2e-unlock-panel")).ToBeVisibleAsync();
+        await Expect(Page.Locator("#vaults-page")).ToBeVisibleAsync();
+        var card = Page.Locator($".vault-card[data-vault='{id}']");
+        await Expect(card.Locator(".vault-card-state")).ToHaveTextAsync("Locked");
+        await card.Locator(".vault-card-main").ClickAsync();
         await Expect(Page.Locator("#secrets")).ToHaveCountAsync(0);
         await UnlockAsync();
 
@@ -248,6 +251,35 @@ public class VaultTests : TestBase
         await Page.Locator(".secret-quick-copy[data-field='UserName']").ClickAsync();
         await Expect(Page.Locator("#toasts")).ToContainTextAsync("User name copied.");
         Assert.AreEqual("bob", await Page.EvaluateAsync<string>("() => navigator.clipboard.readText()"));
+    }
+
+    [TestMethod]
+    public async Task GivenClipboardClearingSetInSettings_WhenAPasswordIsCopied_ThenTheSettingIsUsed()
+    {
+        await Context.GrantPermissionsAsync(["clipboard-read", "clipboard-write"], new() { Origin = ServerUrl });
+        await LoginAsync();
+        await Page.Locator("#nav-settings").ClickAsync();
+        await Page.Locator("#clipboard-settings-after").SelectOptionAsync("60");
+        await Page.Locator("#clipboard-settings-save").ClickAsync();
+        await Expect(Page.Locator("#toasts")).ToContainTextAsync("Clipboard settings saved.");
+        await CreateVaultAsync("Personal");
+        await AddLoginAsync("Gmail", "bob", "hunter2hunter2");
+
+        await Page.Locator(".secret-quick-copy[data-field='Password']").ClickAsync();
+        await Expect(Page.Locator("#toasts")).ToContainTextAsync("Password copied. It is cleared from the clipboard in 60 seconds.");
+
+        await Page.Locator("#nav-settings").ClickAsync();
+        await Page.Locator("#clipboard-settings-clear").UncheckAsync();
+        await Expect(Page.Locator("#clipboard-settings-after")).ToHaveCountAsync(0);
+        await Page.Locator("#clipboard-settings-save").ClickAsync();
+        await Page.Locator("#nav-vaults").ClickAsync();
+        await Page.Locator(".vault-card .vault-card-main").First.ClickAsync();
+        await Page.Locator(".secret-quick-copy[data-field='Password']").ClickAsync();
+
+        var toast = Page.Locator("#toasts .bw-toast").Last;
+        await Expect(toast).ToContainTextAsync("Password copied.");
+        await Expect(toast).Not.ToContainTextAsync("cleared");
+        Assert.AreEqual("hunter2hunter2", await Page.EvaluateAsync<string>("() => navigator.clipboard.readText()"));
     }
 
     [TestMethod]
@@ -328,13 +360,16 @@ public class VaultTests : TestBase
         await LoginAsync();
         await Page.Locator("#nav-settings").ClickAsync();
         await Expect(Page.Locator("#generator-settings")).ToBeVisibleAsync();
+        await Expect(Page.Locator("#generator-settings-length")).ToBeVisibleAsync();
+        await Expect(Page.Locator("#generator-template-name")).ToHaveCountAsync(0);
+        await Page.Locator("#generator-settings-memorable").ClickAsync();
+        await Expect(Page.Locator("#generator-settings-length")).ToHaveCountAsync(0);
         await Page.Locator("#generator-template-name").FillAsync("Two words");
         await Page.Locator("#generator-template-pattern").FillAsync("{dict(adjective):initialupper}{dict(noun):initialupper}");
         await Page.Locator("#generator-template-try").ClickAsync();
         await Expect(Page.Locator("#generator-template-example")).ToContainTextAsync(new Regex(@"Example: [A-Z]\S+"));
         await Page.Locator("#generator-template-add").ClickAsync();
         await Expect(Page.Locator(".generator-template[data-template='Two words']")).ToBeVisibleAsync();
-        await Page.Locator("#generator-settings-memorable").ClickAsync();
         await Page.Locator("#generator-settings-template").SelectOptionAsync("Two words");
         await Page.Locator("#generator-settings-save").ClickAsync();
         await Expect(Page.Locator("#toasts")).ToContainTextAsync("Password generator settings saved.");

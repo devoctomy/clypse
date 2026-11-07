@@ -157,7 +157,8 @@
     color: var(--bw-text-muted);
 }
 
-.vault-card-lock {
+.vault-card-lock,
+.vault-card-forget {
     align-self: center;
     margin-right: 0.75rem;
 }

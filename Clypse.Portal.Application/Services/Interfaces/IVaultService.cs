@@ -60,4 +60,20 @@ public interface IVaultService
     /// </summary>
     /// <param name="id">The vault's id.</param>
     void Lock(string id);
+
+    /// <summary>
+    /// Unlocks a vault with biometrics (<see cref="Vault.CanUnlockWithBiometrics"/>), asking for the passkey if its key
+    /// is not in memory.
+    /// </summary>
+    /// <param name="id">The vault's id.</param>
+    /// <returns>True if it was unlocked; false if the passkey was cancelled or could not unlock it.</returns>
+    Task<bool> UnlockWithBiometricsAsync(string id);
+
+    /// <summary>
+    /// Stops unlocking a vault with biometrics on this device, forgetting its passkey-wrapped key here. Its passphrase
+    /// still unlocks it, and biometrics can be turned on again when it is next unlocked with the passphrase.
+    /// </summary>
+    /// <param name="id">The vault's id.</param>
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
+    Task ForgetBiometricsAsync(string id);
 }

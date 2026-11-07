@@ -9,6 +9,7 @@ using Devoctomy.Blazwiz.Encryption.Interfaces;
 using Devoctomy.Blazwiz.Encryption.Models;
 using Devoctomy.Blazwiz.Sync.Encryption.Interfaces;
 using Devoctomy.Blazwiz.Testing;
+using Devoctomy.Blazwiz.Sync.Interfaces;
 using Moq;
 
 namespace Clypse.Portal.Application.UnitTests.ViewModels;
@@ -20,6 +21,8 @@ public class VaultsViewModelTests
     private readonly Mock<ISyncProtectedProfileService> mockProfiles = new();
     private readonly Mock<IE2eProtectedProfileManager> mockManager = new();
     private readonly Mock<INavigationService> mockNavigation = new();
+    private readonly Mock<ISyncScheduler> mockScheduler = new();
+    private readonly List<string> calls = [];
     private List<Vault> vaults = [];
 
     public VaultsViewModelTests()
@@ -34,12 +37,13 @@ public class VaultsViewModelTests
         var t = text.For<ClypseText>();
 
         // Act & Assert
-        Assert.Equal("vaultService", Assert.Throws<ArgumentNullException>(() => new VaultsViewModel(null!, mockProfiles.Object, mockManager.Object, mockNavigation.Object, text.Errors, t)).ParamName);
-        Assert.Equal("profiles", Assert.Throws<ArgumentNullException>(() => new VaultsViewModel(mockVaults.Object, null!, mockManager.Object, mockNavigation.Object, text.Errors, t)).ParamName);
-        Assert.Equal("manager", Assert.Throws<ArgumentNullException>(() => new VaultsViewModel(mockVaults.Object, mockProfiles.Object, null!, mockNavigation.Object, text.Errors, t)).ParamName);
-        Assert.Equal("navigationService", Assert.Throws<ArgumentNullException>(() => new VaultsViewModel(mockVaults.Object, mockProfiles.Object, mockManager.Object, null!, text.Errors, t)).ParamName);
-        Assert.Equal("errorText", Assert.Throws<ArgumentNullException>(() => new VaultsViewModel(mockVaults.Object, mockProfiles.Object, mockManager.Object, mockNavigation.Object, null!, t)).ParamName);
-        Assert.Equal("text", Assert.Throws<ArgumentNullException>(() => new VaultsViewModel(mockVaults.Object, mockProfiles.Object, mockManager.Object, mockNavigation.Object, text.Errors, null!)).ParamName);
+        Assert.Equal("vaultService", Assert.Throws<ArgumentNullException>(() => new VaultsViewModel(null!, mockProfiles.Object, mockManager.Object, mockNavigation.Object, text.Errors, t, mockScheduler.Object)).ParamName);
+        Assert.Equal("profiles", Assert.Throws<ArgumentNullException>(() => new VaultsViewModel(mockVaults.Object, null!, mockManager.Object, mockNavigation.Object, text.Errors, t, mockScheduler.Object)).ParamName);
+        Assert.Equal("manager", Assert.Throws<ArgumentNullException>(() => new VaultsViewModel(mockVaults.Object, mockProfiles.Object, null!, mockNavigation.Object, text.Errors, t, mockScheduler.Object)).ParamName);
+        Assert.Equal("navigationService", Assert.Throws<ArgumentNullException>(() => new VaultsViewModel(mockVaults.Object, mockProfiles.Object, mockManager.Object, null!, text.Errors, t, mockScheduler.Object)).ParamName);
+        Assert.Equal("errorText", Assert.Throws<ArgumentNullException>(() => new VaultsViewModel(mockVaults.Object, mockProfiles.Object, mockManager.Object, mockNavigation.Object, null!, t, mockScheduler.Object)).ParamName);
+        Assert.Equal("text", Assert.Throws<ArgumentNullException>(() => new VaultsViewModel(mockVaults.Object, mockProfiles.Object, mockManager.Object, mockNavigation.Object, text.Errors, null!, mockScheduler.Object)).ParamName);
+        Assert.Equal("scheduler", Assert.Throws<ArgumentNullException>(() => new VaultsViewModel(mockVaults.Object, mockProfiles.Object, mockManager.Object, mockNavigation.Object, text.Errors, t, null!)).ParamName);
     }
 
     [Fact]
@@ -285,11 +289,128 @@ public class VaultsViewModelTests
         }
     }
 
+    [Fact]
+    public async Task GivenTheVaultsLoaded_WhenThePageOpens_ThenTheListIsReadAgain()
+    {
+        // Arrange: e.g. one created or deleted on another device since sign in.
+        mockProfiles.SetupGet(x => x.IsLoaded).Returns(true);
+        var sut = CreateSut();
+
+        // Act
+        await sut.OnInitializedAsync();
+
+        // Assert
+        mockProfiles.Verify(x => x.LoadAsync(It.IsAny<CancellationToken>()), Times.Once);
+        Assert.False(sut.IsLoading);
+    }
+
+    [Fact]
+    public async Task GivenTheVaultsStillBeingRead_WhenThePageOpens_ThenTheyAreNotReadAgain()
+    {
+        // Arrange
+        mockProfiles.SetupGet(x => x.IsLoaded).Returns(false);
+        var sut = CreateSut();
+
+        // Act
+        await sut.OnInitializedAsync();
+
+        // Assert
+        mockProfiles.Verify(x => x.LoadAsync(It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task GivenTheListCannotBeRead_WhenThePageOpens_ThenTheVaultsKnownStay()
+    {
+        // Arrange
+        mockProfiles.SetupGet(x => x.IsLoaded).Returns(true);
+        mockProfiles.Setup(x => x.LoadAsync(It.IsAny<CancellationToken>())).ThrowsAsync(new HttpRequestException("offline"));
+        vaults.Add(new Vault { Id = "v1", Name = "Personal" });
+        var sut = CreateSut();
+
+        // Act
+        await sut.OnInitializedAsync();
+
+        // Assert
+        Assert.Equal(["Personal"], sut.Vaults.Select(v => v.Name));
+        Assert.False(sut.IsLoading);
+    }
+
+    [Fact]
+    public async Task GivenALockedVaultWithBiometrics_WhenOpened_ThenItIsSyncedAndUnlockedWithThem_ThenItsPageOpens()
+    {
+        // Arrange
+        vaults = [new Vault { Id = "v1", Name = "Personal", CanUnlockWithBiometrics = true }];
+        mockScheduler.Setup(x => x.SyncProfileAsync("v1")).Callback(() => calls.Add("sync")).Returns(Task.CompletedTask);
+        mockVaults.Setup(x => x.UnlockWithBiometricsAsync("v1")).Callback(() => calls.Add("unlock")).ReturnsAsync(true);
+        mockNavigation.Setup(x => x.NavigateTo(It.IsAny<string>())).Callback<string>(url => calls.Add("open " + url));
+        var sut = CreateSut();
+        await sut.OnInitializedAsync();
+
+        // Act
+        await sut.OpenCommand.ExecuteAsync("v1");
+
+        // Assert
+        Assert.Equal(["sync", "unlock", "open vaults/v1"], calls);
+    }
+
+    [Fact]
+    public async Task GivenBiometricsCancelled_WhenOpened_ThenItsPageStillOpens_ForThePassphrase()
+    {
+        // Arrange
+        vaults = [new Vault { Id = "v1", Name = "Personal", CanUnlockWithBiometrics = true }];
+        mockVaults.Setup(x => x.UnlockWithBiometricsAsync("v1")).ReturnsAsync(false);
+        var sut = CreateSut();
+        await sut.OnInitializedAsync();
+
+        // Act
+        await sut.OpenCommand.ExecuteAsync("v1");
+
+        // Assert
+        mockNavigation.Verify(x => x.NavigateTo("vaults/v1"), Times.Once);
+    }
+
+    [Fact]
+    public async Task GivenAVaultWithoutBiometrics_WhenOpened_ThenItsPageOpens_WithoutUnlocking()
+    {
+        // Arrange
+        vaults = [new Vault { Id = "v1", Name = "Personal" }, new Vault { Id = "v2", Name = "Work", IsUnlocked = true, CanUnlockWithBiometrics = true }];
+        var sut = CreateSut();
+        await sut.OnInitializedAsync();
+
+        // Act
+        await sut.OpenCommand.ExecuteAsync("v1");
+        await sut.OpenCommand.ExecuteAsync("v2");
+
+        // Assert
+        mockVaults.Verify(x => x.UnlockWithBiometricsAsync(It.IsAny<string>()), Times.Never);
+        mockScheduler.Verify(x => x.SyncProfileAsync(It.IsAny<string>()), Times.Never);
+        mockNavigation.Verify(x => x.NavigateTo("vaults/v1"), Times.Once);
+        mockNavigation.Verify(x => x.NavigateTo("vaults/v2"), Times.Once);
+    }
+
+    [Fact]
+    public async Task GivenAVaultWithBiometrics_WhenTheyAreForgotten_ThenTheServiceForgetsThem_AndTheListIsRefreshed()
+    {
+        // Arrange
+        vaults = [new Vault { Id = "v1", Name = "Personal", CanUnlockWithBiometrics = true }];
+        var sut = CreateSut();
+        await sut.OnInitializedAsync();
+        mockVaults.Setup(x => x.ForgetBiometricsAsync("v1")).Callback(() => vaults = [new Vault { Id = "v1", Name = "Personal" }]).Returns(Task.CompletedTask);
+
+        // Act
+        await sut.ForgetBiometricsCommand.ExecuteAsync("v1");
+
+        // Assert
+        mockVaults.Verify(x => x.ForgetBiometricsAsync("v1"), Times.Once);
+        Assert.False(sut.Vaults.Single().CanUnlockWithBiometrics);
+    }
+
     private VaultsViewModel CreateSut() => new(
         mockVaults.Object,
         mockProfiles.Object,
         mockManager.Object,
         mockNavigation.Object,
         text.Errors,
-        text.For<ClypseText>());
+        text.For<ClypseText>(),
+        mockScheduler.Object);
 }

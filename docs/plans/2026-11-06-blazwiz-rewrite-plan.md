@@ -222,7 +222,38 @@ The template's notebooks feature is the model to follow, almost one to one:
 
   The S3, Secrets Manager and IAM checks need the deployed stack.
 
-**Phase 4 is not finished** until the deployed-stack checks are done.
+**The deployed-stack checks were done on 2026-11-07**, using `docs/manualtests/2026-11-07-aws-deployment.md`:
+- **Passed:** S3 holds only ciphertext under GUID names; Secrets Manager holds wrapped keys and an index without names;
+  the second device works; passkey labels, auto-lock and clipboard clearing work; the phone works (the maintainer
+  didn't record timings, as they were fine).
+- **Fixed after that test and the maintainer's notes:**
+  - **Locking a vault** goes back to the Vaults page.
+  - **Deleting a vault** that fails after its keys are gone (e.g. removing a file) no longer leaves it listed,
+    locked, with the error hidden by the lock. blazwiz removes the profile once its keys are gone, and clypse goes
+    back to the Vaults page and says what failed.
+  - **The Vaults page** reads the vault list again each time it opens, so vaults deleted or created on another device
+    appear or go without signing in again.
+  - **Unlocking syncs the vault first,** when online (blazwiz `ISyncScheduler.SyncProfileAsync`, used by the unlock
+    panel).
+  - **Password generator settings** show only the selected kind's options (random or memorable).
+  - **Clipboard settings:** a Settings section to turn clearing on or off and choose the time, kept on the device
+    (`ClipboardPreferencesService`; the configured `Clypse:ClipboardClearSeconds` is the default).
+  - **Phone browser:**
+    - the sidebar's Log out was hidden behind a bottom address bar, because the shell used `100vh`; it now uses
+      `100dvh`;
+    - the update banner was squeezed and covered the sync pill.
+
+    Both fixes are in blazwiz.
+- **Biometric unlock** replaces passkey unlock. Before, passkey unlock only worked after a passkey sign-in: its key
+  lived in memory and was lost on reload, so vaults kept asking for the passphrase. Nothing was being deleted.
+  - **Turning it on:** the unlock page offers "Unlock with biometrics next time on this device", for a user
+    remembered here with a passkey.
+  - **Once it's on:** the vault's card shows a fingerprint. Tapping it asks for the passkey whenever its key isn't in
+    memory, then opens the vault straight away. A trash button on the card forgets it.
+  - **Settings** no longer has the passkey buttons.
+  - **Code:** blazwiz `IPasskeyKeysService`, `HasDeviceUnlockAsync` and `DisableDeviceUnlockAsync`; clypse
+    `VaultService.UnlockWithBiometricsAsync` and `ForgetBiometricsAsync`; `BiometricUnlockTests`, using Chromium's
+    virtual passkey.
 
 ### Changes made in blazwiz
 

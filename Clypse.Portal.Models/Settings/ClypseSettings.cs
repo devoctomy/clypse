@@ -17,7 +17,7 @@ public class ClypseSettings
 
     /// <summary>
     /// Gets or sets how long, in seconds, a copied password or other secret value stays on the clipboard before it is
-    /// cleared.
+    /// cleared, until the user chooses otherwise in Settings (<see cref="ClipboardPreferences"/>).
     /// </summary>
     public int ClipboardClearSeconds { get; set; } = 30;
 }

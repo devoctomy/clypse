@@ -7,6 +7,7 @@ using Devoctomy.Blazwiz.Browser.Services.Interfaces;
 using Devoctomy.Blazwiz.Encryption.Interfaces;
 using Devoctomy.Blazwiz.Encryption.Models;
 using Devoctomy.Blazwiz.Sync.Encryption.Interfaces;
+using Devoctomy.Blazwiz.Sync.Interfaces;
 using Devoctomy.Blazwiz.UI.Text.Interfaces;
 using Microsoft.Extensions.Localization;
 
@@ -27,6 +28,7 @@ public partial class VaultsViewModel : ViewModelBase
     private readonly ISyncProtectedProfileService profiles;
     private readonly IE2eProtectedProfileManager manager;
     private readonly INavigationService navigationService;
+    private readonly ISyncScheduler scheduler;
     private readonly IErrorText errorText;
     private readonly IStringLocalizer<ClypseText> text;
 
@@ -50,14 +52,17 @@ public partial class VaultsViewModel : ViewModelBase
     /// <param name="navigationService">Opens a vault.</param>
     /// <param name="errorText">Describes errors.</param>
     /// <param name="text">Clypse's text.</param>
+    /// <param name="scheduler">Syncs a vault before it is unlocked with biometrics.</param>
     public VaultsViewModel(
         IVaultService vaultService,
         ISyncProtectedProfileService profiles,
         IE2eProtectedProfileManager manager,
         INavigationService navigationService,
         IErrorText errorText,
-        IStringLocalizer<ClypseText> text)
+        IStringLocalizer<ClypseText> text,
+        ISyncScheduler scheduler)
     {
+        this.scheduler = scheduler ?? throw new ArgumentNullException(nameof(scheduler));
         this.vaultService = vaultService ?? throw new ArgumentNullException(nameof(vaultService));
         this.profiles = profiles ?? throw new ArgumentNullException(nameof(profiles));
         this.manager = manager ?? throw new ArgumentNullException(nameof(manager));
@@ -177,20 +182,73 @@ public partial class VaultsViewModel : ViewModelBase
     }
 
     /// <inheritdoc/>
+    /// <remarks>
+    /// Shows the vaults known now, then reads the list again, so vaults created or deleted on another device since
+    /// sign in are added or gone (the list changes when the read finishes). Offline, the vaults known stay.
+    /// </remarks>
     public override async Task OnInitializedAsync()
     {
         await RefreshAsync();
         IsLoading = false;
+        if (!profiles.IsLoaded)
+        {
+            // Still being read after sign in; the list changes when that finishes.
+            return;
+        }
+
+        try
+        {
+            await profiles.LoadAsync();
+        }
+        catch (Exception)
+        {
+            // Offline, or the list could not be read: the vaults known stay, and the next visit tries again.
+        }
     }
 
     /// <summary>
-    /// Opens a vault's page.
+    /// Opens a vault's page. A locked vault that can be unlocked with biometrics is synced (online) and unlocked with
+    /// them first, so its page opens straight onto its secrets; if the passkey is cancelled or fails, the page asks for
+    /// the passphrase as usual.
     /// </summary>
     /// <param name="id">The vault's id.</param>
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     [RelayCommand]
-    public void Open(string id)
+    public async Task OpenAsync(string id)
     {
+        if (Vaults.FirstOrDefault(v => v.Id == id) is { CanUnlockWithBiometrics: true, IsUnlocked: false })
+        {
+            try
+            {
+                await scheduler.SyncProfileAsync(id);
+            }
+            catch (Exception)
+            {
+                // Unlocking goes ahead with the files this device has.
+            }
+
+            await vaultService.UnlockWithBiometricsAsync(id);
+        }
+
         navigationService.NavigateTo(GetVaultUrl(id));
+    }
+
+    /// <summary>
+    /// Stops unlocking a vault with biometrics on this device.
+    /// </summary>
+    /// <param name="id">The vault's id.</param>
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
+    [RelayCommand]
+    public async Task ForgetBiometricsAsync(string id)
+    {
+        try
+        {
+            await vaultService.ForgetBiometricsAsync(id);
+        }
+        finally
+        {
+            await RefreshSafelyAsync();
+        }
     }
 
     /// <summary>
@@ -255,7 +313,7 @@ public partial class VaultsViewModel : ViewModelBase
             var vault = await vaultService.CreateAsync(Name, Description, Passphrase);
             ClearInputs();
             IsCreateDialogOpen = false;
-            Open(vault.Id);
+            navigationService.NavigateTo(GetVaultUrl(vault.Id));
         }
         catch (Exception ex)
         {

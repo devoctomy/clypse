@@ -30,4 +30,10 @@ public class Vault
     /// Gets or sets a value indicating whether it is unlocked.
     /// </summary>
     public bool IsUnlocked { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether, locked, it can be unlocked with biometrics on this device: turned on
+    /// here, and the signed in user has a passkey here.
+    /// </summary>
+    public bool CanUnlockWithBiometrics { get; set; }
 }

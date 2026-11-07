@@ -35,8 +35,8 @@
             @foreach (var vault in ViewModel.Vaults)
             {
                 <div class="vault-card @(vault.IsUnlocked ? "is-unlocked" : "is-locked")" data-vault="@vault.Id">
-                    <button type="button" class="vault-card-main" @onclick="() => ViewModel.OpenCommand.Execute(vault.Id)">
-                        <span class="vault-card-icon"><i class="bi @(vault.IsUnlocked ? "bi-unlock-fill" : "bi-lock-fill")"></i></span>
+                    <button type="button" class="vault-card-main" @onclick="() => ViewModel.OpenCommand.ExecuteAsync(vault.Id)">
+                        <span class="vault-card-icon"><i class="bi @(vault.IsUnlocked ? "bi-unlock-fill" : vault.CanUnlockWithBiometrics ? "bi-fingerprint" : "bi-lock-fill")"></i></span>
                         <span class="vault-card-body">
                             <span data-user-content class="vault-card-name @(VaultsViewModel.IsShownById(vault) ? "is-id" : null)">@vault.Name</span>
                             @if (!string.IsNullOrWhiteSpace(vault.Description))
@@ -52,6 +52,13 @@
                         <button type="button" class="btn btn-sm btn-outline-secondary vault-card-lock" title="@T["Vaults.Lock"]"
                                 @onclick="() => ViewModel.LockCommand.Execute(vault.Id)">
                             <i class="bi bi-lock"></i><span class="visually-hidden">@T["Vaults.Lock"]</span>
+                        </button>
+                    }
+                    else if (vault.CanUnlockWithBiometrics)
+                    {
+                        <button type="button" class="btn btn-sm btn-outline-danger vault-card-forget" title="@T["Vaults.ForgetBiometrics"]"
+                                @onclick="() => ViewModel.ForgetBiometricsCommand.ExecuteAsync(vault.Id)">
+                            <i class="bi bi-trash"></i><span class="visually-hidden">@T["Vaults.ForgetBiometrics"]</span>
                         </button>
                     }
                 </div>

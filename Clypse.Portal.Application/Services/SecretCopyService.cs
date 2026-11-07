@@ -1,6 +1,5 @@
 using Clypse.Portal.Application.Services.Interfaces;
 using Clypse.Portal.Application.Text;
-using Clypse.Portal.Models.Settings;
 using Devoctomy.Blazwiz.Browser.Services.Interfaces;
 using Devoctomy.Blazwiz.UI.Models;
 using Devoctomy.Blazwiz.UI.Services.Interfaces;
@@ -13,18 +12,18 @@ namespace Clypse.Portal.Application.Services;
 /// </summary>
 /// <param name="clipboard">Copies, and clears secret values again.</param>
 /// <param name="toasts">Says what was copied.</param>
-/// <param name="settings">How long secret values stay on the clipboard.</param>
+/// <param name="preferences">Whether, and when, secret values are cleared from the clipboard.</param>
 /// <param name="text">Clypse's text.</param>
 public class SecretCopyService(
     IClipboardService clipboard,
     IToastService toasts,
-    ClypseSettings settings,
+    IClipboardPreferencesService preferences,
     IStringLocalizer<ClypseText> text)
     : ISecretCopyService
 {
     private readonly IClipboardService clipboard = clipboard ?? throw new ArgumentNullException(nameof(clipboard));
     private readonly IToastService toasts = toasts ?? throw new ArgumentNullException(nameof(toasts));
-    private readonly ClypseSettings settings = settings ?? throw new ArgumentNullException(nameof(settings));
+    private readonly IClipboardPreferencesService preferences = preferences ?? throw new ArgumentNullException(nameof(preferences));
     private readonly IStringLocalizer<ClypseText> text = text ?? throw new ArgumentNullException(nameof(text));
 
     /// <inheritdoc/>
@@ -37,7 +36,8 @@ public class SecretCopyService(
         }
 
         var name = text["Secret.Field." + field];
-        var clearAfter = isSecretValue ? TimeSpan.FromSeconds(Math.Max(1, settings.ClipboardClearSeconds)) : (TimeSpan?)null;
+        var chosen = await preferences.GetAsync();
+        var clearAfter = isSecretValue && chosen.ClearSecrets ? TimeSpan.FromSeconds(chosen.ClearAfterSeconds) : (TimeSpan?)null;
         try
         {
             await clipboard.CopyAsync(value, clearAfter);

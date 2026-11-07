@@ -6,6 +6,7 @@ using Clypse.Portal.Application.Services.Interfaces;
 using Clypse.Portal.Application.Text;
 using Clypse.Portal.Models.Vaults;
 using CommunityToolkit.Mvvm.Input;
+using Devoctomy.Blazwiz.Browser.Services.Interfaces;
 using Devoctomy.Blazwiz.Core.Text.Interfaces;
 using Devoctomy.Blazwiz.UI.Text.Interfaces;
 using Microsoft.Extensions.Localization;
@@ -25,6 +26,7 @@ public partial class VaultViewModel : ViewModelBase
     private readonly ITextPlurals plurals;
     private readonly IStringLocalizer<ClypseText> text;
     private readonly ISecretCopyService copyService;
+    private readonly INavigationService navigationService;
     private readonly Dictionary<string, string> copyLabels = new Dictionary<string, string>(StringComparer.Ordinal);
 
     private string? vaultId;
@@ -46,14 +48,17 @@ public partial class VaultViewModel : ViewModelBase
     /// <param name="plurals">Words counts.</param>
     /// <param name="text">Clypse's text.</param>
     /// <param name="copyService">Copies secrets' fields to the clipboard.</param>
+    /// <param name="navigationService">Goes back to the vaults once the vault is locked.</param>
     public VaultViewModel(
         IVaultService vaultService,
         IVaultSession session,
         IErrorText errorText,
         ITextPlurals plurals,
         IStringLocalizer<ClypseText> text,
-        ISecretCopyService copyService)
+        ISecretCopyService copyService,
+        INavigationService navigationService)
     {
+        this.navigationService = navigationService ?? throw new ArgumentNullException(nameof(navigationService));
         this.copyService = copyService ?? throw new ArgumentNullException(nameof(copyService));
         this.vaultService = vaultService ?? throw new ArgumentNullException(nameof(vaultService));
         this.session = session ?? throw new ArgumentNullException(nameof(session));
@@ -353,7 +358,7 @@ public partial class VaultViewModel : ViewModelBase
     }
 
     /// <summary>
-    /// Locks the vault: its keys are wiped, and its secrets forgotten.
+    /// Locks the vault: its keys are wiped, and its secrets forgotten. Then goes back to the vaults.
     /// </summary>
     [RelayCommand]
     public void Lock()
@@ -365,6 +370,7 @@ public partial class VaultViewModel : ViewModelBase
 
         ActiveDialog = VaultDialog.None;
         vaultService.Lock(Vault.Id);
+        navigationService.NavigateTo(VaultsViewModel.Url);
     }
 
     /// <summary>

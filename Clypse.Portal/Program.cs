@@ -58,6 +58,7 @@ builder.Services.AddClypseCore(textLists =>
 // builder.Services.ReplacePage<MyLogin>(BlazwizPages.Login) or builder.Services.DisablePage(BlazwizPages.Sync).
 builder.Services.AddClypse(builder.Configuration);
 builder.Services.AddSettingsSection<PasswordGeneratorSettingsSection>(order: 300);
+builder.Services.AddSettingsSection<ClipboardSettingsSection>(order: 310);
 
 // The app's view models: all of them in the application assembly are registered automatically.
 builder.Services.AddMvvm(options =>

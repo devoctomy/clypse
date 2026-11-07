@@ -12,6 +12,30 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="ClipboardSettings.Clear" xml:space="preserve">
+    <value>Clear copied passwords and secret keys from the clipboard</value>
+  </data>
+  <data name="ClipboardSettings.ClearAfter" xml:space="preserve">
+    <value>Clear after</value>
+  </data>
+  <data name="ClipboardSettings.Save" xml:space="preserve">
+    <value>Save</value>
+  </data>
+  <data name="ClipboardSettings.Saved" xml:space="preserve">
+    <value>Clipboard settings saved.</value>
+  </data>
+  <data name="ClipboardSettings.Seconds.One" xml:space="preserve">
+    <value>{0} second</value>
+  </data>
+  <data name="ClipboardSettings.Seconds.Other" xml:space="preserve">
+    <value>{0} seconds</value>
+  </data>
+  <data name="ClipboardSettings.Text" xml:space="preserve">
+    <value>When you copy a password or a secret key, it can be cleared from the clipboard again after a while, unless something else was copied since. Kept on this device.</value>
+  </data>
+  <data name="ClipboardSettings.Title" xml:space="preserve">
+    <value>Clipboard</value>
+  </data>
   <data name="Common.Cancel" xml:space="preserve">
     <value>Cancel</value>
   </data>
@@ -396,6 +420,9 @@
   <data name="VaultSettings.Deleted" xml:space="preserve">
     <value>{0} deleted.</value>
   </data>
+  <data name="VaultSettings.Deleted.Incomplete" xml:space="preserve">
+    <value>{0} deleted, but some of its files could not be removed: {1}</value>
+  </data>
   <data name="VaultSettings.Save" xml:space="preserve">
     <value>Save</value>
   </data>
@@ -458,6 +485,9 @@
   </data>
   <data name="Vaults.Loading" xml:space="preserve">
     <value>Loading your vaults...</value>
+  </data>
+  <data name="Vaults.ForgetBiometrics" xml:space="preserve">
+    <value>Stop unlocking this vault with biometrics on this device</value>
   </data>
   <data name="Vaults.Lock" xml:space="preserve">
     <value>Lock</value>

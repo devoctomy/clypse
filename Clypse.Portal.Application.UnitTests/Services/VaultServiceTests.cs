@@ -8,6 +8,7 @@ using Devoctomy.Blazwiz.Encryption.Models;
 using Devoctomy.Blazwiz.Sync.Encryption.Interfaces;
 using Devoctomy.Blazwiz.Sync.Interfaces;
 using Devoctomy.Blazwiz.Sync.Models;
+using Devoctomy.Blazwiz.UI.Services.Interfaces;
 using Moq;
 
 namespace Clypse.Portal.Application.UnitTests.Services;
@@ -17,6 +18,7 @@ public class VaultServiceTests
     private readonly Mock<ISyncProtectedProfileService> mockProfiles = new();
     private readonly Mock<IE2eProtectedProfileManager> mockManager = new();
     private readonly Mock<ISyncProfileRegistry> mockRegistry = new();
+    private readonly Mock<IPasskeyKeysService> mockPasskeys = new();
     private readonly List<SyncProtectedProfile> profiles = [];
     private readonly HashSet<E2eKeyScope> unlocked = [];
     private readonly Dictionary<string, Dictionary<string, byte[]>> stored = [];
@@ -32,9 +34,10 @@ public class VaultServiceTests
     public void GivenNullDependencies_WhenConstructing_ThenThrowsArgumentNullException()
     {
         // Act & Assert
-        Assert.Equal("profiles", Assert.Throws<ArgumentNullException>(() => new VaultService(null!, mockManager.Object, mockRegistry.Object)).ParamName);
-        Assert.Equal("manager", Assert.Throws<ArgumentNullException>(() => new VaultService(mockProfiles.Object, null!, mockRegistry.Object)).ParamName);
-        Assert.Equal("registry", Assert.Throws<ArgumentNullException>(() => new VaultService(mockProfiles.Object, mockManager.Object, null!)).ParamName);
+        Assert.Equal("profiles", Assert.Throws<ArgumentNullException>(() => new VaultService(null!, mockManager.Object, mockRegistry.Object, mockPasskeys.Object)).ParamName);
+        Assert.Equal("manager", Assert.Throws<ArgumentNullException>(() => new VaultService(mockProfiles.Object, null!, mockRegistry.Object, mockPasskeys.Object)).ParamName);
+        Assert.Equal("registry", Assert.Throws<ArgumentNullException>(() => new VaultService(mockProfiles.Object, mockManager.Object, null!, mockPasskeys.Object)).ParamName);
+        Assert.Equal("passkeys", Assert.Throws<ArgumentNullException>(() => new VaultService(mockProfiles.Object, mockManager.Object, mockRegistry.Object, null!)).ParamName);
     }
 
     [Fact]
@@ -311,7 +314,83 @@ public class VaultServiceTests
         Assert.Equal(ClypseErrorCodes.VaultNotFound, ex.Code);
     }
 
-    private VaultService CreateSut() => new(mockProfiles.Object, mockManager.Object, mockRegistry.Object);
+    [Fact]
+    public async Task GivenALockedVaultWithBiometricsOnHere_AndAPasskey_WhenListed_ThenItCanBeUnlockedWithThem()
+    {
+        // Arrange
+        var id = AddVault();
+        var other = AddVault();
+        mockProfiles.Setup(x => x.HasDeviceUnlockAsync(new E2eKeyScope(id))).ReturnsAsync(true);
+        mockPasskeys.Setup(x => x.IsAvailableAsync()).ReturnsAsync(true);
+
+        // Act
+        var vaults = await CreateSut().GetVaultsAsync();
+
+        // Assert
+        Assert.True(vaults.Single(v => v.Id == id).CanUnlockWithBiometrics);
+        Assert.False(vaults.Single(v => v.Id == other).CanUnlockWithBiometrics);
+    }
+
+    [Fact]
+    public async Task GivenBiometricsOnHere_ButNoPasskey_WhenListed_ThenNotOffered()
+    {
+        // Arrange
+        var id = AddVault();
+        mockProfiles.Setup(x => x.HasDeviceUnlockAsync(new E2eKeyScope(id))).ReturnsAsync(true);
+        mockPasskeys.Setup(x => x.IsAvailableAsync()).ReturnsAsync(false);
+
+        // Act
+        var vault = await CreateSut().FindAsync(id);
+
+        // Assert
+        Assert.False(vault!.CanUnlockWithBiometrics);
+    }
+
+    [Fact]
+    public async Task GivenThePasskeysKey_WhenUnlockedWithBiometrics_ThenTheProfileServiceUnlocksIt()
+    {
+        // Arrange
+        var id = AddVault();
+        mockPasskeys.Setup(x => x.EnsureKeyAsync("e2e-kek")).ReturnsAsync(true);
+
+        // Act
+        var unlocked = await CreateSut().UnlockWithBiometricsAsync(id);
+
+        // Assert
+        Assert.True(unlocked);
+        mockProfiles.Verify(x => x.UnlockWithDeviceAsync(new E2eKeyScope(id)), Times.Once);
+    }
+
+    [Fact]
+    public async Task GivenThePasskeyCancelledOrUnableToUnlock_WhenUnlockedWithBiometrics_ThenFalse()
+    {
+        // Arrange
+        var id = AddVault();
+        var sut = CreateSut();
+
+        // Act & Assert
+        mockPasskeys.Setup(x => x.EnsureKeyAsync("e2e-kek")).ReturnsAsync(false);
+        Assert.False(await sut.UnlockWithBiometricsAsync(id));
+        mockProfiles.Verify(x => x.UnlockWithDeviceAsync(It.IsAny<E2eKeyScope>()), Times.Never);
+        mockPasskeys.Setup(x => x.EnsureKeyAsync("e2e-kek")).ReturnsAsync(true);
+        mockProfiles.Setup(x => x.UnlockWithDeviceAsync(It.IsAny<E2eKeyScope>())).ThrowsAsync(new InvalidOperationException("another passkey"));
+        Assert.False(await sut.UnlockWithBiometricsAsync(id));
+    }
+
+    [Fact]
+    public async Task GivenAVault_WhenBiometricsForgotten_ThenTheProfileServiceTurnsThemOff()
+    {
+        // Arrange
+        var id = AddVault();
+
+        // Act
+        await CreateSut().ForgetBiometricsAsync(id);
+
+        // Assert
+        mockProfiles.Verify(x => x.DisableDeviceUnlockAsync(new E2eKeyScope(id)), Times.Once);
+    }
+
+    private VaultService CreateSut() => new(mockProfiles.Object, mockManager.Object, mockRegistry.Object, mockPasskeys.Object);
 
     private string AddVault() => AddProfile(Guid.NewGuid().ToString("D"), isCreatedByUser: true);
 
