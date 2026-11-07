@@ -128,7 +128,7 @@ The template's notebooks feature is the model to follow, almost one to one:
   - random passwords (length 8–64, character groups, at least one of each);
   - memorable passwords from the templates in the `Clypse` section of `appsettings.json` (`ClypseSettings`).
 - **Strength.** `PasswordStrengthService` uses the complexity estimator *without* the weak-password list, so typing stays
-  fast. The list check is still planned for Phase 4.
+  fast. The list check was added in Phase 4.
 - **CSV import** (`ImportSecretsDialog`, `ImportSecretsViewModel`):
   - KeePass and Cachy formats;
   - a file of the wrong format, or one with rows missing a name, is refused when read, not at import.
@@ -172,6 +172,57 @@ The template's notebooks feature is the model to follow, almost one to one:
 - **Tests:** 214 application unit tests, 126 core, and 56 UI tests (new ones for copying, vault settings, deleting, the
   generator settings and the logo). All pass on the local blazwiz build.
 
+### Phase 4: framework additions and hardening
+
+**Done so far:**
+- Items 1–3 were done with the Phase 3 leftovers: clipboard and toasts, a 5-minute auto-lock default, and passkey
+  unlock allowed.
+- **The weak known passwords list in the strength meter** (left over from Phase 3):
+  - The editor shows the quick estimate as you type. Once typing pauses for 500 ms
+    (`SecretEditorViewModel.KnownPasswordCheckDelay`, timed with `TimeProvider`), it checks the password against the
+    list (`IPasswordStrengthService.EstimateCheckingKnownPasswordsAsync`).
+  - A listed password shows as "Very weak: it is a commonly used password", however long it is.
+  - The generator doesn't check its own passwords against the list.
+  - **Changed decision:** `Clypse.Core` keeps the list as a sorted array of 64-bit XxHash3 hashes of each line
+    (`HashedTextSet`, `LoadCompressedHashedTextSetAsync`, package `System.IO.Hashing`), not as a `HashSet<string>`.
+    It is about 42 MB in memory. The string set was a few hundred MB by estimate, not measured. The original clypse
+    loaded the string set in WebAssembly without trouble, so this saves memory; it doesn't fix a failure. The list
+    loads once, however many ask at once.
+  - **Which list.** Debug builds use the stand-in list. Release builds use the full list unless
+    `TextLists:UseFullWeakKnownPasswordsList` is false. `appsettings.Development.json` sets it to false, so the UI
+    tests (interpreted Release) use the stand-in list too.
+- **CSP (item 4) already exists.** blazwiz's deploy adds it (`Add-ContentSecurityPolicy` in the base stack's
+  `_common.ps1`):
+  - scripts: self, `wasm-unsafe-eval` and the inline scripts by hash;
+  - connections: only this region's Cognito, Secrets Manager and data bucket endpoints;
+  - framing refused by CloudFront's security headers.
+
+  Checked on 2026-11-07: the same policy, applied to a local AOT publish, ran the 1,000-secret flow, quick copy, the
+  generator and Settings with no violations and no console errors.
+- **Fix:** the browser theme colour (`theme-color` in `index.html`, `theme_color` in the manifest) was still the
+  template's purple. It is now #ff6600.
+- **Item 5, the open blazwiz findings** (decided with the maintainer on 2026-11-07):
+  - **MP1 fixed in blazwiz.** The sync status now covers every vault's last sync, not only the last one run (blazwiz
+    change 11).
+  - **MP4 fixed in blazwiz,** although clypse's vaults can't clash. Clashing profiles are refused (blazwiz change 12).
+  - **Concurrent writes of the index secret:** left in blazwiz's backlog
+    (`docs/backlog/protected-profile-concurrent-writes.md`). It now also covers a vault's auto-lock change racing
+    another device's index write. Nothing is done about it for now.
+  - **Secrets Manager deletes skip the recovery window:** moved to its own plan, with secret history (S3 versioning),
+    in `docs/plans/2026-11-07-versioning-and-recovery-plan.md`. A recovery window on the keys alone would recover
+    nothing, because the files are deleted too.
+- **The security checklist** ("done when") is in `docs/reviews/2026-11-07-security-checklist.md`. Locally it passes:
+  - no secret content in browser storage;
+  - only wrapped keys stored;
+  - clipboard clearing, auto-lock and the CSP all work.
+
+  **One item is open, for the maintainer to decide:** vault names are in local storage in plaintext, as blazwiz's
+  device labels.
+
+  The S3, Secrets Manager and IAM checks need the deployed stack.
+
+**Phase 4 is not finished** until the open checklist item is decided and the deployed-stack checks are done.
+
 ### Changes made in blazwiz
 
 All on branch `clypseupdates`, with unit tests and CHANGELOG entries:
@@ -201,8 +252,23 @@ AGENTS.md). The 5 UI tests that were `[Ignore]`d waiting for fixes 1 and 2 run a
 9. **CSS fixes:**
    - a dialog over another dims the one beneath;
    - the theme preview and range sliders use the app's accent.
+10. **Text lookups are cached** in `OverridingStringLocalizer`, per culture and name (see "Spike results").
+11. **MP1: the sync status covers every profile.**
+    - `SyncService` keeps each profile's last pass.
+    - The status is Error if any profile failed. "Last synced" is when the least recently synced profile last synced.
+      Conflicts are added up.
+    - A profile held back (a locked vault) or removed no longer counts.
+12. **MP4: clashing profiles are refused.** `SyncBuilder.AddProfile` and `SyncProfileRegistry.Add` refuse two
+    profiles that:
+    - have overlapping remote prefixes;
+    - or share an IndexedDB store or OPFS root.
 
-The full blazwiz suite passes with these: unit, integration (`@aws` skipped), UI (57) and the template pack test.
+    A profile set up in code may not cover `profiles/`, where the profiles users create are kept.
+
+The full blazwiz suite passes with all of these (last run 2026-11-07, after changes 11 and 12): unit, integration
+(`@aws` skipped), UI (57), the template pack test, and the upgrade test from the latest release
+(`test-template.ps1 -UpgradeFrom latest`), because MP4 can refuse configurations that built before. The template
+scripts ran under Windows PowerShell 5.1, because `pwsh` is not installed here.
 
 ### Framework gaps found, not fixed
 
@@ -509,9 +575,8 @@ is a deliberate choice, and the view model tests pass.
    default clear time of about 30 s.
 2. Idle lock defaults suited to a password manager, for example 5 minutes.
 3. Turn on `AllowDeviceUnlock` in the app. It stays off for each vault until the user opts in.
-4. A Content Security Policy for the portal. The framework has none, so add it in the template or as CloudFront
-   response headers.
-5. Review the open blazwiz findings that affect clypse, and fix them upstream or document them:
+4. A Content Security Policy for the portal. (Already added by blazwiz's deploy; see Progress.)
+5. Review the open blazwiz findings that affect clypse, and fix them upstream or document them (done; see Progress):
    - MP1: the status shows only the last profile's pass;
    - MP4: nothing prevents store clashes between profiles;
    - concurrent writes of the profile index secret, for example creating vaults on two devices at once;

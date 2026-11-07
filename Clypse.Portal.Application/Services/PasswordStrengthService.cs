@@ -9,15 +9,20 @@ using Microsoft.Extensions.Localization;
 namespace Clypse.Portal.Application.Services;
 
 /// <summary>
-/// Implementation of <see cref="IPasswordStrengthService"/> over clypse's complexity estimator. The weak known passwords
-/// list is not checked here: loading it is slow, so it is not done on every key press.
+/// Implementation of <see cref="IPasswordStrengthService"/> over clypse's complexity estimator and its list of weak
+/// known passwords.
 /// </summary>
 /// <param name="estimator">Estimates complexity.</param>
+/// <param name="weakPasswords">The list of weak known passwords.</param>
 /// <param name="text">Clypse's text.</param>
-public class PasswordStrengthService(IPasswordComplexityEstimatorService estimator, IStringLocalizer<ClypseText> text)
+public class PasswordStrengthService(
+    IPasswordComplexityEstimatorService estimator,
+    IWeakKnownPasswordsService weakPasswords,
+    IStringLocalizer<ClypseText> text)
     : IPasswordStrengthService
 {
     private readonly IPasswordComplexityEstimatorService estimator = estimator ?? throw new ArgumentNullException(nameof(estimator));
+    private readonly IWeakKnownPasswordsService weakPasswords = weakPasswords ?? throw new ArgumentNullException(nameof(weakPasswords));
     private readonly IStringLocalizer<ClypseText> text = text ?? throw new ArgumentNullException(nameof(text));
 
     /// <inheritdoc/>
@@ -33,9 +38,26 @@ public class PasswordStrengthService(IPasswordComplexityEstimatorService estimat
     }
 
     /// <inheritdoc/>
+    public async Task<PasswordStrength> EstimateCheckingKnownPasswordsAsync(string? password, CancellationToken ct = default)
+    {
+        var strength = await EstimateAsync(password, ct);
+        if (string.IsNullOrEmpty(password) || !await weakPasswords.ContainsAsync(password, ct))
+        {
+            return strength;
+        }
+
+        return new PasswordStrength { Estimation = PasswordComplexityEstimation.VeryWeak, Entropy = strength.Entropy, IsKnownWeak = true };
+    }
+
+    /// <inheritdoc/>
     public string Describe(PasswordStrength strength)
     {
         ArgumentNullException.ThrowIfNull(strength);
+
+        if (strength.IsKnownWeak)
+        {
+            return text["Strength.KnownWeak"];
+        }
 
         return strength.Estimation switch
         {

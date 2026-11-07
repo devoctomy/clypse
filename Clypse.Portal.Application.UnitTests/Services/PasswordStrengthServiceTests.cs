@@ -17,8 +17,10 @@ public class PasswordStrengthServiceTests
     public void GivenNullDependencies_WhenConstructing_ThenThrowsArgumentNullException()
     {
         // Act & Assert
-        Assert.Equal("estimator", Assert.Throws<ArgumentNullException>(() => new PasswordStrengthService(null!, text.For<ClypseText>())).ParamName);
-        Assert.Equal("text", Assert.Throws<ArgumentNullException>(() => new PasswordStrengthService(new Mock<IPasswordComplexityEstimatorService>().Object, null!)).ParamName);
+        var estimator = new Mock<IPasswordComplexityEstimatorService>().Object;
+        Assert.Equal("estimator", Assert.Throws<ArgumentNullException>(() => new PasswordStrengthService(null!, mockWeak.Object, text.For<ClypseText>())).ParamName);
+        Assert.Equal("weakPasswords", Assert.Throws<ArgumentNullException>(() => new PasswordStrengthService(estimator, null!, text.For<ClypseText>())).ParamName);
+        Assert.Equal("text", Assert.Throws<ArgumentNullException>(() => new PasswordStrengthService(estimator, mockWeak.Object, null!)).ParamName);
     }
 
     [Theory]
@@ -75,5 +77,50 @@ public class PasswordStrengthServiceTests
         Assert.StartsWith("Strength unknown", sut.Describe(new PasswordStrength { Estimation = PasswordComplexityEstimation.Unknown }), StringComparison.Ordinal);
     }
 
-    private PasswordStrengthService CreateSut() => new(new StandardWesternPasswordComplexityEstimatorService(mockWeak.Object), text.For<ClypseText>());
+    [Fact]
+    public async Task GivenAKnownWeakPassword_WhenEstimatedCheckingKnownPasswords_ThenVeryWeak_AndDescribedAsCommon()
+    {
+        // Arrange: long and varied, so it would be very strong if it were not in the list.
+        mockWeak.Setup(x => x.ContainsAsync("A1+dB2=hI3_lM4-p!!", It.IsAny<CancellationToken>())).ReturnsAsync(true);
+        var sut = CreateSut();
+
+        // Act
+        var strength = await sut.EstimateCheckingKnownPasswordsAsync("A1+dB2=hI3_lM4-p!!");
+
+        // Assert
+        Assert.True(strength.IsKnownWeak);
+        Assert.Equal(PasswordComplexityEstimation.VeryWeak, strength.Estimation);
+        Assert.Equal("danger", strength.Tone);
+        Assert.Equal("Very weak: it is a commonly used password.", sut.Describe(strength));
+    }
+
+    [Fact]
+    public async Task GivenAPasswordNotInTheList_WhenEstimatedCheckingKnownPasswords_ThenAsWithoutTheList()
+    {
+        // Arrange
+        mockWeak.Setup(x => x.ContainsAsync(It.IsAny<string>(), It.IsAny<CancellationToken>())).ReturnsAsync(false);
+        var sut = CreateSut();
+
+        // Act
+        var strength = await sut.EstimateCheckingKnownPasswordsAsync("A1+dB2=hI3_lM4-p!!");
+
+        // Assert
+        Assert.False(strength.IsKnownWeak);
+        Assert.Equal(PasswordComplexityEstimation.VeryStrong, strength.Estimation);
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    public async Task GivenNoPassword_WhenEstimatedCheckingKnownPasswords_ThenNone_AndTheListNotChecked(string? password)
+    {
+        // Act
+        var strength = await CreateSut().EstimateCheckingKnownPasswordsAsync(password);
+
+        // Assert
+        Assert.Same(PasswordStrength.None, strength);
+        mockWeak.VerifyNoOtherCalls();
+    }
+
+    private PasswordStrengthService CreateSut() => new(new StandardWesternPasswordComplexityEstimatorService(mockWeak.Object), mockWeak.Object, text.For<ClypseText>());
 }

@@ -28,7 +28,7 @@ public class WeakKnownPasswordsService(
             return this.options.StandInWeakKnownPasswords.Contains(password);
         }
 
-        var weakKnownPasswords = await this.embeddedResourceLoaderService.LoadCompressedHashSetAsync(
+        var weakKnownPasswords = await this.embeddedResourceLoaderService.LoadCompressedHashedTextSetAsync(
             ResourceKeys.CompressedWeakKnownPasswordsResourceKey,
             typeof(WeakKnownPasswordsService).Assembly,
             cancellationToken);

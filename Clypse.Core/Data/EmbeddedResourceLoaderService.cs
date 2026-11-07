@@ -9,30 +9,35 @@ namespace Clypse.Core.Data;
 /// </summary>
 public class EmbeddedResourceLoaderService : IEmbeddedResourceLoaderService
 {
-    private readonly ConcurrentDictionary<string, HashSet<string>> cachedHashSets = [];
-
     /// <summary>
-    /// Loads a gzip compressed hash set from an embedded resource.
+    /// How much of a compressed list is read at a time. Between reads the load yields, so a large list does not hold up
+    /// the page (WebAssembly runs the app on the browser's one thread).
     /// </summary>
-    /// <param name="resourceKey">The key of the embedded resource to load.</param>
-    /// <param name="resourceAssembly">The assembly containing the embedded resource.</param>
-    /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
-    /// <returns>A <see cref="HashSet{String}"/> containing the items in the resource.</returns>
+    public const int ReadChunkSize = 1024 * 1024;
+
+    private const int InitialHashCapacity = 1024;
+
+    private readonly ConcurrentDictionary<string, HashSet<string>> cachedHashSets = [];
+    private readonly ConcurrentDictionary<string, Lazy<Task<HashedTextSet>>> hashedTextSets = [];
+
+    /// <inheritdoc/>
     /// <exception cref="InvalidOperationException">Thrown if the specified resource is not found.</exception>
-    public async Task<HashSet<string>> LoadCompressedHashSetAsync(
+    public Task<HashedTextSet> LoadCompressedHashedTextSetAsync(
         string resourceKey,
         Assembly? resourceAssembly,
         CancellationToken cancellationToken)
     {
-        if (this.cachedHashSets.TryGetValue(resourceKey, out var cachedHashSet))
+        // The resource is opened here, so a missing one throws at once and is not kept as a failed load.
+        var assembly = resourceAssembly ?? Assembly.GetExecutingAssembly();
+        if (assembly.GetManifestResourceInfo(resourceKey) == null)
         {
-            return cachedHashSet;
+            throw new InvalidOperationException($"Resource '{resourceKey}' not found.");
         }
 
-        using var compressedStream = OpenResource(resourceKey, resourceAssembly);
-        using var decompressedStream = new GZipStream(compressedStream, CompressionMode.Decompress);
-        var lines = await ReadLinesAsync(decompressedStream, cancellationToken);
-        return this.cachedHashSets.GetOrAdd(resourceKey, lines);
+        var load = this.hashedTextSets.GetOrAdd(
+            resourceKey,
+            key => new Lazy<Task<HashedTextSet>>(() => ReadHashedLinesAsync(key, assembly)));
+        return load.Value.WaitAsync(cancellationToken);
     }
 
     /// <summary>
@@ -76,5 +81,77 @@ public class EmbeddedResourceLoaderService : IEmbeddedResourceLoaderService
         }
 
         return lines;
+    }
+
+    /// <summary>
+    /// Reads a gzip compressed list and hashes each line's bytes as they are, with no strings made, so the list's
+    /// text is never all in memory at once.
+    /// </summary>
+    private static async Task<HashedTextSet> ReadHashedLinesAsync(string resourceKey, Assembly assembly)
+    {
+        // The first caller gets its task back at once, and waits on it like any other.
+        await Task.Yield();
+
+        using var compressedStream = OpenResource(resourceKey, assembly);
+        using var stream = new GZipStream(compressedStream, CompressionMode.Decompress);
+        var hashes = new List<ulong>(InitialHashCapacity);
+        var buffer = new byte[ReadChunkSize];
+        var carried = 0;
+        var isFirstLine = true;
+        int read;
+        while ((read = await stream.ReadAsync(buffer.AsMemory(carried, buffer.Length - carried))) > 0)
+        {
+            var filled = carried + read;
+            var start = 0;
+            int end;
+            while ((end = Array.IndexOf(buffer, (byte)'\n', start, filled - start)) >= 0)
+            {
+                AddLine(hashes, buffer.AsSpan(start, end - start), ref isFirstLine);
+                start = end + 1;
+            }
+
+            // Keep the unfinished last line for the next read. A line as long as the whole buffer is cut there.
+            carried = filled - start;
+            if (carried == buffer.Length)
+            {
+                AddLine(hashes, buffer, ref isFirstLine);
+                carried = 0;
+            }
+            else if (carried > 0)
+            {
+                Buffer.BlockCopy(buffer, start, buffer, 0, carried);
+            }
+
+            await Task.Yield();
+        }
+
+        if (carried > 0)
+        {
+            AddLine(hashes, buffer.AsSpan(0, carried), ref isFirstLine);
+        }
+
+        return new HashedTextSet([.. hashes]);
+    }
+
+    private static void AddLine(List<ulong> hashes, ReadOnlySpan<byte> line, ref bool isFirstLine)
+    {
+        if (isFirstLine)
+        {
+            isFirstLine = false;
+            if (line.StartsWith((ReadOnlySpan<byte>)[0xEF, 0xBB, 0xBF]))
+            {
+                line = line[3..];
+            }
+        }
+
+        if (line.EndsWith((ReadOnlySpan<byte>)[(byte)'\r']))
+        {
+            line = line[..^1];
+        }
+
+        if (!line.IsEmpty)
+        {
+            hashes.Add(HashedTextSet.Hash(line));
+        }
     }
 }

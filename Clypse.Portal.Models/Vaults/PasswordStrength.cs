@@ -23,6 +23,12 @@ public class PasswordStrength
     public double Entropy { get; init; }
 
     /// <summary>
+    /// Gets a value indicating whether the password is in the list of weak known passwords, so it is very weak however
+    /// long or varied it is.
+    /// </summary>
+    public bool IsKnownWeak { get; init; }
+
+    /// <summary>
     /// Gets how full the strength meter is, from 0 to 100.
     /// </summary>
     public int Percent => Estimation switch

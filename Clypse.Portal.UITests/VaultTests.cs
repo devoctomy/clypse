@@ -141,6 +141,20 @@ public class VaultTests : TestBase
     }
 
     [TestMethod]
+    public async Task GivenTheSecretEditor_WhenACommonPasswordIsTyped_ThenTheMeterSaysItIsCommon()
+    {
+        // The UI tests run with the stand-in list of weak known passwords (appsettings.Development.json), which has it.
+        await LoginAsync();
+        await CreateVaultAsync("Personal");
+        await Page.Locator("#new-secret-button").ClickAsync();
+
+        await Page.Locator("#secret-field-Password").FillAsync("password123");
+
+        await Expect(Page.Locator(".strength-meter")).ToHaveAttributeAsync("data-strength", "VeryWeak");
+        await Expect(Page.Locator(".strength-text")).ToHaveTextAsync("Very weak: it is a commonly used password.");
+    }
+
+    [TestMethod]
     public async Task GivenTheGenerator_WhenMemorableIsChosen_ThenAPasswordIsMadeFromTheTemplate()
     {
         await LoginAsync();

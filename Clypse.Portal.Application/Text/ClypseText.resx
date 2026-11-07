@@ -282,6 +282,9 @@
   <data name="Strength.Described" xml:space="preserve">
     <value>{0}, about {1} bits</value>
   </data>
+  <data name="Strength.KnownWeak" xml:space="preserve">
+    <value>Very weak: it is a commonly used password.</value>
+  </data>
   <data name="Strength.Medium" xml:space="preserve">
     <value>Medium</value>
   </data>

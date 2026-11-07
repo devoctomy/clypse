@@ -38,11 +38,11 @@ public class WeakKnownPasswordsServiceTests
         // Arrange
         var mockLoader = new Mock<IEmbeddedResourceLoaderService>();
         mockLoader
-            .Setup(x => x.LoadCompressedHashSetAsync(
+            .Setup(x => x.LoadCompressedHashedTextSetAsync(
                 ResourceKeys.CompressedWeakKnownPasswordsResourceKey,
                 typeof(WeakKnownPasswordsService).Assembly,
                 It.IsAny<CancellationToken>()))
-            .ReturnsAsync(["hunter2"]);
+            .ReturnsAsync(new HashedTextSet([HashedTextSet.Hash("hunter2"u8)]));
         var options = Options.Create(new TextListOptions());
         var sut = new WeakKnownPasswordsService(mockLoader.Object, options);
 

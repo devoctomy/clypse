@@ -21,12 +21,20 @@ public partial class SecretEditorViewModel : ViewModelBase
     /// </summary>
     public static readonly IReadOnlyList<SecretType> SecretTypes = [SecretType.Web, SecretType.Aws, SecretType.None];
 
+    /// <summary>
+    /// How long typing in a password field must pause before the password is checked against the list of weak known
+    /// passwords. The first check loads the list, which takes a while, so it is not done on every key press.
+    /// </summary>
+    public static readonly TimeSpan KnownPasswordCheckDelay = TimeSpan.FromMilliseconds(500);
+
     private readonly IVaultSession session;
     private readonly IPasswordStrengthService strengthService;
     private readonly IErrorText errorText;
     private readonly ISecretCopyService copyService;
+    private readonly TimeProvider timeProvider;
     private readonly Dictionary<string, string> values = [];
     private readonly Dictionary<string, PasswordStrength> strengths = [];
+    private readonly Dictionary<string, CancellationTokenSource> knownPasswordChecks = [];
     private readonly HashSet<string> revealed = [];
 
     private Secret? original;
@@ -44,16 +52,19 @@ public partial class SecretEditorViewModel : ViewModelBase
     /// <param name="strengthService">Estimates passwords' strength.</param>
     /// <param name="errorText">Describes errors.</param>
     /// <param name="copyService">Copies fields to the clipboard.</param>
+    /// <param name="timeProvider">Times the pause before a password is checked against the known passwords.</param>
     public SecretEditorViewModel(
         IVaultSession session,
         IPasswordStrengthService strengthService,
         IErrorText errorText,
-        ISecretCopyService copyService)
+        ISecretCopyService copyService,
+        TimeProvider timeProvider)
     {
         this.session = session ?? throw new ArgumentNullException(nameof(session));
         this.strengthService = strengthService ?? throw new ArgumentNullException(nameof(strengthService));
         this.errorText = errorText ?? throw new ArgumentNullException(nameof(errorText));
         this.copyService = copyService ?? throw new ArgumentNullException(nameof(copyService));
+        this.timeProvider = timeProvider ?? throw new ArgumentNullException(nameof(timeProvider));
         Fields = FieldsOf(SecretType.Web);
     }
 
@@ -128,6 +139,12 @@ public partial class SecretEditorViewModel : ViewModelBase
     /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     public async Task LoadAsync(string? secretId)
     {
+        foreach (var check in knownPasswordChecks.Values)
+        {
+            check.Cancel();
+        }
+
+        knownPasswordChecks.Clear();
         values.Clear();
         strengths.Clear();
         revealed.Clear();
@@ -381,8 +398,44 @@ public partial class SecretEditorViewModel : ViewModelBase
         return secret;
     }
 
+    /// <summary>
+    /// Estimates a password field's strength at once, then checks it against the known passwords once typing has paused
+    /// (<see cref="KnownPasswordCheckDelay"/>). Another change to the field before then cancels the check.
+    /// </summary>
     private async Task UpdateStrengthAsync(string field)
     {
-        strengths[field] = await strengthService.EstimateAsync(GetValue(field));
+        if (knownPasswordChecks.Remove(field, out var previous))
+        {
+            previous.Cancel();
+        }
+
+        var password = GetValue(field);
+        strengths[field] = await strengthService.EstimateAsync(password);
+        if (password.Length > 0)
+        {
+            var check = new CancellationTokenSource();
+            knownPasswordChecks[field] = check;
+            _ = CheckKnownPasswordAsync(field, password, check.Token);
+        }
+    }
+
+    private async Task CheckKnownPasswordAsync(string field, string password, CancellationToken ct)
+    {
+        try
+        {
+            await Task.Delay(KnownPasswordCheckDelay, timeProvider, ct);
+            var strength = await strengthService.EstimateCheckingKnownPasswordsAsync(password, ct);
+            if (!ct.IsCancellationRequested && GetValue(field) == password)
+            {
+                strengths[field] = strength;
+
+                // Every property: the strength shown for this field (GetStrength, GetStrengthText) has changed.
+                OnPropertyChanged(string.Empty);
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            // The field changed again, or the editor moved on to another secret.
+        }
     }
 }

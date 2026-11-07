@@ -6,6 +6,7 @@ using Clypse.Portal.Application.Text;
 using Clypse.Portal.Application.ViewModels;
 using Clypse.Portal.Models.Vaults;
 using Devoctomy.Blazwiz.Testing;
+using Microsoft.Extensions.Time.Testing;
 using Moq;
 
 namespace Clypse.Portal.Application.UnitTests.ViewModels;
@@ -13,11 +14,13 @@ namespace Clypse.Portal.Application.UnitTests.ViewModels;
 public class SecretEditorViewModelTests
 {
     private static readonly PasswordStrength Strong = new() { Estimation = PasswordComplexityEstimation.Strong, Entropy = 100 };
+    private static readonly PasswordStrength KnownWeak = new() { Estimation = PasswordComplexityEstimation.VeryWeak, Entropy = 50, IsKnownWeak = true };
 
     private readonly FrameworkText text = new(typeof(ClypseText));
     private readonly Mock<IVaultSession> mockSession = new();
     private readonly Mock<IPasswordStrengthService> mockStrength = new();
     private readonly Mock<ISecretCopyService> mockCopy = new();
+    private readonly FakeTimeProvider time = new();
     private readonly List<Secret> secrets = [];
     private Secret? saved;
 
@@ -29,6 +32,8 @@ public class SecretEditorViewModelTests
             .ReturnsAsync((Secret s, CancellationToken _) => s);
         mockStrength.Setup(x => x.EstimateAsync(It.IsAny<string?>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((string? p, CancellationToken _) => string.IsNullOrEmpty(p) ? PasswordStrength.None : Strong);
+        mockStrength.Setup(x => x.EstimateCheckingKnownPasswordsAsync(It.IsAny<string?>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((string? p, CancellationToken _) => p == "password123" ? KnownWeak : Strong);
         mockStrength.Setup(x => x.Describe(It.IsAny<PasswordStrength>())).Returns((PasswordStrength s) => s.Estimation.ToString());
     }
 
@@ -36,10 +41,11 @@ public class SecretEditorViewModelTests
     public void GivenNullDependencies_WhenConstructing_ThenThrowsArgumentNullException()
     {
         // Act & Assert
-        Assert.Equal("session", Assert.Throws<ArgumentNullException>(() => new SecretEditorViewModel(null!, mockStrength.Object, text.Errors, mockCopy.Object)).ParamName);
-        Assert.Equal("strengthService", Assert.Throws<ArgumentNullException>(() => new SecretEditorViewModel(mockSession.Object, null!, text.Errors, mockCopy.Object)).ParamName);
-        Assert.Equal("errorText", Assert.Throws<ArgumentNullException>(() => new SecretEditorViewModel(mockSession.Object, mockStrength.Object, null!, mockCopy.Object)).ParamName);
-        Assert.Equal("copyService", Assert.Throws<ArgumentNullException>(() => new SecretEditorViewModel(mockSession.Object, mockStrength.Object, text.Errors, null!)).ParamName);
+        Assert.Equal("session", Assert.Throws<ArgumentNullException>(() => new SecretEditorViewModel(null!, mockStrength.Object, text.Errors, mockCopy.Object, time)).ParamName);
+        Assert.Equal("strengthService", Assert.Throws<ArgumentNullException>(() => new SecretEditorViewModel(mockSession.Object, null!, text.Errors, mockCopy.Object, time)).ParamName);
+        Assert.Equal("errorText", Assert.Throws<ArgumentNullException>(() => new SecretEditorViewModel(mockSession.Object, mockStrength.Object, null!, mockCopy.Object, time)).ParamName);
+        Assert.Equal("copyService", Assert.Throws<ArgumentNullException>(() => new SecretEditorViewModel(mockSession.Object, mockStrength.Object, text.Errors, null!, time)).ParamName);
+        Assert.Equal("timeProvider", Assert.Throws<ArgumentNullException>(() => new SecretEditorViewModel(mockSession.Object, mockStrength.Object, text.Errors, mockCopy.Object, null!)).ParamName);
     }
 
     [Fact]
@@ -343,5 +349,79 @@ public class SecretEditorViewModelTests
         Assert.False(sut.Fields.Single(f => f.Name == "AccessKeyId").IsSecretValue);
     }
 
-    private SecretEditorViewModel CreateSut() => new(mockSession.Object, mockStrength.Object, text.Errors, mockCopy.Object);
+    [Fact]
+    public async Task GivenAKnownWeakPassword_WhenTypingPauses_ThenItIsShownAsKnownWeak()
+    {
+        // Arrange
+        var sut = CreateSut();
+        await sut.LoadAsync(null);
+        var changed = WaitForAllPropertiesChanged(sut);
+
+        // Act
+        await sut.SetValueAsync("Password", "password123");
+        var before = sut.GetStrength("Password");
+        time.Advance(SecretEditorViewModel.KnownPasswordCheckDelay);
+        await changed;
+
+        // Assert
+        Assert.Equal(Strong, before);
+        Assert.Equal(KnownWeak, sut.GetStrength("Password"));
+    }
+
+    [Fact]
+    public async Task GivenAPasswordChangedBeforeTypingPauses_WhenThePauseComes_ThenOnlyTheLastValueIsChecked()
+    {
+        // Arrange
+        var sut = CreateSut();
+        await sut.LoadAsync(null);
+        mockStrength.Invocations.Clear();
+        var changed = WaitForAllPropertiesChanged(sut);
+
+        // Act
+        await sut.SetValueAsync("Password", "password123");
+        time.Advance(SecretEditorViewModel.KnownPasswordCheckDelay / 2);
+        await sut.SetValueAsync("Password", "password1234");
+        time.Advance(SecretEditorViewModel.KnownPasswordCheckDelay);
+        await changed;
+
+        // Assert
+        Assert.Equal(Strong, sut.GetStrength("Password"));
+        mockStrength.Verify(x => x.EstimateCheckingKnownPasswordsAsync("password1234", It.IsAny<CancellationToken>()), Times.Once);
+        mockStrength.Verify(x => x.EstimateCheckingKnownPasswordsAsync("password123", It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task GivenACheckWaiting_WhenAnotherSecretIsLoaded_ThenTheCheckIsCancelled()
+    {
+        // Arrange
+        var sut = CreateSut();
+        await sut.LoadAsync(null);
+        await sut.SetValueAsync("Password", "password123");
+        mockStrength.Invocations.Clear();
+
+        // Act
+        await sut.LoadAsync(null);
+        time.Advance(SecretEditorViewModel.KnownPasswordCheckDelay);
+        await Task.Yield();
+
+        // Assert
+        mockStrength.Verify(x => x.EstimateCheckingKnownPasswordsAsync(It.IsAny<string?>(), It.IsAny<CancellationToken>()), Times.Never);
+        Assert.Same(PasswordStrength.None, sut.GetStrength("Password"));
+    }
+
+    private static Task WaitForAllPropertiesChanged(SecretEditorViewModel sut)
+    {
+        var changed = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        sut.PropertyChanged += (_, e) =>
+        {
+            if (string.IsNullOrEmpty(e.PropertyName))
+            {
+                changed.TrySetResult();
+            }
+        };
+
+        return changed.Task.WaitAsync(TimeSpan.FromSeconds(10));
+    }
+
+    private SecretEditorViewModel CreateSut() => new(mockSession.Object, mockStrength.Object, text.Errors, mockCopy.Object, time);
 }

@@ -41,11 +41,15 @@ builder.Services.AddBlazwizSyncModule(builder.Configuration, sync => sync
 
 // The clypse domain: password generation and complexity estimation, the embedded text lists, and secret import.
 // The full weak known passwords list (over five million entries) is far too slow to load in a Debug WebAssembly build,
-// so Debug builds check passwords against a small stand-in list instead.
+// so Debug builds check passwords against a small stand-in list instead. Release builds use the full list unless
+// TextLists:UseFullWeakKnownPasswordsList is false, as in appsettings.Development.json: the UI tests run a Release
+// build, interpreted, where loading it would take far longer than any test.
 builder.Services.AddClypseCore(textLists =>
 {
 #if DEBUG
     textLists.UseFullWeakKnownPasswordsList = false;
+#else
+    textLists.UseFullWeakKnownPasswordsList = builder.Configuration.GetValue("TextLists:UseFullWeakKnownPasswordsList", true);
 #endif
 });
 
