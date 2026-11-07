@@ -184,20 +184,26 @@ public class VaultTests : TestBase
     }
 
     [TestMethod]
-    public async Task GivenAVaultWithASecret_WhenReloaded_ThenItIsListedLockedByNameAndOpensAfterUnlocking()
+    public async Task GivenAVaultWithASecret_WhenReloaded_ThenItIsListedLockedById_AndByNameAfterUnlocking()
     {
+        // Signed in with a password, so the vault's name is not kept on the device (it is only kept encrypted with the
+        // key derived from the passkey).
         await LoginAsync();
         var id = await CreateVaultAsync("Personal");
         await AddLoginAsync("Gmail", "bob", "hunter2hunter2");
+        var kept = await Page.EvaluateAsync<int>("() => Object.keys(localStorage).filter(k => k.includes('e2e_labels_')).length");
+        Assert.AreEqual(0, kept);
 
         await GoToAsync("/");
         var card = Page.Locator($".vault-card[data-vault='{id}']");
-        await Expect(card.Locator(".vault-card-name")).ToHaveTextAsync("Personal");
+        await Expect(card.Locator(".vault-card-name")).ToHaveTextAsync(id);
         await Expect(card.Locator(".vault-card-state")).ToHaveTextAsync("Locked");
         await card.Locator(".vault-card-main").ClickAsync();
         await UnlockAsync();
 
         await Expect(Page.Locator("#secrets .secret-name")).ToHaveTextAsync("Gmail");
+        await Page.Locator("#nav-vaults").ClickAsync();
+        await Expect(card.Locator(".vault-card-name")).ToHaveTextAsync("Personal");
     }
 
     [TestMethod]

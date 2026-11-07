@@ -216,12 +216,13 @@ The template's notebooks feature is the model to follow, almost one to one:
   - only wrapped keys stored;
   - clipboard clearing, auto-lock and the CSP all work.
 
-  **One item is open, for the maintainer to decide:** vault names are in local storage in plaintext, as blazwiz's
-  device labels.
+  **Fixed after the first run:** vault names were in local storage in plain text, as blazwiz's device labels. They
+  should have been encrypted from the start. Now they are kept only encrypted with a key derived from the passkey
+  (blazwiz change 13). Locked vaults show by id when there is no passkey sign in.
 
   The S3, Secrets Manager and IAM checks need the deployed stack.
 
-**Phase 4 is not finished** until the open checklist item is decided and the deployed-stack checks are done.
+**Phase 4 is not finished** until the deployed-stack checks are done.
 
 ### Changes made in blazwiz
 
@@ -264,11 +265,19 @@ AGENTS.md). The 5 UI tests that were `[Ignore]`d waiting for fixes 1 and 2 run a
     - or share an IndexedDB store or OPFS root.
 
     A profile set up in code may not cover `profiles/`, where the profiles users create are kept.
+13. **Labels are encrypted on the device.**
+    - Protected profiles' labels (a vault's name) are kept only encrypted (AES-GCM) with `E2eKeyNames.LabelKey`.
+      That key is derived from the passkey's PRF output at sign in.
+    - Without the key (password sign in, or after a reload), labels are not read or kept, so profiles show by id.
 
-The full blazwiz suite passes with all of these (last run 2026-11-07, after changes 11 and 12): unit, integration
-(`@aws` skipped), UI (57), the template pack test, and the upgrade test from the latest release
-(`test-template.ps1 -UpgradeFrom latest`), because MP4 can refuse configurations that built before. The template
-scripts ran under Windows PowerShell 5.1, because `pwsh` is not installed here.
+**Last full run, 2026-11-07, after change 13:**
+- **Pass:** blazwiz's unit, integration (`@aws` skipped), UI (57) and template pack tests.
+- **Upgrade test from the latest release** (`test-template.ps1 -UpgradeFrom latest`): **one failure, expected.**
+  - The app created from 0.4.0 carries the old notebook reload test, which expects a name after a password sign in.
+    That is the behaviour change 13 removes.
+  - The changelog tells apps to update that test.
+  - The same run after changes 11 and 12 passed in full.
+- The template scripts ran under Windows PowerShell 5.1, because `pwsh` is not installed here.
 
 ### Framework gaps found, not fixed
 

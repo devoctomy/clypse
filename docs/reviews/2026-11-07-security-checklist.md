@@ -21,7 +21,7 @@ stack (Cognito, Secrets Manager, S3) is listed under "Not checked" at the end.
 | # | Check | Result | How |
 |---|---|---|---|
 | 1 | No secret content in browser storage | **Pass** | Every localStorage and sessionStorage value, and every IndexedDB record in every database, was searched for the three markers, as UTF-8 and UTF-16 inside binary values too. None found. The secret files are `E2EE` ciphertext under GUID keys. |
-| 2 | No plaintext vault details in browser storage | **Open (see below)** | The vault's **name** is in localStorage in plaintext, as its device label (`<app>_e2e_labels_<user>`). |
+| 2 | No plaintext vault details in browser storage | **Pass (fixed 2026-11-07)** | At first the vault's name was in localStorage in plain text, as its device label. Labels are now kept only encrypted (AES-GCM) with a key derived from the passkey at sign in (see below). Checked in Chromium with a virtual authenticator (PRF): the entry did not contain the name; after a reload the vault showed by id; after signing in with the passkey it showed by name again, locked. |
 | 3 | Keys in browser storage are wrapped only | **Pass** | `e2e_browser_keys_*` (local stand-in for Secrets Manager) holds the Argon2id settings, and the master key and vault key, each wrapped (AES-GCM, nonce and ciphertext). `e2e_keys_*` (the device's cached copy) holds the same wrapped document; its device-unlock slot is empty while passkey unlock is off. No raw key material. |
 | 4 | Passphrase key derivation | **Pass (by configuration)** | Release builds use the framework's Argon2id defaults: 512 MiB, 2 iterations (`Argon2idOptions`). Only `appsettings.Development.json` lightens them (19 MiB), and it is not published. A passphrase change rewraps the master key (`E2eProtectedProfileManager.ChangePassphraseAsync`). |
 | 5 | Clipboard clearing | **Pass** | Quick copy of the password put it on the clipboard; 32 s later the clipboard was empty (`Clypse:ClipboardClearSeconds`, 30 by default). Non-secret fields are not cleared, by design. Covered by blazwiz's `ClipboardService` unit tests and clypse's copy tests too. |
@@ -31,20 +31,21 @@ stack (Cognito, Secrets Manager, S3) is listed under "Not checked" at the end.
 | 9 | Weak passwords flagged | **Pass** | The strength meter checks the weak known passwords list after typing pauses; a UI test types one and sees "Very weak: it is a commonly used password." |
 | 10 | File names reveal nothing | **Pass** | Secret files are `secrets/<guid>.json`. Ids are checked to be GUIDs, so a name can't reach a path (`SecretService`). |
 
-## Open item: vault names in plaintext on the device
+## Vault names on the device (fixed)
 
 - **What blazwiz does.** It labels a protected profile on each device so Settings, the unlock panel and the Sync
   page can show a name instead of an id.
-  - The label is kept only on the device (`IE2eProfileLabelStore`, local storage) and never synced.
-  - clypse sets it to the vault's name whenever the vault is unlocked (`VaultLabelHandler`). So a locked vault shows
-    by name on the Vaults page.
-- **The risk.** Anyone with access to the browser profile can read the names of the user's vaults, though nothing
-  inside them.
-- **For the maintainer to decide.** Options include:
-  - keeping it, as a trade-off for showing locked vaults by name;
-  - an option to not label vaults, so locked ones show their id;
-  - encrypting labels with a device key. That needs a key that is available while locked, so it only protects
-    against copying the storage elsewhere.
+  - The label is kept only on the device and never synced.
+  - clypse sets it to the vault's name whenever the vault is unlocked (`VaultLabelHandler`).
+- **The bug.** The label was kept in plain text. Encrypting the name was asked for, and that was missed when the
+  vaults were built.
+- **The fix.** `LocalStorageE2eProfileLabelStore` now keeps the labels only encrypted (AES-GCM) with
+  `E2eKeyNames.LabelKey`. That key is derived from the passkey's PRF output at sign in, beside `rememberme` and
+  `e2e-kek`, and is held in memory only.
+- **What a locked vault shows:**
+  - **Signed in with the passkey:** its name.
+  - **Signed in with a password, or after a reload until the next passkey sign in:** its id. A name set then
+    lasts only until the page is closed.
 
 ## Other observations (not failures)
 
