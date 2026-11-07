@@ -8,6 +8,8 @@
 #   the minimum deploy policy in cloudformation/README.md.
 # - variable AWS_REGION: the region the environment is in, e.g. eu-west-2.
 # - secret TEST_USER_PASSWORD: only if a test user is created (min 12 characters, upper, lower and a number).
+# - variables CUSTOM_DOMAIN_NAME and CERTIFICATE_ARN: optional, both or neither. The portal's own address (e.g.
+#   test.clypse.net) and an ACM certificate for it in us-east-1. Point the address's DNS at the CloudFront distribution.
 # Add required reviewers to the GitHub environment to approve each run before it starts.
 #
 # It uses the blazwiz version set in Directory.Packages.props (BlazwizVersion), restored from nuget.org.
@@ -51,6 +53,10 @@ jobs:
       DOTNET_CLI_TELEMETRY_OPTOUT: true
       MSBUILDDISABLENODEREUSE: 1
       ENVIRONMENT_NAME: ${{ inputs.environment }}
+      # Optional: the portal's own address, e.g. test.clypse.net, and its ACM certificate (in us-east-1). Passed on every
+      # run, as the stack drops the address when they are not.
+      CUSTOM_DOMAIN_NAME: ${{ vars.CUSTOM_DOMAIN_NAME }}
+      CERTIFICATE_ARN: ${{ vars.CERTIFICATE_ARN }}
       TEST_USER_EMAIL: ${{ inputs.test_user_email }}
       TEST_USER_PASSWORD: ${{ secrets.TEST_USER_PASSWORD }}
     steps:
@@ -62,6 +68,7 @@ jobs:
           if ($env:ENVIRONMENT_NAME -notmatch '^[a-z0-9]+$') { throw "The environment name must be lowercase letters and numbers: '$env:ENVIRONMENT_NAME'." }
           if (-not '${{ vars.AWS_DEPLOY_ROLE_ARN }}') { throw "The GitHub environment '$env:ENVIRONMENT_NAME' has no AWS_DEPLOY_ROLE_ARN variable." }
           if (-not '${{ vars.AWS_REGION }}') { throw "The GitHub environment '$env:ENVIRONMENT_NAME' has no AWS_REGION variable." }
+          if ([bool]$env:CUSTOM_DOMAIN_NAME -ne [bool]$env:CERTIFICATE_ARN) { throw "The GitHub environment '$env:ENVIRONMENT_NAME' must have both CUSTOM_DOMAIN_NAME and CERTIFICATE_ARN, or neither." }
           if ($env:TEST_USER_EMAIL -and -not $env:TEST_USER_PASSWORD) { throw "A test user was asked for, but the GitHub environment '$env:ENVIRONMENT_NAME' has no TEST_USER_PASSWORD secret." }
 
       - name: Check BlazwizVersion is a released version
@@ -113,8 +120,8 @@ jobs:
           $region = '${{ vars.AWS_REGION }}'
           if ($env:TEST_USER_EMAIL) {
             $password = ConvertTo-SecureString $env:TEST_USER_PASSWORD -AsPlainText -Force
-            ./cloudformation/deploy.ps1 -Region $region -Environment $env:ENVIRONMENT_NAME -TestUserEmail $env:TEST_USER_EMAIL -TestUserPassword $password -Force
+            ./cloudformation/deploy.ps1 -Region $region -Environment $env:ENVIRONMENT_NAME -CustomDomainName $env:CUSTOM_DOMAIN_NAME -CertificateArn $env:CERTIFICATE_ARN -TestUserEmail $env:TEST_USER_EMAIL -TestUserPassword $password -Force
           }
           else {
-            ./cloudformation/deploy.ps1 -Region $region -Environment $env:ENVIRONMENT_NAME -SkipTestUser -Force
+            ./cloudformation/deploy.ps1 -Region $region -Environment $env:ENVIRONMENT_NAME -CustomDomainName $env:CUSTOM_DOMAIN_NAME -CertificateArn $env:CERTIFICATE_ARN -SkipTestUser -Force
           }

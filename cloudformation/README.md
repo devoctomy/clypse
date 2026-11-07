@@ -279,5 +279,14 @@ Then, in the repository's **Settings, Environments**, add one GitHub environment
 | `AWS_DEPLOY_ROLE_ARN` | Variable | The role's ARN, e.g. `arn:aws:iam::ACCOUNT_ID:role/clypse-github-deploy`. |
 | `AWS_REGION` | Variable | The environment's region, e.g. `eu-west-2`. |
 | `TEST_USER_PASSWORD` | Secret | Only for a Deploy that creates a test user: at least 12 characters, with upper case, lower case and a number. |
+| `CUSTOM_DOMAIN_NAME` | Variable | Optional: the portal's own address, e.g. `test.clypse.net`. Set it with `CERTIFICATE_ARN`. |
+| `CERTIFICATE_ARN` | Variable | Optional: an ACM certificate in **us-east-1** covering that address (a wildcard such as `*.clypse.net` will do). |
+
+With a custom address, Deploy and Upgrade put it on the CloudFront distribution and allow it in the data bucket's CORS.
+They pass it on every run, because the stack drops the address when it is not given.
+
+They don't create the DNS record: point the address at the distribution yourself. Use a CNAME to its
+`dxxxxxxxx.cloudfront.net` name, or a Route 53 alias. The deploy user, or the role, needs the policy's
+`CustomDomainCertificate` statement.
 
 To approve each run before it starts, add **required reviewers** to the GitHub environment.

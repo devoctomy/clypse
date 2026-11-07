@@ -7,7 +7,8 @@
 # that would replace one fails the upgrade, with nothing lost. Other resources a change replaces are replaced without
 # asking (the run cannot ask).
 #
-# Uses the same GitHub environment settings as the Deploy workflow (AWS_DEPLOY_ROLE_ARN, AWS_REGION), and the blazwiz
+# Uses the same GitHub environment settings as the Deploy workflow (AWS_DEPLOY_ROLE_ARN, AWS_REGION, and the optional
+# CUSTOM_DOMAIN_NAME and CERTIFICATE_ARN, kept on every upgrade), and the blazwiz
 # version set in Directory.Packages.props (BlazwizVersion), restored from nuget.org.
 name: Upgrade
 
@@ -50,6 +51,10 @@ jobs:
       DOTNET_CLI_TELEMETRY_OPTOUT: true
       MSBUILDDISABLENODEREUSE: 1
       ENVIRONMENT_NAME: ${{ inputs.environment }}
+      # Optional: the portal's own address, e.g. test.clypse.net, and its ACM certificate (in us-east-1). Passed on every
+      # run, as the stack drops the address when they are not.
+      CUSTOM_DOMAIN_NAME: ${{ vars.CUSTOM_DOMAIN_NAME }}
+      CERTIFICATE_ARN: ${{ vars.CERTIFICATE_ARN }}
     steps:
       - uses: actions/checkout@v4
 
@@ -59,6 +64,7 @@ jobs:
           if ($env:ENVIRONMENT_NAME -notmatch '^[a-z0-9]+$') { throw "The environment name must be lowercase letters and numbers: '$env:ENVIRONMENT_NAME'." }
           if (-not '${{ vars.AWS_DEPLOY_ROLE_ARN }}') { throw "The GitHub environment '$env:ENVIRONMENT_NAME' has no AWS_DEPLOY_ROLE_ARN variable." }
           if (-not '${{ vars.AWS_REGION }}') { throw "The GitHub environment '$env:ENVIRONMENT_NAME' has no AWS_REGION variable." }
+          if ([bool]$env:CUSTOM_DOMAIN_NAME -ne [bool]$env:CERTIFICATE_ARN) { throw "The GitHub environment '$env:ENVIRONMENT_NAME' must have both CUSTOM_DOMAIN_NAME and CERTIFICATE_ARN, or neither." }
 
       - name: Check BlazwizVersion is a released version
         shell: pwsh
@@ -108,8 +114,8 @@ jobs:
         run: |
           $region = '${{ vars.AWS_REGION }}'
           if ('${{ inputs.portal_only }}' -eq 'true') {
-            ./cloudformation/deploy.ps1 -Region $region -Environment $env:ENVIRONMENT_NAME -SkipInfrastructure -SkipTestUser -Force
+            ./cloudformation/deploy.ps1 -Region $region -Environment $env:ENVIRONMENT_NAME -CustomDomainName $env:CUSTOM_DOMAIN_NAME -CertificateArn $env:CERTIFICATE_ARN -SkipInfrastructure -SkipTestUser -Force
           }
           else {
-            ./cloudformation/deploy.ps1 -Region $region -Environment $env:ENVIRONMENT_NAME -SkipTestUser -Force
+            ./cloudformation/deploy.ps1 -Region $region -Environment $env:ENVIRONMENT_NAME -CustomDomainName $env:CUSTOM_DOMAIN_NAME -CertificateArn $env:CERTIFICATE_ARN -SkipTestUser -Force
           }

@@ -28,6 +28,10 @@ Instructions for AI coding agents working on clypse.
    - A pass with rules or tests switched off is not a pass.
    - If something failed and you could not find out why, say so.
 9. **When reviewing the maintainer's own edits, list the fixes.** Don't hand back a rewritten copy of their work.
+10. **A question or an instruction for the maintainer always comes last.** Never ask a question, or give steps for them
+    to follow, and then carry on with tool calls: their output pushes it off screen.
+    - Either stop and wait for their answer,
+    - or do the tool calls first, and ask or instruct at the end of the reply.
 
 ## Project
 
