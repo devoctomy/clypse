@@ -1,0 +1,79 @@
+# Builds and tests clypse on every push, to any branch. The deploy and upgrade workflows only deploy a commit this has
+# passed.
+#
+# Pushes only, not pull requests as well: the push run's checks already show on a pull request from this repository
+# (they are on the same commit).
+#
+# Not for a push that only creates a branch, with no commits of its own: that commit was already tested on the branch it
+# was made from.
+#
+# Linux, with the Ubuntu version fixed rather than ubuntu-latest: the Playwright version in use must support it, and a
+# new runner image should not change what the tests run on unannounced.
+name: CI
+
+on:
+  push:
+    branches: ['**']
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  DOTNET_NOLOGO: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+  # Fresh MSBuild processes for every build (static web assets compression; see AGENTS.md).
+  MSBUILDDISABLENODEREUSE: 1
+
+jobs:
+  test:
+    if: ${{ !github.event.created || github.event.commits[0] != null }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      # clypse is built against released blazwiz packages here. A build packed locally from the blazwiz source
+      # (eng/use-local-blazwiz.ps1, version <prefix>-local.<timestamp>) is only on the machine that packed it.
+      - name: Check BlazwizVersion is a released version
+        shell: pwsh
+        run: ./eng/check-blazwiz-version.ps1
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      # The UI tests build the portal in Release, which relinks the WebAssembly runtime (Clypse.Portal.csproj).
+      - name: Install the wasm-tools workload
+        run: dotnet workload install wasm-tools
+
+      - name: Restore
+        run: dotnet restore Clypse.slnx
+
+      - name: Build
+        run: dotnet build Clypse.slnx --no-restore
+
+      - name: Unit tests
+        run: dotnet test Clypse.slnx --no-build --filter "FullyQualifiedName~UnitTests" --logger trx --results-directory TestResults/unit
+
+      # --with-deps also installs the libraries Chromium needs on Linux.
+      - name: Install the Playwright browser
+        shell: pwsh
+        run: ./Clypse.Portal.UITests/bin/Debug/net10.0/playwright.ps1 install --with-deps chromium
+
+      # The UI tests build and start the portal themselves (Release); its output is in TestResults/portal.log.
+      - name: UI tests
+        run: dotnet test Clypse.slnx --no-build --filter "FullyQualifiedName~UITests" --logger trx --results-directory TestResults/ui
+
+      - name: Upload test results
+        if: ${{ !success() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: |
+            TestResults/**
+            **/bin/Debug/net10.0/TestResults/**
+          if-no-files-found: ignore

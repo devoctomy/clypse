@@ -255,6 +255,22 @@ The template's notebooks feature is the model to follow, almost one to one:
     `VaultService.UnlockWithBiometricsAsync` and `ForgetBiometricsAsync`; `BiometricUnlockTests`, using Chromium's
     virtual passkey.
 
+### Phase 5: UI tests, CI and deployment
+
+**Done so far:**
+- **CI** (`.github/workflows/ci.yml`, on every push): build, unit tests and UI tests, as blazwiz's CI does.
+- **Manual workflows** to Deploy (a new environment), Upgrade (an existing one) and Destroy. Deploy and Upgrade only
+  run on a commit CI has passed (`ci-passed.yml`). They sign in to AWS through an OIDC role.
+- **Blazwiz version.** Every workflow uses the blazwiz version set in `BlazwizVersion` and refuses a locally packed
+  build (`eng/check-blazwiz-version.ps1`). So they only work once clypse is set to a released blazwiz.
+- **Setup docs.** The one-off AWS and GitHub setup (OIDC provider, role and trust policy, GitHub environments) is in
+  `cloudformation/README.md`, under "Deploying from GitHub". The maintainer sets it up.
+- **Fixed on the way:** the workflows pass the scripts their parameters written out. Splatting a hashtable through the
+  app's wrapper scripts turns `Force = $true` into a stray "True", so the call fails (checked locally with stand-in
+  scripts).
+
+**Not tested yet:** the workflows have not run. They need the OIDC setup, and clypse set to a released blazwiz.
+
 ### Changes made in blazwiz
 
 All on branch `clypseupdates`, with unit tests and CHANGELOG entries:

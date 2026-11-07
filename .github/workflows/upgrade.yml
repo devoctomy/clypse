@@ -1,0 +1,99 @@
+# Upgrades an EXISTING clypse environment on AWS to this commit: the blazwiz base stack and clypse's own stack
+# (app.yaml), then the portal. Run by hand (Actions > Upgrade > Run workflow), on a commit the CI workflow has passed.
+#
+# Refused if the environment does not exist: use the Deploy workflow to create one. The test user is left as it is.
+#
+# Resources protected by the stack policy (the user pool, identity pool and data bucket) are never replaced: a change
+# that would replace one fails the upgrade, with nothing lost. Other resources a change replaces are replaced without
+# asking (the run cannot ask).
+#
+# Uses the same GitHub environment settings as the Deploy workflow (AWS_DEPLOY_ROLE_ARN, AWS_REGION), and the blazwiz
+# version set in Directory.Packages.props (BlazwizVersion), restored from nuget.org.
+name: Upgrade
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment name, e.g. test (the stacks clypse-<environment>).'
+        required: true
+        default: test
+      portal_only:
+        description: 'Only publish the portal (skip the CloudFormation stacks).'
+        type: boolean
+        required: false
+        default: false
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: aws-${{ inputs.environment }}
+  cancel-in-progress: false
+
+jobs:
+  ci-passed:
+    uses: ./.github/workflows/ci-passed.yml
+
+  upgrade:
+    needs: ci-passed
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    environment: ${{ inputs.environment }}
+    permissions:
+      contents: read
+      # An OIDC token from GitHub, exchanged for short-lived AWS credentials.
+      id-token: write
+    env:
+      DOTNET_NOLOGO: true
+      DOTNET_CLI_TELEMETRY_OPTOUT: true
+      MSBUILDDISABLENODEREUSE: 1
+      ENVIRONMENT_NAME: ${{ inputs.environment }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check the inputs
+        shell: pwsh
+        run: |
+          if ($env:ENVIRONMENT_NAME -notmatch '^[a-z0-9]+$') { throw "The environment name must be lowercase letters and numbers: '$env:ENVIRONMENT_NAME'." }
+          if (-not '${{ vars.AWS_DEPLOY_ROLE_ARN }}') { throw "The GitHub environment '$env:ENVIRONMENT_NAME' has no AWS_DEPLOY_ROLE_ARN variable." }
+          if (-not '${{ vars.AWS_REGION }}') { throw "The GitHub environment '$env:ENVIRONMENT_NAME' has no AWS_REGION variable." }
+
+      - name: Check BlazwizVersion is a released version
+        shell: pwsh
+        run: ./eng/check-blazwiz-version.ps1
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      # The portal is compiled ahead of time to WebAssembly when published (Clypse.Portal.csproj).
+      - name: Install the wasm-tools workload
+        run: dotnet workload install wasm-tools
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Check the environment exists
+        shell: pwsh
+        run: |
+          $stack = "clypse-$env:ENVIRONMENT_NAME"
+          aws cloudformation describe-stacks --stack-name $stack --region '${{ vars.AWS_REGION }}' *> $null
+          if ($LASTEXITCODE -ne 0) { throw "Stack $stack does not exist. Use the Deploy workflow to create it." }
+          Write-Host "Stack $stack exists."
+
+      # Parameters written out, not splatted from a hashtable: the app's deploy.ps1 passes them on to the base stack's
+      # with @args, which turns a hashtable's switches (Force = $true) into a stray "True".
+      - name: Upgrade
+        shell: pwsh
+        run: |
+          $region = '${{ vars.AWS_REGION }}'
+          if ('${{ inputs.portal_only }}' -eq 'true') {
+            ./cloudformation/deploy.ps1 -Region $region -Environment $env:ENVIRONMENT_NAME -SkipInfrastructure -SkipTestUser -Force
+          }
+          else {
+            ./cloudformation/deploy.ps1 -Region $region -Environment $env:ENVIRONMENT_NAME -SkipTestUser -Force
+          }

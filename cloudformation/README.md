@@ -214,3 +214,63 @@ Notes:
    ```
 
 When you've finished testing, delete the access key, or the whole user.
+
+## Deploying from GitHub
+
+Three workflows deploy from GitHub, each run by hand (Actions, then the workflow, then **Run workflow**):
+
+| Workflow | What it does |
+| --- | --- |
+| **Deploy** (`deploy.yml`) | Creates a new environment: both stacks, the portal, and optionally a test user. Refused if the environment already exists. |
+| **Upgrade** (`upgrade.yml`) | Updates an existing environment to the commit it is run on: both stacks, then the portal (or only the portal). Refused if the environment does not exist. |
+| **Destroy** (`destroy.yml`) | Deletes an environment, once its name is typed again. |
+
+Deploy and Upgrade only run on a commit the CI workflow (`ci.yml`, on every push) has passed, waiting for it if it is still running. All three:
+
+- use the blazwiz version set in `Directory.Packages.props` (`BlazwizVersion`), from nuget.org;
+- refuse a blazwiz build packed locally (`eng/check-blazwiz-version.ps1`).
+
+They run the same scripts as above, with `-Force`, because a workflow can't answer prompts:
+
+- **Replaced resources.** Resources a change replaces are replaced without asking. The user pool, identity pool and data bucket are never replaced (stack policy): a change that would replace one fails the run.
+- **No AWS keys in GitHub.** The workflows sign in to AWS through OIDC, assuming an IAM role for the run.
+
+### Setting up GitHub to deploy
+
+Once per AWS account:
+
+1. **Create the OIDC identity provider.** In IAM, go to Identity providers and add one:
+   - type **OpenID Connect**;
+   - provider URL `https://token.actions.githubusercontent.com`;
+   - audience `sts.amazonaws.com`.
+2. **Create the `clypse-deploy` policy** from the minimum policy above, if you haven't already.
+3. **Create a role,** e.g. `clypse-github-deploy`. Attach only `clypse-deploy`, and give it this trust policy (with `ACCOUNT_ID` replaced). It lets only this repository's workflows assume the role, and only for its GitHub environments:
+
+   ```json
+   {
+     "Version": "2012-10-17",
+     "Statement": [
+       {
+         "Effect": "Allow",
+         "Principal": { "Federated": "arn:aws:iam::ACCOUNT_ID:oidc-provider/token.actions.githubusercontent.com" },
+         "Action": "sts:AssumeRoleWithWebIdentity",
+         "Condition": {
+           "StringEquals": { "token.actions.githubusercontent.com:aud": "sts.amazonaws.com" },
+           "StringLike": { "token.actions.githubusercontent.com:sub": "repo:devoctomy/clypse:environment:*" }
+         }
+       }
+     ]
+   }
+   ```
+
+   To allow only some environments, list them instead of `*`, e.g. `repo:devoctomy/clypse:environment:test`.
+
+Then, in the repository's **Settings, Environments**, add one GitHub environment for each AWS environment, named the same (e.g. `test`). Give it:
+
+| Name | Kind | Value |
+| --- | --- | --- |
+| `AWS_DEPLOY_ROLE_ARN` | Variable | The role's ARN, e.g. `arn:aws:iam::ACCOUNT_ID:role/clypse-github-deploy`. |
+| `AWS_REGION` | Variable | The environment's region, e.g. `eu-west-2`. |
+| `TEST_USER_PASSWORD` | Secret | Only for a Deploy that creates a test user: at least 12 characters, with upper case, lower case and a number. |
+
+To approve each run before it starts, add **required reviewers** to the GitHub environment.
