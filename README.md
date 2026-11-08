@@ -141,3 +141,7 @@ The first time, install the browser for the UI tests:
 
 The rules the code follows, and how to build against a local copy of blazwiz, are in [AGENTS.md](AGENTS.md). The
 rewrite's plan and decisions are in [`docs/plans`](docs/plans).
+
+## License
+
+[MIT](LICENSE). clypse is built on [blazwiz](https://github.com/devoctomy/blazwiz), which is also MIT licensed.
