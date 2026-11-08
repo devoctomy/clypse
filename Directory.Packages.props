@@ -3,7 +3,7 @@
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
     <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
     <!-- The blazwiz framework. Every Devoctomy.Blazwiz package has the same version: upgrade by changing this. -->
-    <BlazwizVersion>0.5.0</BlazwizVersion>
+    <BlazwizVersion>0.6.0-beta.15</BlazwizVersion>
   </PropertyGroup>
   <ItemGroup>
     <!-- blazwiz -->
