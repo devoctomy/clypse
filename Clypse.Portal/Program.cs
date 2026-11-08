@@ -25,7 +25,7 @@ builder.Services.AddBlazwizApp(AppIdentity.Name, AppIdentity.Id);
 // The framework: the app shell (sign in, theme, settings and their pages), with settings from wwwroot/appsettings.json
 // (+ appsettings.{Environment}.json), signing in with Cognito once a user pool is configured.
 builder.Services.AddBlazwizUi(builder.Configuration);
-builder.Services.AddBlazwizCognito(builder.Configuration);
+builder.Services.AddBlazwizCognito(builder.Configuration, allowPlaceholderSignIn: builder.HostEnvironment.IsDevelopment());
 
 // Sync and end to end encryption, and the Sync page, with the settings from sync.json (embedded in this project).
 // Clypse defines no sync profiles in code: every vault is a protected profile the user creates. A vault locks itself
