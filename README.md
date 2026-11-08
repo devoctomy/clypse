@@ -114,7 +114,8 @@ You can deploy two ways:
 
 - **From your machine,** with `cloudformation/deploy.ps1`.
 - **From GitHub,** with the Deploy, Upgrade and Destroy workflows. They only deploy a commit that has passed the
-  tests.
+  tests. The Release workflow tags a commit of main as a checkpoint (`v<version>`, with a GitHub release noting the
+  blazwiz version it is built on); nothing is published, deployments are always made from source.
 
 See [`cloudformation/README.md`](cloudformation/README.md) for the steps, the IAM permissions needed, and setting up
 GitHub.
