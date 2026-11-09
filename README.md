@@ -144,4 +144,4 @@ rewrite's plan and decisions are in [`docs/plans`](docs/plans).
 
 ## License
 
-[MIT](LICENSE). clypse is built on [blazwiz](https://github.com/devoctomy/blazwiz), which is also MIT licensed.
+[MIT](LICENSE). clypse is built on [blazwiz](https://github.com/devoctomy/blazwiz), which is licensed under the [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0).
