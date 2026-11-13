@@ -83,7 +83,7 @@ public class RandomStringTokenProcessorTests
         mockRandomGeneratorService.Setup(x => x.GetRandomStringContainingCharacters(
             It.IsAny<int>(),
             It.IsAny<string>()))
-            .Returns((int length, string chars) =>
+            .Returns((int _, string chars) =>
             {
                 return chars;
             });

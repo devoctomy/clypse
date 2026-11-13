@@ -45,14 +45,16 @@ jobs:
           if (-not '${{ vars.AWS_DEPLOY_ROLE_ARN }}') { throw "The GitHub environment '$env:ENVIRONMENT_NAME' has no AWS_DEPLOY_ROLE_ARN variable." }
           if (-not '${{ vars.AWS_REGION }}') { throw "The GitHub environment '$env:ENVIRONMENT_NAME' has no AWS_REGION variable." }
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       # The base stack's remove script comes with the Devoctomy.Blazwiz.Aws package, restored at BlazwizVersion.
       - name: Check BlazwizVersion is a released version
         shell: pwsh
         run: ./eng/check-blazwiz-version.ps1
 
-      - uses: actions/setup-dotnet@v4
+      - uses: actions/setup-dotnet@0f4a354dd5547a28c70b7853dbd95d5b67886e73 # v6.1.0
         with:
           global-json-file: global.json
 
@@ -72,7 +74,7 @@ jobs:
           Write-Host "environment: $($claims.environment)"
           Write-Host "ref:         $($claims.ref)"
 
-      - uses: aws-actions/configure-aws-credentials@v4
+      - uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
         with:
           role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
           aws-region: ${{ vars.AWS_REGION }}

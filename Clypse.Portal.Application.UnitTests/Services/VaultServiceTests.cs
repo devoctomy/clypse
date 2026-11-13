@@ -354,10 +354,10 @@ public class VaultServiceTests
         mockPasskeys.Setup(x => x.EnsureKeyAsync("e2e-kek")).ReturnsAsync(true);
 
         // Act
-        var unlocked = await CreateSut().UnlockWithBiometricsAsync(id);
+        var result = await CreateSut().UnlockWithBiometricsAsync(id);
 
         // Assert
-        Assert.True(unlocked);
+        Assert.True(result);
         mockProfiles.Verify(x => x.UnlockWithDeviceAsync(new E2eKeyScope(id)), Times.Once);
     }
 

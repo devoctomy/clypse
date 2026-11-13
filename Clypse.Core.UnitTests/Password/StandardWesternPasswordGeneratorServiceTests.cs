@@ -9,14 +9,13 @@ namespace Clypse.Core.UnitTests.Password;
 
 public class StandardWesternPasswordGeneratorServiceTests : IDisposable
 {
-    private readonly RandomGeneratorService randomGeneratorService;
     private readonly Mock<IEmbeddedResourceLoaderService> mockEmbeddedResourceLoaderService;
     private readonly List<IPasswordGeneratorTokenProcessor> tokenProcessors;
     private readonly StandardWesternPasswordGeneratorService sut;
 
     public StandardWesternPasswordGeneratorServiceTests()
     {
-        this.randomGeneratorService = new RandomGeneratorService();
+        var randomGeneratorService = new RandomGeneratorService();
         this.mockEmbeddedResourceLoaderService = new Mock<IEmbeddedResourceLoaderService>();
 
         this.tokenProcessors =
@@ -25,7 +24,7 @@ public class StandardWesternPasswordGeneratorServiceTests : IDisposable
             new RandomStringTokenProcessor(),
         ];
         this.sut = new StandardWesternPasswordGeneratorService(
-            this.randomGeneratorService,
+            randomGeneratorService,
             this.tokenProcessors);
     }
 
@@ -53,7 +52,7 @@ public class StandardWesternPasswordGeneratorServiceTests : IDisposable
             It.IsAny<string>(),
             It.IsAny<Assembly?>(),
             It.IsAny<CancellationToken>()))
-            .ReturnsAsync((string name, Assembly asm, CancellationToken ct) =>
+            .ReturnsAsync((string name, Assembly _, CancellationToken _) =>
             {
                 var nameParts = name.Split('.');
                 return [nameParts[^2]];

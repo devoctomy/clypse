@@ -9,6 +9,11 @@
 
 ---
 
+[![Codacy Badge](https://app.codacy.com/project/badge/Grade/8b73b79d3a0344f3a6cb55f7eab7d37b)](https://app.codacy.com/gh/devoctomy/clypse/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade)
+[![CI](https://github.com/devoctomy/clypse/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/devoctomy/clypse/actions/workflows/ci.yml?query=branch%3Amain)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![.NET](https://img.shields.io/badge/.NET-10.0-512BD4.svg)](https://dotnet.microsoft.com/download/dotnet/10.0)
+
 Clypse keeps your logins, AWS keys and other secrets in **vaults**. Each vault has its own passphrase and its own
 encryption keys. Everything is encrypted in your browser before it is saved or synced, so neither the cloud storage nor
 anyone with access to the AWS account can read it.
