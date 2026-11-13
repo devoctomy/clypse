@@ -6,8 +6,9 @@ there, fixed in 0.7.0); clypse's own code and workflows have not been reviewed y
 
 ## Noticed while upgrading to blazwiz 0.7.0
 
-- The Deploy, Upgrade and Destroy workflows use `actions/checkout@v4` and `actions/setup-dotnet@v4` by tag. blazwiz pins
-  its actions to commit SHAs (a tag can be moved); `release.yml` here already does.
+- **Done 2026-11-13:** every workflow's actions are pinned to the commit SHAs blazwiz uses, checkouts set
+  `persist-credentials: false`, and Dependabot (`.github/dependabot.yml`) keeps the pins up to date. Before, the Deploy,
+  Upgrade and Destroy workflows used `actions/checkout@v4` and `actions/setup-dotnet@v4` by tag.
 - `deploy.yml` says the custom domain and certificate must be passed on every run "as the stack drops the address
   when they are not". From blazwiz 0.7.0 the deploy script keeps a stack's current values, so the comment is out of
   date; passing them is still correct.
