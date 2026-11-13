@@ -48,7 +48,7 @@ public class DictionaryTokenProcessor : IPasswordGeneratorTokenProcessor
             dictionary = passwordGeneratorService.RandomGeneratorService.GetRandomArrayEntry<string>(allDicts);
         }
 
-        if (Enum.TryParse<DictionaryType>(dictionary, true, out var dictType))
+        if (Enum.TryParse<DictionaryType>(dictionary, true, out var dictType) && dictType != DictionaryType.None && Enum.IsDefined(dictType))
         {
             var words = await this.embeddedResourceLoaderService.LoadHashSetAsync(
                 GetResourceKey(dictType),

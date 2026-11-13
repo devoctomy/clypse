@@ -190,6 +190,85 @@ public class PasswordGeneratorSettingsViewModelTests
         Assert.Equal(["Default"], sut.Templates.Select(t => t.Name));
     }
 
+    [Fact]
+    public void GivenTheNewTemplateFields_WhenSetToNull_ThenTheyAreEmpty()
+    {
+        // Arrange
+        var sut = CreateSut();
+        sut.NewTemplateName = "Mine";
+        sut.NewTemplate = "{dict(noun):random}";
+
+        // Act
+        sut.NewTemplateName = null!;
+        sut.NewTemplate = null!;
+
+        // Assert
+        Assert.Empty(sut.NewTemplateName);
+        Assert.Empty(sut.NewTemplate);
+    }
+
+    [Fact]
+    public void GivenBuiltInTemplatesWithoutANameOrATemplate_WhenListed_ThenTheyAreLeftOut()
+    {
+        // Arrange
+        settings.MemorablePasswordTemplates.Add(new MemorablePasswordTemplate { Name = " ", Template = "{dict(verb):random}" });
+        settings.MemorablePasswordTemplates.Add(new MemorablePasswordTemplate { Name = "Empty", Template = " " });
+        var sut = CreateSut();
+
+        // Act
+        var templates = sut.BuiltInTemplates;
+
+        // Assert
+        Assert.Equal(["Default"], templates.Select(t => t.Name));
+    }
+
+    [Fact]
+    public async Task GivenNoTemplates_WhenInitialized_ThenNoneIsChosen()
+    {
+        // Arrange
+        settings.MemorablePasswordTemplates.Clear();
+        var sut = CreateSut();
+
+        // Act
+        await sut.OnInitializedAsync();
+
+        // Assert
+        Assert.Null(sut.Template);
+    }
+
+    [Fact]
+    public async Task GivenAKindOfCharacterTurnedOff_WhenTurnedOnAgain_ThenItIsUsed()
+    {
+        // Arrange
+        var sut = CreateSut();
+        await sut.OnInitializedAsync();
+        sut.SetGroup(CharacterGroup.Special, false);
+        Assert.False(sut.Uses(CharacterGroup.Special));
+
+        // Act
+        sut.SetGroup(CharacterGroup.Special, true);
+
+        // Assert
+        Assert.True(sut.Uses(CharacterGroup.Special));
+    }
+
+    [Fact]
+    public async Task GivenATemplateThatMakesNoPassword_WhenTried_ThenItSaysSo()
+    {
+        // Arrange
+        mockGenerator.Setup(x => x.GenerateMemorablePasswordAsync("{dict(none)}", false, It.IsAny<CancellationToken>())).ReturnsAsync(string.Empty);
+        var sut = CreateSut();
+        await sut.OnInitializedAsync();
+        sut.NewTemplate = "{dict(none)}";
+
+        // Act
+        await sut.TryTemplateCommand.ExecuteAsync(null);
+
+        // Assert
+        Assert.Null(sut.Example);
+        Assert.Equal("That template could not make a password.", sut.Error);
+    }
+
     private PasswordGeneratorPreferencesService Preferences() => new(mockStorage.Object, settings);
 
     private PasswordGeneratorSettingsViewModel CreateSut() => new(Preferences(), mockGenerator.Object, settings, mockToasts.Object, text.For<ClypseText>());

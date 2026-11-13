@@ -409,6 +409,76 @@ public class SecretEditorViewModelTests
         Assert.Same(PasswordStrength.None, sut.GetStrength("Password"));
     }
 
+    [Fact]
+    public async Task GivenAField_WhenSetToNull_ThenItIsEmpty()
+    {
+        // Arrange
+        var sut = CreateSut();
+        await sut.LoadAsync(null);
+        await sut.SetValueAsync("Name", "Gmail");
+
+        // Act
+        await sut.SetValueAsync("Name", null);
+
+        // Assert
+        Assert.Equal(string.Empty, sut.GetValue("Name"));
+    }
+
+    [Fact]
+    public async Task GivenANameThatIsNoField_WhenCopied_ThenItIsNotCopiedAsASecret()
+    {
+        // Arrange
+        var sut = CreateSut();
+        await sut.LoadAsync(null);
+
+        // Act
+        await sut.CopyAsync("NotAField");
+
+        // Assert
+        mockCopy.Verify(x => x.CopyAsync("NotAField", It.IsAny<string>(), false), Times.Once);
+    }
+
+    [Fact]
+    public async Task GivenTheGeneratorIsNotOpen_WhenClosedWithAPassword_ThenNoFieldChanges()
+    {
+        // Arrange
+        var sut = CreateSut();
+        await sut.LoadAsync(null);
+        await sut.SetValueAsync("Password", "mine");
+
+        // Act
+        await sut.CloseGeneratorAsync("generated");
+
+        // Assert
+        Assert.Equal("mine", sut.GetValue("Password"));
+        Assert.Null(sut.GeneratingFor);
+    }
+
+    [Fact]
+    public async Task GivenASaveRunning_WhenSavedOrDeletedAgain_ThenNeitherHappens()
+    {
+        // Arrange
+        var secret = new Secret { Name = "Gmail" };
+        secrets.Add(secret);
+        var saving = new TaskCompletionSource<Secret>();
+        mockSession.Setup(x => x.SaveAsync(It.IsAny<Secret>(), It.IsAny<CancellationToken>())).Returns(saving.Task);
+        var sut = CreateSut();
+        await sut.LoadAsync(secret.Id);
+        var first = sut.SaveAsync();
+
+        // Act
+        var second = await sut.SaveAsync();
+        var deleted = await sut.DeleteAsync();
+        saving.SetResult(secret);
+
+        // Assert
+        Assert.False(second);
+        Assert.False(deleted);
+        Assert.True(await first);
+        mockSession.Verify(x => x.SaveAsync(It.IsAny<Secret>(), It.IsAny<CancellationToken>()), Times.Once);
+        mockSession.Verify(x => x.DeleteAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
     private static Task WaitForAllPropertiesChanged(SecretEditorViewModel sut)
     {
         var changed = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);

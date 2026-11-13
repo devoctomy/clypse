@@ -390,6 +390,50 @@ public class VaultServiceTests
         mockProfiles.Verify(x => x.DisableDeviceUnlockAsync(new E2eKeyScope(id)), Times.Once);
     }
 
+    [Fact]
+    public async Task GivenThisDevicesKeysCannotBeRead_WhenListed_ThenBiometricsAreNotOffered()
+    {
+        // Arrange
+        var id = AddVault();
+        mockProfiles.Setup(x => x.HasDeviceUnlockAsync(new E2eKeyScope(id))).ThrowsAsync(new InvalidOperationException("unreadable"));
+
+        // Act
+        var vault = await CreateSut().FindAsync(id);
+
+        // Assert
+        Assert.False(vault!.CanUnlockWithBiometrics);
+    }
+
+    [Fact]
+    public async Task GivenAnUnlockedVault_WhenFoundAndCancelled_ThenTheCancellationIsThrown()
+    {
+        // Arrange
+        var id = AddVault();
+        unlocked.Add(new E2eKeyScope(id));
+        var store = new Mock<ISyncFileStore>();
+        store.Setup(x => x.ReadAsync(It.IsAny<string>(), It.IsAny<CancellationToken>())).ThrowsAsync(new OperationCanceledException());
+        mockRegistry.Setup(x => x.GetFileStore(id)).Returns(store.Object);
+
+        // Act & Assert
+        await Assert.ThrowsAsync<OperationCanceledException>(() => CreateSut().FindAsync(id));
+    }
+
+    [Fact]
+    public async Task GivenNoVault_WhenUnlockedWithBiometrics_ThenThrowsVaultNotFound()
+    {
+        // Act & Assert
+        var exception = await Assert.ThrowsAsync<ClypseException>(() => CreateSut().UnlockWithBiometricsAsync("missing"));
+        Assert.Equal(ClypseErrorCodes.VaultNotFound, exception.Code);
+    }
+
+    [Fact]
+    public async Task GivenNoVault_WhenBiometricsForgotten_ThenThrowsVaultNotFound()
+    {
+        // Act & Assert
+        var exception = await Assert.ThrowsAsync<ClypseException>(() => CreateSut().ForgetBiometricsAsync("missing"));
+        Assert.Equal(ClypseErrorCodes.VaultNotFound, exception.Code);
+    }
+
     private VaultService CreateSut() => new(mockProfiles.Object, mockManager.Object, mockRegistry.Object, mockPasskeys.Object);
 
     private string AddVault() => AddProfile(Guid.NewGuid().ToString("D"), isCreatedByUser: true);

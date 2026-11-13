@@ -413,4 +413,42 @@ public class VaultsViewModelTests
         text.Errors,
         text.For<ClypseText>(),
         mockScheduler.Object);
+
+    [Fact]
+    public async Task GivenALockedVaultWithBiometrics_AndSyncFails_WhenOpened_ThenItIsStillUnlockedWithThem_ThenItsPageOpens()
+    {
+        // Arrange
+        vaults = [new Vault { Id = "v1", Name = "Personal", CanUnlockWithBiometrics = true }];
+        mockScheduler.Setup(x => x.SyncProfileAsync("v1")).ThrowsAsync(new InvalidOperationException("offline"));
+        mockVaults.Setup(x => x.UnlockWithBiometricsAsync("v1")).Callback(() => calls.Add("unlock")).ReturnsAsync(true);
+        mockNavigation.Setup(x => x.NavigateTo(It.IsAny<string>())).Callback<string>(url => calls.Add("open " + url));
+        var sut = CreateSut();
+        await sut.OnInitializedAsync();
+
+        // Act
+        await sut.OpenCommand.ExecuteAsync("v1");
+
+        // Assert
+        Assert.Equal(["unlock", "open vaults/v1"], calls);
+    }
+
+    [Fact]
+    public void GivenTheDialog_WhenItsFieldsAreSetToNull_ThenTheyAreEmpty()
+    {
+        // Arrange
+        var sut = CreateSut();
+        Fill(sut);
+
+        // Act
+        sut.Name = null!;
+        sut.Description = null!;
+        sut.Passphrase = null!;
+        sut.ConfirmPassphrase = null!;
+
+        // Assert
+        Assert.Empty(sut.Name);
+        Assert.Empty(sut.Description);
+        Assert.Empty(sut.Passphrase);
+        Assert.Empty(sut.ConfirmPassphrase);
+    }
 }

@@ -357,6 +357,75 @@ public class VaultSessionTests
         Assert.False(changed);
     }
 
+    [Fact]
+    public async Task GivenALockedVault_WhenUnlockedAndListingItsSecretsFails_ThenNothingIsHeldAndNothingThrows()
+    {
+        // Arrange
+        var vault = NewVault(isUnlocked: false);
+        var listed = false;
+        var mockService = new Mock<ISecretService>();
+        mockService.Setup(x => x.ListIdsAsync(It.IsAny<CancellationToken>()))
+            .Callback(() => listed = true)
+            .ThrowsAsync(new InvalidOperationException("store gone"));
+        mockFactory.Setup(x => x.Create(vault)).Returns(mockService.Object);
+        using var sut = CreateSut();
+        await sut.OpenAsync(vault);
+
+        // Act
+        unlocked.Add(new E2eKeyScope(vault.Id));
+        mockManager.Raise(x => x.LockStateChanged += null, mockManager.Object, new E2eKeyScope(vault.Id));
+        await WaitForAsync(() => listed && !sut.IsLoading);
+
+        // Assert
+        Assert.True(listed);
+        Assert.False(sut.IsLoading);
+        Assert.Empty(sut.Secrets);
+    }
+
+    [Fact]
+    public async Task GivenAnOpenVault_WhenSyncChangesASecretThatCannotBeRead_ThenNothingChangesAndNothingThrows()
+    {
+        // Arrange
+        var vault = NewVault(isUnlocked: true);
+        var read = false;
+        var mockService = new Mock<ISecretService>();
+        mockService.Setup(x => x.ListIdsAsync(It.IsAny<CancellationToken>())).ReturnsAsync([]);
+        mockService.Setup(x => x.GetSecretId(It.IsAny<string>())).Returns("abc");
+        mockService.Setup(x => x.GetAsync("abc", It.IsAny<CancellationToken>()))
+            .Callback(() => read = true)
+            .ThrowsAsync(new InvalidOperationException("locked meanwhile"));
+        mockFactory.Setup(x => x.Create(vault)).Returns(mockService.Object);
+        using var sut = CreateSut();
+        await sut.OpenAsync(vault);
+        var changes = 0;
+        sut.Changed += (_, _) => changes++;
+
+        // Act
+        mockSync.Raise(x => x.FilesChanged += null, mockSync.Object, new SyncFilesChangedEventArgs(vault.Id, [$"{vault.Root}secrets/abc.json"]));
+        await WaitForAsync(() => read);
+
+        // Assert
+        Assert.True(read);
+        Assert.Equal(0, changes);
+        Assert.Empty(sut.Secrets);
+    }
+
+    [Fact]
+    public void GivenNoOpenVault_WhenAVaultIsLockedOrUnlocked_ThenNothingChanges()
+    {
+        // Arrange
+        using var sut = CreateSut();
+        var changes = 0;
+        sut.Changed += (_, _) => changes++;
+
+        // Act
+        mockManager.Raise(x => x.LockStateChanged += null, mockManager.Object, new E2eKeyScope(Guid.NewGuid().ToString("D")));
+
+        // Assert
+        Assert.Equal(0, changes);
+        Assert.Null(sut.Vault);
+    }
+
     private static async Task WaitForAsync(Func<bool> condition)
     {
         var deadline = DateTime.UtcNow.AddSeconds(5);

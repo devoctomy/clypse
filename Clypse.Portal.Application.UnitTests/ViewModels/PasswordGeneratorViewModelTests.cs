@@ -176,6 +176,21 @@ public class PasswordGeneratorViewModelTests
     }
 
     [Fact]
+    public async Task GivenNoTemplates_WhenOneIsChosen_ThenNoneIsUsed()
+    {
+        // Arrange
+        settings.MemorablePasswordTemplates.Clear();
+        var sut = CreateSut();
+        await sut.OnInitializedAsync();
+
+        // Act
+        await sut.SetTemplateAsync("Words");
+
+        // Assert
+        Assert.Null(sut.Template);
+    }
+
+    [Fact]
     public async Task GivenNoTemplates_WhenMemorableIsChosen_ThenRandomPasswordsAreStillMade()
     {
         // Arrange
