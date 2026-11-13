@@ -119,7 +119,6 @@ public class DictionaryTokenProcessorTests
             "adjective",
             "noun",
         };
-        var expectedWord = words[1];
 
         mockEmbeddedResourceLoaderService.Setup(
             x => x.LoadHashSetAsync(

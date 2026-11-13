@@ -35,7 +35,7 @@ public class PasswordGeneratorViewModelTests
     public PasswordGeneratorViewModelTests()
     {
         mockGenerator.Setup(x => x.GenerateRandomPassword(It.IsAny<CharacterGroup>(), It.IsAny<int>(), It.IsAny<bool>()))
-            .Returns((CharacterGroup g, int length, bool _) => new string('x', length));
+            .Returns((CharacterGroup _, int length, bool _) => new string('x', length));
         mockGenerator.Setup(x => x.GenerateMemorablePasswordAsync(It.IsAny<string>(), It.IsAny<bool>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((string template, bool shuffle, CancellationToken _) => $"{template}|{shuffle}");
         mockStrength.Setup(x => x.EstimateAsync(It.IsAny<string?>(), It.IsAny<CancellationToken>()))

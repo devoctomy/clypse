@@ -73,7 +73,9 @@ jobs:
       TEST_USER_EMAIL: ${{ vars.TEST_USER_EMAIL }}
       TEST_USER_PASSWORD: ${{ secrets.TEST_USER_PASSWORD }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Check the inputs
         shell: pwsh
@@ -88,7 +90,7 @@ jobs:
         shell: pwsh
         run: ./eng/check-blazwiz-version.ps1
 
-      - uses: actions/setup-dotnet@v4
+      - uses: actions/setup-dotnet@0f4a354dd5547a28c70b7853dbd95d5b67886e73 # v6.1.0
         with:
           global-json-file: global.json
 
@@ -112,7 +114,7 @@ jobs:
           Write-Host "environment: $($claims.environment)"
           Write-Host "ref:         $($claims.ref)"
 
-      - uses: aws-actions/configure-aws-credentials@v4
+      - uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
         with:
           role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
           aws-region: ${{ vars.AWS_REGION }}

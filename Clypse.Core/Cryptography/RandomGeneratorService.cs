@@ -9,7 +9,7 @@ namespace Clypse.Core.Cryptography;
 public class RandomGeneratorService : IRandomGeneratorService, IDisposable
 {
     private readonly RandomNumberGenerator randomNumberGenerator;
-    private bool disposed = false;
+    private bool disposed;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="RandomGeneratorService"/> class.
