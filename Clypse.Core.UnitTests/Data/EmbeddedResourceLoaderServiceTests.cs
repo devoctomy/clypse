@@ -143,4 +143,48 @@ public class EmbeddedResourceLoaderServiceTests
             CancellationToken.None));
         Assert.Contains(key, exception.Message);
     }
+
+    [Fact]
+    public async Task GivenACompressedListWithALineLongerThanTheReadBuffer_WhenLoadCompressedHashedTextSetAsync_ThenTheLineIsCutAtTheBuffer_AndTheRestIsReadOn()
+    {
+        // Arrange: the first line is ten bytes longer than one read, and is followed by "banana".
+        var key = "Clypse.Core.UnitTests.Data.Lists.longline.txt.gz";
+        var sut = new EmbeddedResourceLoaderService();
+
+        // Act
+        var set = await sut.LoadCompressedHashedTextSetAsync(
+            key,
+            typeof(EmbeddedResourceLoaderServiceTests).Assembly,
+            CancellationToken.None);
+
+        // Assert
+        Assert.Equal(3, set.Count);
+        Assert.True(set.Contains(new string('x', EmbeddedResourceLoaderService.ReadChunkSize)));
+        Assert.True(set.Contains(new string('x', 10)));
+        Assert.True(set.Contains("banana"));
+    }
+
+    [Fact]
+    public async Task GivenNoAssembly_AndAKeyNotInClypseCore_WhenLoadHashSetAsync_ThenExceptionThrown()
+    {
+        // Arrange: with no assembly given, the resource is looked for in Clypse.Core.
+        var key = "Clypse.Core.UnitTests.Data.Lists.fruit.txt";
+        var sut = new EmbeddedResourceLoaderService();
+
+        // Act & Assert
+        var exception = await Assert.ThrowsAsync<InvalidOperationException>(() => sut.LoadHashSetAsync(key, null, CancellationToken.None));
+        Assert.Contains(key, exception.Message);
+    }
+
+    [Fact]
+    public async Task GivenNoAssembly_AndAKeyNotInClypseCore_WhenLoadCompressedHashedTextSetAsync_ThenExceptionThrown()
+    {
+        // Arrange: with no assembly given, the resource is looked for in Clypse.Core.
+        var key = "Clypse.Core.UnitTests.Data.Lists.fruit.txt.gz";
+        var sut = new EmbeddedResourceLoaderService();
+
+        // Act & Assert
+        var exception = await Assert.ThrowsAsync<InvalidOperationException>(() => sut.LoadCompressedHashedTextSetAsync(key, null, CancellationToken.None));
+        Assert.Contains(key, exception.Message);
+    }
 }

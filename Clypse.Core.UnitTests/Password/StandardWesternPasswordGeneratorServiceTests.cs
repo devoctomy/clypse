@@ -184,4 +184,29 @@ public class StandardWesternPasswordGeneratorServiceTests : IDisposable
     {
         this.sut.Dispose();
     }
+
+    [Fact]
+    public void GivenMoreGroupsThanTheLength_AndOneFromEachGroup_WhenGenerateRandomPassword_ThenArgumentExceptionThrown()
+    {
+        // Act & Assert
+        var exception = Assert.Throws<ArgumentException>(() => this.sut.GenerateRandomPassword(
+            Enums.CharacterGroup.Lowercase | Enums.CharacterGroup.Uppercase | Enums.CharacterGroup.Digits,
+            2,
+            true));
+        Assert.Equal("length", exception.ParamName);
+    }
+
+    [Fact]
+    public void GivenARandomGeneratorThatIsNotDisposable_WhenDisposed_ThenNothingThrows()
+    {
+        // Arrange
+        var notDisposable = new Mock<IRandomGeneratorService>();
+        var generator = new StandardWesternPasswordGeneratorService(notDisposable.Object, this.tokenProcessors);
+
+        // Act
+        var exception = Record.Exception(generator.Dispose);
+
+        // Assert
+        Assert.Null(exception);
+    }
 }

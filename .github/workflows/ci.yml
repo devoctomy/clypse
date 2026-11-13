@@ -68,6 +68,28 @@ jobs:
       - name: UI tests
         run: dotnet test Clypse.slnx --no-build --filter "FullyQualifiedName~UITests" --logger trx --results-directory TestResults/ui
 
+      # The UI tests build and run the portal themselves, so a failure there is only explained in portal.log. Printed
+      # here so it shows in the run's log, and uploaded on its own.
+      - name: Show the portal log
+        if: ${{ !success() }}
+        shell: pwsh
+        run: |
+          $logs = Get-ChildItem -Path . -Recurse -Filter portal.log -File -ErrorAction SilentlyContinue
+          if (-not $logs) { Write-Host "No portal.log found."; exit 0 }
+          foreach ($log in $logs) {
+            Write-Host "::group::$($log.FullName)"
+            Get-Content $log.FullName
+            Write-Host "::endgroup::"
+          }
+
+      - name: Upload the portal log
+        if: ${{ !success() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: portal-log
+          path: '**/portal.log'
+          if-no-files-found: warn
+
       - name: Upload test results
         if: ${{ !success() }}
         uses: actions/upload-artifact@v4

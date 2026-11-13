@@ -132,7 +132,7 @@ public partial class StandardWesternPasswordGeneratorService : IPasswordGenerato
         {
             if (disposing)
             {
-                ((IDisposable)this.randomGeneratorService)?.Dispose();
+                (this.randomGeneratorService as IDisposable)?.Dispose();
             }
 
             this.disposed = true;

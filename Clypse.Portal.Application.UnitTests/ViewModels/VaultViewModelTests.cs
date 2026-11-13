@@ -426,5 +426,70 @@ public class VaultViewModelTests
         Assert.Contains(nameof(VaultViewModel.Title), changed);
     }
 
+    [Theory]
+    [InlineData("UserName", "bi-person")]
+    [InlineData("AccessKeyId", "bi-person-badge")]
+    [InlineData("Password", "bi-key")]
+    [InlineData("SecretAccessKey", "bi-key")]
+    [InlineData("Comments", "bi-copy")]
+    public void GivenAField_WhenGettingItsCopyIcon_ThenItsOwn(string field, string expected)
+    {
+        // Act & Assert
+        Assert.Equal(expected, VaultViewModel.GetCopyIcon(field));
+    }
+
+    [Fact]
+    public void GivenAWebsiteThatIsNoAddress_WhenSummarised_ThenItIsShownAsItIs()
+    {
+        // Act & Assert
+        Assert.Equal("not a site", VaultViewModel.GetSummary(new WebSecret { Name = "a", WebsiteUrl = "not a site" }));
+    }
+
+    [Fact]
+    public void GivenNoVaultLoaded_WhenShown_ThenTheTitlesSayWhatThePageIs_AndItIsNotUnlocked()
+    {
+        // Arrange
+        var t = text.For<ClypseText>();
+
+        // Act
+        var sut = CreateSut();
+
+        // Assert
+        Assert.Equal(t["Vault.Title"], sut.Title);
+        Assert.Equal(t["Vault.Subtitle"], sut.Subtitle);
+        Assert.False(sut.IsUnlocked);
+    }
+
+    [Fact]
+    public async Task GivenASearch_WhenSetToNull_ThenItIsEmpty()
+    {
+        // Arrange
+        var sut = CreateSut();
+        await sut.LoadAsync("v1");
+        sut.Search = "gmail";
+
+        // Act
+        sut.Search = null!;
+
+        // Assert
+        Assert.Empty(sut.Search);
+    }
+
+    [Fact]
+    public async Task GivenASecret_WhenAFieldItDoesNotHaveIsCopied_ThenItIsNotCopiedAsASecret()
+    {
+        // Arrange
+        var web = new WebSecret { Name = "Gmail" };
+        secrets = [web];
+        var sut = CreateSut();
+        await sut.LoadAsync("v1");
+
+        // Act
+        await sut.CopyAsync(web.Id, "NotAField");
+
+        // Assert
+        mockCopy.Verify(x => x.CopyAsync("NotAField", null, false), Times.Once);
+    }
+
     private VaultViewModel CreateSut() => new(mockVaults.Object, mockSession.Object, text.Errors, text.Plurals, text.For<ClypseText>(), mockCopy.Object, mockNavigation.Object);
 }

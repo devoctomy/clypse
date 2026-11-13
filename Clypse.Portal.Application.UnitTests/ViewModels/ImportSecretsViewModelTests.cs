@@ -93,6 +93,20 @@ public class ImportSecretsViewModelTests
     }
 
     [Fact]
+    public void GivenAnEmptyFile_WhenLoaded_ThenItSaysItCouldNotBeRead()
+    {
+        // Arrange
+        var sut = CreateSut();
+
+        // Act
+        sut.LoadFile("empty.csv", string.Empty);
+
+        // Assert
+        Assert.Equal("That file could not be read as KeePass CSV (1.x).", sut.Error);
+        Assert.False(sut.CanImport);
+    }
+
+    [Fact]
     public void GivenAFileWithARowMissingItsName_WhenLoaded_ThenItSaysWhatIsMissing_AndNothingCanBeImported()
     {
         // Arrange

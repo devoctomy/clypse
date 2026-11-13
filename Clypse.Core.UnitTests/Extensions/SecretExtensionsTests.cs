@@ -116,4 +116,37 @@ public class SecretExtensionsTests
         // Assert
         Assert.IsType(expectedSecretType, result);
     }
+
+    [Fact]
+    public void GivenSecretOfAnUnknownType_WhenCastSecretToCorrectType_ThenNotSupportedExceptionThrown()
+    {
+        // Arrange
+        var sut = new Secret
+        {
+            SecretType = (SecretType)99,
+        };
+
+        // Act & Assert
+        Assert.Throws<NotSupportedException>(() => sut.CastSecretToCorrectType());
+    }
+
+    [Fact]
+    public void GivenAFieldWithNoDisplayOrder_WhenGetOrderedSecretFields_ThenItComesLast()
+    {
+        // Arrange
+        var sut = new SecretWithUnorderedField();
+
+        // Act
+        var result = sut.GetOrderedSecretFields();
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Equal(nameof(SecretWithUnorderedField.Unordered), result.Keys.Last().Name);
+    }
+
+    private sealed class SecretWithUnorderedField : Secret
+    {
+        [SecretField]
+        public string? Unordered { get; set; }
+    }
 }

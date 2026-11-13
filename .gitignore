@@ -442,3 +442,6 @@ Clypse.Portal/wwwroot/appsettings.Production.json
 
 #Ignore vscode AI rules
 .github\instructions\codacy.instructions.md
+
+# Local scratch output (coverage reports and the like)
+temp/

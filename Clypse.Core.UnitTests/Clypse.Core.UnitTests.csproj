@@ -5,6 +5,7 @@
   <ItemGroup>
     <EmbeddedResource Include="Data\Lists\fruit.txt" />
     <EmbeddedResource Include="Data\Lists\fruit.txt.gz" />
+    <EmbeddedResource Include="Data\Lists\longline.txt.gz" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="coverlet.collector">

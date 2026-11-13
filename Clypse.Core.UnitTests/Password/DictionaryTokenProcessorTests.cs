@@ -165,4 +165,49 @@ public class DictionaryTokenProcessorTests
         Assert.NotEmpty(result);
         Assert.Contains(words, x => x.Equals(result, StringComparison.InvariantCultureIgnoreCase));
     }
+
+    [Theory]
+    [InlineData("dict(none)")]
+    [InlineData("dict(7)")]
+    public async Task GivenToken_AndNoDictionaryOrANumber_WhenProcess_ThenEmptyStringReturned(string token)
+    {
+        // Arrange
+        var mockEmbeddedResourceLoaderService = new Mock<IEmbeddedResourceLoaderService>();
+        var mockPasswordGeneratorService = new Mock<IPasswordGeneratorService>();
+        var sut = new DictionaryTokenProcessor(mockEmbeddedResourceLoaderService.Object);
+
+        // Act
+        var result = await sut.ProcessAsync(
+            mockPasswordGeneratorService.Object,
+            token,
+            CancellationToken.None);
+
+        // Assert
+        Assert.Empty(result);
+        mockEmbeddedResourceLoaderService.VerifyNoOtherCalls();
+    }
+
+    [Fact]
+    public async Task GivenToken_AndAnEmptyDictionary_WhenProcess_ThenEmptyStringReturned()
+    {
+        // Arrange
+        var mockEmbeddedResourceLoaderService = new Mock<IEmbeddedResourceLoaderService>();
+        var mockPasswordGeneratorService = new Mock<IPasswordGeneratorService>();
+        var sut = new DictionaryTokenProcessor(mockEmbeddedResourceLoaderService.Object);
+        mockEmbeddedResourceLoaderService.Setup(
+            x => x.LoadHashSetAsync(
+                It.Is<string>(y => y == ResourceKeys.NounResourceKey),
+                It.IsAny<Assembly?>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync([]);
+
+        // Act
+        var result = await sut.ProcessAsync(
+            mockPasswordGeneratorService.Object,
+            "dict(noun)",
+            CancellationToken.None);
+
+        // Assert
+        Assert.Empty(result);
+    }
 }

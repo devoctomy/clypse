@@ -132,4 +132,15 @@ public class CsvSecretsImporterServiceTests
             }
         }
     }
+
+    [Fact]
+    public void GivenImportedSecrets_AndNoFormat_WhenMapImportedSecretsIsCalled_ThenCsvImportDataFormatNotSpecifiedExceptionIsThrown()
+    {
+        // Arrange
+        var importer = new CsvSecretsImporterService();
+        importer.ReadData("Account,Password\nGmail,secret");
+
+        // Act & Assert
+        Assert.Throws<CsvImportDataFormatNotSpecifiedException>(() => importer.MapImportedSecrets(Enums.CsvImportDataFormat.None));
+    }
 }

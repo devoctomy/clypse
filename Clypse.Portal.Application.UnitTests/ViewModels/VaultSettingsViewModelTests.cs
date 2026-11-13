@@ -1,4 +1,4 @@
-using Clypse.Portal.Application.Exceptions;
+﻿using Clypse.Portal.Application.Exceptions;
 using Clypse.Portal.Application.Services.Interfaces;
 using Clypse.Portal.Application.Text;
 using Clypse.Portal.Application.ViewModels;
@@ -262,6 +262,58 @@ public class VaultSettingsViewModelTests
         Assert.Null(sut.Error);
         mockToasts.Verify(x => x.Show("Personal deleted, but some of its files could not be removed: That vault no longer exists.", ToastTone.Warning, null), Times.Once);
         mockNavigation.Verify(x => x.NavigateTo("vaults"), Times.Once);
+    }
+
+    [Fact]
+    public void GivenTheFields_WhenSetToNull_ThenTheyAreEmpty()
+    {
+        // Arrange
+        var sut = CreateSut();
+        sut.Load(vault);
+
+        // Act
+        sut.Name = null!;
+        sut.Description = null!;
+        sut.DeleteConfirmation = null!;
+
+        // Assert
+        Assert.Empty(sut.Name);
+        Assert.Empty(sut.Description);
+        Assert.Empty(sut.DeleteConfirmation);
+    }
+
+    [Fact]
+    public void GivenAVaultWithNoDescriptionOrProfileHere_WhenLoaded_ThenTheDescriptionIsEmptyAndItNeverLocks()
+    {
+        // Arrange
+        var other = new Vault { Id = Guid.NewGuid().ToString("D"), Name = "Elsewhere" };
+        var sut = CreateSut();
+
+        // Act
+        sut.Load(other);
+
+        // Assert
+        Assert.Empty(sut.Description);
+        Assert.Null(sut.AutoLock);
+    }
+
+    [Fact]
+    public async Task GivenTheDescriptionCleared_WhenSaved_ThenTheVaultHasNoDescription()
+    {
+        // Arrange
+        mockVaults.Setup(x => x.UpdateAsync(vault.Id, "Personal", "  ", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Vault { Id = vault.Id, Name = "Personal" });
+        var sut = CreateSut();
+        sut.Load(vault);
+        sut.Description = "  ";
+
+        // Act
+        var saved = await sut.SaveAsync();
+
+        // Assert
+        Assert.True(saved);
+        Assert.Null(vault.Description);
+        mockVaults.Verify(x => x.UpdateAsync(vault.Id, "Personal", "  ", It.IsAny<CancellationToken>()), Times.Once);
     }
 
     private VaultSettingsViewModel CreateSut() => new(

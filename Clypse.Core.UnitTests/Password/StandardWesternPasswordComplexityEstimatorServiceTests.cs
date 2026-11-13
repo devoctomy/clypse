@@ -83,4 +83,18 @@ public class StandardWesternPasswordComplexityEstimatorServiceTests
             x => x.ContainsAsync(Moq.It.IsAny<string>(), Moq.It.IsAny<CancellationToken>()),
             Moq.Times.Never);
     }
+
+    [Fact]
+    public void GivenEmptyPassword_WhenEstimateEntropy_ThenZeroReturned()
+    {
+        // Arrange
+        var mockWeakKnownPasswordsService = new Moq.Mock<IWeakKnownPasswordsService>();
+        var sut = new StandardWesternPasswordComplexityEstimatorService(mockWeakKnownPasswordsService.Object);
+
+        // Act
+        var result = sut.EstimateEntropy(string.Empty);
+
+        // Assert
+        Assert.Equal(0, result);
+    }
 }
