@@ -195,4 +195,18 @@ public class StandardWesternPasswordGeneratorServiceTests : IDisposable
             true));
         Assert.Equal("length", exception.ParamName);
     }
+
+    [Fact]
+    public void GivenARandomGeneratorThatIsNotDisposable_WhenDisposed_ThenNothingThrows()
+    {
+        // Arrange
+        var notDisposable = new Mock<IRandomGeneratorService>();
+        var generator = new StandardWesternPasswordGeneratorService(notDisposable.Object, this.tokenProcessors);
+
+        // Act
+        var exception = Record.Exception(generator.Dispose);
+
+        // Assert
+        Assert.Null(exception);
+    }
 }
