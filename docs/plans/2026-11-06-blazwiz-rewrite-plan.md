@@ -269,6 +269,12 @@ The template's notebooks feature is the model to follow, almost one to one:
   app's wrapper scripts turns `Force = $true` into a stray "True", so the call fails (checked locally with stand-in
   scripts).
 
+- **Deploy tests** (D9): `Clypse.Portal.DeployTests`, Playwright UI tests of the deployed portal, signing in as a test
+  user kept only for them: sign in, a wrong password, sign out. Run by the Deploy tests workflow
+  (`deploy-tests.yml`), by hand or from Deploy and Upgrade ("Run the deploy tests afterwards"). Deploy and Upgrade
+  can create or update the test user (`TEST_USER_EMAIL`, `TEST_USER_PASSWORD`). `cloudformation/test-auth.ps1` and
+  the deploy policy's `cognito-idp:AdminInitiateAuth` are removed, as in blazwiz.
+
 **Not tested yet:** the workflows have not run. They need the OIDC setup, and clypse set to a released blazwiz.
 
 ### Changes made in blazwiz
@@ -432,6 +438,11 @@ clypse did. It needs the `wasm-tools` workload.
     cannot pick IndexedDB, OPFS or a folder until they create their first vault. Not fixed. It needs a framework
     decision: a device-wide default storage for profiles created later. The storage UI tests now create a protected
     profile first.
+
+- **D9. Deploy tests test clypse's own UI only.** After a deploy, Playwright tests sign in to the deployed portal as a
+  test user kept only for them. What the blazwiz base stack does (SDK sign-in, per-user S3 access, keys, events) is
+  tested by blazwiz's own deploy tests and assumed to work here. No hand-run check scripts: `test-auth.ps1` is
+  removed.
 
 ## What is brought over
 

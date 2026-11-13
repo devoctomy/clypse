@@ -1,0 +1,110 @@
+# Runs the deploy tests (Clypse.Portal.DeployTests) against an environment already deployed with the Deploy workflow:
+# UI tests of the deployed portal, signing in as the test user with the real user pool. Run by hand (Actions > Deploy
+# tests > Run workflow), or by Deploy and Upgrade when "Run the deploy tests afterwards" is ticked.
+#
+# The deploy role is used only to read the portal's address from the stack. The tests themselves run with no AWS
+# credentials: they use the portal in a browser, as a user does.
+#
+# Uses the GitHub environment's AWS_DEPLOY_ROLE_ARN and AWS_REGION, and the test user: variable TEST_USER_EMAIL and
+# secret TEST_USER_PASSWORD (created with Deploy or Upgrade's "Create or update the test user"). The test user is an
+# account kept only for these tests. See cloudformation/README.md.
+name: Deploy tests
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment name, e.g. test (the stacks clypse-<environment>).'
+        required: true
+        default: test
+  workflow_call:
+    inputs:
+      environment:
+        type: string
+        required: true
+
+permissions:
+  contents: read
+
+# Not aws-<environment>: Deploy and Upgrade hold that group while they call this workflow.
+concurrency:
+  group: aws-tests-${{ inputs.environment }}
+  cancel-in-progress: false
+
+jobs:
+  deploy-tests:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    environment: ${{ inputs.environment }}
+    permissions:
+      contents: read
+      # An OIDC token from GitHub, exchanged for short-lived AWS credentials, used only to read the stack's outputs.
+      id-token: write
+    env:
+      DOTNET_NOLOGO: true
+      DOTNET_CLI_TELEMETRY_OPTOUT: true
+      # Through the environment, never into the script: an input can hold quotes and $( ).
+      ENVIRONMENT_NAME: ${{ inputs.environment }}
+      AWS_DEPLOY_ROLE_ARN: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+      AWS_DEPLOY_REGION: ${{ vars.AWS_REGION }}
+      TEST_USER_EMAIL: ${{ vars.TEST_USER_EMAIL }}
+      TEST_USER_PASSWORD: ${{ secrets.TEST_USER_PASSWORD }}
+    steps:
+      - name: Check the inputs
+        shell: pwsh
+        run: |
+          if ($env:ENVIRONMENT_NAME -notmatch '^[a-z0-9]+$') { throw "The environment name must be lowercase letters and numbers: '$env:ENVIRONMENT_NAME'." }
+          if (-not $env:AWS_DEPLOY_ROLE_ARN) { throw "The GitHub environment '$env:ENVIRONMENT_NAME' has no AWS_DEPLOY_ROLE_ARN variable." }
+          if (-not $env:AWS_DEPLOY_REGION) { throw "The GitHub environment '$env:ENVIRONMENT_NAME' has no AWS_REGION variable." }
+          if (-not $env:TEST_USER_EMAIL) { throw "The GitHub environment '$env:ENVIRONMENT_NAME' has no TEST_USER_EMAIL variable." }
+          if (-not $env:TEST_USER_PASSWORD) { throw "The GitHub environment '$env:ENVIRONMENT_NAME' has no TEST_USER_PASSWORD secret." }
+
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Find the deployed portal
+        id: stack
+        shell: pwsh
+        run: |
+          $stack = "clypse-$env:ENVIRONMENT_NAME"
+          $url = aws cloudformation describe-stacks --stack-name $stack --region $env:AWS_DEPLOY_REGION --query "Stacks[0].Outputs[?OutputKey=='PortalUrl'].OutputValue" --output text 2>$null
+          if ($LASTEXITCODE -ne 0 -or -not $url -or $url -eq 'None') { throw "Stack $stack does not exist, or has no portal. Deploy it first." }
+          Write-Host "Portal: $url"
+          "portal_url=$url" >> $env:GITHUB_OUTPUT
+
+      - name: Build the deploy tests
+        run: dotnet build Clypse.Portal.DeployTests
+
+      # --with-deps also installs the libraries Chromium needs on Linux.
+      - name: Install the Playwright browser
+        shell: pwsh
+        run: ./Clypse.Portal.DeployTests/bin/Debug/net10.0/playwright.ps1 install --with-deps chromium
+
+      # No AWS credentials from here on: the tests use only the portal, as the test user.
+      - name: Deploy tests
+        env:
+          AWS_ACCESS_KEY_ID: ''
+          AWS_SECRET_ACCESS_KEY: ''
+          AWS_SESSION_TOKEN: ''
+          CLYPSE_DEPLOYTEST_PORTAL_URL: ${{ steps.stack.outputs.portal_url }}
+          CLYPSE_DEPLOYTEST_EMAIL: ${{ vars.TEST_USER_EMAIL }}
+          CLYPSE_DEPLOYTEST_PASSWORD: ${{ secrets.TEST_USER_PASSWORD }}
+        run: dotnet test Clypse.Portal.DeployTests --no-build --logger "console;verbosity=normal" --logger trx --results-directory TestResults/deploy
+
+      - name: Upload test results
+        if: ${{ !success() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: deploy-test-results
+          path: |
+            TestResults/**
+            Clypse.Portal.DeployTests/bin/Debug/net10.0/TestResults/**
+          if-no-files-found: ignore

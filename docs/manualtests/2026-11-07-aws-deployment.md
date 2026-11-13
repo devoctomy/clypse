@@ -14,19 +14,7 @@ Note the result beside each test (pass or fail, and anything odd). Send me any f
 
 ---
 
-## 1. The end-to-end auth check passes
-
-**Steps:**
-1. Run `./cloudformation/test-auth.ps1 -Region <region> -Environment test -Email <test user email>` with the deploy
-   user's keys (as for the deploy).
-
-**Expected:**
-- Every check passes: the portal answers, Cognito sign-in works, identity pool credentials are issued, S3 access
-  works for the user's own prefix only, and the per-user keys secrets work.
-
-> Why? This completely superfluous. The other tests already prove deployment and sign in works, why the fuck would i want to run some script you made to do a manual test? You really need to understand what a manual test is.
-
-## 2. The deployed page is locked down
+## 1. The deployed page is locked down
 
 **Steps:**
 1. Open the portal URL in Chrome with DevTools open on the Network tab.
@@ -44,7 +32,7 @@ content-security-policy = where am I supposed to see this?
 
 Console : dotnet.native.3mg5thhzjn.js:5173 [Violation] 'setTimeout' handler took 233ms
 
-## 3. A vault's files in S3 are ciphertext under GUID names
+## 2. A vault's files in S3 are ciphertext under GUID names
 
 **Steps:**
 1. In the portal, create a vault named **Manual test vault**, with a passphrase you'll remember.
@@ -70,7 +58,7 @@ d†£!ØÙ€Å|¶”voÃÝµK&í¯)÷È„sIjÝjªR:‡§!’ú®ô
 
 don't trust this encoding, it's just for reference
 
-## 4. The keys in Secrets Manager are wrapped, and names aren't in them
+## 3. The keys in Secrets Manager are wrapped, and names aren't in them
 
 **Steps:**
 1. In the AWS console, open Secrets Manager (same region) and find the secrets named `<user sub>/keys/…`.
@@ -80,8 +68,8 @@ don't trust this encoding, it's just for reference
 - **The index:** profile ids, created dates and idle timeouts only. No vault names.
 - **The vault's keys secret:** Argon2id settings plus a wrapped master key and wrapped file keys (base64). No raw
   keys and no names.
-- **Other users' secrets:** you can't open or list them as the test user. That's what test 1 covers; just note
-  anything odd.
+- **Other users' secrets:** you can't open or list them as the test user. blazwiz's deploy tests cover this;
+  just note anything odd.
 
 looks fine
 
@@ -123,7 +111,7 @@ looks fine
 }
 ```
 
-## 5. A second device gets the vault, and changes sync both ways
+## 4. A second device gets the vault, and changes sync both ways
 
 **Steps:**
 1. In a private window (or another browser), sign in as the test user.
@@ -139,7 +127,7 @@ looks fine
 
 Yes it works on secondary device.
 
-## 6. With a passkey, a locked vault shows its name; without one, its id
+## 5. With a passkey, a locked vault shows its name; without one, its id
 
 **Steps:**
 1. Sign out. Sign in again with your password, tick **Remember me**, and set up the passkey when asked.
@@ -155,7 +143,7 @@ Yes it works on secondary device.
 
 yes vault name is id until unlocked
 
-## 7. Auto-lock and clipboard clearing on the deployed build
+## 6. Auto-lock and clipboard clearing on the deployed build
 
 **Steps:**
 1. Open **Manual test vault**, then Settings (on the vault page), set Auto-lock to **1 minute**, and save.
@@ -169,7 +157,7 @@ yes vault name is id until unlocked
 
 yes both features worked
 
-## 8. Phone: install, sign in, and the 1,000-secret timings
+## 7. Phone: install, sign in, and the 1,000-secret timings
 
 **Steps:**
 1. On the phone, open the portal URL. Add it to the home screen, then open it from there.
@@ -191,7 +179,7 @@ yes both features worked
 
 yes it worked fine, i am not providing timings, they were fine for my use
 
-## 9. Deleting a vault removes it everywhere
+## 8. Deleting a vault removes it everywhere
 
 **Steps:**
 1. On the desktop, open **Phone spike**, then Settings. Type its name to confirm, and delete it.

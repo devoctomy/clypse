@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    UI tests of a deployed environment, run by the Deploy tests workflow (.github/workflows/deploy-tests.yml) after a
+    deploy. The .DeployTests suffix keeps them out of CI's UnitTests and UITests filters. Without the
+    CLYPSE_DEPLOYTEST_* environment variables every test is skipped. See cloudformation/README.md.
+  -->
+  <PropertyGroup>
+    <IsTestProject>true</IsTestProject>
+    <RunSettingsFilePath>$(MSBuildProjectDirectory)\.runsettings</RunSettingsFilePath>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="Microsoft.Playwright.MSTest" />
+    <PackageReference Include="MSTest.TestAdapter" />
+    <PackageReference Include="MSTest.TestFramework" />
+  </ItemGroup>
+  <ItemGroup>
+    <Using Include="Microsoft.Playwright" />
+    <Using Include="Microsoft.VisualStudio.TestTools.UnitTesting" />
+  </ItemGroup>
+</Project>

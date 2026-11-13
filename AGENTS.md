@@ -63,6 +63,8 @@ Layout:
 - `Clypse.Portal.Application`: services and view models.
 - `Clypse.Portal.Models`: models.
 - `Clypse.Portal.Application.UnitTests` and `Clypse.Portal.UITests`: tests.
+- `Clypse.Portal.DeployTests`: UI tests of a deployed environment, signing in with the real user pool. Run by the
+  Deploy tests workflow; skipped without their `CLYPSE_DEPLOYTEST_*` variables (`cloudformation/README.md`).
 - `cloudformation/`: the app's AWS stack, on top of the blazwiz base stack.
 - `eng/`: build scripts, e.g. `use-local-blazwiz.ps1` (see "blazwiz packages").
 - `Resources/Art`: icons and logos. **Use only the PNGs.** The SVGs render with the wrong font (Montserrat Black is
@@ -131,6 +133,8 @@ dotnet test Clypse.slnx --no-build --filter "FullyQualifiedName~UITests"
     ```
 
   - Don't build while they run.
+- **Deploy tests** (`Clypse.Portal.DeployTests`) run against a deployed environment, from the Deploy tests workflow.
+  They test clypse's own UI only; what the blazwiz base stack does is tested by blazwiz. No CI filter runs them.
 - **Static web assets compression failures.** If a build fails in that step ("An item with the same key has already
   been added"), build again with `MSBUILDDISABLENODEREUSE=1`.
 

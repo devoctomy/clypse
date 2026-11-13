@@ -97,7 +97,7 @@ first.
 
 ## Phases (once the questions are answered)
 
-1. **blazwiz base stack:** versioning, the lifecycle rule and the IAM additions. `test-auth.ps1` checks the new
+1. **blazwiz base stack:** versioning, the lifecycle rule and the IAM additions. blazwiz's deploy tests check the new
    permissions. Deployed by the maintainer.
 2. **blazwiz Sync:** file history (list and read versions), with unit tests over a fake remote store and an
    integration scenario.

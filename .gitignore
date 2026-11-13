@@ -438,3 +438,7 @@ Clypse.Portal/wwwroot/appsettings.Production.json
 !.blazwiz/packages/
 .blazwiz/packages/*
 !.blazwiz/packages/.gitkeep
+
+
+#Ignore vscode AI rules
+.github\instructions\codacy.instructions.md
