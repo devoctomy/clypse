@@ -36,8 +36,13 @@ public class EmbeddedResourceLoaderService : IEmbeddedResourceLoaderService
 
         var load = this.hashedTextSets.GetOrAdd(
             resourceKey,
-            key => new Lazy<Task<HashedTextSet>>(() => ReadHashedLinesAsync(key, assembly)));
-        return load.Value.WaitAsync(cancellationToken);
+            key => new Lazy<Task<HashedTextSet>>(() => ReadHashedLinesAsync(key, assembly))).Value;
+
+        // The load is started even for a caller that has already given up, so the next caller finds it running. The
+        // token is checked here because WaitAsync returns a load that has already finished as it is, cancelled or not.
+        return cancellationToken.IsCancellationRequested
+            ? Task.FromCanceled<HashedTextSet>(cancellationToken)
+            : load.WaitAsync(cancellationToken);
     }
 
     /// <summary>
