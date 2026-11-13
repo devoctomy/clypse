@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RunSettings>
+  <RunConfiguration>
+    <!-- Abort the whole run if it takes longer than 10 minutes. -->
+    <TestSessionTimeout>600000</TestSessionTimeout>
+  </RunConfiguration>
+  <MSTest>
+    <!-- Fail any single test that takes longer than 3 minutes rather than hanging. The first page load downloads the
+         whole WebAssembly app from CloudFront. -->
+    <TestTimeout>180000</TestTimeout>
+  </MSTest>
+</RunSettings>

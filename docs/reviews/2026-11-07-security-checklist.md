@@ -59,6 +59,6 @@ stack (Cognito, Secrets Manager, S3) is listed under "Not checked" at the end.
 
 - What S3 holds: that objects are ciphertext under GUID keys only, and that one user can't read another's prefix.
 - Secrets Manager: per-user keys secrets, and that the IAM policy confines each user to `<sub>/keys/*`.
-  (`test-auth.ps1` in blazwiz checks this, run by the maintainer.)
+  (blazwiz's deploy tests check this, against its own deployment of the same base stack.)
 - CloudFront's response headers (HSTS, `X-Frame-Options`) and the CSP on the deployed page.
 - The same checks on a phone.

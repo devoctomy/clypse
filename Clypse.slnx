@@ -16,11 +16,11 @@
     <File Path="cloudformation/deploy-policy.json" />
     <File Path="cloudformation/README.md" />
     <File Path="cloudformation/remove.ps1" />
-    <File Path="cloudformation/test-auth.ps1" />
   </Folder>
   <Folder Name="/Tests/">
     <Project Path="Clypse.Core.UnitTests/Clypse.Core.UnitTests.csproj" />
     <Project Path="Clypse.Portal.Application.UnitTests/Clypse.Portal.Application.UnitTests.csproj" />
+    <Project Path="Clypse.Portal.DeployTests/Clypse.Portal.DeployTests.csproj" />
     <Project Path="Clypse.Portal.UITests/Clypse.Portal.UITests.csproj" />
   </Folder>
   <Project Path="Clypse.Core/Clypse.Core.csproj" />
