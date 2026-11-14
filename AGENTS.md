@@ -9,26 +9,35 @@ Instructions for AI coding agents working on clypse.
    - The same applies to `gh` and any other tool that talks to GitHub.
    - To delete or move files, use plain file operations.
    - If a step seems to need git, stop and ask.
-2. **The blazwiz framework repository may be changed, on its current branch only.**
+2. **NEVER change another repository unless the maintainer has discussed and agreed it beforehand.** This includes
+   blazwiz, even for a change the design rules say belongs there.
+   - When a fix or feature could go in another repository, stop and explain:
+     - what the change is;
+     - why it belongs there rather than in clypse;
+     - what it would mean for clypse (e.g. a local blazwiz build).
+
+     Then wait for the maintainer's agreement before editing that repository or running `eng/use-local-blazwiz.ps1`.
+   - Agreement covers only the change discussed. A further change there needs agreeing again.
+3. **Once agreed, blazwiz may be changed, on its current branch only.**
    - Read-only git commands there are fine: `git status`, `git log`, `git diff`, `git show`, `git ls-files`,
      `git branch --list`.
    - Never run git commands that change anything there: no `add`, `commit`, `checkout`/`switch`, `stash`, `reset`,
      `restore`, `fetch`, `pull`, `push`, and no branches or tags.
    - Leave changes uncommitted in its working tree. The maintainer reviews, commits and pushes.
    - Follow blazwiz's own `AGENTS.md` for anything done in that repository.
-3. **The original clypse repository is read-only.** Copy from it; never change it.
-4. **No AI attribution.** Never add `Co-Authored-By`, "Generated with…" or similar lines to files, commits or PRs.
-5. **Never publish anything.** Do not push NuGet packages, create tags or releases, or deploy.
-6. **Never run AWS commands or the deploy scripts** (`cloudformation/*.ps1`), unless the maintainer asks for that exact
+4. **The original clypse repository is read-only.** Copy from it; never change it.
+5. **No AI attribution.** Never add `Co-Authored-By`, "Generated with…" or similar lines to files, commits or PRs.
+6. **Never publish anything.** Do not push NuGet packages, create tags or releases, or deploy.
+7. **Never run AWS commands or the deploy scripts** (`cloudformation/*.ps1`), unless the maintainer asks for that exact
    action. They create, change or delete real AWS resources.
-7. If an action is blocked or fails, stop and report it. Don't substitute a different or more destructive action.
-8. **Report honestly how things were checked.**
+8. If an action is blocked or fails, stop and report it. Don't substitute a different or more destructive action.
+9. **Report honestly how things were checked.**
    - Say exactly what was run: which suites, which configuration.
    - Say what was skipped, and why.
    - A pass with rules or tests switched off is not a pass.
    - If something failed and you could not find out why, say so.
-9. **When reviewing the maintainer's own edits, list the fixes.** Don't hand back a rewritten copy of their work.
-10. **A question or an instruction for the maintainer always comes last.** Never ask a question, or give steps for them
+10. **When reviewing the maintainer's own edits, list the fixes.** Don't hand back a rewritten copy of their work.
+11. **A question or an instruction for the maintainer always comes last.** Never ask a question, or give steps for them
     to follow, and then carry on with tool calls: their output pushes it off screen.
     - Either stop and wait for their answer,
     - or do the tool calls first, and ask or instruct at the end of the reply.
@@ -44,8 +53,6 @@ end to end.
   - its name and description, in an encrypted `.vault` file;
   - each **secret**, as one encrypted JSON file, `secrets/<secretId>.json`.
 - **Users start with no vaults.** The app defines no sync profiles in code.
-- **The plan:** `docs/plans/2026-11-06-blazwiz-rewrite-plan.md` holds the phases and decisions (D1 to D8). Read it
-  before structural work, keep it up to date as work is done, and record changed decisions there.
 - **The reference app:** the template's notes feature in blazwiz (`template/MyApp.Portal*`, `NotebookService`,
   `NoteService`) shows how to use protected profiles, file stores and `E2eUnlockPanel`. Use it as the reference.
 
@@ -68,7 +75,7 @@ Layout:
 - `cloudformation/`: the app's AWS stack, on top of the blazwiz base stack.
 - `eng/`: build scripts, e.g. `use-local-blazwiz.ps1` (see "blazwiz packages").
 - `Resources/Art`: icons and logos. **Use only the PNGs.** The SVGs render with the wrong font (Montserrat Black is
-  not embedded); see the plan.
+  not embedded).
 
 The project is in development and unreleased. Nobody uses it yet.
 
@@ -107,7 +114,8 @@ These follow blazwiz's rules, so the app and the framework read the same.
   - Test projects end in `.UnitTests`, and their namespaces must contain that suffix.
 - **Generic gaps go into blazwiz, not into clypse.** Clipboard with auto-clear, toasts and conflict resolution belong
   in the framework.
-  - Make those changes in the blazwiz repository (rule 2), with tests there.
+  - Propose them first and wait for the maintainer's agreement (rule 2). Only then make them in the blazwiz repository
+    (rule 3), with tests there.
   - clypse picks them up from a local build of blazwiz (see "blazwiz packages" below), never by copying framework code
     into clypse.
 
@@ -163,3 +171,17 @@ blazwiz change is being made:
 - **Never edit `BlazwizVersion` by hand,** and never point clypse at blazwiz project references.
 - **Before work that changed blazwiz is done,** rebuild the packages from the current blazwiz tree and run clypse's full
   test suite on them.
+
+## Versions and releases
+
+- **clypse's version is set in one place:** `VersionPrefix` in `Directory.Build.props`. Every project takes it from
+  there, and Settings > About shows it.
+- **Every user-visible change goes in the `Unreleased` section of `CHANGELOG.md`,** in the same piece of work, under
+  Added, Changed, Fixed, Removed or Security. Write it for someone using clypse, not as a list of files.
+- **`eng/bump-version.ps1`** sets the next version: the next minor by default, or `-Version <version>`. It turns
+  `Unreleased` into that version's section. If the current version has no GitHub release yet, it offers to add the
+  `Unreleased` changes to it instead. The maintainer runs it before a release.
+- **The Release workflow** reads `VersionPrefix` and tags `v<version>` on main. Its notes are the blazwiz version and
+  the version's `CHANGELOG.md` section. It refuses a version that is already released, is not above the latest release,
+  or has no changelog section.
+- **Never change `VersionPrefix` by hand, or run the release yourself** (rule 6).

@@ -4,7 +4,6 @@
 **Status:** not started. A plan only: nothing here is built yet, and the open questions need the maintainer's answers
 first.
 **Related:**
-- `docs/plans/2026-11-06-blazwiz-rewrite-plan.md`, Phase 4 (where this was split off).
 - blazwiz `docs/requests/2026-11-05-protected-profile-recovery.md`. That one is about a different recovery: getting
   back into a vault whose **passphrase** is forgotten. This plan is about getting back **data** that was changed or
   deleted.
@@ -82,7 +81,7 @@ first.
 4. **How much history to show:** every version within the window, or only the last N?
 5. **Deleting a single secret.** Should it be recoverable too, as a "Recently deleted" list inside a vault, since
    versioning keeps it anyway?
-6. **Sync conflicts.** Today the newest write wins (D6). Should the version that lost a conflict be shown, with a way
+6. **Sync conflicts.** Today the newest write wins. Should the version that lost a conflict be shown, with a way
    to restore it? Versioning makes that possible.
 7. **Clearing history.** A rollback creates a new version, so earlier ones are never lost within the window. Is that
    right, or should a user be able to clear a secret's history?

@@ -1,8 +1,8 @@
-# Security checklist (Phase 4)
+# Security checklist
 
 **Date:** 2026-11-07
 **Build checked:** clypse on blazwiz `0.4.0-local.20261107093211` (the `clypseupdates` working tree).
-**Context:** the rewrite plan's Phase 4 "done when". Each item below says how it was checked. What needs a deployed
+**Context:** the security checks for the first deployable build. Each item below says how it was checked. What needs a deployed
 stack (Cognito, Secrets Manager, S3) is listed under "Not checked" at the end.
 
 ## How it was checked

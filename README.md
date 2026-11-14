@@ -122,6 +122,11 @@ You can deploy two ways:
   tests. The Release workflow tags a commit of main as a checkpoint (`v<version>`, with a GitHub release noting the
   blazwiz version it is built on); nothing is published, deployments are always made from source.
 
+The version is set in one place, `VersionPrefix` in `Directory.Build.props`, and each release's changes are in
+[`CHANGELOG.md`](CHANGELOG.md). To release, run `./eng/bump-version.ps1` (the next minor version) or
+`./eng/bump-version.ps1 -Version 1.0.0` on a branch, merge it, then run the Release workflow on main. It tags that
+version, with its changelog section as the release notes.
+
 See [`cloudformation/README.md`](cloudformation/README.md) for the steps, the IAM permissions needed, and setting up
 GitHub.
 
@@ -144,8 +149,8 @@ dotnet test Clypse.slnx --filter "FullyQualifiedName~UITests"   # starts the app
 The first time, install the browser for the UI tests:
 `pwsh Clypse.Portal.UITests/bin/Debug/net10.0/playwright.ps1 install chromium`.
 
-The rules the code follows, and how to build against a local copy of blazwiz, are in [AGENTS.md](AGENTS.md). The
-rewrite's plan and decisions are in [`docs/plans`](docs/plans).
+The rules the code follows, and how to build against a local copy of blazwiz, are in [AGENTS.md](AGENTS.md). Plans
+for work not yet done are in [`docs/plans`](docs/plans).
 
 ## License
 

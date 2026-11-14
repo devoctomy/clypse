@@ -235,6 +235,54 @@ public class VaultTests : TestBase
     }
 
     [TestMethod]
+    public async Task GivenManySecrets_WhenTheListIsScrolledWithTheWheel_ThenItMovesOneStepAtATimeBothWays()
+    {
+        // The list is virtualised: its spacers change height as rows load, and the browser's scroll anchoring used to
+        // chase them, so one turn of the wheel ran to the end of the list (or back to the start).
+        const int count = 200;
+        const int step = 400;
+        await LoginAsync();
+        await CreateVaultAsync("Personal");
+        var csv = Path.Combine(Path.GetTempPath(), $"clypse-import-{Guid.NewGuid():N}.csv");
+        var lines = Enumerable.Range(0, count).Select(i => $"\"Site {i:D4}\",\"user{i}\",\"password{i}\",\"https://site{i}.example\",\"\"");
+        await File.WriteAllTextAsync(csv, "\"Account\",\"Username\",\"Password\",\"Web site\",\"Comments\"\r\n" + string.Join("\r\n", lines) + "\r\n");
+        try
+        {
+            await Page.Locator("#import-button").ClickAsync();
+            await Page.Locator("#import-file").SetInputFilesAsync(csv);
+            await Page.Locator("#import-confirm").ClickAsync();
+            await Expect(Page.Locator("#import-done")).ToContainTextAsync($"{count} secrets imported.");
+            await Page.Locator("#import-close").ClickAsync();
+        }
+        finally
+        {
+            File.Delete(csv);
+        }
+
+        await Expect(Page.Locator("#secrets-count")).ToHaveTextAsync($"{count} secrets");
+        var lastRow = Page.Locator("#secrets .secret-name", new() { HasTextString = $"Site {count - 1:D4}" });
+        var firstRow = Page.Locator("#secrets .secret-name", new() { HasTextString = "Site 0000" });
+        var row = await Page.Locator("#secrets .secret-row").First.BoundingBoxAsync();
+        await Page.Mouse.MoveAsync(row!.X + (row.Width / 2), row.Y + (row.Height / 2));
+
+        var steps = 0;
+        while (await lastRow.CountAsync() == 0)
+        {
+            await WheelAsync(step);
+            Assert.IsTrue(++steps < count, "The end of the list was never reached.");
+        }
+
+        await Expect(firstRow).ToHaveCountAsync(0);
+        while (await firstRow.CountAsync() == 0)
+        {
+            await WheelAsync(-step);
+            Assert.IsTrue(++steps < count * 2, "The start of the list was never reached again.");
+        }
+
+        await Expect(lastRow).ToHaveCountAsync(0);
+    }
+
+    [TestMethod]
     public async Task GivenALogin_WhenItsPasswordIsCopiedFromTheList_ThenItIsOnTheClipboard_AndAToastSaysSo()
     {
         await Context.GrantPermissionsAsync(["clipboard-read", "clipboard-write"], new() { Origin = ServerUrl });
@@ -400,5 +448,30 @@ public class VaultTests : TestBase
         await GoToAsync($"/vaults/{Guid.NewGuid():D}");
 
         await Expect(Page.Locator("#vault-not-found")).ToBeVisibleAsync();
+    }
+
+    /// <summary>
+    /// Turns the mouse wheel once, waits for the page to stop scrolling (smooth scrolling animates it), and checks it
+    /// moved by no more than the wheel asked for.
+    /// </summary>
+    private async Task WheelAsync(int deltaY)
+    {
+        var before = await Page.EvaluateAsync<double>("() => window.scrollY");
+        await Page.Mouse.WheelAsync(0, deltaY);
+        var after = await Page.EvaluateAsync<double>(
+            """
+            () => new Promise(resolve => {
+                let last = window.scrollY;
+                let still = 0;
+                const check = () => {
+                    still = window.scrollY === last ? still + 1 : 0;
+                    last = window.scrollY;
+                    if (still >= 10) { resolve(last); } else { setTimeout(check, 30); }
+                };
+                setTimeout(check, 30);
+            })
+            """);
+        var moved = Math.Abs(after - before);
+        Assert.IsTrue(moved <= Math.Abs(deltaY) + 1, $"One turn of the wheel ({deltaY}px) scrolled the page {after - before}px, from {before} to {after}.");
     }
 }

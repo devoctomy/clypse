@@ -5,6 +5,9 @@
     <Nullable>enable</Nullable>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <IsPackable>false</IsPackable>
+    <!-- clypse's version, set only here, with eng/bump-version.ps1. The Release workflow tags v<version> from it, and
+         Settings > About shows it. -->
+    <VersionPrefix>0.8.0</VersionPrefix>
   </PropertyGroup>
   <ItemGroup>
     <!-- Analyzer rules turned off for the whole solution (including SA1633, the file header). -->
