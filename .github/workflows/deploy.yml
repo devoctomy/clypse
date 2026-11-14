@@ -58,7 +58,6 @@ jobs:
     env:
       DOTNET_NOLOGO: true
       DOTNET_CLI_TELEMETRY_OPTOUT: true
-      MSBUILDDISABLENODEREUSE: 1
       ENVIRONMENT_NAME: ${{ inputs.environment }}
       # Optional: the portal's own address, e.g. test.clypse.net, and its ACM certificate (in us-east-1). Passed on every
       # run, as the stack drops the address when they are not.

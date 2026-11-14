@@ -59,8 +59,7 @@ New-Item -ItemType Directory -Force -Path $feed | Out-Null
 Get-ChildItem -Path $feed -Filter '*.nupkg' -ErrorAction SilentlyContinue | Remove-Item -Force
 Get-ChildItem -Path $feed -Filter '*.snupkg' -ErrorAction SilentlyContinue | Remove-Item -Force
 
-$env:MSBUILDDISABLENODEREUSE = '1'
-& dotnet pack $solution -c Release -o $feed --nologo -v q -m:1 "-p:VersionSuffix=$versionSuffix"
+& dotnet pack $solution -c Release -o $feed --nologo -v q "-p:VersionSuffix=$versionSuffix"
 if ($LASTEXITCODE -ne 0) {
     throw 'Packing blazwiz failed.'
 }

@@ -135,8 +135,11 @@ dotnet test Clypse.slnx --no-build --filter "FullyQualifiedName~UITests"
   - Don't build while they run.
 - **Deploy tests** (`Clypse.Portal.DeployTests`) run against a deployed environment, from the Deploy tests workflow.
   They test clypse's own UI only; what the blazwiz base stack does is tested by blazwiz. No CI filter runs them.
-- **Static web assets compression failures.** If a build fails in that step ("An item with the same key has already
-  been added"), build again with `MSBUILDDISABLENODEREUSE=1`.
+- **Never work around a build failure.**
+  - If a build fails for a reason you don't understand, stop and show the maintainer the full error. Don't retry with
+    something changed until it passes.
+  - Never add a build flag, environment variable, clean-up step (deleting `bin` or `obj`) or build server shutdown to
+    get past a failure: not in workflows, scripts, project files or test code, and not in your own shell.
 
 ## blazwiz packages
 
