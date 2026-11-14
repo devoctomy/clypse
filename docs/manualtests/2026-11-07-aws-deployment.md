@@ -2,7 +2,7 @@
 
 **For:** the first deployment of clypse to AWS (`clypse-test`, or the environment you deployed).
 **Why:** these are the checks that couldn't run locally. They're the "Not checked" items in
-`docs/reviews/2026-11-07-security-checklist.md` and the phone half of the spikes in the rewrite plan.
+`docs/reviews/2026-11-07-security-checklist.md`, and the checks that need a phone.
 
 **You need:**
 - the portal URL (the deploy prints it, or see the stack output);
