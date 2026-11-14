@@ -91,7 +91,7 @@ public class StandardWesternPasswordGeneratorServiceTests : IDisposable
             It.IsAny<string>(),
             It.IsAny<Assembly?>(),
             It.IsAny<CancellationToken>()))
-            .ReturnsAsync((string name, Assembly asm, CancellationToken ct) =>
+            .ReturnsAsync((string name, Assembly _, CancellationToken _) =>
             {
                 return [name.Split('.')[0]];
             });
