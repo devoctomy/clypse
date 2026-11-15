@@ -151,14 +151,21 @@ To approve each run before it starts, add **required reviewers** to the GitHub e
 
 The unit and UI tests run before anything is deployed, with a stand-in sign-in. The deploy tests
 (`Clypse.Portal.DeployTests`, Playwright) run after, against the deployed portal: clypse's own UI with the real user
-pool. What the blazwiz base stack does (sign-in with the SDK, per-user S3 access, keys) is tested by blazwiz's own
+pool. They are written as Reqnroll scenarios: the features in `Features/*.feature`, their steps in `Steps/`, and the
+browser for each scenario in `Support/`. MSTest runs them. What the blazwiz base stack does (sign-in with the SDK, per-user S3 access, keys) is tested by blazwiz's own
 deploy tests, and is not tested again here.
 
-| Test | What it checks |
+| Scenario (`SignIn.feature`) | What it checks |
 | --- | --- |
-| Signing in | The test user signs in and the vaults page is shown. |
-| A wrong password | Signing in with a wrong password shows an error and stays on the login page. |
-| Signing out | A signed-in test user signs out and is back at the login page. |
+| The test user signs in | The test user signs in and the vaults page is shown. |
+| A wrong password is refused | Signing in with a wrong password shows an error and stays on the sign-in page. |
+| A signed-in user signs out | A signed-in test user signs out and is back at the sign-in page. |
+| The test vault is created on the first run (`TestVault.feature`) | If the test user has no vault, creates the test vault (its name, passphrase and login are in the feature), adds the login, locks the vault and runs a sync until nothing is left to upload. If they have a vault already, it ends there and passes. |
+| The test vault's login is copied (`TestVault.feature`) | If the test user has a vault, unlocks it, searches for the login, copies its user name and password and checks each on the clipboard. With no vault yet (the first run), it ends there and passes. If the test user has more than one vault, it fails. |
+
+The test user keeps one vault, the test vault, made by the first run and used by every run after. Both vault
+scenarios read the vault list only after the first sync since sign in has finished, because a new browser reads the
+list from the cloud first.
 
 Run them with the **Deploy tests** workflow, or tick "Run the deploy tests afterwards" on Deploy or Upgrade. They need
 the environment deployed, and the test user: set `TEST_USER_EMAIL` and `TEST_USER_PASSWORD` on the GitHub environment,
@@ -172,4 +179,4 @@ credentials: they use the portal in a browser, as the test user. If one fails, i
 To run them from your own machine, install the browser once
 (`pwsh Clypse.Portal.DeployTests/bin/Debug/net10.0/playwright.ps1 install chromium`), set
 `CLYPSE_DEPLOYTEST_PORTAL_URL`, `CLYPSE_DEPLOYTEST_EMAIL` and `CLYPSE_DEPLOYTEST_PASSWORD`, and run
-`dotnet test Clypse.Portal.DeployTests`. Without them, every test is skipped.
+`dotnet test Clypse.Portal.DeployTests`. Without them, every scenario is skipped. Set `HEADED=1` to watch the browser.

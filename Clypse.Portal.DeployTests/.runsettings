@@ -1,12 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RunSettings>
   <RunConfiguration>
-    <!-- Abort the whole run if it takes longer than 10 minutes. -->
-    <TestSessionTimeout>600000</TestSessionTimeout>
+    <!-- Abort the whole run if it takes longer than 25 minutes, inside the Deploy tests job's 30. -->
+    <TestSessionTimeout>1500000</TestSessionTimeout>
   </RunConfiguration>
   <MSTest>
-    <!-- Fail any single test that takes longer than 3 minutes rather than hanging. The first page load downloads the
-         whole WebAssembly app from CloudFront. -->
-    <TestTimeout>180000</TestTimeout>
+    <!-- Fail any single scenario that takes longer than 8 minutes rather than hanging. The first page load downloads
+         the whole WebAssembly app from CloudFront, the first sync downloads the user's vaults, and creating or
+         unlocking a vault derives its key with Argon2id at the deployed settings (512 MiB). -->
+    <TestTimeout>480000</TestTimeout>
   </MSTest>
 </RunSettings>
