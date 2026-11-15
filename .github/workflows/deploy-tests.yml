@@ -35,7 +35,10 @@ jobs:
   deploy-tests:
     runs-on: ubuntu-24.04
     timeout-minutes: 30
-    environment: ${{ inputs.environment }}
+    # For the environment's variables and secrets only: the tests deploy nothing, so no deployment is recorded.
+    environment:
+      name: ${{ inputs.environment }}
+      deployment: false
     permissions:
       contents: read
       # An OIDC token from GitHub, exchanged for short-lived AWS credentials, used only to read the stack's outputs.
