@@ -63,7 +63,7 @@ encrypted vaults through Amazon S3 when you are back online.
 | **Nothing readable in storage** | In S3 and in the browser, a vault's files are ciphertext with random names. Names, websites and user names never appear in a file name or a path. |
 | **Biometrics** | Optional, per vault and per device. The vault's key is kept on that device only, wrapped with a key that only your passkey can produce after your fingerprint, face or PIN. It is never synced. |
 | **Locking** | A locked vault's keys are wiped from memory. Vaults lock on their own when idle, when you sign out, and in every open tab at once. |
-| **Sign in** | Amazon Cognito, using SRP, so your account password is not sent to the server. Optionally remembered with a passkey. |
+| **Sign in** | Amazon Cognito, using SRP, so your account password is not sent to the server. Optionally remembered with a passkey, and shown by a name you choose instead of your email address. |
 | **The page itself** | Served with a Content Security Policy that only lets it run its own code and talk to its own AWS endpoints. |
 
 > **There is no recovery.** If you forget a vault's passphrase, its secrets cannot be decrypted by anyone, including

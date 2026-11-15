@@ -62,8 +62,8 @@ public interface IVaultService
     void Lock(string id);
 
     /// <summary>
-    /// Unlocks a vault with biometrics (<see cref="Vault.CanUnlockWithBiometrics"/>), asking for the passkey if its key
-    /// is not in memory.
+    /// Unlocks a vault with biometrics (<see cref="Vault.CanUnlockWithBiometrics"/>): online, it is synced first, then
+    /// the passkey is asked for if its key is not in memory.
     /// </summary>
     /// <param name="id">The vault's id.</param>
     /// <returns>True if it was unlocked; false if the passkey was cancelled or could not unlock it.</returns>
