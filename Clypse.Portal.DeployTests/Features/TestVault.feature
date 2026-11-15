@@ -25,3 +25,21 @@ Scenario: The test vault's login is copied
     Then the clipboard holds "deploy.test.user"
     When I copy its password
     Then the clipboard holds "Deploy-test-password-1"
+
+Scenario: A login with a generated password reaches another device
+    Given the test user has a vault, or the scenario ends here
+    When I unlock the test vault with the passphrase "Deploy-test-vault-passphrase-1"
+    And I add a login named "Deploy test login" with the date and time, user name "deploy.test.user" and a random password from the generator
+    And I lock the vault
+    Then the test vault is listed as locked
+    And sync is complete
+    When I sign out
+    Then the sign-in page is shown
+    When I open the portal on another device
+    And I sign in as the test user
+    Then the vaults page is shown
+    And the first sync has finished
+    When I unlock the test vault with the passphrase "Deploy-test-vault-passphrase-1"
+    And I search for the generated login
+    Then the generated login is found
+    And its password is the one the generator made

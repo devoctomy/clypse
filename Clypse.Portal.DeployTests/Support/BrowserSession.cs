@@ -33,6 +33,7 @@ public sealed partial class BrowserSession(ScenarioContext scenario)
 
     private static readonly string ScreenshotDirectory = Path.Combine(Directory.GetCurrentDirectory(), "TestResults", "Screenshots");
     private readonly ScenarioContext scenario = scenario ?? throw new ArgumentNullException(nameof(scenario));
+    private IBrowser? browser;
     private IBrowserContext? context;
     private IPage? page;
     private DeployTestSettings? settings;
@@ -65,18 +66,25 @@ public sealed partial class BrowserSession(ScenarioContext scenario)
         ArgumentNullException.ThrowIfNull(deployTestSettings);
 
         settings = deployTestSettings;
-        context = await browser.NewContextAsync(new BrowserNewContextOptions
-        {
-            ViewportSize = new ViewportSize { Width = 1440, Height = 900 },
-            ColorScheme = ColorScheme.Light,
-
-            // So the steps can read what the app copied.
-            Permissions = ["clipboard-read", "clipboard-write"],
-        });
-        page = await context.NewPageAsync();
-        page.SetDefaultTimeout(StepTimeoutMs);
+        this.browser = browser;
+        await OpenContextAsync();
         Assertions.SetDefaultExpectTimeout(StepTimeoutMs);
         Directory.CreateDirectory(ScreenshotDirectory);
+    }
+
+    /// <summary>
+    /// Closes this context and opens a fresh one, as another device would be: no local storage, IndexedDB or cache,
+    /// so whatever the app shows there came from the cloud.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
+    public async Task SwitchToAnotherDeviceAsync()
+    {
+        if (context != null)
+        {
+            await context.CloseAsync();
+        }
+
+        await OpenContextAsync();
     }
 
     /// <summary>
@@ -105,6 +113,21 @@ public sealed partial class BrowserSession(ScenarioContext scenario)
         var title = NotAllowedInFileName().Replace(scenario.ScenarioInfo.Title, "_");
         var fileName = $"{title}_{screenshotCounter:D2}_{name}.png";
         await Page.ScreenshotAsync(new() { Path = Path.Combine(ScreenshotDirectory, fileName) });
+    }
+
+    private async Task OpenContextAsync()
+    {
+        var shared = browser ?? throw new InvalidOperationException("The browser has not been started.");
+        context = await shared.NewContextAsync(new BrowserNewContextOptions
+        {
+            ViewportSize = new ViewportSize { Width = 1440, Height = 900 },
+            ColorScheme = ColorScheme.Light,
+
+            // So the steps can read what the app copied.
+            Permissions = ["clipboard-read", "clipboard-write"],
+        });
+        page = await context.NewPageAsync();
+        page.SetDefaultTimeout(StepTimeoutMs);
     }
 
     [GeneratedRegex(@"[^A-Za-z0-9\-]+")]

@@ -35,6 +35,22 @@ public sealed partial class SignInSteps(BrowserSession session, ScenarioFlow flo
     }
 
     /// <summary>
+    /// Leaves this browser context for a fresh one, like another device, and opens the portal's sign-in page there.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
+    [When("I open the portal on another device")]
+    public async Task WhenIOpenThePortalOnAnotherDevice()
+    {
+        if (flow.HasEnded)
+        {
+            return;
+        }
+
+        await session.SwitchToAnotherDeviceAsync();
+        await GivenTheSignInPageIsOpen();
+    }
+
+    /// <summary>
     /// Signs in as the test user from the sign-in page, and waits for the vaults page.
     /// </summary>
     /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>

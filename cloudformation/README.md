@@ -162,6 +162,7 @@ deploy tests, and is not tested again here.
 | A signed-in user signs out | A signed-in test user signs out and is back at the sign-in page. |
 | The test vault is created on the first run (`TestVault.feature`) | If the test user has no vault, creates the test vault (its name, passphrase and login are in the feature), adds the login, locks the vault and runs a sync until nothing is left to upload. If they have a vault already, it ends there and passes. |
 | The test vault's login is copied (`TestVault.feature`) | If the test user has a vault, waits for the first sync to download it, unlocks it, searches for the login, copies its user name and password and checks each on the clipboard. With no vault yet (the first run), it ends there and passes. If the test user has more than one vault, it fails. |
+| A login with a generated password reaches another device (`TestVault.feature`) | If the test user has a vault, unlocks it, adds a login named with the date and time, the same user name and a random password from the app's generator, locks the vault and runs a sync until nothing is left to upload. It signs out, opens the portal in a fresh browser context (like another device, with nothing stored), signs in, waits for the first sync, unlocks the vault, finds the login and checks its password is the generated one. With no vault yet, it ends there and passes. |
 
 The test user keeps one vault, the test vault, made by the first run and used by every run after.
 
