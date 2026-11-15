@@ -59,15 +59,7 @@ public sealed partial class SyncSteps(BrowserSession session, ScenarioFlow flow)
         var syncNow = Page.Locator("#sync-now-button");
         await Expect(syncNow).ToBeEnabledAsync(new() { Timeout = BrowserSession.SyncTimeoutMs });
         await syncNow.ClickAsync();
-        try
-        {
-            // The pass can finish before this looks: then it is already up to date below.
-            await Expect(Pill.Locator(".sync-spin")).ToHaveCountAsync(1, new() { Timeout = 5000 });
-        }
-        catch (PlaywrightException)
-        {
-        }
-
+        await WaitBrieflyForAPassToStartAsync();
         await ExpectUpToDateAsync();
         await Expect(syncNow).ToBeEnabledAsync();
         await ClosePopoverAsync();
@@ -80,6 +72,17 @@ public sealed partial class SyncSteps(BrowserSession session, ScenarioFlow flow)
     private Task ExpectUpToDateAsync()
     {
         return Expect(Pill).ToHaveClassAsync(UpToDate(), new() { Timeout = BrowserSession.SyncTimeoutMs });
+    }
+
+    // So the pill is not read as up to date before the pass Sync now started has shown. A short pass can finish before
+    // this looks, so not seeing it start is not an error: the pill is then already up to date.
+    private async Task WaitBrieflyForAPassToStartAsync()
+    {
+        var deadline = DateTime.UtcNow.AddSeconds(5);
+        while (DateTime.UtcNow < deadline && await Pill.Locator(".sync-spin").CountAsync() == 0)
+        {
+            await Page.WaitForTimeoutAsync(100);
+        }
     }
 
     private async Task OpenPopoverAsync()
