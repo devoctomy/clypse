@@ -29,7 +29,7 @@ Scenario: The test vault's login is copied
 Scenario: A login with a generated password reaches another device
     Given the test user has a vault, or the scenario ends here
     When I unlock the test vault with the passphrase "Deploy-test-vault-passphrase-1"
-    And I add a login named "Deploy test login" with the date and time, user name "deploy.test.user" and a random password from the generator
+    And I add a login named "Generated login" with the date and time, user name "deploy.test.user" and a random password from the generator
     And I lock the vault
     Then the test vault is listed as locked
     And sync is complete

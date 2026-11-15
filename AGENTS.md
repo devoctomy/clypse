@@ -150,6 +150,8 @@ dotnet test Clypse.slnx --no-build --filter "FullyQualifiedName~UITests"
   - Write steps in the user's words and reuse them across features, so new workflows are built from existing steps.
   - A scenario can end early and pass with `ScenarioFlow.End` (e.g. "…, or the scenario ends here"). Every step
     therefore returns at once when `ScenarioFlow.HasEnded` is true; new steps must check it first.
+  - The scenarios share one test user and their one test vault, and later ones use what earlier ones left. They never
+    run in parallel (`[assembly: DoNotParallelize]`, `Support/TestRunOrder.cs`). Keep it that way.
 - **Never work around a build failure.**
   - If a build fails for a reason you don't understand, stop and show the maintainer the full error. Don't retry with
     something changed until it passes.

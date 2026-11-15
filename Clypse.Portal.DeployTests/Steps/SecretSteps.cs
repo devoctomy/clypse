@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using Clypse.Portal.DeployTests.Support;
 using static Microsoft.Playwright.Assertions;
 
@@ -142,7 +143,8 @@ public sealed class SecretSteps(BrowserSession session, ScenarioFlow flow)
     }
 
     /// <summary>
-    /// Checks the search found exactly the one secret with that name; the following steps act on it.
+    /// Checks the search found exactly one secret with that exact name; the following steps act on it. The search
+    /// matches part of a name, so it can find others too (e.g. the dated logins whose names start with it).
     /// </summary>
     /// <param name="name">The secret's name.</param>
     /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
@@ -155,9 +157,12 @@ public sealed class SecretSteps(BrowserSession session, ScenarioFlow flow)
         }
 
         // Each secret is an item holding its row (name, summary, tags) and, beside it, its quick copy buttons.
-        var items = Page.Locator("#secrets .secret-item");
+        var exactName = new Regex($@"^\s*{Regex.Escape(name)}\s*$");
+        var items = Page.Locator("#secrets .secret-item").Filter(new()
+        {
+            Has = Page.Locator(".secret-name", new() { HasTextRegex = exactName }),
+        });
         await Expect(items).ToHaveCountAsync(1);
-        await Expect(items.Locator(".secret-name")).ToHaveTextAsync(name);
         foundRow = items.First;
     }
 
