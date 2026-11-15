@@ -172,8 +172,10 @@ then tick "Create or update the deploy tests' user" on a Deploy or Upgrade run o
 changes).
 
 The workflow uses the deploy role only to read the portal's address from the stack. The tests run with no AWS
-credentials: they use the portal in a browser, as the test user. If one fails, its screenshot is in the run's
-`deploy-test-results` artifact.
+credentials: they use the portal in a browser, as the test user. Every run uploads its results as the
+`deploy-test-results` artifact: the `.trx` file, with each scenario's steps and why any ended early, and a screenshot
+of each that failed. A step in a feature with no matching step definition fails the run (`reqnroll.json`), rather than
+skipping the scenario.
 
 To run them from your own machine, install the browser once
 (`pwsh Clypse.Portal.DeployTests/bin/Debug/net10.0/playwright.ps1 install chromium`), set

@@ -29,6 +29,7 @@ public sealed partial class SyncSteps(BrowserSession session, ScenarioFlow flow)
     /// </summary>
     /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     [Given("the first sync has finished")]
+    [Then("the first sync has finished")]
     public async Task GivenTheFirstSyncHasFinished()
     {
         if (flow.HasEnded)
