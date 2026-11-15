@@ -50,7 +50,7 @@ public sealed class VaultSteps(BrowserSession session, ScenarioFlow flow)
             return;
         }
 
-        var count = await VaultCards.CountAsync();
+        var count = await CountVaultsAsync();
         if (count > 0)
         {
             flow.End($"the test user already has {Vaults(count)}, so the test vault exists.");
@@ -73,7 +73,7 @@ public sealed class VaultSteps(BrowserSession session, ScenarioFlow flow)
             return;
         }
 
-        var count = await VaultCards.CountAsync();
+        var count = await CountVaultsAsync();
         if (count == 0)
         {
             flow.End("the test user has no vault yet, so there is no test vault to use. It is created by \"The test vault is created on the first run\".");
@@ -164,6 +164,22 @@ public sealed class VaultSteps(BrowserSession session, ScenarioFlow flow)
     }
 
     private static string Vaults(int count) => count == 1 ? "1 vault" : $"{count} vaults";
+
+    // Counts the vaults as a user would see them. A new browser shows the vaults page before it has read the user's
+    // vaults from the cloud, and the page looks the same while it reads as when there are none, so, like a user, this
+    // gives the vaults time to appear before taking "none" for an answer. They all appear at once.
+    private async Task<int> CountVaultsAsync()
+    {
+        var deadline = DateTime.UtcNow.AddMilliseconds(BrowserSession.VaultListTimeoutMs);
+        var count = await VaultCards.CountAsync();
+        while (count == 0 && DateTime.UtcNow < deadline)
+        {
+            await Page.WaitForTimeoutAsync(250);
+            count = await VaultCards.CountAsync();
+        }
+
+        return count;
+    }
 
     private ILocator TestVaultCard()
     {

@@ -31,6 +31,12 @@ public sealed partial class BrowserSession(ScenarioContext scenario)
     /// </summary>
     public const int SyncTimeoutMs = 120000;
 
+    /// <summary>
+    /// How long to give the user's vaults to appear on the vaults page before deciding they have none. A new browser
+    /// shows the page before it has read them from the cloud.
+    /// </summary>
+    public const int VaultListTimeoutMs = 10000;
+
     private static readonly string ScreenshotDirectory = Path.Combine(Directory.GetCurrentDirectory(), "TestResults", "Screenshots");
     private readonly ScenarioContext scenario = scenario ?? throw new ArgumentNullException(nameof(scenario));
     private IBrowser? browser;
