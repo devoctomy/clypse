@@ -24,8 +24,8 @@ public sealed partial class SyncSteps(BrowserSession session, ScenarioFlow flow)
     private ILocator Pill => Page.Locator("#sync-status-pill");
 
     /// <summary>
-    /// Waits for the first sync pass since sign in to finish with nothing left to sync. It runs once the user's vaults
-    /// have been read from the cloud, so the vault list is complete from then on.
+    /// Waits for the first sync pass since sign in to finish with nothing left to sync, so a vault's files are on this
+    /// device. Only for a user with a vault: with none there is nothing to sync, and "Last synced" stays "Not yet".
     /// </summary>
     /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     [Given("the first sync has finished")]

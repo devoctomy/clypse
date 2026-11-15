@@ -161,11 +161,9 @@ deploy tests, and is not tested again here.
 | A wrong password is refused | Signing in with a wrong password shows an error and stays on the sign-in page. |
 | A signed-in user signs out | A signed-in test user signs out and is back at the sign-in page. |
 | The test vault is created on the first run (`TestVault.feature`) | If the test user has no vault, creates the test vault (its name, passphrase and login are in the feature), adds the login, locks the vault and runs a sync until nothing is left to upload. If they have a vault already, it ends there and passes. |
-| The test vault's login is copied (`TestVault.feature`) | If the test user has a vault, unlocks it, searches for the login, copies its user name and password and checks each on the clipboard. With no vault yet (the first run), it ends there and passes. If the test user has more than one vault, it fails. |
+| The test vault's login is copied (`TestVault.feature`) | If the test user has a vault, waits for the first sync to download it, unlocks it, searches for the login, copies its user name and password and checks each on the clipboard. With no vault yet (the first run), it ends there and passes. If the test user has more than one vault, it fails. |
 
-The test user keeps one vault, the test vault, made by the first run and used by every run after. Both vault
-scenarios read the vault list only after the first sync since sign in has finished, because a new browser reads the
-list from the cloud first.
+The test user keeps one vault, the test vault, made by the first run and used by every run after.
 
 Run them with the **Deploy tests** workflow, or tick "Run the deploy tests afterwards" on Deploy or Upgrade. They need
 the environment deployed, and the test user: set `TEST_USER_EMAIL` and `TEST_USER_PASSWORD` on the GitHub environment,
