@@ -7,7 +7,6 @@ using Devoctomy.Blazwiz.Browser.Services.Interfaces;
 using Devoctomy.Blazwiz.Encryption.Interfaces;
 using Devoctomy.Blazwiz.Encryption.Models;
 using Devoctomy.Blazwiz.Sync.Encryption.Interfaces;
-using Devoctomy.Blazwiz.Sync.Interfaces;
 using Devoctomy.Blazwiz.UI.Text.Interfaces;
 using Microsoft.Extensions.Localization;
 
@@ -28,7 +27,6 @@ public partial class VaultsViewModel : ViewModelBase
     private readonly ISyncProtectedProfileService profiles;
     private readonly IE2eProtectedProfileManager manager;
     private readonly INavigationService navigationService;
-    private readonly ISyncScheduler scheduler;
     private readonly IErrorText errorText;
     private readonly IStringLocalizer<ClypseText> text;
 
@@ -52,17 +50,14 @@ public partial class VaultsViewModel : ViewModelBase
     /// <param name="navigationService">Opens a vault.</param>
     /// <param name="errorText">Describes errors.</param>
     /// <param name="text">Clypse's text.</param>
-    /// <param name="scheduler">Syncs a vault before it is unlocked with biometrics.</param>
     public VaultsViewModel(
         IVaultService vaultService,
         ISyncProtectedProfileService profiles,
         IE2eProtectedProfileManager manager,
         INavigationService navigationService,
         IErrorText errorText,
-        IStringLocalizer<ClypseText> text,
-        ISyncScheduler scheduler)
+        IStringLocalizer<ClypseText> text)
     {
-        this.scheduler = scheduler ?? throw new ArgumentNullException(nameof(scheduler));
         this.vaultService = vaultService ?? throw new ArgumentNullException(nameof(vaultService));
         this.profiles = profiles ?? throw new ArgumentNullException(nameof(profiles));
         this.manager = manager ?? throw new ArgumentNullException(nameof(manager));
@@ -218,15 +213,6 @@ public partial class VaultsViewModel : ViewModelBase
     {
         if (Vaults.FirstOrDefault(v => v.Id == id) is { CanUnlockWithBiometrics: true, IsUnlocked: false })
         {
-            try
-            {
-                await scheduler.SyncProfileAsync(id);
-            }
-            catch (Exception)
-            {
-                // Unlocking goes ahead with the files this device has.
-            }
-
             await vaultService.UnlockWithBiometricsAsync(id);
         }
 

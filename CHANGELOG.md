@@ -9,6 +9,17 @@ Changed, Fixed, Removed or Security.
 
 ## Unreleased
 
+## 0.8.1
+
+### Added
+- A name to remember you by. Ticking "Remember me" when signing in offers an optional name, shown in the list of
+  remembered users instead of your email address (which still shows when you hover over it).
+
+### Changed
+- Built on blazwiz 0.8.1.
+- Unlocking a vault with biometrics from the vault list now uses blazwiz's biometric unlock, which came from clypse.
+  It works as before: the vault is synced first when online, then opens straight onto its secrets.
+
 ## 0.8.0
 
 ### Changed
