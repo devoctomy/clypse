@@ -1,4 +1,4 @@
-namespace Clypse.Portal.DeployTests;
+namespace Clypse.Portal.DeployTests.Support;
 
 /// <summary>
 /// What the deploy tests are given, from environment variables: the deployed portal and the test user, an account kept

@@ -143,6 +143,15 @@ dotnet test Clypse.slnx --no-build --filter "FullyQualifiedName~UITests"
   - Don't build while they run.
 - **Deploy tests** (`Clypse.Portal.DeployTests`) run against a deployed environment, from the Deploy tests workflow.
   They test clypse's own UI only; what the blazwiz base stack does is tested by blazwiz. No CI filter runs them.
+  - They are Reqnroll scenarios run by MSTest: features in `Features/*.feature`, steps in `Steps/`, and the
+    per-scenario browser (`BrowserSession`) and its hooks in `Support/`.
+  - Scenario titles are plain sentences, not `Given…_When…_Then…` names, and steps carry no Arrange/Act/Assert
+    comments: the unit test naming rules don't apply to them.
+  - Write steps in the user's words and reuse them across features, so new workflows are built from existing steps.
+  - A scenario can end early and pass with `ScenarioFlow.End` (e.g. "…, or the scenario ends here"). Every step
+    therefore returns at once when `ScenarioFlow.HasEnded` is true; new steps must check it first.
+  - The scenarios share one test user and their one test vault, and later ones use what earlier ones left. They never
+    run in parallel (`[assembly: DoNotParallelize]`, `Support/TestRunOrder.cs`). Keep it that way.
 - **Never work around a build failure.**
   - If a build fails for a reason you don't understand, stop and show the maintainer the full error. Don't retry with
     something changed until it passes.
