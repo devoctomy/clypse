@@ -184,6 +184,45 @@ public class ImportSecretsViewModelTests
     }
 
     [Fact]
+    public async Task GivenALoadedFile_WhenImporting_ThenItSaysHowManyHaveBeenImportedSoFar()
+    {
+        // Arrange
+        var sut = CreateSut();
+        sut.LoadFile("export.csv", KeePassCsv);
+        var during = new List<string?>();
+        mockSession.Setup(x => x.ImportAsync(It.IsAny<IReadOnlyList<Secret>>(), It.IsAny<IProgress<int>?>(), It.IsAny<CancellationToken>()))
+            .Callback<IReadOnlyList<Secret>, IProgress<int>?, CancellationToken>((_, progress, _) =>
+            {
+                during.Add(sut.ProgressText);
+                progress!.Report(1);
+                during.Add(sut.ProgressText);
+                progress.Report(2);
+                during.Add(sut.ProgressText);
+            })
+            .ReturnsAsync(2);
+
+        // Act
+        await sut.ImportAsync();
+
+        // Assert
+        Assert.Equal(["Importing 0 of 2…", "Importing 1 of 2…", "Importing 2 of 2…"], during);
+        Assert.Null(sut.ProgressText);
+    }
+
+    [Fact]
+    public void GivenALoadedFile_WhenNotImporting_ThenThereIsNoProgress()
+    {
+        // Arrange
+        var sut = CreateSut();
+
+        // Act
+        sut.LoadFile("export.csv", KeePassCsv);
+
+        // Assert
+        Assert.Null(sut.ProgressText);
+    }
+
+    [Fact]
     public async Task GivenImportingFails_WhenImported_ThenTheErrorIsShown()
     {
         // Arrange

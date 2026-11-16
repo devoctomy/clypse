@@ -97,6 +97,23 @@ public class VaultViewModelTests
     }
 
     [Fact]
+    public async Task GivenAVaultBeingDeleted_WhenLoaded_ThenItIsNotOpened_AndTheVaultsAreShown()
+    {
+        // Arrange
+        vault.IsDeleting = true;
+        vault.IsUnlocked = false;
+        var sut = CreateSut();
+
+        // Act
+        await sut.LoadAsync("v1");
+
+        // Assert
+        mockSession.Verify(x => x.OpenAsync(It.IsAny<Vault>(), It.IsAny<CancellationToken>()), Times.Never);
+        mockNavigation.Verify(x => x.NavigateTo("vaults"), Times.Once);
+        Assert.False(sut.IsMissing);
+    }
+
+    [Fact]
     public async Task GivenNoSuchVault_WhenLoaded_ThenItIsMissing()
     {
         // Arrange

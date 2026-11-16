@@ -17,6 +17,10 @@
     <PackageReference Include="Reqnroll.MSTest" />
   </ItemGroup>
   <ItemGroup>
+    <!-- Files the scenarios import (made-up logins), e.g. the first 200 rows of Resources/medium-import.zip's KeePass CSV. -->
+    <None Update="TestData\**" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+  <ItemGroup>
     <Using Include="Microsoft.Playwright" />
     <Using Include="Reqnroll" />
   </ItemGroup>

@@ -109,6 +109,22 @@ public class VaultsViewModelTests
     }
 
     [Fact]
+    public async Task GivenAVaultBeingDeleted_WhenOpened_ThenNothingHappens()
+    {
+        // Arrange
+        vaults = [new Vault { Id = "abc", Name = "Personal", IsDeleting = true }];
+        var sut = CreateSut();
+        await sut.OnInitializedAsync();
+
+        // Act
+        await sut.OpenCommand.ExecuteAsync("abc");
+
+        // Assert
+        mockNavigation.Verify(x => x.NavigateTo(It.IsAny<string>()), Times.Never);
+        mockVaults.Verify(x => x.UnlockWithBiometricsAsync(It.IsAny<string>()), Times.Never);
+    }
+
+    [Fact]
     public void GivenAVault_WhenOpenedOrLocked_ThenItsPageIsShownOrItIsLocked()
     {
         // Arrange

@@ -84,6 +84,24 @@ public class VaultServiceTests
     }
 
     [Fact]
+    public async Task GivenAVaultBeingDeleted_WhenFound_ThenItIsDeleting_AndCannotBeUsed()
+    {
+        // Arrange: it was unlocked, with biometrics, when deleting started.
+        var id = AddVault();
+        profiles.Single(p => p.Name == id).IsDeleting = true;
+        unlocked.Add(new E2eKeyScope(id));
+        mockDeviceUnlock.Setup(x => x.CanUnlockAsync(new E2eKeyScope(id))).ReturnsAsync(true);
+
+        // Act
+        var vault = await CreateSut().FindAsync(id);
+
+        // Assert
+        Assert.True(vault!.IsDeleting);
+        Assert.False(vault.IsUnlocked);
+        Assert.False(vault.CanUnlockWithBiometrics);
+    }
+
+    [Fact]
     public async Task GivenALockedVaultLabelledOnThisDevice_WhenFound_ThenItsLabelIsShown()
     {
         // Arrange

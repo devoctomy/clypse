@@ -226,7 +226,29 @@ public class VaultSettingsViewModelTests
     }
 
     [Fact]
-    public async Task GivenDeletingFails_WhenDeleted_ThenTheErrorIsShownAndTheVaultStays()
+    public async Task GivenTheNameTyped_WhenDeleted_ThenTheVaultsAreShownAsSoonAsDeletingStarts()
+    {
+        // Arrange
+        var finish = new TaskCompletionSource();
+        mockVaults.Setup(x => x.DeleteAsync(vault.Id, It.IsAny<CancellationToken>())).Returns(finish.Task);
+        var sut = CreateSut();
+        sut.Load(vault);
+        sut.DeleteConfirmation = "Personal";
+
+        // Act
+        var deleting = sut.DeleteAsync();
+
+        // Assert
+        mockNavigation.Verify(x => x.NavigateTo("vaults"), Times.Once);
+        Assert.True(sut.IsWorking);
+        mockToasts.VerifyNoOtherCalls();
+        finish.SetResult();
+        Assert.True(await deleting);
+        mockToasts.Verify(x => x.Show("Personal deleted.", ToastTone.Success, null), Times.Once);
+    }
+
+    [Fact]
+    public async Task GivenDeletingFails_WhenDeleted_ThenItSaysSoAndTheVaultStays()
     {
         // Arrange
         mockVaults.Setup(x => x.DeleteAsync(It.IsAny<string>(), It.IsAny<CancellationToken>())).ThrowsAsync(new ClypseException(ClypseErrorCodes.VaultNotFound));
@@ -240,8 +262,9 @@ public class VaultSettingsViewModelTests
 
         // Assert
         Assert.False(deleted);
-        Assert.Equal("That vault no longer exists.", sut.Error);
-        mockNavigation.VerifyNoOtherCalls();
+        Assert.False(sut.IsWorking);
+        mockToasts.Verify(x => x.Show("Personal could not be deleted: That vault no longer exists.", ToastTone.Danger, null), Times.Once);
+        mockNavigation.Verify(x => x.NavigateTo("vaults"), Times.Once);
     }
 
     [Fact]

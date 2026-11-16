@@ -163,8 +163,11 @@ deploy tests, and is not tested again here.
 | The test vault is created on the first run (`TestVault.feature`) | If the test user has no vault, creates the test vault (its name, passphrase and login are in the feature), adds the login, locks the vault and runs a sync until nothing is left to upload. If they have a vault already, it ends there and passes. |
 | The test vault's login is copied (`TestVault.feature`) | If the test user has a vault, waits for the first sync to download it, unlocks it, searches for the login, copies its user name and password and checks each on the clipboard. With no vault yet (the first run), it ends there and passes. If the test user has more than one vault, it fails. |
 | A login with a generated password reaches another device (`TestVault.feature`) | If the test user has a vault, unlocks it, adds a login named with the date and time, the same user name and a random password from the app's generator, locks the vault and runs a sync until nothing is left to upload. It signs out, opens the portal in a fresh browser context (like another device, with nothing stored), signs in, waits for the first sync, unlocks the vault, finds the login and checks its password is the generated one. With no vault yet, it ends there and passes. |
+| Imported secrets are kept through locking, and their vault is deleted (`ImportingSecrets.feature`) | Creates a second vault, imports the 200 logins of `TestData/medium-import-keepass-1.x.csv` (KeePass 1.x), checks all 200 are imported and listed, and runs a sync until nothing is left to upload. Locks the vault, unlocks it and checks it still holds 200. Deletes it: the vaults page is shown at once with the vault listed as being deleted, then waits for the app to say it is deleted and for it to leave the list, and runs a sync. |
 
-The test user keeps one vault, the test vault, made by the first run and used by every run after.
+The test user keeps one vault, the test vault, made by the first run and used by every run after. The import scenario
+makes a vault of its own and deletes it again; if a run fails part way through, that vault is left behind and the test
+vault scenarios fail until it is deleted by hand.
 
 Run them with the **Deploy tests** workflow, or tick "Run the deploy tests afterwards" on Deploy or Upgrade. They need
 the environment deployed, and the test user: set `TEST_USER_EMAIL` and `TEST_USER_PASSWORD` on the GitHub environment,

@@ -9,6 +9,16 @@ Changed, Fixed, Removed or Security.
 
 ## Unreleased
 
+## 0.8.2
+
+### Changed
+- Built on blazwiz 0.8.2.
+- Importing secrets from a CSV file shows how far it has got ("Importing 120 of 1000…"), instead of only a spinner.
+- The sync status shows how far a sync has got ("Syncing 120 of 1000"), from blazwiz.
+- Deleting a vault goes straight back to the vaults list, instead of leaving you on the deleted vault's unlock page
+  until it is gone. The vault shows "Deleting…" there and cannot be opened, the sync status counts its files as they
+  are deleted, and a message says when it is gone (or why it could not be deleted).
+
 ## 0.8.1
 
 ### Added
