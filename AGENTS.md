@@ -158,6 +158,55 @@ dotnet test Clypse.slnx --no-build --filter "FullyQualifiedName~UITests"
   - Never add a build flag, environment variable, clean-up step (deleting `bin` or `obj`) or build server shutdown to
     get past a failure: not in workflows, scripts, project files or test code, and not in your own shell.
 
+## Running locally against the deployed Test environment
+
+A Debug build of the portal can run on your machine against the deployed Test environment's user pool and bucket, to
+check a change with real sign-in and sync before it is deployed.
+
+- **Settings:** `Clypse.Portal/wwwroot/appsettings.Test.json` holds the Test stack's `AwsCognito` and `AwsS3`
+  settings, over `appsettings.json`. It is local to the maintainer's machine and git ignored. If it is missing, ask
+  the maintainer for it; never run AWS commands to find the values (rule 7).
+- **Start the portal** (in the background, from the repository root):
+
+  ```powershell
+  dotnet run --project Clypse.Portal --launch-profile test -p:WasmApplicationEnvironmentName=Test
+  ```
+
+  - It serves `https://localhost:7090`.
+  - The `test` launch profile only sets the host's environment. The WASM client's environment is fixed when it is
+    built, so `-p:WasmApplicationEnvironmentName=Test` is needed too. Without it the client loads the Development
+    settings. This selects the environment; it is not a way past a build failure.
+  - Don't build while it runs. A rebuild leaves it serving stale fingerprinted files (e.g. `dotnet.*.js` 404s): stop
+    it, build, and start it again.
+  - Stop it when you are done, or when the maintainer says they no longer need it.
+- **Signing in** uses the deploy tests' user, through the Playwright MCP server in `.mcp.json` (Edge, with
+  `--secrets playwright-secrets.env`).
+  - `playwright-secrets.env` is in the repository root, git ignored (`*.env`). It holds `CLYPSE_TEST_USERNAME` and
+    `CLYPSE_TEST_PASSWORD`, which the maintainer sets.
+  - Type the secret names into the sign-in form; Playwright fills in the values. Never print, echo or copy the file's
+    values.
+- **The data is real:** the Test environment's bucket, shared with the deploy tests.
+  - Never delete the maintainer's vaults, or the deploy tests' "Deploy tests" vault.
+  - Use one passphrase for every vault you make, so it can be cleaned up afterwards.
+- **Once the portal is handed to the maintainer,** leave it and the Playwright browser alone: don't rebuild, restart
+  or drive it while they test. File pickers (e.g. the import dialog's) don't open in the Playwright window; the
+  maintainer uses their own browser at `https://localhost:7090` for those.
+- **Deploy tests against it:** build first, then point the tests at the local portal, taking the user from
+  `playwright-secrets.env` without printing it:
+
+  ```powershell
+  $s = @{}
+  Get-Content playwright-secrets.env | Where-Object { $_ -match '^\s*([A-Z_]+)\s*=\s*(.*)$' } |
+      ForEach-Object { $s[$Matches[1]] = $Matches[2].Trim().Trim('"') }
+  $env:CLYPSE_DEPLOYTEST_PORTAL_URL = 'https://localhost:7090'
+  $env:CLYPSE_DEPLOYTEST_EMAIL = $s.CLYPSE_TEST_USERNAME
+  $env:CLYPSE_DEPLOYTEST_PASSWORD = $s.CLYPSE_TEST_PASSWORD
+  dotnet test Clypse.Portal.DeployTests --no-build
+  ```
+
+  They use the same user as the deployed runs, so the rules in "Build and test" apply: one run at a time, and a failed
+  run of the import scenario leaves its vault behind.
+
 ## blazwiz packages
 
 clypse uses either a released blazwiz from nuget.org, or blazwiz packed locally from the blazwiz working tree while a
@@ -178,8 +227,14 @@ blazwiz change is being made:
 - **What can run on a local build:** the CI, deploy and upgrade workflows only run on a released version
   (`eng/check-blazwiz-version.ps1`). A commit with a `-local.` version fails CI.
 - **Never edit `BlazwizVersion` by hand,** and never point clypse at blazwiz project references.
-- **Before work that changed blazwiz is done,** rebuild the packages from the current blazwiz tree and run clypse's full
-  test suite on them.
+- **Get the change working before running any full suite.**
+  - While working on a blazwiz change, run only the unit tests of the projects you changed, and check the change in
+    the running clypse portal.
+  - Hand the portal to the maintainer to try. Run the full suites only after they have confirmed the fix is right.
+  - Never run blazwiz's full suites (unit, integration, UI, `test-template.ps1`) or clypse's between attempts. They
+    take many minutes and are the final gate, run once.
+- **Before work that changed blazwiz is done,** rebuild the packages from the current blazwiz tree. Then run blazwiz's
+  full suites and clypse's full test suite on them, once.
 
 ## Versions and releases
 

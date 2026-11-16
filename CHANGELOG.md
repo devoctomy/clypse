@@ -9,6 +9,16 @@ Changed, Fixed, Removed or Security.
 
 ## Unreleased
 
+## 0.8.3
+
+### Changed
+- Built on blazwiz 0.8.3.
+
+### Fixed
+- When more than one vault syncs at the same time, each shows its own progress in its own pill, instead of one pill
+  jumping between their counts. The sync status names the vault being synced ("Syncing Work 12 of 201"), or shows only
+  the progress for a vault whose name isn't known on this device yet (fixed in blazwiz 0.8.3).
+
 ## 0.8.2
 
 ### Changed
