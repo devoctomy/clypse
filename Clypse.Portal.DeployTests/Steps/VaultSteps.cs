@@ -4,8 +4,9 @@ using static Microsoft.Playwright.Assertions;
 namespace Clypse.Portal.DeployTests.Steps;
 
 /// <summary>
-/// Steps for the vaults page and the test vault: finding it, creating, unlocking and locking it. The test user has at
-/// most one vault, the test vault.
+/// Steps for the vaults page and the scenario's vault: finding the test vault, creating, unlocking, locking and
+/// deleting a vault. Between scenarios the test user has at most one vault, the test vault; a scenario that creates
+/// another deletes it again.
 /// </summary>
 /// <param name="session">The scenario's browser.</param>
 /// <param name="flow">Ends the scenario early when there is nothing for it to do.</param>
@@ -15,6 +16,7 @@ public sealed class VaultSteps(BrowserSession session, ScenarioFlow flow)
     private readonly BrowserSession session = session ?? throw new ArgumentNullException(nameof(session));
     private readonly ScenarioFlow flow = flow ?? throw new ArgumentNullException(nameof(flow));
     private string? vaultId;
+    private string? deletedName;
 
     private IPage Page => session.Page;
 
@@ -89,12 +91,14 @@ public sealed class VaultSteps(BrowserSession session, ScenarioFlow flow)
     }
 
     /// <summary>
-    /// Creates the test vault from the empty vaults page, which opens it, unlocked.
+    /// Creates a vault from the vaults page (with the button shown when there are none, or the New vault button), which
+    /// opens it, unlocked. It is the vault the later steps of the scenario use.
     /// </summary>
     /// <param name="name">The vault's name.</param>
     /// <param name="passphrase">Its passphrase.</param>
     /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     [When("I create the test vault named {string} with the passphrase {string}")]
+    [When("I create a vault named {string} with the passphrase {string}")]
     public async Task WhenICreateTheTestVault(string name, string passphrase)
     {
         if (flow.HasEnded)
@@ -102,7 +106,7 @@ public sealed class VaultSteps(BrowserSession session, ScenarioFlow flow)
             return;
         }
 
-        await Page.Locator("#create-first-vault-button").ClickAsync();
+        await Page.Locator("#create-first-vault-button, #new-vault-button").First.ClickAsync();
         await Page.Locator("#vault-name").FillAsync(name);
         await Page.Locator("#vault-passphrase").FillAsync(passphrase);
         await Page.Locator("#vault-confirm-passphrase").FillAsync(passphrase);
@@ -113,11 +117,13 @@ public sealed class VaultSteps(BrowserSession session, ScenarioFlow flow)
     }
 
     /// <summary>
-    /// Opens the test vault from the vaults page and unlocks it with its passphrase.
+    /// Opens the scenario's vault (the test vault, or the one it created) from the vaults page and unlocks it with its
+    /// passphrase.
     /// </summary>
     /// <param name="passphrase">Its passphrase.</param>
     /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     [When("I unlock the test vault with the passphrase {string}")]
+    [When("I unlock the vault with the passphrase {string}")]
     public async Task WhenIUnlockTheTestVault(string passphrase)
     {
         if (flow.HasEnded)
@@ -149,10 +155,11 @@ public sealed class VaultSteps(BrowserSession session, ScenarioFlow flow)
     }
 
     /// <summary>
-    /// Checks the vaults page lists the test vault, locked.
+    /// Checks the vaults page lists the scenario's vault, locked.
     /// </summary>
     /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     [Then("the test vault is listed as locked")]
+    [Then("the vault is listed as locked")]
     public async Task ThenTheTestVaultIsListedAsLocked()
     {
         if (flow.HasEnded)
@@ -161,6 +168,59 @@ public sealed class VaultSteps(BrowserSession session, ScenarioFlow flow)
         }
 
         await Expect(TestVaultCard()).ToHaveClassAsync(new System.Text.RegularExpressions.Regex(@"\bis-locked\b"));
+    }
+
+    /// <summary>
+    /// Deletes the open vault from its settings, typing its name to confirm. The vaults page is shown at once.
+    /// </summary>
+    /// <param name="name">The vault's name.</param>
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
+    [When("I delete the vault named {string}")]
+    public async Task WhenIDeleteTheVault(string name)
+    {
+        if (flow.HasEnded)
+        {
+            return;
+        }
+
+        deletedName = name;
+        await Page.Locator("#vault-settings-button").ClickAsync();
+        await Page.Locator("#vault-delete-confirmation").FillAsync(name);
+        await Page.Locator("#vault-delete-button").ClickAsync();
+        await Expect(Page.Locator("#vaults-page")).ToBeVisibleAsync();
+    }
+
+    /// <summary>
+    /// Checks the vaults page lists the scenario's vault as being deleted: it says so, and cannot be opened.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
+    [Then("the vault is listed as being deleted")]
+    public async Task ThenTheVaultIsListedAsBeingDeleted()
+    {
+        if (flow.HasEnded)
+        {
+            return;
+        }
+
+        await Expect(TestVaultCard()).ToHaveClassAsync(new System.Text.RegularExpressions.Regex(@"\bis-deleting\b"));
+        await Expect(TestVaultCard().Locator(".vault-card-main")).ToBeDisabledAsync();
+    }
+
+    /// <summary>
+    /// Waits for the vault being deleted to be gone: the app says it was deleted, and it is no longer listed.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
+    [Then("the vault is deleted")]
+    public async Task ThenTheVaultIsDeleted()
+    {
+        if (flow.HasEnded)
+        {
+            return;
+        }
+
+        var name = deletedName ?? throw new InvalidOperationException("No vault has been deleted in this scenario.");
+        await Expect(Page.Locator(".bw-toast", new() { HasText = $"{name} deleted." })).ToBeVisibleAsync(new() { Timeout = BrowserSession.SyncTimeoutMs });
+        await Expect(TestVaultCard()).ToHaveCountAsync(0);
     }
 
     private static string Vaults(int count) => count == 1 ? "1 vault" : $"{count} vaults";
