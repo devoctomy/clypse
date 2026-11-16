@@ -36,4 +36,9 @@ public class Vault
     /// here, and the signed in user has a passkey here.
     /// </summary>
     public bool CanUnlockWithBiometrics { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether it is being deleted on this device. It cannot be opened meanwhile.
+    /// </summary>
+    public bool IsDeleting { get; set; }
 }

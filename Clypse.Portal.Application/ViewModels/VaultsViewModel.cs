@@ -211,7 +211,13 @@ public partial class VaultsViewModel : ViewModelBase
     [RelayCommand]
     public async Task OpenAsync(string id)
     {
-        if (Vaults.FirstOrDefault(v => v.Id == id) is { CanUnlockWithBiometrics: true, IsUnlocked: false })
+        var vault = Vaults.FirstOrDefault(v => v.Id == id);
+        if (vault is { IsDeleting: true })
+        {
+            return;
+        }
+
+        if (vault is { CanUnlockWithBiometrics: true, IsUnlocked: false })
         {
             await vaultService.UnlockWithBiometricsAsync(id);
         }

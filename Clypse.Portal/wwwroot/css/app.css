@@ -157,6 +157,24 @@
     color: var(--bw-text-muted);
 }
 
+.vault-card.is-deleting {
+    opacity: 0.7;
+}
+
+.vault-card.is-deleting:hover {
+    border-color: var(--bw-border);
+    transform: none;
+}
+
+.vault-card.is-deleting .vault-card-main {
+    cursor: not-allowed;
+}
+
+.vault-card.is-deleting .vault-card-icon,
+.vault-card.is-deleting .vault-card-state {
+    color: var(--bs-danger);
+}
+
 .vault-card-lock,
 .vault-card-forget {
     align-self: center;

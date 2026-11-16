@@ -201,6 +201,9 @@
   <data name="Import.Intro" xml:space="preserve">
     <value>Import logins from a CSV file exported by another password manager. They are added to this vault as new secrets.</value>
   </data>
+  <data name="Import.Progress" xml:space="preserve">
+    <value>Importing {0} of {1}…</value>
+  </data>
   <data name="Import.Title" xml:space="preserve">
     <value>Import secrets</value>
   </data>
@@ -408,6 +411,9 @@
   <data name="VaultSettings.Delete.Confirm" xml:space="preserve">
     <value>Type the vault's name to confirm</value>
   </data>
+  <data name="VaultSettings.Delete.Failed" xml:space="preserve">
+    <value>{0} could not be deleted: {1}</value>
+  </data>
   <data name="VaultSettings.Delete.Mismatch" xml:space="preserve">
     <value>Type the vault's name exactly to delete it.</value>
   </data>
@@ -497,6 +503,9 @@
   </data>
   <data name="Vaults.Open" xml:space="preserve">
     <value>Open</value>
+  </data>
+  <data name="Vaults.State.Deleting" xml:space="preserve">
+    <value>Deleting…</value>
   </data>
   <data name="Vaults.State.Locked" xml:space="preserve">
     <value>Locked</value>

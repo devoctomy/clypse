@@ -34,18 +34,25 @@
         <div class="vault-grid" id="vaults">
             @foreach (var vault in ViewModel.Vaults)
             {
-                <div class="vault-card @(vault.IsUnlocked ? "is-unlocked" : "is-locked")" data-vault="@vault.Id">
-                    <button type="button" class="vault-card-main" @onclick="() => ViewModel.OpenCommand.ExecuteAsync(vault.Id)">
-                        <span class="vault-card-icon"><i class="bi @(vault.IsUnlocked ? "bi-unlock-fill" : vault.CanUnlockWithBiometrics ? "bi-fingerprint" : "bi-lock-fill")"></i></span>
+                <div class="vault-card @(vault.IsDeleting ? "is-deleting" : vault.IsUnlocked ? "is-unlocked" : "is-locked")" data-vault="@vault.Id">
+                    <button type="button" class="vault-card-main" disabled="@vault.IsDeleting" @onclick="() => ViewModel.OpenCommand.ExecuteAsync(vault.Id)">
+                        <span class="vault-card-icon"><i class="bi @(vault.IsDeleting ? "bi-trash" : vault.IsUnlocked ? "bi-unlock-fill" : vault.CanUnlockWithBiometrics ? "bi-fingerprint" : "bi-lock-fill")"></i></span>
                         <span class="vault-card-body">
                             <span data-user-content class="vault-card-name @(VaultsViewModel.IsShownById(vault) ? "is-id" : null)">@vault.Name</span>
                             @if (!string.IsNullOrWhiteSpace(vault.Description))
                             {
                                 <span data-user-content class="vault-card-description">@vault.Description</span>
                             }
-                            <span class="vault-card-state">@(vault.IsUnlocked ? T["Vaults.State.Unlocked"] : T["Vaults.State.Locked"])</span>
+                            <span class="vault-card-state">@(vault.IsDeleting ? T["Vaults.State.Deleting"] : vault.IsUnlocked ? T["Vaults.State.Unlocked"] : T["Vaults.State.Locked"])</span>
                         </span>
-                        <i class="bi bi-chevron-right vault-card-chevron"></i>
+                        @if (vault.IsDeleting)
+                        {
+                            <span class="spinner-border spinner-border-sm text-danger vault-card-chevron" role="status" aria-hidden="true"></span>
+                        }
+                        else
+                        {
+                            <i class="bi bi-chevron-right vault-card-chevron"></i>
+                        }
                     </button>
                     @if (vault.IsUnlocked)
                     {

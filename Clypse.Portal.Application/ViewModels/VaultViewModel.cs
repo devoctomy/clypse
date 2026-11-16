@@ -338,6 +338,14 @@ public partial class VaultViewModel : ViewModelBase
         session.Close();
 
         var vault = await vaultService.FindAsync(id);
+        if (vault is { IsDeleting: true })
+        {
+            // It cannot be opened while it is deleted: the vaults page shows it being deleted.
+            vaultId = null;
+            navigationService.NavigateTo(VaultsViewModel.Url);
+            return;
+        }
+
         IsMissing = vault == null;
         if (vault != null)
         {

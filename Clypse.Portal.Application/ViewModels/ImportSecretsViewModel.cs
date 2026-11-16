@@ -41,6 +41,7 @@ public partial class ImportSecretsViewModel : ViewModelBase
     private string? fileName;
     private IReadOnlyList<Secret> found = [];
     private bool isWorking;
+    private int written;
     private int imported;
     private string? error;
 
@@ -121,9 +122,15 @@ public partial class ImportSecretsViewModel : ViewModelBase
             if (SetProperty(ref isWorking, value))
             {
                 OnPropertyChanged(nameof(CanImport));
+                OnPropertyChanged(nameof(ProgressText));
             }
         }
     }
+
+    /// <summary>
+    /// Gets how far the import has got, as the dialog says it, or null when nothing is being imported.
+    /// </summary>
+    public string? ProgressText => IsWorking ? text["Import.Progress", written, Found.Count].Value : null;
 
     /// <summary>
     /// Gets how many secrets were imported, as the dialog says it, or null before they are.
@@ -179,11 +186,12 @@ public partial class ImportSecretsViewModel : ViewModelBase
             return false;
         }
 
+        written = 0;
         IsWorking = true;
         Error = null;
         try
         {
-            imported = await session.ImportAsync(Found);
+            imported = await session.ImportAsync(Found, new ProgressReporter(this));
             content = null;
             OnPropertyChanged(nameof(DoneText));
             OnPropertyChanged(nameof(CanImport));
@@ -263,6 +271,21 @@ public partial class ImportSecretsViewModel : ViewModelBase
         catch (Exception)
         {
             Error = errorText.Describe(ClypseErrorCodes.ImportUnreadable, [GetFormatName(Format)]);
+        }
+    }
+
+    /// <summary>
+    /// Takes the count of secrets written so far. It reports on the caller's thread, unlike <see cref="Progress{T}"/>,
+    /// so the dialog updates as each secret is written.
+    /// </summary>
+    /// <param name="owner">The view model it reports to.</param>
+    private sealed class ProgressReporter(ImportSecretsViewModel owner)
+        : IProgress<int>
+    {
+        public void Report(int value)
+        {
+            owner.written = value;
+            owner.OnPropertyChanged(nameof(ProgressText));
         }
     }
 }

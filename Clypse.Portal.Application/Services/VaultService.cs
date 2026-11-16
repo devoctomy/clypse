@@ -150,7 +150,8 @@ public class VaultService(
         {
             Id = profile.Scope.Id,
             Root = RootOf(profile.Scope.Id),
-            IsUnlocked = manager.IsUnlocked(profile.Scope),
+            IsUnlocked = !profile.IsDeleting && manager.IsUnlocked(profile.Scope),
+            IsDeleting = profile.IsDeleting,
         };
 
         var details = vault.IsUnlocked ? await ReadDetailsAsync(profile.Name, vault.Root, ct) : null;
@@ -161,7 +162,7 @@ public class VaultService(
 
         vault.Name = details?.Name ?? profile.Label ?? vault.Id;
         vault.Description = details?.Description;
-        vault.CanUnlockWithBiometrics = !vault.IsUnlocked && await deviceUnlock.CanUnlockAsync(profile.Scope);
+        vault.CanUnlockWithBiometrics = !vault.IsUnlocked && !vault.IsDeleting && await deviceUnlock.CanUnlockAsync(profile.Scope);
         return vault;
     }
 
