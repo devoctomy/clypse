@@ -119,6 +119,9 @@ jobs:
           $stack = "clypse-$env:ENVIRONMENT_NAME"
           aws cloudformation describe-stacks --stack-name $stack --region '${{ vars.AWS_REGION }}' *> $null
           if ($LASTEXITCODE -eq 0) { throw "Stack $stack already exists. Use the Upgrade workflow to update it." }
+          # The failed lookup is the expected result here. Reset its exit code, or GitHub's pwsh wrapper ends the step
+          # with it and fails the run.
+          $global:LASTEXITCODE = 0
           Write-Host "Stack $stack does not exist yet."
 
       # Parameters written out, not splatted from a hashtable: the app's deploy.ps1 passes them on to the base stack's
