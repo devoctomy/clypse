@@ -89,7 +89,6 @@ public class SyncTests : TestBase
         await Expect(Page.Locator("#offline-banner-text")).ToContainTextAsync("You're in offline mode");
         await Expect(Page.Locator("#session-timer")).ToHaveTextAsync(new Regex(@"^Offline 1[45]:\d{2}$"));
         await Expect(Page.Locator("#sync-status-pill")).ToHaveAttributeAsync("title", new Regex("Offline: offline mode"));
-        await Expect(Page.Locator("#e2e-offline")).ToContainTextAsync("You're offline");
         await ScreenshotAsync("OfflineMode");
     }
 
@@ -168,8 +167,8 @@ public class SyncTests : TestBase
     public async Task GivenStorageChoiceOpen_WhenCancelled_ThenNothingMoves()
     {
         await LoginAsync();
+        await CreateVaultAsync("Personal");
         await Page.Locator("#nav-settings").ClickAsync();
-        await CreateProtectedProfileAsync();
         await Page.Locator("#storage-option-opfs").ClickAsync();
         await Expect(Page.Locator("#storage-dialog")).ToBeVisibleAsync();
 
@@ -191,8 +190,8 @@ public class SyncTests : TestBase
         await other.EvaluateAsync("() => window.notReloaded = true");
         await Page.EvaluateAsync("() => window.notReloaded = true");
 
+        await CreateVaultAsync("Personal");
         await Page.Locator("#nav-settings").ClickAsync();
-        await CreateProtectedProfileAsync();
         await Page.Locator("#storage-option-opfs").ClickAsync();
         await Page.Locator("#storage-confirm").ClickAsync();
         await Expect(Page.Locator("#storage-option-opfs")).ToHaveClassAsync(new Regex("active"));

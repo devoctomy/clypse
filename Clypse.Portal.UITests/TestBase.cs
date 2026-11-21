@@ -192,19 +192,6 @@ public class TestBase : PageTest
     }
 
     /// <summary>
-    /// Creates a protected profile (what a vault is) from Settings, which leaves it unlocked. The page must already
-    /// show Settings.
-    /// </summary>
-    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
-    protected async Task CreateProtectedProfileAsync()
-    {
-        await Page.Locator("#e2e-new").ClickAsync();
-        await EnterNewPassphraseAsync();
-        await CloseFinishedDialogAsync();
-        await Expect(Page.Locator("#e2e-created-profiles .e2e-profile")).ToHaveCountAsync(1);
-    }
-
-    /// <summary>
     /// Creates a vault from the vaults page, which opens it unlocked.
     /// </summary>
     /// <param name="name">The vault's name.</param>
@@ -241,29 +228,6 @@ public class TestBase : PageTest
         await Page.Locator("#secret-field-Tags").FillAsync(tags);
         await Page.Locator("#secret-save").ClickAsync();
         await Expect(Page.Locator("#secret-dialog")).ToHaveCountAsync(0);
-    }
-
-    /// <summary>
-    /// Fills in a new passphrase, its confirmation and the no recovery acknowledgement, and confirms the dialog.
-    /// </summary>
-    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
-    protected async Task EnterNewPassphraseAsync()
-    {
-        await Page.Locator("#e2e-passphrase").FillAsync(Passphrase);
-        await Page.Locator("#e2e-confirm-passphrase").FillAsync(Passphrase);
-        await Page.Locator("#e2e-acknowledge").CheckAsync();
-        await Page.Locator("#e2e-confirm").ClickAsync();
-    }
-
-    /// <summary>
-    /// Waits for the dialog's change to finish, and closes it.
-    /// </summary>
-    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
-    protected async Task CloseFinishedDialogAsync()
-    {
-        await Expect(Page.Locator("#e2e-finished")).ToBeVisibleAsync();
-        await Page.Locator("#e2e-close").ClickAsync();
-        await Expect(Page.Locator("#e2e-dialog")).ToHaveCountAsync(0);
     }
 
     /// <summary>

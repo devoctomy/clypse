@@ -11,6 +11,7 @@ using Clypse.Portal.Components;
 using Clypse.Portal.Application;
 using Clypse.Portal.Application.Extensions;
 using Clypse.Portal.Application.ViewModels;
+using Devoctomy.Blazwiz.UI.Sync.Components;
 using Devoctomy.Blazwiz.UI.Sync.Extensions;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
@@ -57,6 +58,11 @@ builder.Services.AddClypseCore(textLists =>
 // section of wwwroot/appsettings.json. Replace or turn off framework pages here too, e.g.
 // builder.Services.ReplacePage<MyLogin>(BlazwizPages.Login) or builder.Services.DisablePage(BlazwizPages.Sync).
 builder.Services.AddClypse(builder.Configuration);
+
+// The framework's End to end encryption section lists protected profiles by id. Clypse does all of that on its own
+// pages, by name: vaults are created and locked on the vaults page, and renamed, deleted and given a new passphrase in
+// a vault's settings. So the section is taken off the Settings page.
+builder.Services.RemoveSettingsSection<E2eProfilesSection>();
 builder.Services.AddSettingsSection<PasswordGeneratorSettingsSection>(order: 300);
 builder.Services.AddSettingsSection<ClipboardSettingsSection>(order: 310);
 

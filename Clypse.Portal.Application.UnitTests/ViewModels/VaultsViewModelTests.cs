@@ -4,18 +4,26 @@ using Clypse.Portal.Application.Text;
 using Clypse.Portal.Application.ViewModels;
 using Clypse.Portal.Models.Vaults;
 using Devoctomy.Blazwiz.Browser.Services.Interfaces;
+using Devoctomy.Blazwiz.Cryptography.Configuration;
+using Devoctomy.Blazwiz.Cryptography.Interfaces;
+using Devoctomy.Blazwiz.Cryptography.Models;
 using Devoctomy.Blazwiz.Encryption.Exceptions;
 using Devoctomy.Blazwiz.Encryption.Interfaces;
 using Devoctomy.Blazwiz.Encryption.Models;
 using Devoctomy.Blazwiz.Sync.Encryption.Interfaces;
 using Devoctomy.Blazwiz.Testing;
+using Devoctomy.Blazwiz.UI.Sync.Models;
+using Devoctomy.Blazwiz.UI.Sync.Text;
+using Devoctomy.Blazwiz.UI.Sync.ViewModels;
 using Moq;
 
 namespace Clypse.Portal.Application.UnitTests.ViewModels;
 
 public class VaultsViewModelTests
 {
-    private readonly FrameworkText text = new(typeof(ClypseText));
+    private readonly FrameworkText text = new(typeof(ClypseText), typeof(SyncUiText));
+    private readonly Mock<IArgon2idKeyDerivationService> mockArgon2 = new();
+    private readonly E2ePassphraseFormViewModel form;
     private readonly Mock<IVaultService> mockVaults = new();
     private readonly Mock<ISyncProtectedProfileService> mockProfiles = new();
     private readonly Mock<IE2eProtectedProfileManager> mockManager = new();
@@ -26,6 +34,11 @@ public class VaultsViewModelTests
     public VaultsViewModelTests()
     {
         mockVaults.Setup(x => x.GetVaultsAsync(It.IsAny<CancellationToken>())).ReturnsAsync(() => vaults);
+        mockProfiles.Setup(x => x.GetArgon2ParametersAsync(null, It.IsAny<CancellationToken>())).ReturnsAsync(() => AppCosts());
+        mockArgon2.Setup(x => x.DeriveKeyAsync(It.IsAny<string>(), It.IsAny<byte[]>(), It.IsAny<Argon2idParameters>(), It.IsAny<CancellationToken>())).ReturnsAsync(() => new byte[32]);
+        var syncText = text.For<SyncUiText>();
+        var benchmark = new Argon2idBenchmarkViewModel(mockArgon2.Object, new Argon2idOptions { Parameters = AppCosts() }, TimeProvider.System, syncText, text.Errors);
+        form = new E2ePassphraseFormViewModel(mockProfiles.Object, benchmark, syncText);
     }
 
     [Fact]
@@ -35,12 +48,13 @@ public class VaultsViewModelTests
         var t = text.For<ClypseText>();
 
         // Act & Assert
-        Assert.Equal("vaultService", Assert.Throws<ArgumentNullException>(() => new VaultsViewModel(null!, mockProfiles.Object, mockManager.Object, mockNavigation.Object, text.Errors, t)).ParamName);
-        Assert.Equal("profiles", Assert.Throws<ArgumentNullException>(() => new VaultsViewModel(mockVaults.Object, null!, mockManager.Object, mockNavigation.Object, text.Errors, t)).ParamName);
-        Assert.Equal("manager", Assert.Throws<ArgumentNullException>(() => new VaultsViewModel(mockVaults.Object, mockProfiles.Object, null!, mockNavigation.Object, text.Errors, t)).ParamName);
-        Assert.Equal("navigationService", Assert.Throws<ArgumentNullException>(() => new VaultsViewModel(mockVaults.Object, mockProfiles.Object, mockManager.Object, null!, text.Errors, t)).ParamName);
-        Assert.Equal("errorText", Assert.Throws<ArgumentNullException>(() => new VaultsViewModel(mockVaults.Object, mockProfiles.Object, mockManager.Object, mockNavigation.Object, null!, t)).ParamName);
-        Assert.Equal("text", Assert.Throws<ArgumentNullException>(() => new VaultsViewModel(mockVaults.Object, mockProfiles.Object, mockManager.Object, mockNavigation.Object, text.Errors, null!)).ParamName);
+        Assert.Equal("vaultService", Assert.Throws<ArgumentNullException>(() => new VaultsViewModel(null!, mockProfiles.Object, mockManager.Object, mockNavigation.Object, text.Errors, t, form)).ParamName);
+        Assert.Equal("profiles", Assert.Throws<ArgumentNullException>(() => new VaultsViewModel(mockVaults.Object, null!, mockManager.Object, mockNavigation.Object, text.Errors, t, form)).ParamName);
+        Assert.Equal("manager", Assert.Throws<ArgumentNullException>(() => new VaultsViewModel(mockVaults.Object, mockProfiles.Object, null!, mockNavigation.Object, text.Errors, t, form)).ParamName);
+        Assert.Equal("navigationService", Assert.Throws<ArgumentNullException>(() => new VaultsViewModel(mockVaults.Object, mockProfiles.Object, mockManager.Object, null!, text.Errors, t, form)).ParamName);
+        Assert.Equal("errorText", Assert.Throws<ArgumentNullException>(() => new VaultsViewModel(mockVaults.Object, mockProfiles.Object, mockManager.Object, mockNavigation.Object, null!, t, form)).ParamName);
+        Assert.Equal("text", Assert.Throws<ArgumentNullException>(() => new VaultsViewModel(mockVaults.Object, mockProfiles.Object, mockManager.Object, mockNavigation.Object, text.Errors, null!, form)).ParamName);
+        Assert.Equal("passphraseForm", Assert.Throws<ArgumentNullException>(() => new VaultsViewModel(mockVaults.Object, mockProfiles.Object, mockManager.Object, mockNavigation.Object, text.Errors, t, null!)).ParamName);
     }
 
     [Fact]
@@ -155,15 +169,15 @@ public class VaultsViewModelTests
         Assert.True(sut.IsCreateDialogOpen);
         Assert.Equal(string.Empty, sut.Name);
         Assert.Equal(string.Empty, sut.Description);
-        Assert.Equal(string.Empty, sut.Passphrase);
-        Assert.Equal(string.Empty, sut.ConfirmPassphrase);
-        Assert.False(sut.AcknowledgedNoRecovery);
+        Assert.Equal(string.Empty, sut.PassphraseForm.Passphrase);
+        Assert.Equal(string.Empty, sut.PassphraseForm.ConfirmPassphrase);
+        Assert.False(sut.PassphraseForm.AcknowledgedNoRecovery);
         Assert.Null(sut.DialogError);
     }
 
     [Theory]
     [InlineData(" ", "correct horse", "correct horse", true, "Give the vault a name.")]
-    [InlineData("Personal", "", "", true, "Enter a passphrase.")]
+    [InlineData("Personal", "", "", true, "Enter your passphrase.")]
     [InlineData("Personal", "correct horse", "correct house", true, "The passphrases do not match.")]
     [InlineData("Personal", "correct horse", "correct horse", false, "Confirm you understand there is no passphrase recovery.")]
     public async Task GivenAnIncompleteDialog_WhenCreating_ThenItSaysWhatIsWrongAndCreatesNothing(
@@ -173,9 +187,9 @@ public class VaultsViewModelTests
         var sut = CreateSut();
         sut.ShowCreateDialogCommand.Execute(null);
         sut.Name = name;
-        sut.Passphrase = passphrase;
-        sut.ConfirmPassphrase = confirm;
-        sut.AcknowledgedNoRecovery = acknowledged;
+        sut.PassphraseForm.Passphrase = passphrase;
+        sut.PassphraseForm.ConfirmPassphrase = confirm;
+        sut.PassphraseForm.AcknowledgedNoRecovery = acknowledged;
 
         // Act
         await sut.CreateCommand.ExecuteAsync(null);
@@ -183,14 +197,14 @@ public class VaultsViewModelTests
         // Assert
         Assert.Equal(expected, sut.DialogError);
         Assert.True(sut.IsCreateDialogOpen);
-        mockVaults.Verify(x => x.CreateAsync(It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<string>(), It.IsAny<IProgress<E2eProgress>?>(), It.IsAny<CancellationToken>()), Times.Never);
+        mockVaults.Verify(x => x.CreateAsync(It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<string>(), It.IsAny<Argon2idParameters?>(), It.IsAny<IProgress<E2eProgress>?>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
     public async Task GivenACompleteDialog_WhenCreating_ThenTheVaultIsCreatedAndOpened_AndThePassphraseCleared()
     {
         // Arrange
-        mockVaults.Setup(x => x.CreateAsync("Personal", "Logins", "correct horse", null, It.IsAny<CancellationToken>())).ReturnsAsync(Vault("Personal", "v1"));
+        mockVaults.Setup(x => x.CreateAsync("Personal", "Logins", "correct horse", It.IsAny<Argon2idParameters?>(), null, It.IsAny<CancellationToken>())).ReturnsAsync(Vault("Personal", "v1"));
         var sut = CreateSut();
         sut.ShowCreateDialogCommand.Execute(null);
         Fill(sut);
@@ -201,16 +215,71 @@ public class VaultsViewModelTests
         // Assert
         Assert.False(sut.IsCreateDialogOpen);
         Assert.False(sut.IsWorking);
-        Assert.Equal(string.Empty, sut.Passphrase);
-        Assert.Equal(string.Empty, sut.ConfirmPassphrase);
+        Assert.Equal(string.Empty, sut.PassphraseForm.Passphrase);
+        Assert.Equal(string.Empty, sut.PassphraseForm.ConfirmPassphrase);
         mockNavigation.Verify(x => x.NavigateTo("vaults/v1"), Times.Once);
+    }
+
+    [Fact]
+    public async Task GivenArgon2SettingsChanged_WhenCreating_ThenRefusedUntilTheyAreBenchmarked_ThenCreatedWithThem()
+    {
+        // Arrange
+        Argon2idParameters? used = null;
+        mockVaults.Setup(x => x.CreateAsync("Personal", "Logins", "correct horse", It.IsAny<Argon2idParameters?>(), null, It.IsAny<CancellationToken>()))
+            .Callback<string, string?, string, Argon2idParameters?, IProgress<E2eProgress>?, CancellationToken>((_, _, _, argon2, _, _) => used = argon2)
+            .ReturnsAsync(Vault("Personal", "v1"));
+        var sut = CreateSut();
+        sut.ShowCreateDialogCommand.Execute(null);
+        Fill(sut);
+        var startedAt = sut.PassphraseForm.Argon2.MemoryMib;
+        sut.PassphraseForm.Argon2.MemoryMib = 4096;
+        sut.PassphraseForm.Argon2.Iterations = 250;
+
+        // Act
+        var canCreateBefore = sut.CanCreate;
+        await sut.CreateCommand.ExecuteAsync(null);
+        var refused = sut.DialogError;
+        var tab = sut.PassphraseForm.ActiveTab;
+        var createdBeforeBenchmark = used;
+        await sut.PassphraseForm.Argon2.BenchmarkCommand.ExecuteAsync(null);
+        var canCreateAfter = sut.CanCreate;
+        await sut.CreateCommand.ExecuteAsync(null);
+
+        // Assert
+        Assert.Equal(19, startedAt);
+        Assert.False(canCreateBefore);
+        Assert.Equal("Benchmark these settings on this device before they can be used.", refused);
+        Assert.Equal(E2ePassphraseFormTab.Advanced, tab);
+        Assert.Null(createdBeforeBenchmark);
+        Assert.True(canCreateAfter);
+        Assert.NotNull(used);
+        Assert.Equal(4096 * 1024, used.MemoryKib);
+        Assert.Equal(250, used.Iterations);
+        Assert.Equal(32, used.KeyLength);
+        mockNavigation.Verify(x => x.NavigateTo("vaults/v1"), Times.Once);
+    }
+
+    [Fact]
+    public async Task GivenNoNameAndTheAdvancedTabShown_WhenCreating_ThenTheFirstTabIsShownWithTheError()
+    {
+        // Arrange
+        var sut = CreateSut();
+        sut.ShowCreateDialogCommand.Execute(null);
+        sut.PassphraseForm.ShowTabCommand.Execute(E2ePassphraseFormTab.Advanced);
+
+        // Act
+        await sut.CreateCommand.ExecuteAsync(null);
+
+        // Assert
+        Assert.Equal("Give the vault a name.", sut.DialogError);
+        Assert.Equal(E2ePassphraseFormTab.Passphrase, sut.PassphraseForm.ActiveTab);
     }
 
     [Fact]
     public async Task GivenCreatingFails_WhenCreating_ThenTheErrorIsDescribedAndTheDialogStaysOpen()
     {
         // Arrange
-        mockVaults.Setup(x => x.CreateAsync(It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<string>(), null, It.IsAny<CancellationToken>()))
+        mockVaults.Setup(x => x.CreateAsync(It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<string>(), It.IsAny<Argon2idParameters?>(), null, It.IsAny<CancellationToken>()))
             .ThrowsAsync(new ClypseException(ClypseErrorCodes.VaultNameRequired));
         var sut = CreateSut();
         sut.ShowCreateDialogCommand.Execute(null);
@@ -229,7 +298,7 @@ public class VaultsViewModelTests
     public async Task GivenAFrameworkError_WhenCreating_ThenItIsDescribed()
     {
         // Arrange
-        mockVaults.Setup(x => x.CreateAsync(It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<string>(), null, It.IsAny<CancellationToken>()))
+        mockVaults.Setup(x => x.CreateAsync(It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<string>(), It.IsAny<Argon2idParameters?>(), null, It.IsAny<CancellationToken>()))
             .ThrowsAsync(new E2eLockedException());
         var sut = CreateSut();
         sut.ShowCreateDialogCommand.Execute(null);
@@ -247,7 +316,7 @@ public class VaultsViewModelTests
     {
         // Arrange
         var release = new TaskCompletionSource<Vault>();
-        mockVaults.Setup(x => x.CreateAsync(It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<string>(), null, It.IsAny<CancellationToken>())).Returns(release.Task);
+        mockVaults.Setup(x => x.CreateAsync(It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<string>(), It.IsAny<Argon2idParameters?>(), null, It.IsAny<CancellationToken>())).Returns(release.Task);
         var sut = CreateSut();
         sut.ShowCreateDialogCommand.Execute(null);
         Fill(sut);
@@ -262,7 +331,7 @@ public class VaultsViewModelTests
         Assert.True(sut.IsCreateDialogOpen);
         release.SetResult(Vault("Personal", "v1"));
         await creating;
-        mockVaults.Verify(x => x.CreateAsync(It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<string>(), null, It.IsAny<CancellationToken>()), Times.Once);
+        mockVaults.Verify(x => x.CreateAsync(It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<string>(), It.IsAny<Argon2idParameters?>(), null, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -282,15 +351,17 @@ public class VaultsViewModelTests
         mockVaults.VerifyNoOtherCalls();
     }
 
+    private static Argon2idParameters AppCosts() => new() { MemoryKib = 19 * 1024, Iterations = 2, Parallelism = 1, KeyLength = 32 };
+
     private static Vault Vault(string name, string? id = null) => new() { Id = id ?? Guid.NewGuid().ToString("D"), Name = name };
 
     private static void Fill(VaultsViewModel sut)
     {
         sut.Name = "Personal";
         sut.Description = "Logins";
-        sut.Passphrase = "correct horse";
-        sut.ConfirmPassphrase = "correct horse";
-        sut.AcknowledgedNoRecovery = true;
+        sut.PassphraseForm.Passphrase = "correct horse";
+        sut.PassphraseForm.ConfirmPassphrase = "correct horse";
+        sut.PassphraseForm.AcknowledgedNoRecovery = true;
     }
 
     private static async Task WaitForAsync(Func<bool> condition)
@@ -422,7 +493,8 @@ public class VaultsViewModelTests
         mockManager.Object,
         mockNavigation.Object,
         text.Errors,
-        text.For<ClypseText>());
+        text.For<ClypseText>(),
+        form);
 
     [Fact]
     public void GivenTheDialog_WhenItsFieldsAreSetToNull_ThenTheyAreEmpty()
@@ -434,13 +506,13 @@ public class VaultsViewModelTests
         // Act
         sut.Name = null!;
         sut.Description = null!;
-        sut.Passphrase = null!;
-        sut.ConfirmPassphrase = null!;
+        sut.PassphraseForm.Passphrase = null!;
+        sut.PassphraseForm.ConfirmPassphrase = null!;
 
         // Assert
         Assert.Empty(sut.Name);
         Assert.Empty(sut.Description);
-        Assert.Empty(sut.Passphrase);
-        Assert.Empty(sut.ConfirmPassphrase);
+        Assert.Empty(sut.PassphraseForm.Passphrase);
+        Assert.Empty(sut.PassphraseForm.ConfirmPassphrase);
     }
 }

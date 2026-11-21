@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using Blazing.Mvvm.ComponentModel;
 using Clypse.Portal.Application.Services.Interfaces;
 using Clypse.Portal.Application.Text;
@@ -7,6 +8,8 @@ using Devoctomy.Blazwiz.Browser.Services.Interfaces;
 using Devoctomy.Blazwiz.Encryption.Interfaces;
 using Devoctomy.Blazwiz.Encryption.Models;
 using Devoctomy.Blazwiz.Sync.Encryption.Interfaces;
+using Devoctomy.Blazwiz.UI.Sync.Models;
+using Devoctomy.Blazwiz.UI.Sync.ViewModels;
 using Devoctomy.Blazwiz.UI.Text.Interfaces;
 using Microsoft.Extensions.Localization;
 
@@ -14,7 +17,9 @@ namespace Clypse.Portal.Application.ViewModels;
 
 /// <summary>
 /// ViewModel for the vaults page: the user's vaults, each with its own passphrase, and a dialog to create one. Opening
-/// a vault shows its secrets. Passphrases are cleared from the view model once used.
+/// a vault shows its secrets. The dialog's passphrase fields and Advanced tab are the framework's passphrase form
+/// (<see cref="E2ePassphraseFormViewModel"/>); the vault's name and description are clypse's. Passphrases are cleared
+/// once used.
 /// </summary>
 public partial class VaultsViewModel : ViewModelBase
 {
@@ -35,9 +40,6 @@ public partial class VaultsViewModel : ViewModelBase
     private bool isCreateDialogOpen;
     private string name = string.Empty;
     private string description = string.Empty;
-    private string passphrase = string.Empty;
-    private string confirmPassphrase = string.Empty;
-    private bool acknowledgedNoRecovery;
     private bool isWorking;
     private string? dialogError;
 
@@ -50,14 +52,17 @@ public partial class VaultsViewModel : ViewModelBase
     /// <param name="navigationService">Opens a vault.</param>
     /// <param name="errorText">Describes errors.</param>
     /// <param name="text">Clypse's text.</param>
+    /// <param name="passphraseForm">The framework's form for a new passphrase and its Argon2id settings.</param>
     public VaultsViewModel(
         IVaultService vaultService,
         ISyncProtectedProfileService profiles,
         IE2eProtectedProfileManager manager,
         INavigationService navigationService,
         IErrorText errorText,
-        IStringLocalizer<ClypseText> text)
+        IStringLocalizer<ClypseText> text,
+        E2ePassphraseFormViewModel passphraseForm)
     {
+        PassphraseForm = passphraseForm ?? throw new ArgumentNullException(nameof(passphraseForm));
         this.vaultService = vaultService ?? throw new ArgumentNullException(nameof(vaultService));
         this.profiles = profiles ?? throw new ArgumentNullException(nameof(profiles));
         this.manager = manager ?? throw new ArgumentNullException(nameof(manager));
@@ -66,7 +71,20 @@ public partial class VaultsViewModel : ViewModelBase
         this.text = text ?? throw new ArgumentNullException(nameof(text));
         this.profiles.ProfilesChanged += OnProfilesChanged;
         this.manager.LockStateChanged += OnLockStateChanged;
+        PassphraseForm.PropertyChanged += OnPassphraseFormChanged;
     }
+
+    /// <summary>
+    /// Gets the new vault's passphrase form: the passphrase on the dialog's first tab, and on its Advanced tab the
+    /// Argon2id settings of the passphrase's key.
+    /// </summary>
+    public E2ePassphraseFormViewModel PassphraseForm { get; }
+
+    /// <summary>
+    /// Gets a value indicating whether the vault may be created: false while it is being created, and while the Argon2id
+    /// settings on the Advanced tab were changed and not benchmarked yet.
+    /// </summary>
+    public bool CanCreate => !IsWorking && PassphraseForm.CanConfirm;
 
     /// <summary>
     /// Gets the user's vaults, by name.
@@ -114,39 +132,18 @@ public partial class VaultsViewModel : ViewModelBase
     }
 
     /// <summary>
-    /// Gets or sets the new vault's passphrase.
-    /// </summary>
-    public string Passphrase
-    {
-        get => passphrase;
-        set => SetProperty(ref passphrase, value ?? string.Empty);
-    }
-
-    /// <summary>
-    /// Gets or sets the passphrase entered again, to confirm it.
-    /// </summary>
-    public string ConfirmPassphrase
-    {
-        get => confirmPassphrase;
-        set => SetProperty(ref confirmPassphrase, value ?? string.Empty);
-    }
-
-    /// <summary>
-    /// Gets or sets a value indicating whether the user has confirmed there is no passphrase recovery.
-    /// </summary>
-    public bool AcknowledgedNoRecovery
-    {
-        get => acknowledgedNoRecovery;
-        set => SetProperty(ref acknowledgedNoRecovery, value);
-    }
-
-    /// <summary>
     /// Gets a value indicating whether the vault is being created.
     /// </summary>
     public bool IsWorking
     {
         get => isWorking;
-        private set => SetProperty(ref isWorking, value);
+        private set
+        {
+            if (SetProperty(ref isWorking, value))
+            {
+                OnPropertyChanged(nameof(CanCreate));
+            }
+        }
     }
 
     /// <summary>
@@ -254,12 +251,13 @@ public partial class VaultsViewModel : ViewModelBase
     }
 
     /// <summary>
-    /// Opens the new vault dialog with empty fields.
+    /// Opens the new vault dialog with empty fields, and the Argon2id settings new vaults are given.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     [RelayCommand]
-    public void ShowCreateDialog()
+    public async Task ShowCreateDialogAsync()
     {
-        ClearInputs();
+        await PassphraseForm.ResetAsync();
         Name = string.Empty;
         Description = string.Empty;
         DialogError = null;
@@ -277,12 +275,13 @@ public partial class VaultsViewModel : ViewModelBase
             return;
         }
 
-        ClearInputs();
+        PassphraseForm.ClearPassphrases();
         IsCreateDialogOpen = false;
     }
 
     /// <summary>
-    /// Creates the vault, once the dialog's fields are valid, and opens it.
+    /// Creates the vault, once the dialog's fields are valid, and opens it. Argon2id settings that were changed must
+    /// have been benchmarked first.
     /// </summary>
     /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     [RelayCommand]
@@ -302,8 +301,8 @@ public partial class VaultsViewModel : ViewModelBase
         IsWorking = true;
         try
         {
-            var vault = await vaultService.CreateAsync(Name, Description, Passphrase);
-            ClearInputs();
+            var vault = await vaultService.CreateAsync(Name, Description, PassphraseForm.Passphrase, PassphraseForm.GetArgon2Parameters());
+            PassphraseForm.ClearPassphrases();
             IsCreateDialogOpen = false;
             navigationService.NavigateTo(GetVaultUrl(vault.Id));
         }
@@ -324,36 +323,31 @@ public partial class VaultsViewModel : ViewModelBase
         {
             profiles.ProfilesChanged -= OnProfilesChanged;
             manager.LockStateChanged -= OnLockStateChanged;
+            PassphraseForm.PropertyChanged -= OnPassphraseFormChanged;
         }
 
         base.Dispose(disposing);
     }
 
+    // The name is clypse's; the passphrase and its Argon2id settings are checked by the framework's form.
     private string? Validate()
     {
         if (string.IsNullOrWhiteSpace(Name))
         {
+            PassphraseForm.ShowTab(E2ePassphraseFormTab.Passphrase);
             return errorText.Describe(Exceptions.ClypseErrorCodes.VaultNameRequired, []);
         }
 
-        if (string.IsNullOrEmpty(Passphrase))
-        {
-            return text["Vaults.Create.PassphraseRequired"];
-        }
-
-        if (!string.Equals(Passphrase, ConfirmPassphrase, StringComparison.Ordinal))
-        {
-            return text["Vaults.Create.PassphraseMismatch"];
-        }
-
-        return AcknowledgedNoRecovery ? null : text["Vaults.Create.AcknowledgeRequired"].Value;
+        return PassphraseForm.Validate();
     }
 
-    private void ClearInputs()
+    // The Create button follows the form: disabled while its Argon2id settings need a benchmark.
+    private void OnPassphraseFormChanged(object? sender, PropertyChangedEventArgs e)
     {
-        Passphrase = string.Empty;
-        ConfirmPassphrase = string.Empty;
-        AcknowledgedNoRecovery = false;
+        if (e.PropertyName == nameof(E2ePassphraseFormViewModel.CanConfirm))
+        {
+            OnPropertyChanged(nameof(CanCreate));
+        }
     }
 
     private async Task RefreshAsync()

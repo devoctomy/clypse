@@ -155,6 +155,11 @@ else if (ViewModel.Vault != null)
         <ImportSecretsDialog OnClose="() => ViewModel.CloseDialogCommand.Execute(null)" />
         break;
     case VaultViewModel.VaultDialog.Settings when ViewModel.Vault != null:
-        <VaultSettingsDialog Vault="@ViewModel.Vault" OnClose="() => ViewModel.CloseSettingsCommand.Execute(null)" />
+        <VaultSettingsDialog Vault="@ViewModel.Vault" OnClose="() => ViewModel.CloseSettingsCommand.Execute(null)"
+                             OnChangePassphrase="() => ViewModel.ShowChangePassphraseCommand.Execute(null)" />
+        break;
+    case VaultViewModel.VaultDialog.ChangePassphrase when ViewModel.Vault != null:
+        @* The framework's change passphrase dialog, for this vault. *@
+        <E2eChangePassphraseDialog Profile="@ViewModel.Vault.Id" OnClose="() => ViewModel.CloseDialogCommand.Execute(null)" />
         break;
 }

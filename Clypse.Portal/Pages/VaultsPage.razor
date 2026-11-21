@@ -5,7 +5,7 @@
 <PageHeader Title="@T["Vaults.Title"]" Icon="bi-safe2" Subtitle="@T["Vaults.Subtitle"]">
     @if (!ViewModel.IsLoading && ViewModel.Vaults.Count > 0)
     {
-        <button type="button" class="btn btn-primary" id="new-vault-button" @onclick="() => ViewModel.ShowCreateDialogCommand.Execute(null)">
+        <button type="button" class="btn btn-primary" id="new-vault-button" @onclick="() => ViewModel.ShowCreateDialogCommand.ExecuteAsync(null)">
             <i class="bi bi-plus-lg me-1"></i>@T["Vaults.New"]
         </button>
     }
@@ -24,7 +24,7 @@
             <span class="empty-state-icon"><i class="bi bi-safe2"></i></span>
             <h2 class="empty-state-title">@T["Vaults.Empty.Title"]</h2>
             <p class="empty-state-text">@T["Vaults.Empty.Text"]</p>
-            <button type="button" class="btn btn-primary" id="create-first-vault-button" @onclick="() => ViewModel.ShowCreateDialogCommand.Execute(null)">
+            <button type="button" class="btn btn-primary" id="create-first-vault-button" @onclick="() => ViewModel.ShowCreateDialogCommand.ExecuteAsync(null)">
                 <i class="bi bi-plus-lg me-1"></i>@T["Vaults.Empty.Create"]
             </button>
         </div>
@@ -82,34 +82,25 @@
     <ModalDialog Id="vault-dialog" Title="@T["Vaults.Create.Title"]" Icon="bi-safe2" OnClose="() => ViewModel.CloseCreateDialogCommand.Execute(null)">
         <ChildContent>
             <form id="vault-form" @onsubmit="() => ViewModel.CreateCommand.ExecuteAsync(null)" @onsubmit:preventDefault>
-                <div class="alert alert-warning" role="alert">
-                    <i class="bi bi-exclamation-triangle me-1"></i><strong>@T["Vaults.Create.NoRecovery"]</strong>
-                </div>
-                <div class="mb-3">
-                    <label class="form-label" for="vault-name">@T["Vaults.Create.Name"]</label>
-                    <input type="text" class="form-control" id="vault-name" autocomplete="off" disabled="@ViewModel.IsWorking"
-                           placeholder="@T["Vaults.Create.Name.Placeholder"]"
-                           @bind="ViewModel.Name" @bind:event="oninput" />
-                </div>
-                <div class="mb-3">
-                    <label class="form-label" for="vault-description">@T["Vaults.Create.Description"]</label>
-                    <input type="text" class="form-control" id="vault-description" autocomplete="off" disabled="@ViewModel.IsWorking"
-                           @bind="ViewModel.Description" @bind:event="oninput" />
-                </div>
-                <div class="mb-3">
-                    <label class="form-label" for="vault-passphrase">@T["Vaults.Create.Passphrase"]</label>
-                    <input type="password" class="form-control" id="vault-passphrase" autocomplete="new-password" disabled="@ViewModel.IsWorking"
-                           @bind="ViewModel.Passphrase" @bind:event="oninput" />
-                </div>
-                <div class="mb-3">
-                    <label class="form-label" for="vault-confirm-passphrase">@T["Vaults.Create.ConfirmPassphrase"]</label>
-                    <input type="password" class="form-control" id="vault-confirm-passphrase" autocomplete="new-password" disabled="@ViewModel.IsWorking"
-                           @bind="ViewModel.ConfirmPassphrase" @bind:event="oninput" />
-                </div>
-                <div class="form-check mb-0">
-                    <input class="form-check-input" type="checkbox" id="vault-acknowledge" disabled="@ViewModel.IsWorking" @bind="ViewModel.AcknowledgedNoRecovery" />
-                    <label class="form-check-label" for="vault-acknowledge">@T["Vaults.Create.Acknowledge"]</label>
-                </div>
+                @* The framework's passphrase form: the passphrase fields under the vault's own, and an Advanced tab with
+                   the Argon2id settings of its key. *@
+                <E2ePassphraseForm Form="ViewModel.PassphraseForm" IdPrefix="vault" FirstTabTitle="@T["Vaults.Create.Tab"]" Disabled="ViewModel.IsWorking"
+                                   AcknowledgeText="@T["Vaults.Create.Acknowledge"]">
+                    <div class="alert alert-warning" role="alert">
+                        <i class="bi bi-exclamation-triangle me-1"></i><strong>@T["Vaults.Create.NoRecovery"]</strong>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label" for="vault-name">@T["Vaults.Create.Name"]</label>
+                        <input type="text" class="form-control" id="vault-name" autocomplete="off" disabled="@ViewModel.IsWorking"
+                               placeholder="@T["Vaults.Create.Name.Placeholder"]"
+                               @bind="ViewModel.Name" @bind:event="oninput" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label" for="vault-description">@T["Vaults.Create.Description"]</label>
+                        <input type="text" class="form-control" id="vault-description" autocomplete="off" disabled="@ViewModel.IsWorking"
+                               @bind="ViewModel.Description" @bind:event="oninput" />
+                    </div>
+                </E2ePassphraseForm>
             </form>
             @if (ViewModel.IsWorking)
             {
@@ -124,7 +115,7 @@
         </ChildContent>
         <Footer>
             <button type="button" class="btn btn-secondary" disabled="@ViewModel.IsWorking" @onclick="() => ViewModel.CloseCreateDialogCommand.Execute(null)">@T["Common.Cancel"]</button>
-            <button type="submit" form="vault-form" class="btn btn-primary" id="vault-create" disabled="@ViewModel.IsWorking">
+            <button type="submit" form="vault-form" class="btn btn-primary" id="vault-create" disabled="@(!ViewModel.CanCreate)">
                 @T["Vaults.Create.Create"]
             </button>
         </Footer>

@@ -1,4 +1,5 @@
 using Clypse.Portal.Models.Vaults;
+using Devoctomy.Blazwiz.Cryptography.Models;
 using Devoctomy.Blazwiz.Encryption.Models;
 
 namespace Clypse.Portal.Application.Services.Interfaces;
@@ -32,10 +33,11 @@ public interface IVaultService
     /// <param name="name">The vault's name.</param>
     /// <param name="description">The vault's description, if any.</param>
     /// <param name="passphrase">The vault's passphrase.</param>
+    /// <param name="argon2">The Argon2id settings chosen for the passphrase's key, or null for the app's.</param>
     /// <param name="progress">Reports the key derivation's progress.</param>
     /// <param name="ct">A token to cancel with.</param>
     /// <returns>The vault.</returns>
-    Task<Vault> CreateAsync(string name, string? description, string passphrase, IProgress<E2eProgress>? progress = null, CancellationToken ct = default);
+    Task<Vault> CreateAsync(string name, string? description, string passphrase, Argon2idParameters? argon2 = null, IProgress<E2eProgress>? progress = null, CancellationToken ct = default);
 
     /// <summary>
     /// Changes an unlocked vault's name and description.

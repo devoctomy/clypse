@@ -179,7 +179,7 @@ public class VaultServiceTests
         // Arrange
         var id = Guid.NewGuid().ToString("D");
         var progress = new Progress<E2eProgress>();
-        mockProfiles.Setup(x => x.CreateAsync("correct horse battery", progress, It.IsAny<CancellationToken>()))
+        mockProfiles.Setup(x => x.CreateAsync("correct horse battery", null, progress, It.IsAny<CancellationToken>()))
             .Callback(() =>
             {
                 AddProfile(id, isCreatedByUser: true);
@@ -188,7 +188,7 @@ public class VaultServiceTests
             .ReturnsAsync(new E2eKeyScope(id));
 
         // Act
-        var vault = await CreateSut().CreateAsync("  Personal  ", "  Everyday logins ", "correct horse battery", progress);
+        var vault = await CreateSut().CreateAsync("  Personal  ", "  Everyday logins ", "correct horse battery", progress: progress);
 
         // Assert
         Assert.Equal(id, vault.Id);
@@ -205,7 +205,7 @@ public class VaultServiceTests
     {
         // Arrange
         var id = Guid.NewGuid().ToString("D");
-        mockProfiles.Setup(x => x.CreateAsync(It.IsAny<string>(), null, It.IsAny<CancellationToken>()))
+        mockProfiles.Setup(x => x.CreateAsync(It.IsAny<string>(), null, null, It.IsAny<CancellationToken>()))
             .Callback(() =>
             {
                 AddProfile(id, isCreatedByUser: true);
@@ -231,14 +231,14 @@ public class VaultServiceTests
 
         // Assert
         Assert.Equal(ClypseErrorCodes.VaultNameRequired, ex.Code);
-        mockProfiles.Verify(x => x.CreateAsync(It.IsAny<string>(), It.IsAny<IProgress<E2eProgress>?>(), It.IsAny<CancellationToken>()), Times.Never);
+        mockProfiles.Verify(x => x.CreateAsync(It.IsAny<string>(), null, It.IsAny<IProgress<E2eProgress>?>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
     public async Task GivenAVaultThatIsCreatedButNotListed_WhenCreated_ThenThrowsInvalidOperationException()
     {
         // Arrange
-        mockProfiles.Setup(x => x.CreateAsync(It.IsAny<string>(), null, It.IsAny<CancellationToken>()))
+        mockProfiles.Setup(x => x.CreateAsync(It.IsAny<string>(), null, null, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new E2eKeyScope(Guid.NewGuid().ToString("D")));
 
         // Act & Assert

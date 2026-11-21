@@ -405,6 +405,15 @@
   <data name="VaultSettings.Button" xml:space="preserve">
     <value>Settings</value>
   </data>
+  <data name="VaultSettings.ChangePassphrase.Button" xml:space="preserve">
+    <value>Change passphrase</value>
+  </data>
+  <data name="VaultSettings.ChangePassphrase.Text" xml:space="preserve">
+    <value>Gives the vault new keys and encrypts every secret again, so anyone who had the old passphrase can read nothing new. You are signed out on every device when it is done.</value>
+  </data>
+  <data name="VaultSettings.ChangePassphrase.Title" xml:space="preserve">
+    <value>Passphrase</value>
+  </data>
   <data name="VaultSettings.Delete.Button" xml:space="preserve">
     <value>Delete vault</value>
   </data>
@@ -441,12 +450,6 @@
   <data name="Vaults.Create.Acknowledge" xml:space="preserve">
     <value>I understand that if I forget this passphrase, this vault cannot be recovered.</value>
   </data>
-  <data name="Vaults.Create.AcknowledgeRequired" xml:space="preserve">
-    <value>Confirm you understand there is no passphrase recovery.</value>
-  </data>
-  <data name="Vaults.Create.ConfirmPassphrase" xml:space="preserve">
-    <value>Enter the passphrase again</value>
-  </data>
   <data name="Vaults.Create.Create" xml:space="preserve">
     <value>Create vault</value>
   </data>
@@ -462,14 +465,8 @@
   <data name="Vaults.Create.NoRecovery" xml:space="preserve">
     <value>There is no passphrase recovery. If you forget it, nobody can open this vault, including us.</value>
   </data>
-  <data name="Vaults.Create.Passphrase" xml:space="preserve">
-    <value>Passphrase</value>
-  </data>
-  <data name="Vaults.Create.PassphraseMismatch" xml:space="preserve">
-    <value>The passphrases do not match.</value>
-  </data>
-  <data name="Vaults.Create.PassphraseRequired" xml:space="preserve">
-    <value>Enter a passphrase.</value>
+  <data name="Vaults.Create.Tab" xml:space="preserve">
+    <value>Vault</value>
   </data>
   <data name="Vaults.Create.Title" xml:space="preserve">
     <value>New vault</value>

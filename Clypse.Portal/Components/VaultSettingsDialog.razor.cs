@@ -26,6 +26,12 @@ public partial class VaultSettingsDialog : MvvmComponentBase<VaultSettingsViewMo
     [Parameter]
     public EventCallback OnClose { get; set; }
 
+    /// <summary>
+    /// Gets or sets what happens when Change passphrase is chosen: the page shows that dialog in place of this one.
+    /// </summary>
+    [Parameter]
+    public EventCallback OnChangePassphrase { get; set; }
+
     /// <inheritdoc/>
     protected override void OnParametersSet()
     {
@@ -46,6 +52,8 @@ public partial class VaultSettingsDialog : MvvmComponentBase<VaultSettingsViewMo
     }
 
     private Task DeleteAsync() => ViewModel.DeleteAsync();
+
+    private Task ChangePassphraseAsync() => ViewModel.IsWorking ? Task.CompletedTask : OnChangePassphrase.InvokeAsync();
 
     private Task CloseAsync() => ViewModel.IsWorking ? Task.CompletedTask : OnClose.InvokeAsync();
 }

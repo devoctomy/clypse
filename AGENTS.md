@@ -192,6 +192,9 @@ check a change with real sign-in and sync before it is deployed.
 - **The data is real:** the Test environment's bucket, shared with the deploy tests.
   - Never delete the maintainer's vaults, or the deploy tests' "Deploy tests" vault.
   - Use one passphrase for every vault you make, so it can be cleaned up afterwards.
+- **Never give the maintainer a URL to test until it works.** Before handing over a URL, check that the server is
+  running, the page loads with no console errors, and the change to be tested works there. While something is still
+  building or restarting, say so, and give no URL.
 - **Once the portal is handed to the maintainer,** leave it and the Playwright browser alone: don't rebuild, restart
   or drive it while they test. File pickers (e.g. the import dialog's) don't open in the Playwright window; the
   maintainer uses their own browser at `https://localhost:7090` for those.

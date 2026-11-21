@@ -386,6 +386,69 @@ public class VaultTests : TestBase
     }
 
     [TestMethod]
+    public async Task GivenTheNewVaultDialog_WhenItsArgon2idSettingsAreChanged_ThenTheVaultIsOnlyCreatedOnceTheyAreBenchmarked()
+    {
+        await LoginAsync();
+        await Page.Locator("#create-first-vault-button").ClickAsync();
+        await Expect(Page.Locator("#vault-tab-passphrase")).ToHaveTextAsync("Vault");
+        await Expect(Page.Locator("#vault-tab-advanced")).ToHaveTextAsync("Advanced");
+        await Page.Locator("#vault-name").FillAsync("Personal");
+        await Page.Locator("#vault-passphrase").FillAsync(Passphrase);
+        await Page.Locator("#vault-confirm-passphrase").FillAsync(Passphrase);
+        await Page.Locator("#vault-acknowledge").CheckAsync();
+
+        await Page.Locator("#vault-tab-advanced").ClickAsync();
+        await Expect(Page.Locator("#vault-argon2id-memory")).ToHaveValueAsync("19");
+        await Expect(Page.Locator("#vault-argon2id-key-length")).ToBeDisabledAsync();
+        await Page.Locator("#vault-argon2id-memory").FillAsync("1");
+        await Page.Locator("#vault-argon2id-memory").BlurAsync();
+        await Expect(Page.Locator("#vault-argon2id-needs-benchmark")).ToBeVisibleAsync();
+        await Expect(Page.Locator("#vault-create")).ToBeDisabledAsync();
+        await ScreenshotAsync("NewVaultAdvanced");
+
+        await Page.Locator("#vault-argon2id-benchmark").ClickAsync();
+        await Expect(Page.Locator("#vault-argon2id-result")).ToBeVisibleAsync();
+        await Expect(Page.Locator("#vault-create")).ToBeEnabledAsync();
+        await Page.Locator("#vault-create").ClickAsync();
+
+        await Expect(Page.Locator("#vault-page")).ToBeVisibleAsync();
+        await Expect(Page.Locator("h1.page-title")).ToContainTextAsync("Personal");
+    }
+
+    [TestMethod]
+    public async Task GivenAVault_WhenItsPassphraseIsChangedFromItsSettings_ThenSignedOutAndOnlyTheNewPassphraseOpensIt()
+    {
+        const string newPassphrase = "a brand new passphrase";
+        await LoginAsync();
+        var id = await CreateVaultAsync("Personal");
+        await AddLoginAsync("Gmail", "bob", "hunter2hunter2");
+
+        await Page.Locator("#vault-settings-button").ClickAsync();
+        await Page.Locator("#vault-change-passphrase-button").ClickAsync();
+        await Expect(Page.Locator("#vault-settings-dialog")).ToHaveCountAsync(0);
+        await Expect(Page.Locator("#e2e-tab-advanced")).ToBeVisibleAsync();
+        await Page.Locator("#e2e-current-passphrase").FillAsync(Passphrase);
+        await Page.Locator("#e2e-passphrase").FillAsync(newPassphrase);
+        await Page.Locator("#e2e-confirm-passphrase").FillAsync(newPassphrase);
+        await Page.Locator("#e2e-acknowledge").CheckAsync();
+        await ScreenshotAsync("ChangePassphrase");
+        await Page.Locator("#e2e-confirm").ClickAsync();
+        await Expect(Page.Locator("#e2e-rotation-estimate")).ToBeVisibleAsync();
+        await Page.Locator("#e2e-rotation-start").ClickAsync();
+        await ExpectLoginPageAsync();
+
+        await LoginAsync();
+        await Page.Locator($".vault-card[data-vault='{id}'] .vault-card-main").ClickAsync();
+        await Page.Locator("#e2e-unlock-passphrase").FillAsync(Passphrase);
+        await Page.Locator("#e2e-unlock-button").ClickAsync();
+        await Expect(Page.Locator("#e2e-unlock-error")).ToBeVisibleAsync();
+        await Page.Locator("#e2e-unlock-passphrase").FillAsync(newPassphrase);
+        await Page.Locator("#e2e-unlock-button").ClickAsync();
+        await Expect(Page.Locator("#e2e-unlock-panel")).ToHaveCountAsync(0);
+        await Expect(Page.Locator("#secrets .secret-row")).ToHaveCountAsync(1);
+    }
+
+    [TestMethod]
     public async Task GivenAVault_WhenDeletedFromItsSettings_ThenItIsGoneOnlyOnceItsNameIsTyped()
     {
         await LoginAsync();

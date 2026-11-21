@@ -9,6 +9,29 @@ Changed, Fixed, Removed or Security.
 
 ## Unreleased
 
+## 0.9.0
+
+### Added
+- The new vault dialog has an **Advanced** tab with the Argon2id settings its passphrase key is made with: memory,
+  iterations and parallelism, starting at the app's defaults. You can enter any values. If you change them, they must
+  be benchmarked on your device first: Create vault stays disabled until the benchmark has run with those values.
+- **Change passphrase** in a vault's settings. It gives the vault new keys and encrypts every secret again, shows how
+  long that will take before it starts, and signs you out on every device when it is done. Its Advanced tab starts at
+  the vault's current Argon2id settings.
+
+### Removed
+- The End to end encryption section in Settings, which listed vaults by id. Everything it did is on clypse's own pages:
+  vaults are created and locked on the vaults page, and renamed, deleted and given a new passphrase in a vault's
+  settings.
+
+### Changed
+- Built on blazwiz 0.9.0.
+- The Argon2id panel in Settings is now **Argon2id Benchmarking**, and you can choose what to benchmark. Memory,
+  iterations, parallelism and key length can be edited, starting at the values new vaults use; memory can be typed in
+  or picked from common sizes (16 to 512 MiB) with the MiB button. Changing them only affects the benchmark, never new
+  vaults. A note explains that the app can use at most 2 GiB of memory in the browser, so very large values can run
+  out and the page then needs reloading (from blazwiz 0.8.4).
+
 ## 0.8.3
 
 ### Changed
