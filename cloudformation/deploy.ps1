@@ -8,7 +8,7 @@ BlazwizVersion), for this app. Takes the same parameters, e.g. -Region, -Environ
 (Get-Help ./cloudformation/deploy.ps1 -Full, after finding it with ./cloudformation/base-stack.ps1).
 
 If Resources/environments/<Environment>/wwwroot exists, the portal is published with its files (icons, logo,
-css/app.css) in place of its own; otherwise with the default ones. The portal project does the swap, from the
+css/theme.css) in place of its own; otherwise with the default ones. The portal project does the swap, from the
 ClypseEnvironment variable set here.
 #>
 param(

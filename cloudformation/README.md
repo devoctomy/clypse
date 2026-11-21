@@ -20,9 +20,10 @@ parameter through.
 
 **Per-environment look.** If `Resources/environments/<Environment>/wwwroot` exists, `deploy.ps1` publishes the portal
 with its files in place of the portal's own at the same paths (e.g. `favicon.ico`, `icon-*.png`, `images/logo.png`,
-`css/app.css`), so an environment can be told apart at a glance (e.g. a blue test). Without the folder, the portal's
-own files are used. It sets `ClypseEnvironment` for `dotnet publish`, and `Clypse.Portal.csproj` makes the swap, so the
-service worker's asset hashes match the files served. A local build can do the same with `-p:ClypseEnvironment=test`.
+`css/theme.css`, which holds the colours), so an environment can be told apart at a glance (e.g. a blue test).
+Without the folder, the portal's own files are used. It sets `ClypseEnvironment` for `dotnet publish`, and
+`Clypse.Portal.csproj` makes the swap, so the service worker's asset hashes match the files served. A local build can
+do the same with `-p:ClypseEnvironment=test`.
 
 The scripts use the AWS CLI v2 with your normal credential chain. Pass `-AwsProfile` to use a named profile.
 

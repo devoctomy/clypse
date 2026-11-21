@@ -1,27 +1,8 @@
 /* =========================================================================
    Clypse's own styles, loaded after the framework's
-   (_content/Devoctomy.Blazwiz.UI/css/blazwiz.css). The framework is
-   re-skinned by overriding its --bw-* tokens here.
+   (_content/Devoctomy.Blazwiz.UI/css/blazwiz.css) and the theme
+   (css/theme.css), whose colour tokens these styles use.
    ========================================================================= */
-
-/* ---------- Theme: the orange of the clypse artwork (#ff6600) ---------- */
-
-:root,
-[data-bs-theme="light"] {
-    --bw-accent: #ff6600;
-    --bw-accent-rgb: 255, 102, 0;
-    --bw-accent-2: #ff9a3d;
-    --bs-link-hover-color: #cc5200;
-    --clypse-accent-text: #c24e00;
-}
-
-[data-bs-theme="dark"] {
-    --bw-accent: #ff6600;
-    --bw-accent-rgb: 255, 102, 0;
-    --bw-accent-2: #ffb066;
-    --bs-link-hover-color: #ff8a3d;
-    --clypse-accent-text: #ff8a3d;
-}
 
 /* ---------- Empty states ---------- */
 

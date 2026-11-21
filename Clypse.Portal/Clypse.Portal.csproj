@@ -44,7 +44,7 @@
   <!--
     Per-environment look: when ClypseEnvironment is set (cloudformation/deploy.ps1 sets it to the environment being
     deployed) and Resources/environments/<environment>/wwwroot exists, each file in it replaces the portal's wwwroot
-    file at the same path (icons, logo, css/app.css), or is added. Done at build time, so the service worker's asset
+    file at the same path (icons, logo, css/theme.css), or is added. Done at build time, so the service worker's asset
     hashes match what is served. Without the folder, the portal's own files are used.
   -->
   <PropertyGroup>
