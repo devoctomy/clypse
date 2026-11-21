@@ -9,8 +9,12 @@ Instructions for AI coding agents working on clypse.
    - The same applies to `gh` and any other tool that talks to GitHub.
    - To delete or move files, use plain file operations.
    - If a step seems to need git, stop and ask.
-2. **NEVER change another repository unless the maintainer has discussed and agreed it beforehand.** This includes
-   blazwiz, even for a change the design rules say belongs there.
+2. **NEVER touch blazwiz, or any other repository, unless the maintainer has discussed and agreed it beforehand.** This
+   holds even for a change the design rules say belongs there.
+   - "Touch" means search, read, build or change. Don't look for blazwiz's working tree or any other folder outside
+     this repository: work from the blazwiz packages clypse uses (their API and docs). If the source is needed, ask the
+     maintainer for permission and the path.
+   - Agreement must be explicit. An answer to a different question (e.g. about scope) is not agreement.
    - When a fix or feature could go in another repository, stop and explain:
      - what the change is;
      - why it belongs there rather than in clypse;
@@ -188,6 +192,9 @@ check a change with real sign-in and sync before it is deployed.
 - **The data is real:** the Test environment's bucket, shared with the deploy tests.
   - Never delete the maintainer's vaults, or the deploy tests' "Deploy tests" vault.
   - Use one passphrase for every vault you make, so it can be cleaned up afterwards.
+- **Never give the maintainer a URL to test until it works.** Before handing over a URL, check that the server is
+  running, the page loads with no console errors, and the change to be tested works there. While something is still
+  building or restarting, say so, and give no URL.
 - **Once the portal is handed to the maintainer,** leave it and the Playwright browser alone: don't rebuild, restart
   or drive it while they test. File pickers (e.g. the import dialog's) don't open in the Playwright window; the
   maintainer uses their own browser at `https://localhost:7090` for those.

@@ -2,6 +2,7 @@ using System.Text.Json;
 using Clypse.Portal.Application.Exceptions;
 using Clypse.Portal.Application.Services.Interfaces;
 using Clypse.Portal.Models.Vaults;
+using Devoctomy.Blazwiz.Cryptography.Models;
 using Devoctomy.Blazwiz.Encryption.Interfaces;
 using Devoctomy.Blazwiz.Encryption.Models;
 using Devoctomy.Blazwiz.Sync.Configuration;
@@ -70,11 +71,12 @@ public class VaultService(
         string name,
         string? description,
         string passphrase,
+        Argon2idParameters? argon2 = null,
         IProgress<E2eProgress>? progress = null,
         CancellationToken ct = default)
     {
         var details = ValidDetails(name, description);
-        var scope = await profiles.CreateAsync(passphrase, progress, ct);
+        var scope = await profiles.CreateAsync(passphrase, argon2, progress, ct);
         await WriteDetailsAsync(scope.Id, details, ct);
         await profiles.SetLabelAsync(scope, details.Name);
         return await FindAsync(scope.Id, ct)

@@ -8,64 +8,34 @@ namespace Clypse.Portal.UITests;
 public class E2eEncryptionTests : TestBase
 {
     [TestMethod]
-    public async Task GivenNoProfiles_WhenSignedIn_ThenNothingAsksForAPassphraseAndNoneAreListed()
+    public async Task GivenNoVaults_WhenSignedIn_ThenNothingAsksForAPassphrase_AndSettingsHasNoEncryptionSection()
     {
-        // Clypse defines no sync profiles in code: every vault is a protected profile the user creates.
+        // Clypse defines no sync profiles in code: every vault is a protected profile the user creates. Vaults are
+        // created, locked, renamed, deleted and given a new passphrase on clypse's own pages, so the framework's End to
+        // end encryption section is taken off the Settings page.
         await LoginAsync();
 
         await Expect(Page.Locator("#e2e-banner")).ToHaveCountAsync(0);
         await Expect(Page.Locator("#e2e-lock-indicator")).ToHaveCountAsync(0);
         await Page.Locator("#nav-settings").ClickAsync();
-        await Expect(Page.Locator("#e2e-no-created")).ToBeVisibleAsync();
-        await Expect(Page.Locator("#e2e-app-profiles .e2e-profile")).ToHaveCountAsync(0);
-        await ScreenshotAsync("EncryptionSection");
+        await Expect(Page.Locator("#sync-card")).ToBeVisibleAsync();
+        await Expect(Page.Locator("#e2e-section")).ToHaveCountAsync(0);
+        await ScreenshotAsync("Settings");
     }
 
     [TestMethod]
-    public async Task GivenNoProtectedProfiles_WhenOneIsCreated_ThenItIsListedByIdAndCanBeDeleted()
+    public async Task GivenAVault_WhenReloaded_ThenItIsStillListedAndLocked()
     {
         await LoginAsync();
-        await Page.Locator("#nav-settings").ClickAsync();
-
-        await Page.Locator("#e2e-new").ClickAsync();
-        await EnterNewPassphraseAsync();
-        await Expect(Page.Locator("#e2e-finished")).ToContainTextAsync("Created ");
-        await ScreenshotAsync("Created");
-        await CloseFinishedDialogAsync();
-
-        var profile = Page.Locator("#e2e-created-profiles .e2e-profile");
-        await Expect(profile).ToHaveCountAsync(1);
-        var id = await profile.GetAttributeAsync("data-profile");
-        Assert.IsTrue(Guid.TryParseExact(id, "D", out _), $"'{id}' is not a GUID");
-        await Expect(profile.Locator(".e2e-profile-name")).ToHaveTextAsync(id!);
-        await Expect(profile.Locator(".e2e-profile-state")).ToHaveTextAsync("Unlocked");
+        var id = await CreateVaultAsync("Personal");
         await Expect(Page.Locator("#e2e-lock-indicator")).ToContainTextAsync("1 unlocked");
 
-        await profile.Locator(".e2e-delete").ClickAsync();
-        await Page.Locator("#e2e-delete-confirmation").FillAsync("not the id");
-        await Page.Locator("#e2e-confirm").ClickAsync();
-        await Expect(Page.Locator("#e2e-error")).ToHaveTextAsync("Type the id exactly to confirm.");
-        await Page.Locator("#e2e-delete-confirmation").FillAsync(id!);
-        await Page.Locator("#e2e-confirm").ClickAsync();
-        await CloseFinishedDialogAsync();
-        await Expect(Page.Locator("#e2e-no-created")).ToBeVisibleAsync();
-        await Expect(Page.Locator("#e2e-lock-indicator")).ToHaveCountAsync(0);
-    }
-
-    [TestMethod]
-    public async Task GivenAProtectedProfile_WhenReloaded_ThenItIsStillListedAndLocked()
-    {
-        await LoginAsync();
-        await Page.Locator("#nav-settings").ClickAsync();
-        await Page.Locator("#e2e-new").ClickAsync();
-        await EnterNewPassphraseAsync();
-        await CloseFinishedDialogAsync();
-
         await ReloadAsync();
+        await Page.Locator("#nav-vaults").ClickAsync();
 
-        var profile = Page.Locator("#e2e-created-profiles .e2e-profile");
-        await Expect(profile).ToHaveCountAsync(1);
-        await Expect(profile.Locator(".e2e-profile-state")).ToHaveTextAsync("Locked");
+        var card = Page.Locator($".vault-card[data-vault='{id}']");
+        await Expect(card).ToHaveClassAsync(new System.Text.RegularExpressions.Regex("is-locked"));
+        await Expect(Page.Locator("#e2e-lock-indicator")).ToHaveCountAsync(0);
     }
 
     [TestMethod]
@@ -76,10 +46,10 @@ public class E2eEncryptionTests : TestBase
         await Page.Locator("#nav-settings").ClickAsync();
 
         await Expect(Page.Locator("#argon2id-card")).ToBeVisibleAsync();
-        await Expect(Page.Locator("#argon2id-memory")).ToHaveTextAsync("19 MiB");
-        await Expect(Page.Locator("#argon2id-iterations")).ToHaveTextAsync("2");
-        await Expect(Page.Locator("#argon2id-parallelism")).ToHaveTextAsync("1");
-        await Expect(Page.Locator("#argon2id-key-length")).ToHaveTextAsync("32 bytes");
+        await Expect(Page.Locator("#argon2id-memory")).ToHaveValueAsync("19");
+        await Expect(Page.Locator("#argon2id-iterations")).ToHaveValueAsync("2");
+        await Expect(Page.Locator("#argon2id-parallelism")).ToHaveValueAsync("1");
+        await Expect(Page.Locator("#argon2id-key-length")).ToHaveValueAsync("32");
         await Expect(Page.Locator("#argon2id-benchmark")).ToBeEnabledAsync();
         await ScreenshotAsync("Argon2idPanel");
     }

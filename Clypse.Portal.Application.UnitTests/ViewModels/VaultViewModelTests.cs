@@ -443,6 +443,24 @@ public class VaultViewModelTests
         Assert.Contains(nameof(VaultViewModel.Title), changed);
     }
 
+    [Fact]
+    public async Task GivenTheVaultsSettings_WhenChangePassphraseIsChosenAndClosed_ThenThatDialogReplacesThemThenCloses()
+    {
+        // Arrange
+        var sut = CreateSut();
+        await sut.LoadAsync("v1");
+        sut.ShowSettingsCommand.Execute(null);
+
+        // Act
+        sut.ShowChangePassphraseCommand.Execute(null);
+        var shown = sut.ActiveDialog;
+        sut.CloseDialogCommand.Execute(null);
+
+        // Assert
+        Assert.Equal(VaultViewModel.VaultDialog.ChangePassphrase, shown);
+        Assert.Equal(VaultViewModel.VaultDialog.None, sut.ActiveDialog);
+    }
+
     [Theory]
     [InlineData("UserName", "bi-person")]
     [InlineData("AccessKeyId", "bi-person-badge")]

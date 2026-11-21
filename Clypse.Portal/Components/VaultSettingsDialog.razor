@@ -27,6 +27,15 @@
             </div>
         </form>
 
+        <div class="mt-4" id="vault-change-passphrase">
+            <h3 class="h6">@T["VaultSettings.ChangePassphrase.Title"]</h3>
+            <p class="small mb-2">@T["VaultSettings.ChangePassphrase.Text"]</p>
+            <button type="button" class="btn btn-outline-secondary" id="vault-change-passphrase-button" disabled="@ViewModel.IsWorking"
+                    @onclick="ChangePassphraseAsync">
+                <i class="bi bi-key me-1"></i>@T["VaultSettings.ChangePassphrase.Button"]
+            </button>
+        </div>
+
         <div class="vault-danger-zone mt-4" id="vault-delete">
             <h3 class="vault-danger-title">@T["VaultSettings.Delete.Title"]</h3>
             <p class="small mb-2">@T["VaultSettings.Delete.Text"]</p>

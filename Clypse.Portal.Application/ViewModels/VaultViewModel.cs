@@ -15,7 +15,8 @@ namespace Clypse.Portal.Application.ViewModels;
 
 /// <summary>
 /// ViewModel for a vault's page: its secrets, read into the <see cref="IVaultSession"/> once it is unlocked, with search
-/// and a tag filter, and which dialog is open (the secret editor or import). Leaving the page closes the session, so the
+/// and a tag filter, and which dialog is open (the secret editor, import, the vault's settings or changing its
+/// passphrase). Leaving the page closes the session, so the
 /// decrypted secrets are not kept in memory.
 /// </summary>
 public partial class VaultViewModel : ViewModelBase
@@ -89,9 +90,14 @@ public partial class VaultViewModel : ViewModelBase
         Import,
 
         /// <summary>
-        /// The vault's settings: its name, when it locks itself, and deleting it.
+        /// The vault's settings: its name, when it locks itself, changing its passphrase, and deleting it.
         /// </summary>
         Settings,
+
+        /// <summary>
+        /// Changing the vault's passphrase, opened from its settings.
+        /// </summary>
+        ChangePassphrase,
     }
 
     /// <summary>
@@ -419,6 +425,15 @@ public partial class VaultViewModel : ViewModelBase
     {
         CloseDialog();
         RaiseVaultChanged();
+    }
+
+    /// <summary>
+    /// Opens the change passphrase dialog, in place of the vault's settings.
+    /// </summary>
+    [RelayCommand]
+    public void ShowChangePassphrase()
+    {
+        ActiveDialog = VaultDialog.ChangePassphrase;
     }
 
     /// <summary>
