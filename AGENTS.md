@@ -9,8 +9,12 @@ Instructions for AI coding agents working on clypse.
    - The same applies to `gh` and any other tool that talks to GitHub.
    - To delete or move files, use plain file operations.
    - If a step seems to need git, stop and ask.
-2. **NEVER change another repository unless the maintainer has discussed and agreed it beforehand.** This includes
-   blazwiz, even for a change the design rules say belongs there.
+2. **NEVER touch blazwiz, or any other repository, unless the maintainer has discussed and agreed it beforehand.** This
+   holds even for a change the design rules say belongs there.
+   - "Touch" means search, read, build or change. Don't look for blazwiz's working tree or any other folder outside
+     this repository: work from the blazwiz packages clypse uses (their API and docs). If the source is needed, ask the
+     maintainer for permission and the path.
+   - Agreement must be explicit. An answer to a different question (e.g. about scope) is not agreement.
    - When a fix or feature could go in another repository, stop and explain:
      - what the change is;
      - why it belongs there rather than in clypse;
