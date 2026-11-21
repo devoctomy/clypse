@@ -41,6 +41,33 @@
       <CopyToPublishDirectory>Never</CopyToPublishDirectory>
     </Content>
   </ItemGroup>
+  <!--
+    Per-environment look: when ClypseEnvironment is set (cloudformation/deploy.ps1 sets it to the environment being
+    deployed) and Resources/environments/<environment>/wwwroot exists, each file in it replaces the portal's wwwroot
+    file at the same path (icons, logo, css/theme.css), or is added. Done at build time, so the service worker's asset
+    hashes match what is served. Without the folder, the portal's own files are used.
+  -->
+  <PropertyGroup>
+    <ClypseEnvironmentWwwRoot>$(MSBuildThisFileDirectory)..\Resources\environments\$(ClypseEnvironment)\wwwroot\</ClypseEnvironmentWwwRoot>
+  </PropertyGroup>
+  <ItemGroup Condition="'$(ClypseEnvironment)' != '' And Exists('$(ClypseEnvironmentWwwRoot)')">
+    <ClypseEnvironmentFile Include="$(ClypseEnvironmentWwwRoot)**\*" />
+    <Content Remove="@(ClypseEnvironmentFile->'wwwroot\%(RecursiveDir)%(Filename)%(Extension)')" />
+    <Content Include="@(ClypseEnvironmentFile)" Link="wwwroot\%(RecursiveDir)%(Filename)%(Extension)" />
+  </ItemGroup>
+  <!-- Static web assets give every discovered file the project's wwwroot as its content root. Publishing copies each
+       file from its own path, but the dev server (dotnet run) serves content root + path, so point the environment's
+       files at their own folder, or it would serve the portal's files instead. -->
+  <Target Name="ClypseUseEnvironmentContentRoot" AfterTargets="ResolveProjectStaticWebAssets" Condition="'$(ClypseEnvironment)' != '' And Exists('$(ClypseEnvironmentWwwRoot)')">
+    <PropertyGroup>
+      <_ClypseEnvironmentWwwRootFull>$([System.IO.Path]::GetFullPath('$(ClypseEnvironmentWwwRoot)'))</_ClypseEnvironmentWwwRootFull>
+    </PropertyGroup>
+    <ItemGroup>
+      <_ClypseEnvironmentAsset Include="@(StaticWebAsset)" Condition="$([System.String]::Copy('%(Identity)').StartsWith('$(_ClypseEnvironmentWwwRootFull)', System.StringComparison.OrdinalIgnoreCase))" />
+      <StaticWebAsset Remove="@(_ClypseEnvironmentAsset)" />
+      <StaticWebAsset Include="@(_ClypseEnvironmentAsset)" ContentRoot="$(_ClypseEnvironmentWwwRootFull)" />
+    </ItemGroup>
+  </Target>
   <ItemGroup>
     <EmbeddedResource Include="sync.json" LogicalName="sync.json" />
     <Content Remove="sync.json" />

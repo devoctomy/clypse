@@ -1,0 +1,27 @@
+/* =========================================================================
+   Clypse's theme: its colours, as the framework's --bw-* tokens (and
+   Bootstrap's link hover). Loaded after the framework's
+   (_content/Devoctomy.Blazwiz.UI/css/blazwiz.css) and before app.css,
+   which uses them. The accent colours are set only here, so an
+   environment can re-colour the portal by replacing just this file
+   (Resources/environments/<environment>/wwwroot/css/theme.css).
+   ========================================================================= */
+
+/* ---------- Theme: the orange of the clypse artwork (#ff6600) ---------- */
+
+:root,
+[data-bs-theme="light"] {
+    --bw-accent: #ff6600;
+    --bw-accent-rgb: 255, 102, 0;
+    --bw-accent-2: #ff9a3d;
+    --bs-link-hover-color: #cc5200;
+    --clypse-accent-text: #c24e00;
+}
+
+[data-bs-theme="dark"] {
+    --bw-accent: #ff6600;
+    --bw-accent-rgb: 255, 102, 0;
+    --bw-accent-2: #ffb066;
+    --bs-link-hover-color: #ff8a3d;
+    --clypse-accent-text: #ff8a3d;
+}
