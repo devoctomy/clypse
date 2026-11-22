@@ -341,9 +341,11 @@ public partial class VaultsViewModel : ViewModelBase
         return PassphraseForm.Validate();
     }
 
-    // The Create button follows the form: disabled while its Argon2id settings need a benchmark.
+    // The form's components are shown again when this page is, so the page is told whenever the form changes. The
+    // Create button follows the form too: disabled while its Argon2id settings need a benchmark.
     private void OnPassphraseFormChanged(object? sender, PropertyChangedEventArgs e)
     {
+        OnPropertyChanged(nameof(PassphraseForm));
         if (e.PropertyName == nameof(E2ePassphraseFormViewModel.CanConfirm))
         {
             OnPropertyChanged(nameof(CanCreate));

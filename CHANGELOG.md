@@ -9,6 +9,16 @@ Changed, Fixed, Removed or Security.
 
 ## Unreleased
 
+## 0.9.2
+
+### Changed
+- Built on blazwiz 0.9.2.
+
+### Fixed
+- An update to clypse no longer fails to download after a new version is deployed. Deploys run from GitHub did not
+  clear the old copies of the app's files from CloudFront, so the app could be given an old file with the new version
+  and reject it (fixed in blazwiz 0.9.2).
+
 ## 0.9.0
 
 ### Added
