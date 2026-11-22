@@ -79,7 +79,7 @@
 
 @if (ViewModel.IsCreateDialogOpen)
 {
-    <ModalDialog Id="vault-dialog" Title="@T["Vaults.Create.Title"]" Icon="bi-safe2" OnClose="() => ViewModel.CloseCreateDialogCommand.Execute(null)">
+    <ModalDialog Id="vault-dialog" Title="@T["Vaults.Create.Title"]" Icon="bi-safe2" FocusMode="ModalDialogFocusMode.Dialog" OnClose="() => ViewModel.CloseCreateDialogCommand.Execute(null)">
         <ChildContent>
             <form id="vault-form" @onsubmit="() => ViewModel.CreateCommand.ExecuteAsync(null)" @onsubmit:preventDefault>
                 @* The framework's passphrase form: the passphrase fields under the vault's own, and an Advanced tab with
