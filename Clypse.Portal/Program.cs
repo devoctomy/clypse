@@ -10,6 +10,7 @@ using Clypse.Portal;
 using Clypse.Portal.Components;
 using Clypse.Portal.Application;
 using Clypse.Portal.Application.Extensions;
+using Clypse.Portal.Application.Services.Interfaces;
 using Clypse.Portal.Application.ViewModels;
 using Devoctomy.Blazwiz.UI.Sync.Components;
 using Devoctomy.Blazwiz.UI.Sync.Extensions;
@@ -76,10 +77,12 @@ builder.Services.AddMvvm(options =>
 var host = builder.Build();
 
 // The language the user chose in Settings (or the browser's), applied before the app starts. Add languages with
-// Text:SupportedCultures in wwwroot/appsettings.json, and their text with resources (see the README).
+// Text:SupportedCultures in wwwroot/appsettings.json, and their text with resources (see the README). Then the app's
+// version goes in the footer of the sign-in pages, in that language.
 await using (var scope = host.Services.CreateAsyncScope())
 {
     await scope.ServiceProvider.GetRequiredService<ICultureService>().ApplySavedCultureAsync();
+    scope.ServiceProvider.GetRequiredService<IVersionFooterService>().Apply();
 }
 
 await host.RunAsync();

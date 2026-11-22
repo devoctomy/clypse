@@ -210,6 +210,12 @@
   <data name="Import.Warning" xml:space="preserve">
     <value>The file holds your passwords unencrypted. Delete it once the import has finished.</value>
   </data>
+  <data name="Footer.Version" xml:space="preserve">
+    <value>Version {0}</value>
+  </data>
+  <data name="Footer.VersionAndCopyright" xml:space="preserve">
+    <value>Version {0} - {1}</value>
+  </data>
   <data name="Nav.Vaults" xml:space="preserve">
     <value>Vaults</value>
   </data>

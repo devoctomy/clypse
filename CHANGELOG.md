@@ -11,6 +11,9 @@ Changed, Fixed, Removed or Security.
 
 ## 0.9.2
 
+### Added
+- The sign-in page shows clypse's version at the bottom, before the copyright message.
+
 ### Changed
 - Built on blazwiz 0.9.2.
 - The sign-in page and the top of the sidebar show the app's name in capitals, in the font of the clypse logo
