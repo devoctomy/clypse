@@ -9,6 +9,15 @@ Changed, Fixed, Removed or Security.
 
 ## Unreleased
 
+### Changed
+- The sign-in page and the top of the sidebar show the app's name in capitals, in the font of the clypse logo
+  (Montserrat ExtraBold). The font comes with the app, so it also shows offline.
+- The clypse icon on the sign-in page is larger.
+
+### Fixed
+- With the sidebar collapsed, the clypse icon at the top lines up with the icons below it. It sat slightly to the
+  left.
+
 ## 0.9.2
 
 ### Changed
