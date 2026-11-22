@@ -9,6 +9,24 @@ Changed, Fixed, Removed or Security.
 
 ## Unreleased
 
+## 0.9.2
+
+### Added
+- The sign-in page shows clypse's version at the bottom, before the copyright message.
+
+### Changed
+- Built on blazwiz 0.9.2.
+- The sign-in page and the top of the sidebar show the app's name in capitals, in the font of the clypse logo
+  (Montserrat ExtraBold). The font comes with the app, so it also shows offline.
+- The clypse icon on the sign-in page is larger.
+
+### Fixed
+- An update to clypse no longer fails to download after a new version is deployed. Deploys run from GitHub did not
+  clear the old copies of the app's files from CloudFront, so the app could be given an old file with the new version
+  and reject it (fixed in blazwiz 0.9.2).
+- With the sidebar collapsed, the clypse icon at the top lines up with the icons below it. It sat slightly to the
+  left.
+
 ## 0.9.0
 
 ### Added

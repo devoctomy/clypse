@@ -4,6 +4,45 @@
    (css/theme.css), whose colour tokens these styles use.
    ========================================================================= */
 
+/* ---------- Logo font ---------- */
+
+/* Montserrat ExtraBold, the font of the clypse logo (fonts/Montserrat-OFL.txt is its licence). */
+@font-face {
+    font-family: "Clypse Logo";
+    font-style: normal;
+    font-weight: 800;
+    font-display: swap;
+    src: url("../fonts/Montserrat-ExtraBold.ttf") format("truetype");
+}
+
+/* The icon on the sign-in page, larger than the framework's 64px (images/logo.png is 192px, so it stays sharp). */
+.auth-logo {
+    width: 96px;
+    height: 96px;
+    border-radius: 27px;
+}
+
+/* The app's name on the sign-in page and at the top of the sidebar (the framework's .auth-title and .brand-name), set
+   as the logo is. */
+.auth-title,
+.brand-name {
+    font-family: "Clypse Logo", var(--bs-font-sans-serif);
+    font-weight: 800;
+    letter-spacing: 0;
+    text-transform: uppercase;
+}
+
+/* ---------- Sidebar ---------- */
+
+/* Collapsed, the framework leaves the icon at the top 2.4px left of the centre of the link icons below it (centred
+   1.575rem from the links' left edge: 0.95rem of padding and half their 1.25rem width). This centres the 36px icon
+   on the same line. */
+@media (min-width: 768px) {
+    .sidebar-collapsed .sidebar-brand {
+        padding-left: 0.45rem;
+    }
+}
+
 /* ---------- Empty states ---------- */
 
 .empty-state {

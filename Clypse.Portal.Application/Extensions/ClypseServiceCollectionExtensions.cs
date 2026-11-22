@@ -43,6 +43,7 @@ public static class ClypseServiceCollectionExtensions
         services.AddScoped<ISecretCopyService, SecretCopyService>();
         services.AddScoped<IPasswordGeneratorPreferencesService, PasswordGeneratorPreferencesService>();
         services.AddScoped<IClipboardPreferencesService, ClipboardPreferencesService>();
+        services.AddScoped<IVersionFooterService, VersionFooterService>();
         services.AddSessionLifecycleHandler<VaultLabelHandler>();
         services.TryAddSingleton(TimeProvider.System);
         services.AddNavigationItem(new NavigationItem

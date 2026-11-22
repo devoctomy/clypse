@@ -260,6 +260,26 @@ public class VaultsViewModelTests
     }
 
     [Fact]
+    public void GivenTheCreateDialog_WhenThePassphraseFormChanges_ThenThePageIsToldItsFormChanged()
+    {
+        // Arrange
+        var sut = CreateSut();
+        sut.ShowCreateDialogCommand.Execute(null);
+        var changed = new List<string?>();
+        sut.PropertyChanged += (_, e) => changed.Add(e.PropertyName);
+
+        // Act
+        sut.PassphraseForm.ShowTabCommand.Execute(E2ePassphraseFormTab.Advanced);
+        var afterTab = changed.Count(p => p == nameof(VaultsViewModel.PassphraseForm));
+        sut.PassphraseForm.Argon2.MemoryMib = 4096;
+
+        // Assert
+        Assert.True(afterTab > 0);
+        Assert.True(changed.Count(p => p == nameof(VaultsViewModel.PassphraseForm)) > afterTab);
+        Assert.Contains(nameof(VaultsViewModel.CanCreate), changed);
+    }
+
+    [Fact]
     public async Task GivenNoNameAndTheAdvancedTabShown_WhenCreating_ThenTheFirstTabIsShownWithTheError()
     {
         // Arrange
