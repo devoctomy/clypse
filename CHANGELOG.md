@@ -9,6 +9,11 @@ Changed, Fixed, Removed or Security.
 
 ## Unreleased
 
+### Changed
+- Built on blazwiz 0.9.3.
+- Opening a dialog no longer selects the text of its first field. The dialog itself takes focus, so Esc still closes
+  it.
+
 ## 0.9.2
 
 ### Added

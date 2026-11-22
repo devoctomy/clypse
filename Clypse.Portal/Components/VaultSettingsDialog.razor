@@ -1,6 +1,6 @@
 @inherits MvvmComponentBase<VaultSettingsViewModel>
 
-<ModalDialog Id="vault-settings-dialog" Title="@T["VaultSettings.Title"]" Icon="bi-sliders" OnClose="CloseAsync">
+<ModalDialog Id="vault-settings-dialog" Title="@T["VaultSettings.Title"]" Icon="bi-sliders" FocusMode="ModalDialogFocusMode.Dialog" OnClose="CloseAsync">
     <ChildContent>
         <form id="vault-settings-form" @onsubmit="SaveAsync" @onsubmit:preventDefault>
             <div class="mb-3">

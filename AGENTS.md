@@ -183,8 +183,27 @@ check a change with real sign-in and sync before it is deployed.
   - Don't build while it runs. A rebuild leaves it serving stale fingerprinted files (e.g. `dotnet.*.js` 404s): stop
     it, build, and start it again.
   - Stop it when you are done, or when the maintainer says they no longer need it.
+- **An AOT build** (when the maintainer asks for one): `dotnet run` never compiles ahead of time; only `dotnet publish`
+  of a Release build does (`Clypse.Portal.csproj`). Publish outside the repository, then serve the output with the dev
+  server `dotnet run` uses (the `Microsoft.AspNetCore.Components.WebAssembly.DevServer` version in
+  `Directory.Packages.props`), in the background:
+
+  ```powershell
+  dotnet publish Clypse.Portal -c Release -p:WasmApplicationEnvironmentName=Test -p:ClypseEnvironment=test -o <folder>
+  $env:ASPNETCORE_ENVIRONMENT = 'Test'
+  dotnet "$env:USERPROFILE\.nuget\packages\microsoft.aspnetcore.components.webassembly.devserver\<version>\tools\blazor-devserver.dll" `
+      --applicationpath <folder>\Clypse.Portal.dll --contentroot <folder> --urls https://localhost:7090
+  ```
+
+  - Publishing with AOT takes several minutes. `-p:ClypseEnvironment=test` gives it the Test environment's look.
+  - A published build has the PWA service worker, which answers every page navigation with the app. Typing a file's
+    URL in the browser (e.g. `/appsettings.Test.json`) therefore shows the app's "Nothing here" page even though the
+    file is served. Check files with `Invoke-WebRequest`, or in the browser's network requests.
 - **Signing in** uses the deploy tests' user, through the Playwright MCP server in `.mcp.json` (Edge, with
   `--secrets playwright-secrets.env`).
+  - Only a Claude session started in this repository has that server. A session started elsewhere (e.g. in blazwiz)
+    gets a different Playwright server without the secrets: typing the secret names there sends them literally and
+    Cognito refuses them. Don't try; say so, and ask the maintainer to sign in or to use a session started here.
   - `playwright-secrets.env` is in the repository root, git ignored (`*.env`). It holds `CLYPSE_TEST_USERNAME` and
     `CLYPSE_TEST_PASSWORD`, which the maintainer sets.
   - Type the secret names into the sign-in form; Playwright fills in the values. Never print, echo or copy the file's
