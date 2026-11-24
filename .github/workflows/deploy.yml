@@ -11,6 +11,8 @@
 #   tests. Needed only if it is created or the tests run (the password: min 12 characters, upper, lower and a number).
 # - variables CUSTOM_DOMAIN_NAME and CERTIFICATE_ARN: optional, both or neither. The portal's own address (e.g.
 #   test.clypse.net) and an ACM certificate for it in us-east-1. Point the address's DNS at the CloudFront distribution.
+# - variable ALLOW_LOCALHOST: optional. "true" lets a portal run on a developer's machine call the environment's data
+#   bucket (for running locally against it). Without it the local addresses are not allowed: leave it out for production.
 # Add required reviewers to the GitHub environment to approve each run before it starts.
 #
 # It uses the blazwiz version set in Directory.Packages.props (BlazwizVersion), restored from nuget.org.
@@ -63,6 +65,9 @@ jobs:
       # run, as the stack drops the address when they are not.
       CUSTOM_DOMAIN_NAME: ${{ vars.CUSTOM_DOMAIN_NAME }}
       CERTIFICATE_ARN: ${{ vars.CERTIFICATE_ARN }}
+      # Optional: "true" lets a portal run on a developer's machine call this environment's data bucket. Said on every
+      # run, so an environment without it never allows the local addresses, whatever it is called.
+      ALLOW_LOCALHOST: ${{ vars.ALLOW_LOCALHOST }}
       CREATE_TEST_USER: ${{ inputs.create_test_user }}
       TEST_USER_EMAIL: ${{ vars.TEST_USER_EMAIL }}
       TEST_USER_PASSWORD: ${{ secrets.TEST_USER_PASSWORD }}
@@ -130,12 +135,13 @@ jobs:
         shell: pwsh
         run: |
           $region = '${{ vars.AWS_REGION }}'
+          $allowLocalhost = $env:ALLOW_LOCALHOST -eq 'true'
           if ($env:CREATE_TEST_USER -eq 'true') {
             $password = ConvertTo-SecureString $env:TEST_USER_PASSWORD -AsPlainText -Force
-            ./cloudformation/deploy.ps1 -Region $region -Environment $env:ENVIRONMENT_NAME -CustomDomainName $env:CUSTOM_DOMAIN_NAME -CertificateArn $env:CERTIFICATE_ARN -TestUserEmail $env:TEST_USER_EMAIL -TestUserPassword $password -Force
+            ./cloudformation/deploy.ps1 -Region $region -Environment $env:ENVIRONMENT_NAME -AllowLocalhost:$allowLocalhost -CustomDomainName $env:CUSTOM_DOMAIN_NAME -CertificateArn $env:CERTIFICATE_ARN -TestUserEmail $env:TEST_USER_EMAIL -TestUserPassword $password -Force
           }
           else {
-            ./cloudformation/deploy.ps1 -Region $region -Environment $env:ENVIRONMENT_NAME -CustomDomainName $env:CUSTOM_DOMAIN_NAME -CertificateArn $env:CERTIFICATE_ARN -SkipTestUser -Force
+            ./cloudformation/deploy.ps1 -Region $region -Environment $env:ENVIRONMENT_NAME -AllowLocalhost:$allowLocalhost -CustomDomainName $env:CUSTOM_DOMAIN_NAME -CertificateArn $env:CERTIFICATE_ARN -SkipTestUser -Force
           }
 
   deploy-tests:

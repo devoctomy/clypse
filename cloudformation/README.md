@@ -22,6 +22,12 @@ parameter through.
 users turn on a code from an authenticator app, or not, in their Profile, and remembered devices are listed in
 Settings. It refuses `-Mfa`, so no environment can make it required or turn it off.
 
+**Running the portal locally against an environment is opt-in.** A portal run on your machine
+(`https://localhost:7090`, `http://localhost:5090`) may call an environment's data bucket only when `deploy.ps1` is
+given `-AllowLocalhost`, whatever the environment is called. It is said on every deploy, so a deploy without the switch
+takes the local addresses off the bucket's CORS list again. It refuses `-LocalDevOrigins`: left to the base stack's
+script, every environment not named `prod` would allow the local addresses.
+
 **Per-environment look.** If `Resources/environments/<Environment>/wwwroot` exists, `deploy.ps1` publishes the portal
 with its files in place of the portal's own at the same paths (e.g. `favicon.ico`, `icon-*.png`, `images/logo.png`,
 `css/theme.css`, which holds the colours), so an environment can be told apart at a glance (e.g. a blue test).
@@ -154,6 +160,7 @@ Then, in the repository's **Settings, Environments**, add one GitHub environment
 | `TEST_USER_PASSWORD` | Secret | For the deploy tests: the test user's password, at least 12 characters, with upper case, lower case and a number. |
 | `CUSTOM_DOMAIN_NAME` | Variable | Optional: the portal's own address, e.g. `test.clypse.net`. Set it with `CERTIFICATE_ARN`. |
 | `CERTIFICATE_ARN` | Variable | Optional: an ACM certificate in **us-east-1** covering that address (a wildcard such as `*.clypse.net` will do). |
+| `ALLOW_LOCALHOST` | Variable | Optional: `true` lets a portal run on your machine call this environment's data bucket, for running locally against it (Deploy and Upgrade then pass `-AllowLocalhost`). Leave it out for production: without it, each run takes the local addresses off. |
 
 With a custom address, Deploy and Upgrade put it on the CloudFront distribution and allow it in the data bucket's CORS.
 They pass it on every run, because the stack drops the address when it is not given.
