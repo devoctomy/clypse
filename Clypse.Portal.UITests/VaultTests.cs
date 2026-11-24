@@ -435,7 +435,10 @@ public class VaultTests : TestBase
         await Page.Locator("#e2e-confirm").ClickAsync();
         await Expect(Page.Locator("#e2e-rotation-estimate")).ToBeVisibleAsync();
         await Page.Locator("#e2e-rotation-start").ClickAsync();
-        await ExpectLoginPageAsync();
+
+        // Changing the passphrase derives a new Argon2id key and encrypts every file again: seconds here, far longer than
+        // a step on a busy CI runner.
+        await ExpectLoginPageAsync(PassphraseChangeTimeoutMs);
 
         await LoginAsync();
         await Page.Locator($".vault-card[data-vault='{id}'] .vault-card-main").ClickAsync();

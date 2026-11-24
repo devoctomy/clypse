@@ -20,11 +20,18 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
+
+# Two-step verification is each user's choice: they turn it on, or not, in their Profile. Deploy with -Mfa optional
+# every time, so the stack never keeps a different value from an earlier deploy.
+if ($args -contains '-Mfa') {
+    throw 'clypse leaves two-step verification to each user: deploy without -Mfa (it is always optional).'
+}
+
 $base = & (Join-Path $PSScriptRoot 'base-stack.ps1')
 $previousClypseEnvironment = $env:ClypseEnvironment
 $env:ClypseEnvironment = $Environment
 try {
-    & (Join-Path $base 'deploy.ps1') -AppName $AppName -Environment $Environment -AppRoot (Split-Path -Parent $PSScriptRoot) -PortalProject 'Clypse.Portal/Clypse.Portal.csproj' -AppStackTemplate (Join-Path $PSScriptRoot 'app.yaml') @args
+    & (Join-Path $base 'deploy.ps1') -AppName $AppName -Environment $Environment -AppRoot (Split-Path -Parent $PSScriptRoot) -PortalProject 'Clypse.Portal/Clypse.Portal.csproj' -AppStackTemplate (Join-Path $PSScriptRoot 'app.yaml') -Mfa optional @args
 }
 finally {
     $env:ClypseEnvironment = $previousClypseEnvironment
