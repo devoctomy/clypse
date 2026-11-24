@@ -110,7 +110,7 @@ Once per AWS account:
    - provider URL `https://token.actions.githubusercontent.com`;
    - audience `sts.amazonaws.com`.
 2. **Create the `clypse-deploy` policy** from `deploy-policy.json`, if you haven't already.
-3. **Create a role,** e.g. `clypse-github-deploy`. Attach only `clypse-deploy`, and give it this trust policy (with `ACCOUNT_ID` replaced). It lets only this repository's workflows assume the role, and only for its GitHub environments:
+3. **Create a role,** e.g. `clypse-github-deploy`. Attach only `clypse-deploy`, and give it this trust policy (with `ACCOUNT_ID` replaced, and one line for each of your environments). It lets only this repository's workflows assume the role, and only for the GitHub environments it lists:
 
    ```json
    {
@@ -122,7 +122,12 @@ Once per AWS account:
          "Action": "sts:AssumeRoleWithWebIdentity",
          "Condition": {
            "StringEquals": { "token.actions.githubusercontent.com:aud": "sts.amazonaws.com" },
-           "StringLike": { "token.actions.githubusercontent.com:sub": "repo:devoctomy@14939242/clypse@1448521013:environment:*" }
+           "StringLike": {
+             "token.actions.githubusercontent.com:sub": [
+               "repo:devoctomy@14939242/clypse@1448521013:environment:test",
+               "repo:devoctomy@14939242/clypse@1448521013:environment:ANOTHER_ENVIRONMENT"
+             ]
+           }
          }
        }
      ]
@@ -135,8 +140,9 @@ Once per AWS account:
    - **The IAM wizard writes it wrong.** It writes `repo:devoctomy/clypse:*`, without the ids, which never matches: AWS
      refuses with "Not authorized to perform sts:AssumeRoleWithWebIdentity".
    - **To see what GitHub sends,** read the Deploy, Upgrade and Destroy workflows' "Show the OIDC token's claims" step.
-   - **To allow only some environments,** list them instead of `*`, e.g.
-     `repo:devoctomy@14939242/clypse@1448521013:environment:test`.
+   - **Each environment is listed by name, not as `environment:*`.** GitHub creates an environment the first time a
+     workflow names one, with no protection rules, so with `*` a workflow that made up a new name could assume the
+     role. A new environment needs its own line before its workflows can sign in to AWS.
 
 Then, in the repository's **Settings, Environments**, add one GitHub environment for each AWS environment, named the same (e.g. `test`). Give it:
 
@@ -156,7 +162,18 @@ They don't create the DNS record: point the address at the distribution yourself
 `dxxxxxxxx.cloudfront.net` name, or a Route 53 alias. The deploy user, or the role, needs the policy's
 `CustomDomainCertificate` statement.
 
-To approve each run before it starts, add **required reviewers** to the GitHub environment.
+**Protect each GitHub environment too,** under its **Deployment protection rules**. The role's trust policy only checks
+the environment's name, which a workflow on any branch can set, and the role is shared: an environment left unprotected
+is a way to the others' resources.
+
+- **Required reviewers:** add yourself, and anyone else allowed to approve. Every Deploy, Upgrade or Destroy run for
+  the environment then waits for approval before it starts. Leave **Prevent self-review** off while you are the only
+  reviewer.
+- **Deployment branches and tags:** choose **Selected branches and tags**, so only a run started from one of them can
+  use the environment.
+  - **Production:** one rule of type **Tag**, `v*`, and no branch. Only a released version can then be deployed: run
+    Deploy or Upgrade at its tag (**Use workflow from**, **Tags**).
+  - **An environment that takes work in progress:** the branches you deploy from.
 
 **Which environments Destroy may delete** is a variable of the repository, not of an environment: in **Settings,
 Secrets and variables, Actions**, on the **Variables** tab, add the repository variable `DESTROY_ALLOWED_ENVIRONMENTS`.

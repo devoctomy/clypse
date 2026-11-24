@@ -53,9 +53,13 @@ protection rules**:
   self-review** stops the person who started the run approving it; leave it off while you are the only reviewer.
 - **Wait timer (optional):** a delay, in minutes, before an approved run starts. Useful for Destroy, as a last chance
   to cancel.
-- **Deployment branches and tags:** choose **Selected branches and tags** and add `main`. A run from any other branch
-  can't use the environment at all, so it gets neither its variables and secrets nor the AWS role. Together with the
-  trust policy above, only `main` can deploy.
+- **Deployment branches and tags:** choose **Selected branches and tags**. A run started from anything else can't use
+  the environment at all, so it gets neither its variables and secrets nor the AWS role.
+  - **Production:** one rule of type **Tag**, `v*`, and no branch. Only a released version can then be deployed: the
+    Release workflow tags `v<version>` on a commit of `main` that CI has passed, and Deploy or Upgrade is run at that
+    tag (**Use workflow from**, **Tags**). The rule checks only the tag's name, not that the tag is on `main`; the
+    required reviewer sees which tag a run is for before approving it.
+  - **Other environments:** the branches work in progress is deployed from (`main`, and any others).
 
 These rules hold the job back before it starts: the OIDC token is only issued, and AWS only reached, once they pass.
 The CI check in Deploy and Upgrade (`ci-passed.yml`) runs first, so an approval is only asked for once CI has passed.
@@ -67,10 +71,18 @@ Done:
 - **The role's trust policy** names only the environments, not the whole repository.
 - **An Upgrade run still works** for a listed environment.
 
-Still to do:
+Still to do, or to check:
 
-- **Each environment** has required reviewers, and deploys from `main` only.
-- **A Deploy or Upgrade run still works** for a listed environment, from `main`, once approved.
+- **Each environment** has required reviewers. Production deploys from `v*` tags only; the others from their chosen
+  branches.
+- **A Deploy or Upgrade run still works** for production, from a release tag, once approved.
 - **A workflow without `environment:` is refused**, or one for an environment not listed: it can't assume the role.
   The trust policy should already do this; it has not been tried.
-- **A run from another branch** is refused by the environment's branch rule.
+- **A run for production started from a branch** is refused by its tag rule. That includes a Deploy tests run: its job
+  names the environment with `deployment: false`, and whether the protection rules apply to such a job has not been
+  tried.
+
+## Related
+
+The Destroy workflow only deletes the environments listed in the repository variable `DESTROY_ALLOWED_ENVIRONMENTS`
+(added 2026-11-24; see `cloudformation/README.md`).
