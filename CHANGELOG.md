@@ -9,6 +9,21 @@ Changed, Fixed, Removed or Security.
 
 ## Unreleased
 
+## 0.9.4
+
+### Added
+- **Two-step verification, if you want it.** You can turn on a code from an authenticator app (such as Google
+  Authenticator, Microsoft Authenticator or 1Password) in your Profile: open the app from the link, scan the QR code
+  or copy the key. Signing in then asks for the app's code after your password. It is off until you turn it on, and
+  you can turn it off again.
+- **Remembered devices.** A device you sign in on with a passkey is not asked for a code again. Settings lists your
+  remembered devices, with a Forget button on each; signing out everywhere forgets them all.
+
+### Changed
+- Built on blazwiz 0.9.4.
+
+## 0.9.3
+
 ### Changed
 - Built on blazwiz 0.9.3.
 - Opening a dialog no longer selects the text of its first field. The dialog itself takes focus, so Esc still closes

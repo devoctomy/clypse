@@ -18,6 +18,10 @@ The infrastructure is in two stacks:
 The scripts here pass the app's name, folder and portal project to the base stack's scripts, and every other
 parameter through.
 
+**Two-step verification is each user's choice.** `deploy.ps1` always deploys the base stack with `-Mfa optional`:
+users turn on a code from an authenticator app, or not, in their Profile, and remembered devices are listed in
+Settings. It refuses `-Mfa`, so no environment can make it required or turn it off.
+
 **Per-environment look.** If `Resources/environments/<Environment>/wwwroot` exists, `deploy.ps1` publishes the portal
 with its files in place of the portal's own at the same paths (e.g. `favicon.ico`, `icon-*.png`, `images/logo.png`,
 `css/theme.css`, which holds the colours), so an environment can be told apart at a glance (e.g. a blue test).
