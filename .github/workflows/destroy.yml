@@ -1,6 +1,11 @@
 # Destroys a clypse environment on AWS: clypse's own stack, then the base stack, its buckets and every object in them,
 # and all its Cognito users. Run by hand (Actions > Destroy > Run workflow). This cannot be undone.
 #
+# Only the environments listed in the repository variable DESTROY_ALLOWED_ENVIRONMENTS (Settings > Secrets and
+# variables > Actions > Variables; names separated by commas or spaces, e.g. "test") can be destroyed. Any other is
+# refused before its GitHub environment is asked for, so before any approval and before AWS is reached. With the
+# variable missing or empty, nothing can be destroyed.
+#
 # The environment's name must be typed again to confirm. Uses the same GitHub environment settings as the Deploy
 # workflow (AWS_DEPLOY_ROLE_ARN, AWS_REGION). It does not need CI to have passed: it deploys nothing.
 name: Destroy
@@ -23,7 +28,27 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  # Runs without the GitHub environment, so an environment that may not be destroyed is refused before anything is
+  # asked of it: no approval is requested, and no AWS credentials are issued.
+  allowed:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    env:
+      ENVIRONMENT_NAME: ${{ inputs.environment }}
+      CONFIRMATION: ${{ inputs.confirm }}
+      # The repository's variable, not an environment's: this job has no environment.
+      DESTROY_ALLOWED_ENVIRONMENTS: ${{ vars.DESTROY_ALLOWED_ENVIRONMENTS }}
+    steps:
+      - name: Check the environment may be destroyed
+        shell: pwsh
+        run: |
+          if ($env:ENVIRONMENT_NAME -notmatch '^[a-z0-9]+$') { throw "The environment name must be lowercase letters and numbers: '$env:ENVIRONMENT_NAME'." }
+          if ($env:CONFIRMATION -cne $env:ENVIRONMENT_NAME) { throw "The confirmation '$env:CONFIRMATION' is not the environment name '$env:ENVIRONMENT_NAME'. Nothing was deleted." }
+          $allowed = @("$env:DESTROY_ALLOWED_ENVIRONMENTS" -split '[,\s]+' | Where-Object { $_ })
+          if ($allowed -cnotcontains $env:ENVIRONMENT_NAME) { throw "This workflow may not destroy the environment '$env:ENVIRONMENT_NAME': it is not listed in the repository variable DESTROY_ALLOWED_ENVIRONMENTS. Nothing was deleted." }
+
   destroy:
+    needs: allowed
     runs-on: ubuntu-24.04
     timeout-minutes: 60
     environment: ${{ inputs.environment }}
@@ -35,13 +60,10 @@ jobs:
       DOTNET_NOLOGO: true
       DOTNET_CLI_TELEMETRY_OPTOUT: true
       ENVIRONMENT_NAME: ${{ inputs.environment }}
-      CONFIRMATION: ${{ inputs.confirm }}
     steps:
-      - name: Check the confirmation
+      - name: Check the environment's settings
         shell: pwsh
         run: |
-          if ($env:ENVIRONMENT_NAME -notmatch '^[a-z0-9]+$') { throw "The environment name must be lowercase letters and numbers: '$env:ENVIRONMENT_NAME'." }
-          if ($env:CONFIRMATION -cne $env:ENVIRONMENT_NAME) { throw "The confirmation '$env:CONFIRMATION' is not the environment name '$env:ENVIRONMENT_NAME'. Nothing was deleted." }
           if (-not '${{ vars.AWS_DEPLOY_ROLE_ARN }}') { throw "The GitHub environment '$env:ENVIRONMENT_NAME' has no AWS_DEPLOY_ROLE_ARN variable." }
           if (-not '${{ vars.AWS_REGION }}') { throw "The GitHub environment '$env:ENVIRONMENT_NAME' has no AWS_REGION variable." }
 
