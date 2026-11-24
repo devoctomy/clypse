@@ -29,6 +29,12 @@ public class TestBase : PageTest
     protected const int AppStartTimeoutMs = 60000;
 
     /// <summary>
+    /// Maximum time for a vault's passphrase change. It derives a new Argon2id key and encrypts every file again, which
+    /// takes a few seconds locally and several times that on a busy CI runner.
+    /// </summary>
+    protected const int PassphraseChangeTimeoutMs = 60000;
+
+    /// <summary>
     /// The passphrase the tests protect their files with.
     /// </summary>
     protected const string Passphrase = "correct horse battery staple";
@@ -170,10 +176,11 @@ public class TestBase : PageTest
     /// <c>Page.WaitForURLAsync</c> can hang indefinitely (ignoring its timeout) when the redirect
     /// has already happened by the time it is called.
     /// </remarks>
+    /// <param name="timeoutMs">How long to wait for the redirect; the step timeout if not given.</param>
     /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
-    protected async Task ExpectLoginPageAsync()
+    protected async Task ExpectLoginPageAsync(int timeoutMs = StepTimeoutMs)
     {
-        await Expect(Page).ToHaveURLAsync(LoginUrlPattern);
+        await Expect(Page).ToHaveURLAsync(LoginUrlPattern, new() { Timeout = timeoutMs });
         await Expect(Page.Locator("#login-button")).ToBeVisibleAsync();
     }
 
