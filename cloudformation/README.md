@@ -89,7 +89,7 @@ These workflows deploy from GitHub, each run by hand (Actions, then the workflow
 | **Deploy** (`deploy.yml`) | Creates a new environment: both stacks, the portal, and optionally the deploy tests' user and the deploy tests. Refused if the environment already exists. |
 | **Upgrade** (`upgrade.yml`) | Updates an existing environment to the commit it is run on: both stacks, then the portal (or only the portal), and optionally the deploy tests' user and the deploy tests. Refused if the environment does not exist. |
 | **Deploy tests** (`deploy-tests.yml`) | Runs the deploy tests against an existing environment (below). Also run by Deploy and Upgrade when "Run the deploy tests afterwards" is ticked. |
-| **Destroy** (`destroy.yml`) | Deletes an environment, once its name is typed again. |
+| **Destroy** (`destroy.yml`) | Deletes an environment, once its name is typed again. Only the environments listed in the repository variable `DESTROY_ALLOWED_ENVIRONMENTS` can be deleted (below). |
 
 Deploy and Upgrade only run on a commit the CI workflow (`ci.yml`, on every push) has passed, waiting for it if it is still running. Deploy, Upgrade and Destroy:
 
@@ -157,6 +157,16 @@ They don't create the DNS record: point the address at the distribution yourself
 `CustomDomainCertificate` statement.
 
 To approve each run before it starts, add **required reviewers** to the GitHub environment.
+
+**Which environments Destroy may delete** is a variable of the repository, not of an environment: in **Settings,
+Secrets and variables, Actions**, on the **Variables** tab, add the repository variable `DESTROY_ALLOWED_ENVIRONMENTS`.
+Its value is the names of the environments the Destroy workflow may delete, separated by commas or spaces, e.g. `test`.
+
+- **Any other environment is refused** before its GitHub environment is asked for: no approval is requested, and AWS
+  is not reached.
+- **With the variable missing or empty, nothing can be deleted.**
+- **The check is in the workflow file,** so it only applies to a run started from a branch or tag that has it. A run
+  started from an earlier tag uses that tag's `destroy.yml`, which has no list.
 
 ## Checking a deployed environment: the deploy tests
 
