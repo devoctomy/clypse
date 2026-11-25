@@ -78,9 +78,14 @@ Still to do, or to check:
 - **A Deploy or Upgrade run still works** for production, from a release tag, once approved.
 - **A workflow without `environment:` is refused**, or one for an environment not listed: it can't assume the role.
   The trust policy should already do this; it has not been tried.
-- **A run for production started from a branch** is refused by its tag rule. That includes a Deploy tests run: its job
-  names the environment with `deployment: false`, and whether the protection rules apply to such a job has not been
-  tried.
+- **A Deploy, Upgrade or Destroy run for production started from a branch** is refused by its tag rule. Not tried yet
+  for those three; a Deploy tests run was (below).
+
+Checked on 2026-11-24:
+
+- **A Deploy tests run for production started from a branch is refused** ("Branch … is not allowed to deploy to … due
+  to environment protection rules"). Its job names the environment with `deployment: false`, so the protection rules
+  apply to such a job too.
 
 ## Related
 
