@@ -1,14 +1,12 @@
 ---
 title: Fixes from using clypse (vault and vaults pages, biometrics, device name)
 type: plan
-status: in progress (clypse items done; blazwiz items next)
+status: in progress (all items done; waiting for the maintainer to try them, then the full suites)
 added: 2026-11-25
 origin: the maintainer, using clypse
 areas: [vault page, vaults page, VaultSession, blazwiz]
 related: blazwiz docs/plans/active/passkey-key-and-device-rename-plan.md
 ---
-
-# Fixes from using clypse
 
 The maintainer reported ten issues while using clypse. Eight are fixed here. Two are fixed in blazwiz (agreed with
 the maintainer), in its plan `docs/plans/active/passkey-key-and-device-rename-plan.md`. clypse picks those up from a
@@ -98,8 +96,8 @@ Clearing a copied secret writes to the clipboard again, which causes problems on
 
 - [x] `ClipboardPreferences.ClearSecrets` defaults to off; Settings > Clipboard turns it on.
 - [x] Unit and UI tests follow the new default.
-- [ ] Build and run the unit tests (waiting: the portal is with the maintainer).
-- [ ] Check in the running portal: copying a password says nothing about clearing until it is turned on.
+- [x] Build and run the unit tests.
+- [x] Check in the running portal: Settings > Clipboard starts with clearing off.
 
 ### Changelog
 
@@ -109,12 +107,12 @@ Clearing a copied secret writes to the clipboard again, which causes problems on
 
 Tracked in blazwiz's plan. Once it is done:
 
-- [ ] Run `eng/use-local-blazwiz.ps1` and build clypse on the local blazwiz build.
+- [x] Run `eng/use-local-blazwiz.ps1` and build clypse on the local blazwiz build.
 - [ ] Check in the running portal: after a passkey sign-in, unlocking a vault with biometrics prompts; after a lock,
       it prompts again.
 - [ ] Check in the running portal: renaming the device warns that it will be forgotten and that MFA is asked at the
       next sign-in.
-- [ ] Add issues 3 and 10 to `Unreleased` in `CHANGELOG.md`.
+- [x] Add issues 3 and 10 to `Unreleased` in `CHANGELOG.md`.
 
 ## Checking
 

@@ -23,8 +23,17 @@ Changed, Fixed, Removed or Security.
   Clipboard. Clearing writes to the clipboard again, which caused problems on some devices. If you already saved your
   clipboard settings on a device, they're kept there.
 
+- Renaming this device in Settings, when it's remembered, now warns first: its remembered name can't be changed, so
+  renaming it forgets it, and your next sign in on it asks for a code from your authenticator app, then remembers it
+  under the new name.
+
 ### Fixed
 - A vault unlocked for the first time on a device shows its name at the top of its page, not its id.
+
+### Security
+- Signing in with your passkey no longer leaves the key that unlocks your vaults with biometrics in memory. Every
+  unlock with biometrics asks for your fingerprint, face or PIN, including after you lock a vault. Changing a vault's
+  passphrase asks for it first when biometrics are on for that vault, so they stay on.
 
 ## 0.9.4
 

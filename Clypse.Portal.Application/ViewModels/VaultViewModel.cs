@@ -531,19 +531,8 @@ public partial class VaultViewModel : ViewModelBase
 
     private static bool IsUntagged(Secret secret) => secret.Tags.All(t => t.Trim().Length == 0);
 
-    private bool Matches(Secret secret)
+    private static bool MatchesSearch(Secret secret, string term)
     {
-        if (IsUntaggedSelected && !IsUntagged(secret))
-        {
-            return false;
-        }
-
-        if (SelectedTag != null && !secret.Tags.Any(t => string.Equals(t.Trim(), SelectedTag, StringComparison.OrdinalIgnoreCase)))
-        {
-            return false;
-        }
-
-        var term = Search.Trim();
         if (term.Length == 0)
         {
             return true;
@@ -553,6 +542,18 @@ public partial class VaultViewModel : ViewModelBase
             || Contains(secret.Description, term)
             || secret.Tags.Any(t => Contains(t, term))
             || (secret is WebSecret web && (Contains(web.UserName, term) || Contains(web.EmailAddress, term) || Contains(web.WebsiteUrl, term)));
+    }
+
+    private bool Matches(Secret secret) => MatchesTag(secret) && MatchesSearch(secret, Search.Trim());
+
+    private bool MatchesTag(Secret secret)
+    {
+        if (IsUntaggedSelected)
+        {
+            return IsUntagged(secret);
+        }
+
+        return SelectedTag == null || secret.Tags.Any(t => string.Equals(t.Trim(), SelectedTag, StringComparison.OrdinalIgnoreCase));
     }
 
     private async Task OpenAsync(Vault vault)
