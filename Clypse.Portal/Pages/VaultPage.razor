@@ -80,14 +80,18 @@ else if (ViewModel.Vault != null)
                                aria-label="@T["Vault.Search"]" placeholder="@T["Vault.Search.Placeholder"]"
                                @bind="ViewModel.Search" @bind:event="oninput" />
                     </div>
-                    <span class="secrets-count text-body-secondary small" id="secrets-count">@ViewModel.CountText</span>
                 </div>
 
                 @if (ViewModel.Tags.Count > 0)
                 {
                     <div class="tag-filters" id="tag-filters">
-                        <button type="button" class="tag-filter @(ViewModel.SelectedTag == null ? "active" : null)" data-tag=""
+                        <button type="button" class="tag-filter tag-filter-builtin @(ViewModel.SelectedTag == null && !ViewModel.IsUntaggedSelected ? "active" : null)" data-tag=""
                                 @onclick="() => ViewModel.SelectTagCommand.Execute(null)">@T["Vault.Tags.All"]</button>
+                        @if (ViewModel.HasUntagged)
+                        {
+                            <button type="button" class="tag-filter tag-filter-builtin @(ViewModel.IsUntaggedSelected ? "active" : null)" id="tag-filter-untagged"
+                                    @onclick="() => ViewModel.SelectUntaggedCommand.Execute(null)">@T["Vault.Tags.Untagged"]</button>
+                        }
                         @foreach (var tag in ViewModel.Tags)
                         {
                             <button type="button" class="tag-filter @(string.Equals(ViewModel.SelectedTag, tag, StringComparison.OrdinalIgnoreCase) ? "active" : null)"
@@ -95,6 +99,8 @@ else if (ViewModel.Vault != null)
                         }
                     </div>
                 }
+
+                <p class="secrets-count text-body-secondary small" id="secrets-count">@ViewModel.CountText</p>
 
                 @if (ViewModel.Secrets.Count == 0)
                 {
@@ -104,7 +110,7 @@ else if (ViewModel.Vault != null)
                 {
                     <ul class="secret-list" id="secrets">
                         @* Only the rows on screen are rendered, so a large vault stays quick. *@
-                        <Virtualize Items="@((ICollection<Secret>)ViewModel.Secrets)" Context="secret" ItemSize="65" OverscanCount="5" SpacerElement="li">
+                        <Virtualize Items="@((ICollection<Secret>)ViewModel.Secrets)" Context="secret" ItemSize="80" OverscanCount="5" SpacerElement="li">
                             @{ var summary = VaultViewModel.GetSummary(secret); }
                             <li class="secret-item" data-secret="@secret.Id">
                                 <button type="button" class="secret-row" @onclick="() => ViewModel.EditSecretCommand.Execute(secret.Id)">
@@ -115,16 +121,16 @@ else if (ViewModel.Vault != null)
                                         {
                                             <span data-user-content class="secret-summary">@summary</span>
                                         }
+                                        @if (secret.Tags.Count > 0)
+                                        {
+                                            <span class="secret-tags">
+                                                @foreach (var tag in secret.Tags)
+                                                {
+                                                    <span data-user-content class="secret-tag">@tag</span>
+                                                }
+                                            </span>
+                                        }
                                     </span>
-                                    @if (secret.Tags.Count > 0)
-                                    {
-                                        <span class="secret-tags">
-                                            @foreach (var tag in secret.Tags)
-                                            {
-                                                <span data-user-content class="secret-tag">@tag</span>
-                                            }
-                                        </span>
-                                    }
                                 </button>
                                 <span class="secret-actions">
                                     @foreach (var field in VaultViewModel.GetQuickCopyFields(secret))

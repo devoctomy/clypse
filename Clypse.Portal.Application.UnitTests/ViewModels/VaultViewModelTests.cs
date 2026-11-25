@@ -161,7 +161,123 @@ public class VaultViewModelTests
         Assert.Equal(["bank", "Deploy", "Zoo"], names);
         Assert.Equal(["fun", "money"], sut.Tags);
         Assert.Equal(3, sut.SecretCount);
-        Assert.Equal("3 secrets", sut.CountText);
+        Assert.Equal("Showing 3/3 secrets", sut.CountText);
+    }
+
+    [Fact]
+    public async Task GivenATag_WhenSelected_ThenTheCountSaysHowManyAreShownOfAll()
+    {
+        // Arrange
+        secrets = [Web("Zoo", "bob", "fun"), Web("bank", "alice", "money"), Web("shop", "carol", "fun")];
+        var sut = CreateSut();
+        await sut.LoadAsync("v1");
+
+        // Act
+        sut.SelectTagCommand.Execute("fun");
+
+        // Assert
+        Assert.Equal("Showing 2/3 secrets", sut.CountText);
+    }
+
+    [Fact]
+    public async Task GivenOneSecret_WhenShown_ThenTheCountIsSingular()
+    {
+        // Arrange
+        secrets = [Web("Zoo", "bob", "fun")];
+        var sut = CreateSut();
+        await sut.LoadAsync("v1");
+
+        // Act
+        var count = sut.CountText;
+
+        // Assert
+        Assert.Equal("Showing 1/1 secret", count);
+    }
+
+    [Fact]
+    public async Task GivenUntaggedSecrets_WhenUntaggedIsSelectedAndSelectedAgain_ThenOnlyThoseAndThenAll()
+    {
+        // Arrange
+        secrets = [Web("Zoo", "bob", "fun"), new AwsCredentials { Name = "Deploy", AccessKeyId = "AKIA" }];
+        var sut = CreateSut();
+        await sut.LoadAsync("v1");
+        Assert.True(sut.HasUntagged);
+
+        // Act & Assert
+        sut.SelectUntaggedCommand.Execute(null);
+        Assert.True(sut.IsUntaggedSelected);
+        Assert.Equal("Deploy", Assert.Single(sut.Secrets).Name);
+        sut.SelectUntaggedCommand.Execute(null);
+        Assert.False(sut.IsUntaggedSelected);
+        Assert.Equal(2, sut.Secrets.Count);
+    }
+
+    [Fact]
+    public async Task GivenUntaggedSelected_WhenATagOrAllIsSelected_ThenUntaggedIsCleared()
+    {
+        // Arrange
+        secrets = [Web("Zoo", "bob", "fun"), new AwsCredentials { Name = "Deploy", AccessKeyId = "AKIA" }];
+        var sut = CreateSut();
+        await sut.LoadAsync("v1");
+        sut.SelectUntaggedCommand.Execute(null);
+
+        // Act & Assert
+        sut.SelectTagCommand.Execute("fun");
+        Assert.False(sut.IsUntaggedSelected);
+        Assert.Equal("Zoo", Assert.Single(sut.Secrets).Name);
+        sut.SelectUntaggedCommand.Execute(null);
+        Assert.Null(sut.SelectedTag);
+        sut.SelectTagCommand.Execute(null);
+        Assert.False(sut.IsUntaggedSelected);
+        Assert.Equal(2, sut.Secrets.Count);
+    }
+
+    [Fact]
+    public async Task GivenUntaggedSelected_WhenSearching_ThenOnlyUntaggedMatchesAreShown()
+    {
+        // Arrange
+        secrets = [Web("Deploy notes", "bob", "fun"), new AwsCredentials { Name = "Deploy", AccessKeyId = "AKIA" }, new AwsCredentials { Name = "Other", AccessKeyId = "AKIB" }];
+        var sut = CreateSut();
+        await sut.LoadAsync("v1");
+        sut.SelectUntaggedCommand.Execute(null);
+
+        // Act
+        sut.Search = "deploy";
+
+        // Assert
+        Assert.Equal("Deploy", Assert.Single(sut.Secrets).Name);
+    }
+
+    [Fact]
+    public async Task GivenEverySecretTagged_WhenShown_ThenUntaggedIsNotOffered()
+    {
+        // Arrange
+        secrets = [Web("Zoo", "bob", "fun"), Web("bank", "alice", "money")];
+        var sut = CreateSut();
+
+        // Act
+        await sut.LoadAsync("v1");
+
+        // Assert
+        Assert.False(sut.HasUntagged);
+    }
+
+    [Fact]
+    public async Task GivenUntaggedSelected_WhenTheLastUntaggedSecretGoes_ThenTheFilterIsCleared()
+    {
+        // Arrange
+        secrets = [Web("Zoo", "bob", "fun"), new AwsCredentials { Name = "Deploy", AccessKeyId = "AKIA" }];
+        var sut = CreateSut();
+        await sut.LoadAsync("v1");
+        sut.SelectUntaggedCommand.Execute(null);
+
+        // Act
+        secrets = [secrets[0]];
+        mockSession.Raise(x => x.Changed += null, EventArgs.Empty);
+
+        // Assert
+        Assert.False(sut.IsUntaggedSelected);
+        Assert.Single(sut.Secrets);
     }
 
     [Theory]

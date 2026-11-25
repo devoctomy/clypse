@@ -24,6 +24,7 @@ public sealed class VaultSession : IVaultSession, IDisposable
     private readonly ISecretServiceFactory secretServiceFactory;
     private readonly IE2eProtectedProfileManager manager;
     private readonly ISyncService syncService;
+    private readonly IVaultService vaultService;
     private readonly Dictionary<string, Secret> secrets = [];
     private readonly Lock gate = new Lock();
     private int unreadableCount;
@@ -38,11 +39,17 @@ public sealed class VaultSession : IVaultSession, IDisposable
     /// <param name="secretServiceFactory">Creates the open vault's secret service.</param>
     /// <param name="manager">Says when the vault is locked or unlocked.</param>
     /// <param name="syncService">Says when sync changes the vault's files.</param>
-    public VaultSession(ISecretServiceFactory secretServiceFactory, IE2eProtectedProfileManager manager, ISyncService syncService)
+    /// <param name="vaultService">Reads the vault's name and description once it is unlocked.</param>
+    public VaultSession(
+        ISecretServiceFactory secretServiceFactory,
+        IE2eProtectedProfileManager manager,
+        ISyncService syncService,
+        IVaultService vaultService)
     {
         this.secretServiceFactory = secretServiceFactory ?? throw new ArgumentNullException(nameof(secretServiceFactory));
         this.manager = manager ?? throw new ArgumentNullException(nameof(manager));
         this.syncService = syncService ?? throw new ArgumentNullException(nameof(syncService));
+        this.vaultService = vaultService ?? throw new ArgumentNullException(nameof(vaultService));
         this.manager.LockStateChanged += OnLockStateChanged;
         this.syncService.FilesChanged += OnFilesChanged;
     }
@@ -299,6 +306,7 @@ public sealed class VaultSession : IVaultSession, IDisposable
             if (IsUnlocked)
             {
                 Vault.IsUnlocked = true;
+                await ReadDetailsAsync(Vault);
                 await LoadAsync(CancellationToken.None);
             }
             else
@@ -311,6 +319,28 @@ public sealed class VaultSession : IVaultSession, IDisposable
         catch (Exception)
         {
             // Event handlers must not throw. The secrets are read again when the vault is next opened.
+        }
+    }
+
+    // A vault opened while locked is shown by its label or id: its name and description can only be read once it is
+    // unlocked.
+    private async Task ReadDetailsAsync(Vault vault)
+    {
+        try
+        {
+            var found = await vaultService.FindAsync(vault.Id);
+            if (found == null || Vault != vault)
+            {
+                return;
+            }
+
+            vault.Name = found.Name;
+            vault.Description = found.Description;
+            Notify();
+        }
+        catch (Exception)
+        {
+            // Shown as it was; read again the next time the vault is opened.
         }
     }
 

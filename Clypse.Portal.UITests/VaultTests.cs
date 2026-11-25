@@ -67,7 +67,7 @@ public class VaultTests : TestBase
         var rows = Page.Locator("#secrets .secret-row");
         await Expect(rows).ToHaveCountAsync(2);
         await Expect(rows.First.Locator(".secret-name")).ToHaveTextAsync("Bank");
-        await Expect(Page.Locator("#secrets-count")).ToHaveTextAsync("2 secrets");
+        await Expect(Page.Locator("#secrets-count")).ToHaveTextAsync("Showing 2/2 secrets");
         await ScreenshotAsync("Secrets");
 
         await Page.Locator("#secret-search").FillAsync("gma");
@@ -80,6 +80,7 @@ public class VaultTests : TestBase
         await Page.Locator(".tag-filter[data-tag='money']").ClickAsync();
         await Expect(rows).ToHaveCountAsync(1);
         await Expect(rows.Locator(".secret-name")).ToHaveTextAsync("Bank");
+        await Expect(Page.Locator("#secrets-count")).ToHaveTextAsync("Showing 1/2 secrets");
         await Page.Locator(".tag-filter[data-tag='']").ClickAsync();
         await Expect(rows).ToHaveCountAsync(2);
     }
@@ -259,7 +260,7 @@ public class VaultTests : TestBase
             File.Delete(csv);
         }
 
-        await Expect(Page.Locator("#secrets-count")).ToHaveTextAsync($"{count} secrets");
+        await Expect(Page.Locator("#secrets-count")).ToHaveTextAsync($"Showing {count}/{count} secrets");
         var lastRow = Page.Locator("#secrets .secret-name", new() { HasTextString = $"Site {count - 1:D4}" });
         var firstRow = Page.Locator("#secrets .secret-name", new() { HasTextString = "Site 0000" });
         var row = await Page.Locator("#secrets .secret-row").First.BoundingBoxAsync();
@@ -292,7 +293,8 @@ public class VaultTests : TestBase
 
         await Page.Locator(".secret-quick-copy[data-field='Password']").ClickAsync();
 
-        await Expect(Page.Locator("#toasts .bw-toast")).ToContainTextAsync("Password copied. It is cleared from the clipboard in 30 seconds.");
+        await Expect(Page.Locator("#toasts .bw-toast")).ToContainTextAsync("Password copied.");
+        await Expect(Page.Locator("#toasts .bw-toast")).Not.ToContainTextAsync("cleared");
         Assert.AreEqual("hunter2hunter2", await Page.EvaluateAsync<string>("() => navigator.clipboard.readText()"));
         await ScreenshotAsync("Copied");
 
@@ -307,6 +309,8 @@ public class VaultTests : TestBase
         await Context.GrantPermissionsAsync(["clipboard-read", "clipboard-write"], new() { Origin = ServerUrl });
         await LoginAsync();
         await Page.Locator("#nav-settings").ClickAsync();
+        await Expect(Page.Locator("#clipboard-settings-after")).ToHaveCountAsync(0);
+        await Page.Locator("#clipboard-settings-clear").CheckAsync();
         await Page.Locator("#clipboard-settings-after").SelectOptionAsync("60");
         await Page.Locator("#clipboard-settings-save").ClickAsync();
         await Expect(Page.Locator("#toasts")).ToContainTextAsync("Clipboard settings saved.");
