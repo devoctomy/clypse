@@ -9,6 +9,8 @@ Changed, Fixed, Removed or Security.
 
 ## Unreleased
 
+## 0.9.5
+
 ### Added
 - An **Untagged** filter on a vault's page shows the secrets that have no tags. It and **All** have their own colour,
   so they stand apart from your tags.
