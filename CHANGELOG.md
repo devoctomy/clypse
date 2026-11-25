@@ -16,6 +16,7 @@ Changed, Fixed, Removed or Security.
   so they stand apart from your tags.
 
 ### Changed
+- Built on blazwiz 0.9.5.
 - A secret's tags show in a row along the bottom of its entry, on phones as well as on larger screens.
 - A vault's page says how many secrets are shown out of how many it holds ("Showing 3/40 secrets"), under the tags.
 - The vaults page is tidier: the line under its title is gone, and the note about vaults shown by their id appears
