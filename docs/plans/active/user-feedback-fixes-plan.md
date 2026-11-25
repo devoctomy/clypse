@@ -89,8 +89,8 @@ local blazwiz build (`eng/use-local-blazwiz.ps1`).
 
 ### 9. CHANGE: the forget biometrics button looks like a delete
 
-- [ ] `VaultsPage.razor`: replace `btn-outline-danger` and `bi-trash` with a neutral button (`btn-outline-secondary`)
-      and an icon that doesn't read as a delete (e.g. `bi-eraser`; the maintainer chooses).
+- [ ] `VaultsPage.razor`: replace `btn-outline-danger` and `bi-trash` with `btn-outline-secondary` and `bi-eraser`
+      (agreed with the maintainer).
 
 ### Changelog
 
