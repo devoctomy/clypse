@@ -9,6 +9,23 @@ Changed, Fixed, Removed or Security.
 
 ## Unreleased
 
+### Added
+- An **Untagged** filter on a vault's page shows the secrets that have no tags. It and **All** have their own colour,
+  so they stand apart from your tags.
+
+### Changed
+- A secret's tags show in a row along the bottom of its entry, on phones as well as on larger screens.
+- A vault's page says how many secrets are shown out of how many it holds ("Showing 3/40 secrets"), under the tags.
+- The vaults page is tidier: the line under its title is gone, and the note about vaults shown by their id appears
+  only when one is, with an (i) on that vault.
+- The button that forgets a vault's biometric unlock is grey with an eraser, so it no longer looks like a delete.
+- Copied passwords and secret keys are no longer cleared from the clipboard unless you turn it on in Settings >
+  Clipboard. Clearing writes to the clipboard again, which caused problems on some devices. If you already saved your
+  clipboard settings on a device, they're kept there.
+
+### Fixed
+- A vault unlocked for the first time on a device shows its name at the top of its page, not its id.
+
 ## 0.9.4
 
 ### Added

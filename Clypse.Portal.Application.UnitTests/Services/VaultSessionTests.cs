@@ -20,6 +20,7 @@ public class VaultSessionTests
     private readonly Mock<ISecretServiceFactory> mockFactory = new();
     private readonly Mock<IE2eProtectedProfileManager> mockManager = new();
     private readonly Mock<ISyncService> mockSync = new();
+    private readonly Mock<IVaultService> mockVaults = new();
     private readonly Mock<ISyncUserContext> mockUser = new();
     private readonly FakeTimeProvider clock = new(new DateTimeOffset(2026, 11, 6, 12, 0, 0, TimeSpan.Zero));
     private readonly HashSet<E2eKeyScope> unlocked = [];
@@ -36,9 +37,10 @@ public class VaultSessionTests
     public void GivenNullDependencies_WhenConstructing_ThenThrowsArgumentNullException()
     {
         // Act & Assert
-        Assert.Equal("secretServiceFactory", Assert.Throws<ArgumentNullException>(() => new VaultSession(null!, mockManager.Object, mockSync.Object)).ParamName);
-        Assert.Equal("manager", Assert.Throws<ArgumentNullException>(() => new VaultSession(mockFactory.Object, null!, mockSync.Object)).ParamName);
-        Assert.Equal("syncService", Assert.Throws<ArgumentNullException>(() => new VaultSession(mockFactory.Object, mockManager.Object, null!)).ParamName);
+        Assert.Equal("secretServiceFactory", Assert.Throws<ArgumentNullException>(() => new VaultSession(null!, mockManager.Object, mockSync.Object, mockVaults.Object)).ParamName);
+        Assert.Equal("manager", Assert.Throws<ArgumentNullException>(() => new VaultSession(mockFactory.Object, null!, mockSync.Object, mockVaults.Object)).ParamName);
+        Assert.Equal("syncService", Assert.Throws<ArgumentNullException>(() => new VaultSession(mockFactory.Object, mockManager.Object, null!, mockVaults.Object)).ParamName);
+        Assert.Equal("vaultService", Assert.Throws<ArgumentNullException>(() => new VaultSession(mockFactory.Object, mockManager.Object, mockSync.Object, null!)).ParamName);
     }
 
     [Fact]
@@ -118,6 +120,47 @@ public class VaultSessionTests
         // Assert
         Assert.Equal(2, sut.Secrets.Count);
         Assert.True(vault.IsUnlocked);
+    }
+
+    [Fact]
+    public async Task GivenALockedVaultShownById_WhenUnlocked_ThenItTakesItsNameAndDescription()
+    {
+        // Arrange
+        var vault = NewVault(isUnlocked: false);
+        mockVaults.Setup(x => x.FindAsync(vault.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Vault { Id = vault.Id, Root = vault.Root, Name = "Personal", Description = "Logins", IsUnlocked = true });
+        using var sut = CreateSut();
+        await sut.OpenAsync(vault);
+
+        // Act
+        unlocked.Add(new E2eKeyScope(vault.Id));
+        mockManager.Raise(x => x.LockStateChanged += null, mockManager.Object, new E2eKeyScope(vault.Id));
+        await WaitForAsync(() => vault.Name == "Personal");
+
+        // Assert
+        Assert.Same(vault, sut.Vault);
+        Assert.Equal("Personal", vault.Name);
+        Assert.Equal("Logins", vault.Description);
+    }
+
+    [Fact]
+    public async Task GivenALockedVault_WhenUnlockedAndReadingItsNameFails_ThenItsSecretsAreStillRead()
+    {
+        // Arrange
+        var vault = NewVault(isUnlocked: false);
+        await AddSecretsAsync(vault, "One", "Two");
+        mockVaults.Setup(x => x.FindAsync(vault.Id, It.IsAny<CancellationToken>())).ThrowsAsync(new InvalidOperationException());
+        using var sut = CreateSut();
+        await sut.OpenAsync(vault);
+
+        // Act
+        unlocked.Add(new E2eKeyScope(vault.Id));
+        mockManager.Raise(x => x.LockStateChanged += null, mockManager.Object, new E2eKeyScope(vault.Id));
+        await WaitForAsync(() => sut.Secrets.Count == 2);
+
+        // Assert
+        Assert.Equal(2, sut.Secrets.Count);
+        Assert.Equal(vault.Id, vault.Name);
     }
 
     [Fact]
@@ -435,7 +478,7 @@ public class VaultSessionTests
         }
     }
 
-    private VaultSession CreateSut() => new(mockFactory.Object, mockManager.Object, mockSync.Object);
+    private VaultSession CreateSut() => new(mockFactory.Object, mockManager.Object, mockSync.Object, mockVaults.Object);
 
     private Vault NewVault(bool isUnlocked)
     {

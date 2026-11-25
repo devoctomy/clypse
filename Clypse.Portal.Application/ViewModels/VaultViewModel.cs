@@ -34,6 +34,8 @@ public partial class VaultViewModel : ViewModelBase
     private bool isMissing;
     private string search = string.Empty;
     private string? selectedTag;
+    private bool isUntaggedSelected;
+    private bool hasUntagged;
     private VaultDialog activeDialog;
     private string? editingSecretId;
     private string? errorMessage;
@@ -160,6 +162,26 @@ public partial class VaultViewModel : ViewModelBase
     }
 
     /// <summary>
+    /// Gets a value indicating whether only the secrets with no tags are shown.
+    /// </summary>
+    public bool IsUntaggedSelected
+    {
+        get => isUntaggedSelected;
+        private set
+        {
+            if (SetProperty(ref isUntaggedSelected, value))
+            {
+                RefreshSecrets();
+            }
+        }
+    }
+
+    /// <summary>
+    /// Gets a value indicating whether any secret has no tags, so the untagged filter is offered.
+    /// </summary>
+    public bool HasUntagged => hasUntagged;
+
+    /// <summary>
     /// Gets every tag used in the vault, in order. Worked out once each time the secrets change, not on every render.
     /// </summary>
     public IReadOnlyList<string> Tags => tags;
@@ -198,9 +220,9 @@ public partial class VaultViewModel : ViewModelBase
         : plurals.Format(text, "Vault.Unreadable", session.UnreadableCount);
 
     /// <summary>
-    /// Gets how many secrets the vault has, as the page says it.
+    /// Gets how many secrets are shown out of how many the vault has, as the page says it, e.g. "Showing 3/40 secrets".
     /// </summary>
-    public string CountText => plurals.Format(text, "Vault.Count", session.Secrets.Count);
+    public string CountText => plurals.Format(text, "Vault.Count", session.Secrets.Count, secrets.Count);
 
     /// <summary>
     /// Gets the open dialog.
@@ -340,6 +362,7 @@ public partial class VaultViewModel : ViewModelBase
         ActiveDialog = VaultDialog.None;
         Search = string.Empty;
         SelectedTag = null;
+        IsUntaggedSelected = false;
         ErrorMessage = null;
         session.Close();
 
@@ -362,13 +385,24 @@ public partial class VaultViewModel : ViewModelBase
     }
 
     /// <summary>
-    /// Filters the secrets by a tag, or shows all.
+    /// Filters the secrets by a tag, or shows all. Selecting the selected tag again shows all.
     /// </summary>
     /// <param name="tag">The tag, or null for all.</param>
     [RelayCommand]
     public void SelectTag(string? tag)
     {
+        IsUntaggedSelected = false;
         SelectedTag = tag == null || string.Equals(tag, SelectedTag, StringComparison.OrdinalIgnoreCase) ? null : tag;
+    }
+
+    /// <summary>
+    /// Shows only the secrets with no tags. Selecting it again shows all.
+    /// </summary>
+    [RelayCommand]
+    public void SelectUntagged()
+    {
+        SelectedTag = null;
+        IsUntaggedSelected = !IsUntaggedSelected;
     }
 
     /// <summary>
@@ -495,8 +529,15 @@ public partial class VaultViewModel : ViewModelBase
     private static bool Contains(string? value, string search) =>
         value != null && value.Contains(search, StringComparison.OrdinalIgnoreCase);
 
+    private static bool IsUntagged(Secret secret) => secret.Tags.All(t => t.Trim().Length == 0);
+
     private bool Matches(Secret secret)
     {
+        if (IsUntaggedSelected && !IsUntagged(secret))
+        {
+            return false;
+        }
+
         if (SelectedTag != null && !secret.Tags.Any(t => string.Equals(t.Trim(), SelectedTag, StringComparison.OrdinalIgnoreCase)))
         {
             return false;
@@ -534,6 +575,11 @@ public partial class VaultViewModel : ViewModelBase
             selectedTag = null;
         }
 
+        if (isUntaggedSelected && !hasUntagged)
+        {
+            isUntaggedSelected = false;
+        }
+
         if (!IsUnlocked && ActiveDialog != VaultDialog.None)
         {
             // Locked (by hand, on idle or in another tab) while a dialog was open: nothing in it can be saved now.
@@ -552,6 +598,7 @@ public partial class VaultViewModel : ViewModelBase
             .Distinct(StringComparer.OrdinalIgnoreCase)
             .Order(StringComparer.OrdinalIgnoreCase)
             .ToList();
+        hasUntagged = session.Secrets.Any(IsUntagged);
     }
 
     private void RefreshSecrets()
@@ -561,6 +608,7 @@ public partial class VaultViewModel : ViewModelBase
             .OrderBy(s => s.Name, StringComparer.OrdinalIgnoreCase)
             .ToList();
         OnPropertyChanged(nameof(Secrets));
+        OnPropertyChanged(nameof(CountText));
     }
 
     private void RaiseVaultChanged()
@@ -573,6 +621,8 @@ public partial class VaultViewModel : ViewModelBase
         OnPropertyChanged(nameof(Subtitle));
         OnPropertyChanged(nameof(Tags));
         OnPropertyChanged(nameof(SelectedTag));
+        OnPropertyChanged(nameof(IsUntaggedSelected));
+        OnPropertyChanged(nameof(HasUntagged));
         OnPropertyChanged(nameof(SecretCount));
         OnPropertyChanged(nameof(IsLoading));
         OnPropertyChanged(nameof(LoadingPercent));

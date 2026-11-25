@@ -11,9 +11,10 @@ public class ClipboardPreferences
     public const int MinimumSeconds = 5;
 
     /// <summary>
-    /// Gets or sets a value indicating whether a copied secret value is cleared from the clipboard.
+    /// Gets or sets a value indicating whether a copied secret value is cleared from the clipboard. Off unless the user
+    /// turns it on: clearing writes to the clipboard again, which causes problems on some devices.
     /// </summary>
-    public bool ClearSecrets { get; set; } = true;
+    public bool ClearSecrets { get; set; }
 
     /// <summary>
     /// Gets or sets how long, in seconds, a copied secret value stays on the clipboard before it is cleared.

@@ -77,6 +77,6 @@ public sealed class ImportSteps(BrowserSession session, ScenarioFlow flow)
         }
 
         await Expect(Page.Locator("#secrets-loading")).ToHaveCountAsync(0, new() { Timeout = BrowserSession.SyncTimeoutMs });
-        await Expect(Page.Locator("#secrets-count")).ToHaveTextAsync($"{count} secrets");
+        await Expect(Page.Locator("#secrets-count")).ToHaveTextAsync($"Showing {count}/{count} secrets");
     }
 }

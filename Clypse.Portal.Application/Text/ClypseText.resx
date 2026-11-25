@@ -340,10 +340,10 @@
     <value>Back to vaults</value>
   </data>
   <data name="Vault.Count.One" xml:space="preserve">
-    <value>{0} secret</value>
+    <value>Showing {1}/{0} secret</value>
   </data>
   <data name="Vault.Count.Other" xml:space="preserve">
-    <value>{0} secrets</value>
+    <value>Showing {1}/{0} secrets</value>
   </data>
   <data name="Vault.Empty.Text" xml:space="preserve">
     <value>Add your first secret, or import secrets from a CSV file.</value>
@@ -383,6 +383,9 @@
   </data>
   <data name="Vault.Tags.All" xml:space="preserve">
     <value>All</value>
+  </data>
+  <data name="Vault.Tags.Untagged" xml:space="preserve">
+    <value>Untagged</value>
   </data>
   <data name="Vault.Title" xml:space="preserve">
     <value>Vault</value>
@@ -490,7 +493,7 @@
     <value>You have no vaults yet</value>
   </data>
   <data name="Vaults.IdHint" xml:space="preserve">
-    <value>A vault shows its id on this device until it has been unlocked here. Change a vault's passphrase or delete it in Settings.</value>
+    <value>A vault shows its id on this device until it has been unlocked here.</value>
   </data>
   <data name="Vaults.Loading" xml:space="preserve">
     <value>Loading your vaults...</value>
@@ -515,9 +518,6 @@
   </data>
   <data name="Vaults.State.Unlocked" xml:space="preserve">
     <value>Unlocked</value>
-  </data>
-  <data name="Vaults.Subtitle" xml:space="preserve">
-    <value>Each vault has its own passphrase, and its secrets are encrypted with its own keys.</value>
   </data>
   <data name="Vaults.Title" xml:space="preserve">
     <value>Vaults</value>

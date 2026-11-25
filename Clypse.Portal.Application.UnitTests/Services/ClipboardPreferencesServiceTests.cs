@@ -19,13 +19,13 @@ public class ClipboardPreferencesServiceTests
     }
 
     [Fact]
-    public async Task GivenNothingSaved_WhenRead_ThenSecretsAreClearedAfterTheAppsDefault()
+    public async Task GivenNothingSaved_WhenRead_ThenSecretsAreNotCleared_AndTheTimeIsTheAppsDefault()
     {
         // Act
         var preferences = await CreateSut().GetAsync();
 
         // Assert
-        Assert.True(preferences.ClearSecrets);
+        Assert.False(preferences.ClearSecrets);
         Assert.Equal(45, preferences.ClearAfterSeconds);
     }
 
@@ -74,7 +74,7 @@ public class ClipboardPreferencesServiceTests
         var preferences = await CreateSut().GetAsync();
 
         // Assert
-        Assert.True(preferences.ClearSecrets);
+        Assert.False(preferences.ClearSecrets);
         Assert.Equal(45, preferences.ClearAfterSeconds);
     }
 

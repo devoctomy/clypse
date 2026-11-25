@@ -96,6 +96,11 @@ public partial class VaultsViewModel : ViewModelBase
     }
 
     /// <summary>
+    /// Gets a value indicating whether any vault is shown by its id, so the page says why.
+    /// </summary>
+    public bool HasVaultShownById => vaults.Any(IsShownById);
+
+    /// <summary>
     /// Gets a value indicating whether the vaults are being loaded for the first time.
     /// </summary>
     public bool IsLoading

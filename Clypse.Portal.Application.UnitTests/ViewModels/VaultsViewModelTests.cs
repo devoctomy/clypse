@@ -73,6 +73,21 @@ public class VaultsViewModelTests
         Assert.Equal(["bank", "Personal", "Work", id], sut.Vaults.Select(v => v.Name));
         Assert.True(VaultsViewModel.IsShownById(sut.Vaults[^1]));
         Assert.False(VaultsViewModel.IsShownById(sut.Vaults[0]));
+        Assert.True(sut.HasVaultShownById);
+    }
+
+    [Fact]
+    public async Task GivenOnlyNamedVaults_WhenInitialized_ThenNoneIsShownById()
+    {
+        // Arrange
+        vaults = [Vault("Work"), Vault("bank")];
+        var sut = CreateSut();
+
+        // Act
+        await sut.OnInitializedAsync();
+
+        // Assert
+        Assert.False(sut.HasVaultShownById);
     }
 
     [Fact]
