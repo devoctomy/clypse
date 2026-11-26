@@ -9,6 +9,8 @@ Changed, Fixed, Removed or Security.
 
 ## Unreleased
 
+## 0.9.6
+
 ### Added
 - A vault's **Report** checks its secrets for known weak passwords, weak passwords, reused passwords, reused user
   names (email addresses aren't counted) and passwords not changed for a while. It shows what passed as well as what
