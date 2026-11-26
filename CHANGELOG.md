@@ -9,6 +9,23 @@ Changed, Fixed, Removed or Security.
 
 ## Unreleased
 
+## 0.9.6
+
+### Added
+- A vault's **Report** checks its secrets for known weak passwords, weak passwords, reused passwords, reused user
+  names (email addresses aren't counted) and passwords not changed for a while. It shows what passed as well as what
+  didn't. Each check opens to list the secrets it found, and choosing one opens it. A red dot on the Report button
+  shows when there's something to look at. The report updates as you add, change, delete or sync secrets.
+- When you open a secret the report has concerns about, its password and user name show a red dot by their title,
+  with what the concern is underneath (e.g. "This password is also used by Bank."). The concern goes as soon as you
+  change that field.
+- Settings > Vault report: choose how long a password can go unchanged before the report counts it as old (3 months
+  unless you change it).
+- Clypse now records when each password was last changed. Editing a secret's other details doesn't count as a change.
+  For secrets saved before this, the last time the secret was saved stands in.
+- Import can read clypse's own JSON format. Each secret keeps its type, its notes (line breaks included), and when it
+  and its password were last updated.
+
 ## 0.9.5
 
 ### Added

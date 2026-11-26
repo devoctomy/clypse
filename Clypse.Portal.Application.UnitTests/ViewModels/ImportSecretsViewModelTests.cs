@@ -30,14 +30,16 @@ public class ImportSecretsViewModelTests
     {
         // Arrange
         var importer = new CsvSecretsImporterService();
+        var json = new JsonSecretsImporterService();
         var t = text.For<ClypseText>();
 
         // Act & Assert
-        Assert.Equal("session", Assert.Throws<ArgumentNullException>(() => new ImportSecretsViewModel(null!, importer, text.Errors, text.Plurals, t)).ParamName);
-        Assert.Equal("importer", Assert.Throws<ArgumentNullException>(() => new ImportSecretsViewModel(mockSession.Object, null!, text.Errors, text.Plurals, t)).ParamName);
-        Assert.Equal("errorText", Assert.Throws<ArgumentNullException>(() => new ImportSecretsViewModel(mockSession.Object, importer, null!, text.Plurals, t)).ParamName);
-        Assert.Equal("plurals", Assert.Throws<ArgumentNullException>(() => new ImportSecretsViewModel(mockSession.Object, importer, text.Errors, null!, t)).ParamName);
-        Assert.Equal("text", Assert.Throws<ArgumentNullException>(() => new ImportSecretsViewModel(mockSession.Object, importer, text.Errors, text.Plurals, null!)).ParamName);
+        Assert.Equal("session", Assert.Throws<ArgumentNullException>(() => new ImportSecretsViewModel(null!, importer, json, text.Errors, text.Plurals, t)).ParamName);
+        Assert.Equal("importer", Assert.Throws<ArgumentNullException>(() => new ImportSecretsViewModel(mockSession.Object, null!, json, text.Errors, text.Plurals, t)).ParamName);
+        Assert.Equal("errorText", Assert.Throws<ArgumentNullException>(() => new ImportSecretsViewModel(mockSession.Object, importer, json, null!, text.Plurals, t)).ParamName);
+        Assert.Equal("plurals", Assert.Throws<ArgumentNullException>(() => new ImportSecretsViewModel(mockSession.Object, importer, json, text.Errors, null!, t)).ParamName);
+        Assert.Equal("text", Assert.Throws<ArgumentNullException>(() => new ImportSecretsViewModel(mockSession.Object, importer, json, text.Errors, text.Plurals, null!)).ParamName);
+        Assert.Equal("jsonImporter", Assert.Throws<ArgumentNullException>(() => new ImportSecretsViewModel(mockSession.Object, importer, null!, text.Errors, text.Plurals, t)).ParamName);
     }
 
     [Fact]
@@ -53,6 +55,59 @@ public class ImportSecretsViewModelTests
         Assert.Null(sut.DoneText);
         Assert.Equal("KeePass CSV (1.x)", sut.GetFormatName(CsvImportDataFormat.KeePassCsv1_x));
         Assert.Equal("Cachy CSV (1.x)", sut.GetFormatName(CsvImportDataFormat.Cachy1_x));
+        Assert.Equal("Clypse JSON", sut.GetFormatName(CsvImportDataFormat.ClypseJson));
+        Assert.Equal(".csv,text/csv", sut.FileTypes);
+    }
+
+    [Fact]
+    public void GivenAClypseJsonFile_WhenLoaded_ThenItsSecretsKeepTheirTypesTimesAndLineBreaks_AsNewSecrets()
+    {
+        // Arrange
+        var sut = CreateSut();
+        sut.SetFormat(CsvImportDataFormat.ClypseJson);
+        const string Json = """
+            [
+              {
+                "Id": "6f1c2a8e-1111-4c3b-9d7e-1a2b3c4d5e6f",
+                "Name": "Forum",
+                "UserName": "quietowl",
+                "Password": "qwerty",
+                "Comments": "Line one\r\nLine two",
+                "LastUpdatedAt": "26-08-2026T10:00:00",
+                "PasswordUpdatedAt": "26-05-2026T10:00:00"
+              },
+              { "SecretType": "Aws", "Name": "AWS", "AccessKeyId": "AKIA", "SecretAccessKey": "secret" }
+            ]
+            """;
+
+        // Act
+        sut.LoadFile("export.json", Json);
+
+        // Assert
+        Assert.Null(sut.Error);
+        Assert.Equal(".json,application/json", sut.FileTypes);
+        Assert.Equal("2 secrets found.", sut.FoundText);
+        var forum = Assert.IsType<WebSecret>(sut.Found[0]);
+        Assert.NotEqual("6f1c2a8e-1111-4c3b-9d7e-1a2b3c4d5e6f", forum.Id);
+        Assert.Equal("Line one\r\nLine two", forum.Comments);
+        Assert.Equal(new DateTime(2026, 8, 26, 10, 0, 0), forum.LastUpdatedAt);
+        Assert.Equal(new DateTime(2026, 5, 26, 10, 0, 0, DateTimeKind.Utc), forum.PasswordUpdatedAt);
+        Assert.IsType<AwsCredentials>(sut.Found[1]);
+    }
+
+    [Fact]
+    public void GivenAFileThatIsNotClypseJson_WhenLoaded_ThenItSaysItCouldNotBeRead()
+    {
+        // Arrange
+        var sut = CreateSut();
+        sut.SetFormat(CsvImportDataFormat.ClypseJson);
+
+        // Act
+        sut.LoadFile("export.csv", KeePassCsv);
+
+        // Assert
+        Assert.Equal("That file could not be read as Clypse JSON.", sut.Error);
+        Assert.False(sut.CanImport);
     }
 
     [Fact]
@@ -241,5 +296,5 @@ public class ImportSecretsViewModelTests
         Assert.True(sut.CanImport);
     }
 
-    private ImportSecretsViewModel CreateSut() => new(mockSession.Object, new CsvSecretsImporterService(), text.Errors, text.Plurals, text.For<ClypseText>());
+    private ImportSecretsViewModel CreateSut() => new(mockSession.Object, new CsvSecretsImporterService(), new JsonSecretsImporterService(), text.Errors, text.Plurals, text.For<ClypseText>());
 }

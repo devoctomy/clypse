@@ -20,4 +20,10 @@ public class ClypseSettings
     /// cleared, until the user chooses otherwise in Settings (<see cref="ClipboardPreferences"/>).
     /// </summary>
     public int ClipboardClearSeconds { get; set; } = 30;
+
+    /// <summary>
+    /// Gets or sets after how many months without being updated a vault's report counts a password as old, until the
+    /// user chooses otherwise in Settings (<see cref="VaultReportPreferences"/>).
+    /// </summary>
+    public int OldPasswordMonths { get; set; } = 3;
 }

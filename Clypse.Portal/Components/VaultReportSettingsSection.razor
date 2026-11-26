@@ -1,0 +1,25 @@
+@inherits MvvmComponentBase<VaultReportSettingsViewModel>
+
+<div class="panel mb-4" id="vault-report-settings">
+    <h2 class="panel-title">@T["VaultReportSettings.Title"]</h2>
+    <p class="panel-text">@T["VaultReportSettings.Text"]</p>
+
+    @if (ViewModel.IsLoaded)
+    {
+        <div class="mb-3">
+            <label class="form-label" for="vault-report-settings-old-after">@T["VaultReportSettings.OldAfter"]</label>
+            <select class="form-select" id="vault-report-settings-old-after"
+                    value="@ViewModel.OldPasswordMonths.ToString(System.Globalization.CultureInfo.InvariantCulture)"
+                    @onchange="e => ViewModel.OldPasswordMonths = int.Parse(e.Value?.ToString() ?? string.Empty, System.Globalization.CultureInfo.InvariantCulture)">
+                @foreach (var months in ViewModel.Options)
+                {
+                    <option value="@months.ToString(System.Globalization.CultureInfo.InvariantCulture)">@ViewModel.GetMonthsText(months)</option>
+                }
+            </select>
+        </div>
+
+        <button type="button" class="btn btn-primary" id="vault-report-settings-save" @onclick="() => ViewModel.SaveCommand.ExecuteAsync(null)">
+            @T["VaultReportSettings.Save"]
+        </button>
+    }
+</div>

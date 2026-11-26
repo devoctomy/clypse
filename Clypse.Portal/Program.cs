@@ -66,6 +66,7 @@ builder.Services.AddClypse(builder.Configuration);
 builder.Services.RemoveSettingsSection<E2eProfilesSection>();
 builder.Services.AddSettingsSection<PasswordGeneratorSettingsSection>(order: 300);
 builder.Services.AddSettingsSection<ClipboardSettingsSection>(order: 310);
+builder.Services.AddSettingsSection<VaultReportSettingsSection>(order: 320);
 
 // The app's view models: all of them in the application assembly are registered automatically.
 builder.Services.AddMvvm(options =>

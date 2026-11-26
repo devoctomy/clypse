@@ -1,0 +1,84 @@
+@inherits MvvmComponentBase<VaultReportViewModel>
+
+<ModalDialog Id="vault-report-dialog" Title="@T["VaultReport.Title"]" Icon="bi-clipboard2-pulse" FocusMode="ModalDialogFocusMode.Dialog" OnClose="CloseAsync">
+    <ChildContent>
+        @if (!ViewModel.IsReady)
+        {
+            <div class="d-flex align-items-center gap-2 text-body-secondary" id="vault-report-waiting" role="status">
+                <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>@T["VaultReport.Waiting"]
+            </div>
+        }
+        else
+        {
+            <div class="vault-report-overview @(ViewModel.AllPassed ? "passed" : "failed")" id="vault-report-overview">
+                <i class="bi @(ViewModel.AllPassed ? "bi-shield-check" : "bi-shield-exclamation") vault-report-overview-icon" aria-hidden="true"></i>
+                <div>
+                    <div class="vault-report-overview-title">@ViewModel.PassedText</div>
+                    <div class="small text-body-secondary">
+                        @ViewModel.CheckedText
+                        @if (ViewModel.IsUpdating)
+                        {
+                            <span class="ms-2" id="vault-report-updating" role="status">
+                                <span class="spinner-border spinner-border-sm me-1" aria-hidden="true"></span>@T["VaultReport.Updating"]
+                            </span>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <div class="vault-report-sections" id="vault-report-sections">
+                @foreach (var section in ViewModel.Sections)
+                {
+                    var isExpanded = ViewModel.IsExpanded(section.Check);
+                    var bodyId = "vault-report-" + section.Check + "-body";
+                    <section class="vault-report-section @(section.Passed ? "passed" : "failed")" data-check="@section.Check">
+                        <button type="button" class="vault-report-section-header" aria-expanded="@(isExpanded ? "true" : "false")" aria-controls="@bodyId"
+                                @onclick="() => ViewModel.ToggleCommand.Execute(section.Check)">
+                            <i class="bi @(section.Passed ? "bi-check-circle-fill" : "bi-x-circle-fill") vault-report-status" aria-hidden="true"></i>
+                            <span class="vault-report-section-text">
+                                <span class="vault-report-section-title">@section.Title</span>
+                                <span class="vault-report-section-summary">@section.Summary</span>
+                            </span>
+                            <i class="bi bi-chevron-down vault-report-chevron" aria-hidden="true"></i>
+                        </button>
+                        @if (isExpanded)
+                        {
+                            <div class="vault-report-section-body" id="@bodyId">
+                                <p class="small text-body-secondary mb-0">@section.About</p>
+                                @if (section.Items.Count > 0)
+                                {
+                                    <ul class="vault-report-items">
+                                        @foreach (var item in section.Items)
+                                        {
+                                            <li class="vault-report-item">
+                                                @if (item.Heading != null)
+                                                {
+                                                    <div class="vault-report-item-heading" data-user-content>@item.Heading</div>
+                                                }
+                                                <div class="vault-report-item-secrets">
+                                                    @foreach (var secret in item.Secrets)
+                                                    {
+                                                        <button type="button" class="vault-report-secret" data-secret="@secret.Id" @onclick="() => OpenSecretAsync(secret.Id)">
+                                                            <i class="bi bi-key me-1" aria-hidden="true"></i><span data-user-content>@secret.Name</span>
+                                                        </button>
+                                                    }
+                                                </div>
+                                                @if (item.Detail != null)
+                                                {
+                                                    <div class="vault-report-item-detail small text-body-secondary">@item.Detail</div>
+                                                }
+                                            </li>
+                                        }
+                                    </ul>
+                                }
+                            </div>
+                        }
+                    </section>
+                }
+            </div>
+        }
+    </ChildContent>
+    <Footer>
+        <button type="button" class="btn btn-primary" id="vault-report-close" @onclick="CloseAsync">@T["Common.Close"]</button>
+    </Footer>
+</ModalDialog>

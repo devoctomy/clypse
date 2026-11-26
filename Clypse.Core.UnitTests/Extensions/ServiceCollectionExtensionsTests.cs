@@ -28,6 +28,7 @@ public class ServiceCollectionExtensionsTests
         Assert.IsType<SsoProvidersService>(provider.GetRequiredService<ISsoProvidersService>());
         Assert.IsType<StandardWesternPasswordComplexityEstimatorService>(provider.GetRequiredService<IPasswordComplexityEstimatorService>());
         Assert.IsType<CsvSecretsImporterService>(provider.GetRequiredService<ISecretsImporterService>());
+        Assert.IsType<JsonSecretsImporterService>(provider.GetRequiredService<IJsonSecretsImporterService>());
         Assert.IsType<EmbeddedResourceLoaderService>(provider.GetRequiredService<IEmbeddedResourceLoaderService>());
         Assert.True(provider.GetRequiredService<IOptions<TextListOptions>>().Value.UseFullWeakKnownPasswordsList);
     }

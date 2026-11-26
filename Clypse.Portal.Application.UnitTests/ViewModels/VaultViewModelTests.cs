@@ -18,6 +18,7 @@ public class VaultViewModelTests
     private readonly Mock<IVaultSession> mockSession = new();
     private readonly Mock<ISecretCopyService> mockCopy = new();
     private readonly Mock<INavigationService> mockNavigation = new();
+    private readonly Mock<IVaultReportService> mockReport = new();
     private readonly Vault vault = new() { Id = "v1", Root = "profiles/v1/", Name = "Personal", Description = "Logins", IsUnlocked = true };
     private List<Secret> secrets = [];
     private Vault? open;
@@ -40,13 +41,14 @@ public class VaultViewModelTests
         var t = text.For<ClypseText>();
 
         // Act & Assert
-        Assert.Equal("vaultService", Assert.Throws<ArgumentNullException>(() => new VaultViewModel(null!, mockSession.Object, text.Errors, text.Plurals, t, mockCopy.Object, mockNavigation.Object)).ParamName);
-        Assert.Equal("session", Assert.Throws<ArgumentNullException>(() => new VaultViewModel(mockVaults.Object, null!, text.Errors, text.Plurals, t, mockCopy.Object, mockNavigation.Object)).ParamName);
-        Assert.Equal("errorText", Assert.Throws<ArgumentNullException>(() => new VaultViewModel(mockVaults.Object, mockSession.Object, null!, text.Plurals, t, mockCopy.Object, mockNavigation.Object)).ParamName);
-        Assert.Equal("plurals", Assert.Throws<ArgumentNullException>(() => new VaultViewModel(mockVaults.Object, mockSession.Object, text.Errors, null!, t, mockCopy.Object, mockNavigation.Object)).ParamName);
-        Assert.Equal("text", Assert.Throws<ArgumentNullException>(() => new VaultViewModel(mockVaults.Object, mockSession.Object, text.Errors, text.Plurals, null!, mockCopy.Object, mockNavigation.Object)).ParamName);
-        Assert.Equal("copyService", Assert.Throws<ArgumentNullException>(() => new VaultViewModel(mockVaults.Object, mockSession.Object, text.Errors, text.Plurals, t, null!, mockNavigation.Object)).ParamName);
-        Assert.Equal("navigationService", Assert.Throws<ArgumentNullException>(() => new VaultViewModel(mockVaults.Object, mockSession.Object, text.Errors, text.Plurals, t, mockCopy.Object, null!)).ParamName);
+        Assert.Equal("vaultService", Assert.Throws<ArgumentNullException>(() => new VaultViewModel(null!, mockSession.Object, text.Errors, text.Plurals, t, mockCopy.Object, mockNavigation.Object, mockReport.Object)).ParamName);
+        Assert.Equal("session", Assert.Throws<ArgumentNullException>(() => new VaultViewModel(mockVaults.Object, null!, text.Errors, text.Plurals, t, mockCopy.Object, mockNavigation.Object, mockReport.Object)).ParamName);
+        Assert.Equal("errorText", Assert.Throws<ArgumentNullException>(() => new VaultViewModel(mockVaults.Object, mockSession.Object, null!, text.Plurals, t, mockCopy.Object, mockNavigation.Object, mockReport.Object)).ParamName);
+        Assert.Equal("plurals", Assert.Throws<ArgumentNullException>(() => new VaultViewModel(mockVaults.Object, mockSession.Object, text.Errors, null!, t, mockCopy.Object, mockNavigation.Object, mockReport.Object)).ParamName);
+        Assert.Equal("text", Assert.Throws<ArgumentNullException>(() => new VaultViewModel(mockVaults.Object, mockSession.Object, text.Errors, text.Plurals, null!, mockCopy.Object, mockNavigation.Object, mockReport.Object)).ParamName);
+        Assert.Equal("copyService", Assert.Throws<ArgumentNullException>(() => new VaultViewModel(mockVaults.Object, mockSession.Object, text.Errors, text.Plurals, t, null!, mockNavigation.Object, mockReport.Object)).ParamName);
+        Assert.Equal("navigationService", Assert.Throws<ArgumentNullException>(() => new VaultViewModel(mockVaults.Object, mockSession.Object, text.Errors, text.Plurals, t, mockCopy.Object, null!, mockReport.Object)).ParamName);
+        Assert.Equal("reportService", Assert.Throws<ArgumentNullException>(() => new VaultViewModel(mockVaults.Object, mockSession.Object, text.Errors, text.Plurals, t, mockCopy.Object, mockNavigation.Object, null!)).ParamName);
     }
 
     [Fact]
@@ -389,6 +391,60 @@ public class VaultViewModelTests
     }
 
     [Fact]
+    public async Task GivenTheReport_WhenShownAndASecretInItIsOpened_ThenTheEditorReplacesIt()
+    {
+        // Arrange
+        var sut = CreateSut();
+        await sut.LoadAsync("v1");
+
+        // Act
+        sut.ShowReportCommand.Execute(null);
+        var shown = sut.ActiveDialog;
+        sut.EditSecretCommand.Execute("s1");
+
+        // Assert
+        Assert.Equal(VaultViewModel.VaultDialog.Report, shown);
+        Assert.Equal(VaultViewModel.VaultDialog.Editor, sut.ActiveDialog);
+        Assert.Equal("s1", sut.EditingSecretId);
+    }
+
+    [Fact]
+    public async Task GivenTheVaultsReport_WhenItFindsSomething_ThenThePageSaysSo_AndIsToldWhenItChanges()
+    {
+        // Arrange
+        var report = new VaultReport { VaultId = "v1" };
+        mockReport.SetupGet(x => x.Report).Returns(() => report);
+        var sut = CreateSut();
+        await sut.LoadAsync("v1");
+        var clean = sut.HasReportIssues;
+        var changed = new List<string?>();
+        sut.PropertyChanged += (_, e) => changed.Add(e.PropertyName);
+        report = new VaultReport { VaultId = "v1", ReusedPasswords = [new VaultReportReuse { SecretIds = ["a", "b"] }] };
+
+        // Act
+        mockReport.Raise(x => x.Changed += null, EventArgs.Empty);
+
+        // Assert
+        Assert.False(clean);
+        Assert.True(sut.HasReportIssues);
+        Assert.Contains(nameof(VaultViewModel.HasReportIssues), changed);
+    }
+
+    [Fact]
+    public async Task GivenAnotherVaultsReport_WhenItFindsSomething_ThenThisPageDoesNotSaySo()
+    {
+        // Arrange
+        mockReport.SetupGet(x => x.Report).Returns(new VaultReport { VaultId = "v2", ReusedPasswords = [new VaultReportReuse { SecretIds = ["a", "b"] }] });
+        var sut = CreateSut();
+
+        // Act
+        await sut.LoadAsync("v1");
+
+        // Assert
+        Assert.False(sut.HasReportIssues);
+    }
+
+    [Fact]
     public async Task GivenADialogOpen_WhenTheVaultIsLockedElsewhere_ThenTheDialogCloses()
     {
         // Arrange
@@ -642,5 +698,20 @@ public class VaultViewModelTests
         mockCopy.Verify(x => x.CopyAsync("NotAField", null, false), Times.Once);
     }
 
-    private VaultViewModel CreateSut() => new(mockVaults.Object, mockSession.Object, text.Errors, text.Plurals, text.For<ClypseText>(), mockCopy.Object, mockNavigation.Object);
+    [Fact]
+    public void GivenAReport_WhenRead_ThenItIsTheReportServicesReport()
+    {
+        // Arrange
+        var report = new VaultReport { VaultId = "v1" };
+        mockReport.SetupGet(x => x.Report).Returns(report);
+        var sut = CreateSut();
+
+        // Act
+        var read = sut.Report;
+
+        // Assert
+        Assert.Same(report, read);
+    }
+
+    private VaultViewModel CreateSut() => new(mockVaults.Object, mockSession.Object, text.Errors, text.Plurals, text.For<ClypseText>(), mockCopy.Object, mockNavigation.Object, mockReport.Object);
 }

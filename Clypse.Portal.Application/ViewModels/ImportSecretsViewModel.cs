@@ -28,10 +28,11 @@ public partial class ImportSecretsViewModel : ViewModelBase
     /// <summary>
     /// The formats offered, in order.
     /// </summary>
-    public static readonly IReadOnlyList<CsvImportDataFormat> Formats = [CsvImportDataFormat.KeePassCsv1_x, CsvImportDataFormat.Cachy1_x];
+    public static readonly IReadOnlyList<CsvImportDataFormat> Formats = [CsvImportDataFormat.KeePassCsv1_x, CsvImportDataFormat.Cachy1_x, CsvImportDataFormat.ClypseJson];
 
     private readonly IVaultSession session;
     private readonly ISecretsImporterService importer;
+    private readonly IJsonSecretsImporterService jsonImporter;
     private readonly IErrorText errorText;
     private readonly ITextPlurals plurals;
     private readonly IStringLocalizer<ClypseText> text;
@@ -50,18 +51,21 @@ public partial class ImportSecretsViewModel : ViewModelBase
     /// </summary>
     /// <param name="session">The open vault, which the secrets are added to.</param>
     /// <param name="importer">Reads CSV files.</param>
+    /// <param name="jsonImporter">Reads clypse's JSON files.</param>
     /// <param name="errorText">Describes errors.</param>
     /// <param name="plurals">Words counts.</param>
     /// <param name="text">Clypse's text.</param>
     public ImportSecretsViewModel(
         IVaultSession session,
         ISecretsImporterService importer,
+        IJsonSecretsImporterService jsonImporter,
         IErrorText errorText,
         ITextPlurals plurals,
         IStringLocalizer<ClypseText> text)
     {
         this.session = session ?? throw new ArgumentNullException(nameof(session));
         this.importer = importer ?? throw new ArgumentNullException(nameof(importer));
+        this.jsonImporter = jsonImporter ?? throw new ArgumentNullException(nameof(jsonImporter));
         this.errorText = errorText ?? throw new ArgumentNullException(nameof(errorText));
         this.plurals = plurals ?? throw new ArgumentNullException(nameof(plurals));
         this.text = text ?? throw new ArgumentNullException(nameof(text));
@@ -73,8 +77,19 @@ public partial class ImportSecretsViewModel : ViewModelBase
     public CsvImportDataFormat Format
     {
         get => format;
-        private set => SetProperty(ref format, value);
+        private set
+        {
+            if (SetProperty(ref format, value))
+            {
+                OnPropertyChanged(nameof(FileTypes));
+            }
+        }
     }
+
+    /// <summary>
+    /// Gets the kinds of file the file picker offers for the format.
+    /// </summary>
+    public string FileTypes => Format == CsvImportDataFormat.ClypseJson ? ".json,application/json" : ".csv,text/csv";
 
     /// <summary>
     /// Gets the chosen file's name, or null.
@@ -210,9 +225,13 @@ public partial class ImportSecretsViewModel : ViewModelBase
 
     private static Secret ToSecret(Dictionary<string, string> row)
     {
-        // Every format imported holds logins.
+        // The CSV formats hold logins; clypse's own format says what each secret is, and is a login if it does not.
         var secret = Secret.FromDictionary(row);
-        secret.SecretType = SecretType.Web;
+        if (!row.ContainsKey(nameof(Secret.SecretType)))
+        {
+            secret.SecretType = SecretType.Web;
+        }
+
         return secret.CastSecretToCorrectType();
     }
 
@@ -229,6 +248,12 @@ public partial class ImportSecretsViewModel : ViewModelBase
         }
     }
 
+    private List<Dictionary<string, string>> ReadCsv(string data)
+    {
+        importer.ReadData(data);
+        return importer.MapImportedSecrets(Format);
+    }
+
     private void Read()
     {
         Error = null;
@@ -240,8 +265,8 @@ public partial class ImportSecretsViewModel : ViewModelBase
 
         try
         {
-            importer.ReadData(content);
-            var secrets = importer.MapImportedSecrets(Format)
+            var rows = Format == CsvImportDataFormat.ClypseJson ? jsonImporter.Read(content) : ReadCsv(content);
+            var secrets = rows
                 .Where(row => row.Count > 0)
                 .Select(ToSecret)
                 .ToList();

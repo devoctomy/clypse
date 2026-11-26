@@ -80,12 +80,9 @@ public class SecretService(Vault vault, ISyncFileStore fileStore, TimeProvider t
     {
         ArgumentNullException.ThrowIfNull(secret);
 
-        var now = timeProvider.GetUtcNow();
-        secret.LastUpdatedAt = now.UtcDateTime;
-        var key = KeyOf(secret.Id);
+        KeyOf(secret.Id);
         Validate(secret);
-        await fileStore.WriteAsync(key, Serialize(secret), now, ct);
-        return secret;
+        return await WriteAsync(secret, await ReadStoredAsync(secret.Id, ct), ct);
     }
 
     /// <inheritdoc/>
@@ -110,7 +107,8 @@ public class SecretService(Vault vault, ISyncFileStore fileStore, TimeProvider t
         foreach (var secret in secrets)
         {
             ct.ThrowIfCancellationRequested();
-            await SaveAsync(secret, ct);
+
+            await WriteImportedAsync(secret, ct);
             written++;
             progress?.Report(written);
         }
@@ -146,6 +144,66 @@ public class SecretService(Vault vault, ISyncFileStore fileStore, TimeProvider t
         {
             throw new ClypseException(ClypseErrorCodes.SecretInvalid, ex, string.Join(", ", ex.MissingProperties));
         }
+    }
+
+    // A new or changed password was updated now. An unchanged one keeps its time; one saved before that time was
+    // recorded takes the stored secret's last update, the latest it can have changed.
+    private static void StampPassword(Secret secret, Secret? stored, DateTime now)
+    {
+        const string PasswordKey = nameof(WebSecret.Password);
+        const string UpdatedKey = nameof(WebSecret.PasswordUpdatedAt);
+        var password = secret.GetData(PasswordKey);
+        if (string.IsNullOrEmpty(password))
+        {
+            secret.SetData(UpdatedKey, null);
+        }
+        else if (stored != null && string.Equals(password, stored.GetData(PasswordKey), StringComparison.Ordinal))
+        {
+            secret.SetData(UpdatedKey, stored.GetData(UpdatedKey) ?? stored.GetData(nameof(Secret.LastUpdatedAt)));
+        }
+        else
+        {
+            secret.SetData(UpdatedKey, now.ToString(ClypseObject.DateFormat, System.Globalization.CultureInfo.InvariantCulture));
+        }
+    }
+
+    // An unreadable stored secret is overwritten as if there were none.
+    private async Task<Secret?> ReadStoredAsync(string id, CancellationToken ct)
+    {
+        try
+        {
+            return await GetAsync(id, ct);
+        }
+        catch (ClypseException ex) when (ex.Code == ClypseErrorCodes.SecretUnreadable)
+        {
+            return null;
+        }
+    }
+
+    // Imported secrets are new, and keep the times they bring: a password without a time of its own was set when the
+    // secret was last updated.
+    private async Task WriteImportedAsync(Secret secret, CancellationToken ct)
+    {
+        const string UpdatedKey = nameof(WebSecret.PasswordUpdatedAt);
+        if (string.IsNullOrEmpty(secret.GetData(nameof(WebSecret.Password))))
+        {
+            secret.SetData(UpdatedKey, null);
+        }
+        else if (secret.GetData(UpdatedKey) == null)
+        {
+            secret.SetData(UpdatedKey, secret.GetData(nameof(Secret.LastUpdatedAt)));
+        }
+
+        await fileStore.WriteAsync(KeyOf(secret.Id), Serialize(secret), timeProvider.GetUtcNow(), ct);
+    }
+
+    private async Task<Secret> WriteAsync(Secret secret, Secret? stored, CancellationToken ct)
+    {
+        var now = timeProvider.GetUtcNow();
+        StampPassword(secret, stored, now.UtcDateTime);
+        secret.LastUpdatedAt = now.UtcDateTime;
+        await fileStore.WriteAsync(KeyOf(secret.Id), Serialize(secret), now, ct);
+        return secret;
     }
 
     private string KeyOf(string id)
