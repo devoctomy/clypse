@@ -595,6 +595,71 @@ public class SecretEditorViewModelTests
         Assert.Contains(nameof(SecretEditorViewModel.Fields), changed);
     }
 
+    [Fact]
+    public async Task GivenAReusedPasswordWhoseOtherSecretsHaveGone_WhenLoaded_ThenItIsNotAConcern()
+    {
+        // Arrange
+        var secret = Login("Forum", "quietowl", "qwerty");
+        report = new VaultReport { VaultId = "v1", ReusedPasswords = [new VaultReportReuse { SecretIds = [secret.Id, Guid.NewGuid().ToString()] }] };
+        var sut = CreateSut();
+
+        // Act
+        await sut.LoadAsync(secret.Id);
+
+        // Assert
+        Assert.Empty(sut.GetConcerns(nameof(WebSecret.Password)));
+    }
+
+    [Fact]
+    public async Task GivenAFieldWithNoValue_WhenItsConcernsAreRead_ThenThereAreNone()
+    {
+        // Arrange
+        var secret = new WebSecret { Name = "No user name", Password = "qwerty" };
+        secrets.Add(secret);
+        var sut = CreateSut();
+        await sut.LoadAsync(secret.Id);
+
+        // Act
+        var concerns = sut.GetConcerns(nameof(WebSecret.UserName));
+
+        // Assert
+        Assert.Empty(concerns);
+    }
+
+    [Fact]
+    public async Task GivenNoOpenVault_WhenASecretsConcernsAreRead_ThenThereAreNone()
+    {
+        // Arrange
+        var secret = Login("Forum", "quietowl", "qwerty");
+        report = new VaultReport { VaultId = "v1", WeakPasswords = [new VaultReportWeakPassword { SecretId = secret.Id, Strength = KnownWeak }] };
+        var sut = CreateSut();
+        await sut.LoadAsync(secret.Id);
+        mockSession.SetupGet(x => x.Vault).Returns((Vault?)null);
+
+        // Act
+        var concerns = sut.GetConcerns(nameof(WebSecret.Password));
+
+        // Assert
+        Assert.Empty(concerns);
+    }
+
+    [Fact]
+    public async Task GivenADisposedEditor_WhenTheReportChanges_ThenItIsNotTold()
+    {
+        // Arrange
+        var sut = CreateSut();
+        await sut.LoadAsync(null);
+        var changed = new List<string?>();
+        sut.PropertyChanged += (_, e) => changed.Add(e.PropertyName);
+
+        // Act
+        sut.Dispose();
+        mockReport.Raise(x => x.Changed += null, EventArgs.Empty);
+
+        // Assert
+        Assert.DoesNotContain(nameof(SecretEditorViewModel.Fields), changed);
+    }
+
     private WebSecret Login(string name, string userName, string password)
     {
         var secret = new WebSecret { Name = name, UserName = userName, Password = password };

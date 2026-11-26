@@ -330,6 +330,139 @@ public class VaultReportServiceTests
         mockStrength.VerifyNoOtherCalls();
     }
 
+    [Fact]
+    public void GivenAReport_WhenTheVaultsSecretsLoadAgain_ThenTheReportStands_AndWaits()
+    {
+        // Arrange
+        secrets.Add(Web("One", password: "weak1"));
+        using var sut = CreateSut();
+        var report = sut.Report;
+        isLoading = true;
+
+        // Act
+        mockSession.Raise(x => x.Changed += null, EventArgs.Empty);
+
+        // Assert
+        Assert.Same(report, sut.Report);
+        Assert.True(sut.IsUpdating);
+    }
+
+    [Fact]
+    public void GivenASecretWithNoName_WhenReported_ThenItIsStillChecked()
+    {
+        // Arrange
+        var nameless = new WebSecret { Password = "weak1" };
+        secrets.Add(Web("Named", password: "weak2"));
+        secrets.Add(nameless);
+
+        // Act
+        using var sut = CreateSut();
+
+        // Assert: with no name, it sorts first.
+        Assert.Equal(nameless.Id, sut.Report.WeakPasswords[0].SecretId);
+        Assert.Equal(2, sut.Report.WeakPasswords.Count);
+    }
+
+    [Fact]
+    public void GivenASecretWhoseTimesCannotBeRead_WhenReported_ThenItsPasswordIsNotCountedAsOld()
+    {
+        // Arrange
+        var secret = Web("Unreadable times", password: "Str0ng!Passw0rd#2026");
+        secret.Data[nameof(Secret.LastUpdatedAt)] = "not a date";
+        secrets.Add(secret);
+
+        // Act
+        using var sut = CreateSut();
+
+        // Assert
+        Assert.Empty(sut.Report.OldPasswords);
+    }
+
+    [Fact]
+    public void GivenAReportBeingMade_WhenTheSecretsChangeWhileAPasswordIsEstimated_ThenTheNewerReportWins()
+    {
+        // Arrange
+        var slow = new TaskCompletionSource<PasswordStrength>();
+        mockStrength.Setup(x => x.EstimateCheckingKnownPasswordsAsync("slow", It.IsAny<CancellationToken>())).Returns(slow.Task);
+        secrets.Add(Web("One", password: "slow"));
+        using var sut = CreateSut();
+        var two = Web("Two", password: "weak2");
+        secrets.Clear();
+        secrets.Add(two);
+        mockSession.Raise(x => x.Changed += null, EventArgs.Empty);
+
+        // Act
+        slow.SetResult(new PasswordStrength { Estimation = PasswordComplexityEstimation.Weak });
+
+        // Assert
+        Assert.Equal(two.Id, Assert.Single(sut.Report.WeakPasswords).SecretId);
+        Assert.False(sut.IsUpdating);
+    }
+
+    [Fact]
+    public void GivenAReportReplacedByANewerOne_WhenItThenFails_ThenTheNewerReportStands()
+    {
+        // Arrange
+        var slow = new TaskCompletionSource<PasswordStrength>();
+        mockStrength.Setup(x => x.EstimateCheckingKnownPasswordsAsync("slow", It.IsAny<CancellationToken>())).Returns(slow.Task);
+        secrets.Add(Web("One", password: "slow"));
+        using var sut = CreateSut();
+        var two = Web("Two", password: "weak2");
+        secrets.Clear();
+        secrets.Add(two);
+        mockSession.Raise(x => x.Changed += null, EventArgs.Empty);
+        var newer = sut.Report;
+        var changes = 0;
+        sut.Changed += (_, _) => changes++;
+
+        // Act
+        slow.SetException(new InvalidOperationException());
+
+        // Assert
+        Assert.Same(newer, sut.Report);
+        Assert.False(sut.IsUpdating);
+        Assert.Equal(0, changes);
+    }
+
+    [Fact]
+    public async Task GivenAReportWaitingForTheSettings_WhenANewerReportIsMadeMeanwhile_ThenTheNewerReportWins()
+    {
+        // Arrange
+        secrets.Add(Web("One", password: "weak1"));
+        using var sut = CreateSut();
+        var pending = new TaskCompletionSource<VaultReportPreferences>();
+        mockPreferences.Setup(x => x.GetAsync()).Returns(pending.Task);
+        var older = sut.RefreshAsync();
+        mockPreferences.Setup(x => x.GetAsync()).ReturnsAsync(new VaultReportPreferences { OldPasswordMonths = 6 });
+        await sut.RefreshAsync();
+
+        // Act
+        pending.SetResult(new VaultReportPreferences { OldPasswordMonths = 1 });
+        await older;
+
+        // Assert
+        Assert.Equal(6, sut.Report.OldPasswordMonths);
+        Assert.False(sut.IsUpdating);
+    }
+
+    [Fact]
+    public void GivenAPasswordThatCannotBeEstimated_WhenTheSessionChanges_ThenNothingIsThrown_AndTheLastReportStands()
+    {
+        // Arrange
+        secrets.Add(Web("One", password: "weak1"));
+        using var sut = CreateSut();
+        var report = sut.Report;
+        secrets.Add(Web("Two", password: "fails"));
+        mockStrength.Setup(x => x.EstimateCheckingKnownPasswordsAsync("fails", It.IsAny<CancellationToken>())).ThrowsAsync(new InvalidOperationException());
+
+        // Act
+        mockSession.Raise(x => x.Changed += null, EventArgs.Empty);
+
+        // Assert
+        Assert.Same(report, sut.Report);
+        Assert.False(sut.IsUpdating);
+    }
+
     private static WebSecret Web(string name, string? userName = null, string? password = null, DateTimeOffset? updated = null, DateTimeOffset? passwordUpdated = null)
     {
         var secret = new WebSecret { Name = name, UserName = userName, Password = password };

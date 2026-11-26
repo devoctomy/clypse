@@ -222,30 +222,12 @@ public partial class SecretEditorViewModel : ViewModelBase
             return [];
         }
 
-        var id = original.Id;
-        var concerns = new List<string>();
-        if (field == nameof(WebSecret.Password))
+        return field switch
         {
-            var weak = report.WeakPasswords.FirstOrDefault(w => w.SecretId == id);
-            if (weak != null)
-            {
-                concerns.Add(text[weak.Strength.IsKnownWeak ? "Secret.Concern.KnownWeak" : "Secret.Concern.Weak"]);
-            }
-
-            AddReuse(concerns, report.ReusedPasswords, id, "Secret.Concern.ReusedPassword");
-            var old = report.OldPasswords.FirstOrDefault(o => o.SecretId == id);
-            if (old != null)
-            {
-                var changed = DateTime.SpecifyKind(old.PasswordUpdatedAt, DateTimeKind.Utc).ToLocalTime().ToString("d", CultureInfo.CurrentCulture);
-                concerns.Add(text["Secret.Concern.Old", changed]);
-            }
-        }
-        else if (field == nameof(WebSecret.UserName))
-        {
-            AddReuse(concerns, report.ReusedUserNames, id, "Secret.Concern.ReusedUserName");
-        }
-
-        return concerns;
+            nameof(WebSecret.Password) => PasswordConcerns(report, original.Id),
+            nameof(WebSecret.UserName) => ReuseConcerns(report.ReusedUserNames, original.Id, "Secret.Concern.ReusedUserName"),
+            _ => [],
+        };
     }
 
     /// <summary>
@@ -505,24 +487,39 @@ public partial class SecretEditorViewModel : ViewModelBase
         }
     }
 
-    // The other secrets sharing the value, by name, e.g. "Also used by Forum Account and Old Laptop.".
-    private void AddReuse(List<string> concerns, IReadOnlyList<VaultReportReuse> reused, string id, string key)
+    // How weak the password is, the other secrets using it, and when it was last changed.
+    private List<string> PasswordConcerns(VaultReport report, string id)
     {
-        var group = reused.FirstOrDefault(r => r.SecretIds.Contains(id));
-        if (group == null)
+        var concerns = new List<string>();
+        var weak = report.WeakPasswords.FirstOrDefault(w => w.SecretId == id);
+        if (weak != null)
         {
-            return;
+            concerns.Add(text[weak.Strength.IsKnownWeak ? "Secret.Concern.KnownWeak" : "Secret.Concern.Weak"]);
         }
 
-        var others = group.SecretIds
+        concerns.AddRange(ReuseConcerns(report.ReusedPasswords, id, "Secret.Concern.ReusedPassword"));
+        var old = report.OldPasswords.FirstOrDefault(o => o.SecretId == id);
+        if (old != null)
+        {
+            var changed = DateTime.SpecifyKind(old.PasswordUpdatedAt, DateTimeKind.Utc).ToLocalTime().ToString("d", CultureInfo.CurrentCulture);
+            concerns.Add(text["Secret.Concern.Old", changed]);
+        }
+
+        return concerns;
+    }
+
+    // The other secrets sharing the value, by name, e.g. "This password is also used by Forum Account, Old Laptop.".
+    // None if they have all gone since the report was made.
+    private List<string> ReuseConcerns(IReadOnlyList<VaultReportReuse> reused, string id, string key)
+    {
+        var others = reused
+            .Where(r => r.SecretIds.Contains(id))
+            .SelectMany(r => r.SecretIds)
             .Where(other => other != id)
             .Select(other => session.Secrets.FirstOrDefault(s => s.Id == other)?.Name)
             .OfType<string>()
             .ToList();
-        if (others.Count > 0)
-        {
-            concerns.Add(text[key, string.Join(text["Secret.Concern.Separator"], others)]);
-        }
+        return others.Count == 0 ? [] : [text[key, string.Join(text["Secret.Concern.Separator"], others)]];
     }
 
     // The concerns shown come from the report, so the fields are drawn again when it changes.

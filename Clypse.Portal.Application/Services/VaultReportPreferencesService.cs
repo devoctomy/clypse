@@ -57,7 +57,13 @@ public class VaultReportPreferencesService(ILocalStorageService localStorage, Cl
         saved.OldPasswordMonths = Math.Max(VaultReportPreferences.MinimumMonths, saved.OldPasswordMonths);
         await localStorage.SetObjectAsync(StorageName, saved);
         current = saved;
-        Changed?.Invoke(this, EventArgs.Empty);
+
+        // Raised through a copy of the handler, not ?.Invoke, which SonarC# S3264 does not count as raising it.
+        var changed = Changed;
+        if (changed != null)
+        {
+            changed(this, EventArgs.Empty);
+        }
     }
 
     private static VaultReportPreferences Copy(VaultReportPreferences preferences) => new VaultReportPreferences

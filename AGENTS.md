@@ -145,6 +145,18 @@ dotnet test Clypse.slnx --no-build --filter "FullyQualifiedName~UITests"
     ```
 
   - Don't build while they run.
+- **Codacy:** check it after every change, with Codacy's cloud CLI through npx. It reads the results Codacy Cloud
+  already holds for `gh/devoctomy/clypse`, so it sees pushed code only; nothing is analysed on this machine.
+
+  ```powershell
+  npx -y @codacy/codacy-cloud-cli repository gh devoctomy clypse        # the repository: issues, coverage, open PRs
+  npx -y @codacy/codacy-cloud-cli pull-request gh devoctomy clypse <n>  # one pull request's new issues and gate
+  ```
+
+  - Tools and patterns are turned on or off with the same CLI and `gh devoctomy clypse`, through `tools` and
+    `pattern` with `--enable` / `--disable`. What was turned off, and why, is in
+    `docs/reviews/2026-11-13-codacy-noise.md`.
+  - Don't install the Codacy Analysis CLI or run `codacy-analysis`, and don't create a `.codacy/` folder here.
 - **Deploy tests** (`Clypse.Portal.DeployTests`) run against a deployed environment, from the Deploy tests workflow.
   They test clypse's own UI only; what the blazwiz base stack does is tested by blazwiz. No CI filter runs them.
   - They are Reqnroll scenarios run by MSTest: features in `Features/*.feature`, steps in `Steps/`, and the

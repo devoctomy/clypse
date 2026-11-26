@@ -462,6 +462,23 @@ public class SecretServiceTests
         Assert.Null(read.PasswordUpdatedAt);
     }
 
+    [Fact]
+    public async Task GivenAStoredSecretThatCannotBeRead_WhenSavedOver_ThenItIsWritten_AndItsPasswordWasUpdatedNow()
+    {
+        // Arrange
+        var sut = CreateSut();
+        var secret = new WebSecret { Name = "Mail", Password = "first" };
+        await files.WriteAsync($"{vault.Root}secrets/{secret.Id}.json", Encoding.UTF8.GetBytes("not json"), Now, CancellationToken.None);
+
+        // Act
+        await sut.SaveAsync(secret);
+
+        // Assert
+        var read = Assert.IsType<WebSecret>(await sut.GetAsync(secret.Id));
+        Assert.Equal("first", read.Password);
+        Assert.Equal(Now.UtcDateTime, read.PasswordUpdatedAt);
+    }
+
     private static Secret Clone(Secret secret) => Secret.FromDictionary(new Dictionary<string, string>(secret.Data));
 
     private SecretService CreateSut() => new(vault, files, clock);

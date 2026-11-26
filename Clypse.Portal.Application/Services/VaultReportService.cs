@@ -108,6 +108,7 @@ public sealed class VaultReportService : IVaultReportService, IDisposable
         MailAddress.TryCreate(value, out var address) && string.Equals(address.Address, value, StringComparison.OrdinalIgnoreCase);
 
     // A secret saved before the password's own time was recorded has its last update: the latest it can have changed.
+    // Null if neither can be read; such a password is never counted as old.
     private static DateTime? PasswordUpdatedAt(Secret secret) =>
         ParseDate(secret.GetData(nameof(WebSecret.PasswordUpdatedAt))) ?? ParseDate(secret.GetData(nameof(Secret.LastUpdatedAt)));
 
@@ -191,10 +192,10 @@ public sealed class VaultReportService : IVaultReportService, IDisposable
             ReusedUserNames = FindReused(userNames, StringComparer.OrdinalIgnoreCase),
             ReusedPasswords = FindReused(passwords, StringComparer.Ordinal),
             OldPasswords = passwords
-                .Select(p => (p.Secret, At: PasswordUpdatedAt(p.Secret)))
-                .Where(p => p.At != null && p.At < oldBefore)
+                .Select(p => (p.Secret, At: PasswordUpdatedAt(p.Secret) ?? DateTime.MaxValue))
+                .Where(p => p.At < oldBefore)
                 .OrderBy(p => p.At)
-                .Select(p => new VaultReportOldPassword { SecretId = p.Secret.Id, PasswordUpdatedAt = p.At!.Value })
+                .Select(p => new VaultReportOldPassword { SecretId = p.Secret.Id, PasswordUpdatedAt = p.At })
                 .ToList(),
         };
     }
@@ -240,7 +241,13 @@ public sealed class VaultReportService : IVaultReportService, IDisposable
 
         Report = report;
         IsUpdating = isUpdating;
-        Changed?.Invoke(this, EventArgs.Empty);
+
+        // Raised through a copy of the handler, not ?.Invoke, which SonarC# S3264 does not count as raising it.
+        var changed = Changed;
+        if (changed != null)
+        {
+            changed(this, EventArgs.Empty);
+        }
     }
 
     private async void OnChanged(object? sender, EventArgs e)

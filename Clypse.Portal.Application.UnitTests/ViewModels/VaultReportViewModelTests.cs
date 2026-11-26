@@ -148,6 +148,52 @@ public class VaultReportViewModelTests
     }
 
     [Fact]
+    public void GivenAReportBeingMadeAgain_WhenShown_ThenItSaysSo()
+    {
+        // Arrange
+        mockReport.SetupGet(x => x.IsUpdating).Returns(true);
+
+        // Act
+        using var sut = CreateSut();
+
+        // Assert
+        Assert.True(sut.IsUpdating);
+    }
+
+    [Fact]
+    public void GivenAReusedUserNameWhoseFirstSecretHasGone_WhenShown_ThenItHasNoHeading_ButNamesTheSecretsLeft()
+    {
+        // Arrange
+        var b = Add("Video", "jsmith88");
+        var c = Add("Books", "jsmith88");
+        report = Report(reusedUserNames: [new VaultReportReuse { SecretIds = [Guid.NewGuid().ToString(), b.Id, c.Id] }]);
+
+        // Act
+        using var sut = CreateSut();
+
+        // Assert
+        var item = Assert.Single(sut.Sections[3].Items);
+        Assert.Null(item.Heading);
+        Assert.Equal(["Video", "Books"], item.Secrets.Select(s => s.Name));
+    }
+
+    [Fact]
+    public void GivenAReusedUserNameWhoseFirstSecretNoLongerHasOne_WhenShown_ThenItHasNoHeading()
+    {
+        // Arrange
+        var a = new WebSecret { Name = "Music", Password = "x" };
+        secrets.Add(a);
+        var b = Add("Video", "jsmith88");
+        report = Report(reusedUserNames: [new VaultReportReuse { SecretIds = [a.Id, b.Id] }]);
+
+        // Act
+        using var sut = CreateSut();
+
+        // Assert
+        Assert.Null(Assert.Single(sut.Sections[3].Items).Heading);
+    }
+
+    [Fact]
     public void GivenOldPasswords_WhenShown_ThenEachSaysWhenItWasLastChanged()
     {
         // Arrange
