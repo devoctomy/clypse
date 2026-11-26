@@ -45,6 +45,8 @@ public class VaultTests : TestBase
         var id = await CreateVaultAsync("Personal", "Everyday logins");
 
         Assert.IsTrue(Guid.TryParseExact(id, "D", out _), $"'{id}' is not a GUID");
+        await Expect(Page.Locator("#report-button")).ToBeVisibleAsync();
+        await Expect(Page.Locator("#report-alert")).ToHaveCountAsync(0);
         await Expect(Page.Locator("h1.page-title")).ToContainTextAsync("Personal");
         await Expect(Page.Locator(".page-subtitle")).ToHaveTextAsync("Everyday logins");
         await Expect(Page.Locator("#no-secrets")).ToBeVisibleAsync();
@@ -233,6 +235,66 @@ public class VaultTests : TestBase
         }
 
         await Expect(Page.Locator("#secrets .secret-row")).ToHaveCountAsync(2);
+    }
+
+    [TestMethod]
+    public async Task GivenReusedKnownWeakPasswords_WhenTheReportIsShown_ThenItsChecksSaySo_InClosedSections_ThatOpenTheirSecrets()
+    {
+        await LoginAsync();
+        await CreateVaultAsync("Personal");
+        var csv = Path.Combine(Path.GetTempPath(), $"clypse-import-{Guid.NewGuid():N}.csv");
+
+        // password123 is on the Debug build's stand-in list of weak known passwords.
+        await File.WriteAllTextAsync(csv, "\"Account\",\"Username\",\"Password\",\"Web site\",\"Comments\"\r\n\"Gmail\",\"bob\",\"password123\",\"\",\"\"\r\n\"Bank\",\"bob\",\"password123\",\"\",\"\"\r\n");
+        try
+        {
+            await Page.Locator("#import-button").ClickAsync();
+            await Page.Locator("#import-file").SetInputFilesAsync(csv);
+            await Page.Locator("#import-confirm").ClickAsync();
+            await Expect(Page.Locator("#import-done")).ToContainTextAsync("2 secrets imported.");
+            await Page.Locator("#import-close").ClickAsync();
+        }
+        finally
+        {
+            File.Delete(csv);
+        }
+
+        await Expect(Page.Locator("#report-button #report-alert")).ToBeVisibleAsync();
+
+        await Page.Locator("#report-button").ClickAsync();
+
+        await Expect(Page.Locator("#vault-report-overview")).ToContainTextAsync("2 of 5 checks passed");
+        await Expect(Page.Locator("#vault-report-overview")).ToContainTextAsync("2 secrets checked.");
+        var sections = Page.Locator("#vault-report-sections .vault-report-section");
+        await Expect(sections).ToHaveCountAsync(5);
+        await Expect(Page.Locator(".vault-report-section-body")).ToHaveCountAsync(0);
+        await Expect(Page.Locator(".vault-report-section.failed")).ToHaveCountAsync(3);
+        var known = Page.Locator(".vault-report-section[data-check='KnownWeakPasswords']");
+        await Expect(known.Locator(".vault-report-section-summary")).ToHaveTextAsync("2 secrets use known weak passwords.");
+        await Expect(Page.Locator(".vault-report-section[data-check='WeakPasswords'] .vault-report-section-summary")).ToHaveTextAsync("No weak passwords found.");
+        await ScreenshotAsync("VaultReport");
+
+        await known.Locator(".vault-report-section-header").ClickAsync();
+
+        await Expect(known.Locator(".vault-report-section-header")).ToHaveAttributeAsync("aria-expanded", "true");
+        await Expect(known.Locator(".vault-report-secret")).ToHaveTextAsync(["Bank", "Gmail"]);
+        await ScreenshotAsync("VaultReportOpen");
+
+        await known.Locator(".vault-report-secret", new() { HasTextString = "Gmail" }).ClickAsync();
+
+        await Expect(Page.Locator("#vault-report-dialog")).ToHaveCountAsync(0);
+        await Expect(Page.Locator("#secret-dialog")).ToBeVisibleAsync();
+        var password = Page.Locator("#secret-field-Password-concerns .field-concern");
+        await Expect(password).ToHaveTextAsync(["This password is on the list of known weak passwords.", "This password is also used by Bank."]);
+        await Expect(Page.Locator("#secret-field-UserName-concerns .field-concern")).ToHaveTextAsync("This user name is also used by Bank.");
+        await Expect(Page.Locator("label[for='secret-field-Password'] .field-alert-dot")).ToBeVisibleAsync();
+        await Expect(Page.Locator("label[for='secret-field-Name'] .field-alert-dot")).ToHaveCountAsync(0);
+        await ScreenshotAsync("SecretConcerns");
+
+        await Page.Locator("#secret-field-Password").FillAsync("Rc3$mWx8!fGt5@kNz1q");
+
+        await Expect(Page.Locator("#secret-field-Password-concerns")).ToHaveCountAsync(0);
+        await Expect(Page.Locator("#secret-field-UserName-concerns")).ToHaveCountAsync(1);
     }
 
     [TestMethod]

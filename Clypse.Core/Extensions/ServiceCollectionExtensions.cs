@@ -39,6 +39,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IWeakKnownPasswordsService, WeakKnownPasswordsService>();
         services.AddScoped<IPasswordComplexityEstimatorService, StandardWesternPasswordComplexityEstimatorService>();
         services.AddScoped<ISecretsImporterService, CsvSecretsImporterService>();
+        services.AddScoped<IJsonSecretsImporterService, JsonSecretsImporterService>();
         services.AddScoped<ISsoProvidersService, SsoProvidersService>();
 
         AddAllOfType<IPasswordGeneratorTokenProcessor>(services);

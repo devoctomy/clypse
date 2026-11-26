@@ -19,4 +19,9 @@ public enum CsvImportDataFormat
     /// Cachy CSV format version 1.x.
     /// </summary>
     Cachy1_x = 2,
+
+    /// <summary>
+    /// Clypse's own JSON format, read by <see cref="Secrets.Import.IJsonSecretsImporterService"/> rather than as CSV.
+    /// </summary>
+    ClypseJson = 3,
 }

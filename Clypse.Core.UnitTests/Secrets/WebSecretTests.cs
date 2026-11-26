@@ -119,4 +119,47 @@ public class WebSecretTests
         Assert.Equal(secret.CreatedAt, webSecret.CreatedAt);
         Assert.Equal(secret.LastUpdatedAt, webSecret.LastUpdatedAt);
     }
+
+    [Fact]
+    public void GivenAPasswordTime_WhenSet_ThenItIsStoredInTheDateFormat_AndReadBackInUtc()
+    {
+        // Arrange
+        var sut = new WebSecret();
+        var at = new DateTime(2026, 8, 1, 9, 15, 30, DateTimeKind.Utc);
+
+        // Act
+        sut.PasswordUpdatedAt = at;
+
+        // Assert
+        Assert.Equal("01-08-2026T09:15:30", sut.Data[nameof(WebSecret.PasswordUpdatedAt)]);
+        Assert.Equal(at, sut.PasswordUpdatedAt);
+        Assert.Equal(DateTimeKind.Utc, sut.PasswordUpdatedAt!.Value.Kind);
+    }
+
+    [Fact]
+    public void GivenNoPasswordTime_WhenRead_ThenNull_AndTheSecretIsStillValid()
+    {
+        // Arrange: a secret saved before the password's time was recorded.
+        var sut = new WebSecret { Name = "Foobar", Password = "password123" };
+
+        // Act
+        var at = sut.PasswordUpdatedAt;
+
+        // Assert
+        Assert.Null(at);
+        new ClypseObjectValidator(sut).Validate();
+    }
+
+    [Fact]
+    public void GivenAPasswordTime_WhenCleared_ThenItIsRemovedFromTheData()
+    {
+        // Arrange
+        var sut = new WebSecret { PasswordUpdatedAt = DateTime.UtcNow };
+
+        // Act
+        sut.PasswordUpdatedAt = null;
+
+        // Assert
+        Assert.False(sut.Data.ContainsKey(nameof(WebSecret.PasswordUpdatedAt)));
+    }
 }

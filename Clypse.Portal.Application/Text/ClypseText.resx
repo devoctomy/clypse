@@ -178,13 +178,16 @@
     <value>{0} secrets imported.</value>
   </data>
   <data name="Import.File" xml:space="preserve">
-    <value>CSV file</value>
+    <value>File</value>
   </data>
   <data name="Import.Format" xml:space="preserve">
     <value>File format</value>
   </data>
   <data name="Import.Format.Cachy1_x" xml:space="preserve">
     <value>Cachy CSV (1.x)</value>
+  </data>
+  <data name="Import.Format.ClypseJson" xml:space="preserve">
+    <value>Clypse JSON</value>
   </data>
   <data name="Import.Format.KeePassCsv1_x" xml:space="preserve">
     <value>KeePass CSV (1.x)</value>
@@ -199,7 +202,7 @@
     <value>Import</value>
   </data>
   <data name="Import.Intro" xml:space="preserve">
-    <value>Import logins from a CSV file exported by another password manager. They are added to this vault as new secrets.</value>
+    <value>Import logins from a CSV file exported by another password manager, or secrets from a clypse JSON file. They are added to this vault as new secrets.</value>
   </data>
   <data name="Import.Progress" xml:space="preserve">
     <value>Importing {0} of {1}…</value>
@@ -221,6 +224,24 @@
   </data>
   <data name="Nav.Vaults.Description" xml:space="preserve">
     <value>Your vaults, each with its own passphrase.</value>
+  </data>
+  <data name="Secret.Concern.KnownWeak" xml:space="preserve">
+    <value>This password is on the list of known weak passwords.</value>
+  </data>
+  <data name="Secret.Concern.Old" xml:space="preserve">
+    <value>This password has not been changed since {0}.</value>
+  </data>
+  <data name="Secret.Concern.ReusedPassword" xml:space="preserve">
+    <value>This password is also used by {0}.</value>
+  </data>
+  <data name="Secret.Concern.ReusedUserName" xml:space="preserve">
+    <value>This user name is also used by {0}.</value>
+  </data>
+  <data name="Secret.Concern.Separator" xml:space="preserve">
+    <value>, </value>
+  </data>
+  <data name="Secret.Concern.Weak" xml:space="preserve">
+    <value>This password is weak.</value>
   </data>
   <data name="Secret.Delete" xml:space="preserve">
     <value>Delete</value>
@@ -395,6 +416,135 @@
   </data>
   <data name="Vault.Unreadable.Other" xml:space="preserve">
     <value>{0} secrets in this vault could not be read.</value>
+  </data>
+  <data name="VaultReport.Button" xml:space="preserve">
+    <value>Report</value>
+  </data>
+  <data name="VaultReport.Checked.One" xml:space="preserve">
+    <value>{0} secret checked.</value>
+  </data>
+  <data name="VaultReport.Checked.Other" xml:space="preserve">
+    <value>{0} secrets checked.</value>
+  </data>
+  <data name="VaultReport.HasIssues" xml:space="preserve">
+    <value>The report found things to look at.</value>
+  </data>
+  <data name="VaultReport.KnownWeakPasswords.About" xml:space="preserve">
+    <value>Passwords from a list of millions seen in data breaches. They are the first ones an attacker tries, however long or varied they look.</value>
+  </data>
+  <data name="VaultReport.KnownWeakPasswords.Found.One" xml:space="preserve">
+    <value>{0} secret uses a known weak password.</value>
+  </data>
+  <data name="VaultReport.KnownWeakPasswords.Found.Other" xml:space="preserve">
+    <value>{0} secrets use known weak passwords.</value>
+  </data>
+  <data name="VaultReport.KnownWeakPasswords.Passed" xml:space="preserve">
+    <value>No known weak passwords found.</value>
+  </data>
+  <data name="VaultReport.KnownWeakPasswords.Title" xml:space="preserve">
+    <value>Known weak passwords</value>
+  </data>
+  <data name="VaultReport.OldPasswords.About" xml:space="preserve">
+    <value>Passwords not changed for more than {0}. Change how long that is in Settings &gt; Vault report.</value>
+  </data>
+  <data name="VaultReport.OldPasswords.Detail" xml:space="preserve">
+    <value>Last changed {0}</value>
+  </data>
+  <data name="VaultReport.OldPasswords.Found.One" xml:space="preserve">
+    <value>{0} secret has an old password.</value>
+  </data>
+  <data name="VaultReport.OldPasswords.Found.Other" xml:space="preserve">
+    <value>{0} secrets have old passwords.</value>
+  </data>
+  <data name="VaultReport.OldPasswords.Passed" xml:space="preserve">
+    <value>No old passwords found.</value>
+  </data>
+  <data name="VaultReport.OldPasswords.Title" xml:space="preserve">
+    <value>Passwords not changed in {0}</value>
+  </data>
+  <data name="VaultReport.Passed" xml:space="preserve">
+    <value>{0} of {1} checks passed</value>
+  </data>
+  <data name="VaultReport.ReusedPasswords.About" xml:space="preserve">
+    <value>If one site leaks a password used elsewhere, every account using it is open. Give each secret its own password.</value>
+  </data>
+  <data name="VaultReport.ReusedPasswords.Found.One" xml:space="preserve">
+    <value>{0} password is used by more than one secret.</value>
+  </data>
+  <data name="VaultReport.ReusedPasswords.Found.Other" xml:space="preserve">
+    <value>{0} passwords are used by more than one secret.</value>
+  </data>
+  <data name="VaultReport.ReusedPasswords.Passed" xml:space="preserve">
+    <value>No password is used more than once.</value>
+  </data>
+  <data name="VaultReport.ReusedPasswords.Title" xml:space="preserve">
+    <value>Reused passwords</value>
+  </data>
+  <data name="VaultReport.ReusedUserNames.About" xml:space="preserve">
+    <value>The same user name on several sites makes your accounts easier to find and link together. Email addresses are not counted.</value>
+  </data>
+  <data name="VaultReport.ReusedUserNames.Found.One" xml:space="preserve">
+    <value>{0} user name is used by more than one secret.</value>
+  </data>
+  <data name="VaultReport.ReusedUserNames.Found.Other" xml:space="preserve">
+    <value>{0} user names are used by more than one secret.</value>
+  </data>
+  <data name="VaultReport.ReusedUserNames.Passed" xml:space="preserve">
+    <value>No user name is used more than once.</value>
+  </data>
+  <data name="VaultReport.ReusedUserNames.Title" xml:space="preserve">
+    <value>Reused user names</value>
+  </data>
+  <data name="VaultReport.Title" xml:space="preserve">
+    <value>Vault report</value>
+  </data>
+  <data name="VaultReport.Updating" xml:space="preserve">
+    <value>Updating…</value>
+  </data>
+  <data name="VaultReport.UsedBy.One" xml:space="preserve">
+    <value>Used by {0} secret</value>
+  </data>
+  <data name="VaultReport.UsedBy.Other" xml:space="preserve">
+    <value>Used by {0} secrets</value>
+  </data>
+  <data name="VaultReport.Waiting" xml:space="preserve">
+    <value>Making the report…</value>
+  </data>
+  <data name="VaultReport.WeakPasswords.About" xml:space="preserve">
+    <value>Passwords too short, or with too few kinds of character, to hold out long against guessing. Use the password generator for a stronger one.</value>
+  </data>
+  <data name="VaultReport.WeakPasswords.Found.One" xml:space="preserve">
+    <value>{0} secret has a weak password.</value>
+  </data>
+  <data name="VaultReport.WeakPasswords.Found.Other" xml:space="preserve">
+    <value>{0} secrets have weak passwords.</value>
+  </data>
+  <data name="VaultReport.WeakPasswords.Passed" xml:space="preserve">
+    <value>No weak passwords found.</value>
+  </data>
+  <data name="VaultReport.WeakPasswords.Title" xml:space="preserve">
+    <value>Weak passwords</value>
+  </data>
+  <data name="VaultReportSettings.Months.One" xml:space="preserve">
+    <value>{0} month</value>
+  </data>
+  <data name="VaultReportSettings.Months.Other" xml:space="preserve">
+    <value>{0} months</value>
+  </data>
+  <data name="VaultReportSettings.OldAfter" xml:space="preserve">
+    <value>A password is old after</value>
+  </data>
+  <data name="VaultReportSettings.Save" xml:space="preserve">
+    <value>Save</value>
+  </data>
+  <data name="VaultReportSettings.Saved" xml:space="preserve">
+    <value>Vault report settings saved.</value>
+  </data>
+  <data name="VaultReportSettings.Text" xml:space="preserve">
+    <value>A vault's report lists the passwords that haven't been updated for a while. Choose how long that is. Kept on this device.</value>
+  </data>
+  <data name="VaultReportSettings.Title" xml:space="preserve">
+    <value>Vault report</value>
   </data>
   <data name="VaultSettings.AutoLock" xml:space="preserve">
     <value>Lock automatically after</value>

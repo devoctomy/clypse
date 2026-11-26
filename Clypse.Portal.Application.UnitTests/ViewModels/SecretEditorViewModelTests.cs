@@ -20,6 +20,9 @@ public class SecretEditorViewModelTests
     private readonly Mock<IVaultSession> mockSession = new();
     private readonly Mock<IPasswordStrengthService> mockStrength = new();
     private readonly Mock<ISecretCopyService> mockCopy = new();
+    private readonly Mock<IVaultReportService> mockReport = new();
+    private readonly Vault vault = new() { Id = "v1", IsUnlocked = true };
+    private VaultReport report = new() { VaultId = "v1" };
     private readonly FakeTimeProvider time = new();
     private readonly List<Secret> secrets = [];
     private Secret? saved;
@@ -27,6 +30,8 @@ public class SecretEditorViewModelTests
     public SecretEditorViewModelTests()
     {
         mockSession.SetupGet(x => x.Secrets).Returns(() => secrets);
+        mockSession.SetupGet(x => x.Vault).Returns(vault);
+        mockReport.SetupGet(x => x.Report).Returns(() => report);
         mockSession.Setup(x => x.SaveAsync(It.IsAny<Secret>(), It.IsAny<CancellationToken>()))
             .Callback<Secret, CancellationToken>((s, _) => saved = s)
             .ReturnsAsync((Secret s, CancellationToken _) => s);
@@ -40,12 +45,17 @@ public class SecretEditorViewModelTests
     [Fact]
     public void GivenNullDependencies_WhenConstructing_ThenThrowsArgumentNullException()
     {
+        // Arrange
+        var t = text.For<ClypseText>();
+
         // Act & Assert
-        Assert.Equal("session", Assert.Throws<ArgumentNullException>(() => new SecretEditorViewModel(null!, mockStrength.Object, text.Errors, mockCopy.Object, time)).ParamName);
-        Assert.Equal("strengthService", Assert.Throws<ArgumentNullException>(() => new SecretEditorViewModel(mockSession.Object, null!, text.Errors, mockCopy.Object, time)).ParamName);
-        Assert.Equal("errorText", Assert.Throws<ArgumentNullException>(() => new SecretEditorViewModel(mockSession.Object, mockStrength.Object, null!, mockCopy.Object, time)).ParamName);
-        Assert.Equal("copyService", Assert.Throws<ArgumentNullException>(() => new SecretEditorViewModel(mockSession.Object, mockStrength.Object, text.Errors, null!, time)).ParamName);
-        Assert.Equal("timeProvider", Assert.Throws<ArgumentNullException>(() => new SecretEditorViewModel(mockSession.Object, mockStrength.Object, text.Errors, mockCopy.Object, null!)).ParamName);
+        Assert.Equal("session", Assert.Throws<ArgumentNullException>(() => new SecretEditorViewModel(null!, mockStrength.Object, text.Errors, mockCopy.Object, time, mockReport.Object, t)).ParamName);
+        Assert.Equal("strengthService", Assert.Throws<ArgumentNullException>(() => new SecretEditorViewModel(mockSession.Object, null!, text.Errors, mockCopy.Object, time, mockReport.Object, t)).ParamName);
+        Assert.Equal("errorText", Assert.Throws<ArgumentNullException>(() => new SecretEditorViewModel(mockSession.Object, mockStrength.Object, null!, mockCopy.Object, time, mockReport.Object, t)).ParamName);
+        Assert.Equal("copyService", Assert.Throws<ArgumentNullException>(() => new SecretEditorViewModel(mockSession.Object, mockStrength.Object, text.Errors, null!, time, mockReport.Object, t)).ParamName);
+        Assert.Equal("timeProvider", Assert.Throws<ArgumentNullException>(() => new SecretEditorViewModel(mockSession.Object, mockStrength.Object, text.Errors, mockCopy.Object, null!, mockReport.Object, t)).ParamName);
+        Assert.Equal("reportService", Assert.Throws<ArgumentNullException>(() => new SecretEditorViewModel(mockSession.Object, mockStrength.Object, text.Errors, mockCopy.Object, time, null!, t)).ParamName);
+        Assert.Equal("text", Assert.Throws<ArgumentNullException>(() => new SecretEditorViewModel(mockSession.Object, mockStrength.Object, text.Errors, mockCopy.Object, time, mockReport.Object, null!)).ParamName);
     }
 
     [Fact]
@@ -493,5 +503,104 @@ public class SecretEditorViewModelTests
         return changed.Task.WaitAsync(TimeSpan.FromSeconds(10));
     }
 
-    private SecretEditorViewModel CreateSut() => new(mockSession.Object, mockStrength.Object, text.Errors, mockCopy.Object, time);
+    [Fact]
+    public async Task GivenASecretTheReportHasConcernsAbout_WhenLoaded_ThenItsPasswordAndUserNameSaySo()
+    {
+        // Arrange
+        var secret = Login("Forum", "quietowl", "qwerty");
+        var other = Login("Old Laptop", "quietowl", "qwerty");
+        var changed = new DateTime(2024, 11, 26, 10, 0, 0, DateTimeKind.Utc);
+        report = new VaultReport
+        {
+            VaultId = "v1",
+            WeakPasswords = [new VaultReportWeakPassword { SecretId = secret.Id, Strength = KnownWeak }],
+            ReusedPasswords = [new VaultReportReuse { SecretIds = [secret.Id, other.Id] }],
+            ReusedUserNames = [new VaultReportReuse { SecretIds = [secret.Id, other.Id] }],
+            OldPasswords = [new VaultReportOldPassword { SecretId = secret.Id, PasswordUpdatedAt = changed }],
+        };
+        var sut = CreateSut();
+
+        // Act
+        await sut.LoadAsync(secret.Id);
+
+        // Assert
+        Assert.Equal(
+            [
+                "This password is on the list of known weak passwords.",
+                "This password is also used by Old Laptop.",
+                "This password has not been changed since " + changed.ToLocalTime().ToString("d", System.Globalization.CultureInfo.CurrentCulture) + ".",
+            ],
+            sut.GetConcerns(nameof(WebSecret.Password)));
+        Assert.Equal(["This user name is also used by Old Laptop."], sut.GetConcerns(nameof(WebSecret.UserName)));
+        Assert.Empty(sut.GetConcerns(nameof(Secret.Name)));
+    }
+
+    [Fact]
+    public async Task GivenAWeakPassword_WhenItIsChangedInTheEditor_ThenItsConcernsNoLongerApply()
+    {
+        // Arrange
+        var secret = Login("Recipes", "cookbook", "kitten7q");
+        report = new VaultReport
+        {
+            VaultId = "v1",
+            WeakPasswords = [new VaultReportWeakPassword { SecretId = secret.Id, Strength = new PasswordStrength { Estimation = PasswordComplexityEstimation.Weak } }],
+        };
+        var sut = CreateSut();
+        await sut.LoadAsync(secret.Id);
+        var before = sut.GetConcerns(nameof(WebSecret.Password));
+
+        // Act
+        await sut.SetValueAsync(nameof(WebSecret.Password), "Rc3$mWx8!fGt5@kNz1q");
+
+        // Assert
+        Assert.Equal(["This password is weak."], before);
+        Assert.Empty(sut.GetConcerns(nameof(WebSecret.Password)));
+    }
+
+    [Fact]
+    public async Task GivenANewSecret_OrAnotherVaultsReport_WhenLoaded_ThenThereAreNoConcerns()
+    {
+        // Arrange
+        var secret = Login("Recipes", "cookbook", "kitten7q");
+        report = new VaultReport
+        {
+            VaultId = "v2",
+            WeakPasswords = [new VaultReportWeakPassword { SecretId = secret.Id, Strength = KnownWeak }],
+        };
+        var existing = CreateSut();
+        var created = CreateSut();
+
+        // Act
+        await existing.LoadAsync(secret.Id);
+        await created.LoadAsync(null);
+
+        // Assert
+        Assert.Empty(existing.GetConcerns(nameof(WebSecret.Password)));
+        Assert.Empty(created.GetConcerns(nameof(WebSecret.Password)));
+    }
+
+    [Fact]
+    public async Task GivenAnOpenEditor_WhenTheReportChanges_ThenItIsToldToDrawItsFieldsAgain()
+    {
+        // Arrange
+        var sut = CreateSut();
+        await sut.LoadAsync(null);
+        var changed = new List<string?>();
+        sut.PropertyChanged += (_, e) => changed.Add(e.PropertyName);
+
+        // Act
+        mockReport.Raise(x => x.Changed += null, EventArgs.Empty);
+
+        // Assert
+        Assert.Contains(nameof(SecretEditorViewModel.Fields), changed);
+    }
+
+    private WebSecret Login(string name, string userName, string password)
+    {
+        var secret = new WebSecret { Name = name, UserName = userName, Password = password };
+        secrets.Add(secret);
+        return secret;
+    }
+
+    private SecretEditorViewModel CreateSut() => new(mockSession.Object, mockStrength.Object, text.Errors, mockCopy.Object, time, mockReport.Object, text.For<ClypseText>());
 }

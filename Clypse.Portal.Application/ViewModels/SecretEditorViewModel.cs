@@ -1,11 +1,14 @@
+using System.Globalization;
 using Blazing.Mvvm.ComponentModel;
 using Clypse.Core.Base;
 using Clypse.Core.Enums;
 using Clypse.Core.Extensions;
 using Clypse.Core.Secrets;
 using Clypse.Portal.Application.Services.Interfaces;
+using Clypse.Portal.Application.Text;
 using Clypse.Portal.Models.Vaults;
 using Devoctomy.Blazwiz.UI.Text.Interfaces;
+using Microsoft.Extensions.Localization;
 
 namespace Clypse.Portal.Application.ViewModels;
 
@@ -32,6 +35,8 @@ public partial class SecretEditorViewModel : ViewModelBase
     private readonly IErrorText errorText;
     private readonly ISecretCopyService copyService;
     private readonly TimeProvider timeProvider;
+    private readonly IVaultReportService reportService;
+    private readonly IStringLocalizer<ClypseText> text;
     private readonly Dictionary<string, string> values = [];
     private readonly Dictionary<string, PasswordStrength> strengths = [];
     private readonly Dictionary<string, CancellationTokenSource> knownPasswordChecks = [];
@@ -53,19 +58,26 @@ public partial class SecretEditorViewModel : ViewModelBase
     /// <param name="errorText">Describes errors.</param>
     /// <param name="copyService">Copies fields to the clipboard.</param>
     /// <param name="timeProvider">Times the pause before a password is checked against the known passwords.</param>
+    /// <param name="reportService">Says what the vault's report found about the secret's password and user name.</param>
+    /// <param name="text">Clypse's text.</param>
     public SecretEditorViewModel(
         IVaultSession session,
         IPasswordStrengthService strengthService,
         IErrorText errorText,
         ISecretCopyService copyService,
-        TimeProvider timeProvider)
+        TimeProvider timeProvider,
+        IVaultReportService reportService,
+        IStringLocalizer<ClypseText> text)
     {
         this.session = session ?? throw new ArgumentNullException(nameof(session));
         this.strengthService = strengthService ?? throw new ArgumentNullException(nameof(strengthService));
         this.errorText = errorText ?? throw new ArgumentNullException(nameof(errorText));
         this.copyService = copyService ?? throw new ArgumentNullException(nameof(copyService));
         this.timeProvider = timeProvider ?? throw new ArgumentNullException(nameof(timeProvider));
+        this.reportService = reportService ?? throw new ArgumentNullException(nameof(reportService));
+        this.text = text ?? throw new ArgumentNullException(nameof(text));
         Fields = FieldsOf(SecretType.Web);
+        this.reportService.Changed += OnReportChanged;
     }
 
     /// <summary>
@@ -192,6 +204,49 @@ public partial class SecretEditorViewModel : ViewModelBase
     /// <param name="field">The field's name.</param>
     /// <returns>The value, or an empty string.</returns>
     public string GetValue(string field) => values.GetValueOrDefault(field) ?? string.Empty;
+
+    /// <summary>
+    /// Gets what the vault's report found about a field of the secret being edited, worded: e.g. that its password is
+    /// used by other secrets, or has not been changed for a while. Only the password and user name have concerns, and
+    /// only as they were saved: once the field is changed here, they no longer apply.
+    /// </summary>
+    /// <param name="field">The field's name.</param>
+    /// <returns>The concerns: empty if there are none.</returns>
+    public IReadOnlyList<string> GetConcerns(string field)
+    {
+        var report = reportService.Report;
+        if (original == null
+            || report.VaultId != session.Vault?.Id
+            || !string.Equals(GetValue(field), original.GetData(field) ?? string.Empty, StringComparison.Ordinal))
+        {
+            return [];
+        }
+
+        var id = original.Id;
+        var concerns = new List<string>();
+        if (field == nameof(WebSecret.Password))
+        {
+            var weak = report.WeakPasswords.FirstOrDefault(w => w.SecretId == id);
+            if (weak != null)
+            {
+                concerns.Add(text[weak.Strength.IsKnownWeak ? "Secret.Concern.KnownWeak" : "Secret.Concern.Weak"]);
+            }
+
+            AddReuse(concerns, report.ReusedPasswords, id, "Secret.Concern.ReusedPassword");
+            var old = report.OldPasswords.FirstOrDefault(o => o.SecretId == id);
+            if (old != null)
+            {
+                var changed = DateTime.SpecifyKind(old.PasswordUpdatedAt, DateTimeKind.Utc).ToLocalTime().ToString("d", CultureInfo.CurrentCulture);
+                concerns.Add(text["Secret.Concern.Old", changed]);
+            }
+        }
+        else if (field == nameof(WebSecret.UserName))
+        {
+            AddReuse(concerns, report.ReusedUserNames, id, "Secret.Concern.ReusedUserName");
+        }
+
+        return concerns;
+    }
 
     /// <summary>
     /// Sets a field's value, and its strength if it is a password.
@@ -347,6 +402,17 @@ public partial class SecretEditorViewModel : ViewModelBase
         }
     }
 
+    /// <inheritdoc/>
+    protected override void Dispose(bool disposing)
+    {
+        if (disposing)
+        {
+            reportService.Changed -= OnReportChanged;
+        }
+
+        base.Dispose(disposing);
+    }
+
     private static Secret Create(SecretType type) => type switch
     {
         SecretType.Web => new WebSecret(),
@@ -438,4 +504,27 @@ public partial class SecretEditorViewModel : ViewModelBase
             // The field changed again, or the editor moved on to another secret.
         }
     }
+
+    // The other secrets sharing the value, by name, e.g. "Also used by Forum Account and Old Laptop.".
+    private void AddReuse(List<string> concerns, IReadOnlyList<VaultReportReuse> reused, string id, string key)
+    {
+        var group = reused.FirstOrDefault(r => r.SecretIds.Contains(id));
+        if (group == null)
+        {
+            return;
+        }
+
+        var others = group.SecretIds
+            .Where(other => other != id)
+            .Select(other => session.Secrets.FirstOrDefault(s => s.Id == other)?.Name)
+            .OfType<string>()
+            .ToList();
+        if (others.Count > 0)
+        {
+            concerns.Add(text[key, string.Join(text["Secret.Concern.Separator"], others)]);
+        }
+    }
+
+    // The concerns shown come from the report, so the fields are drawn again when it changes.
+    private void OnReportChanged(object? sender, EventArgs e) => OnPropertyChanged(nameof(Fields));
 }

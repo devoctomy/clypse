@@ -1,4 +1,5 @@
-﻿using System.Text.Json.Serialization;
+﻿using System.Globalization;
+using System.Text.Json.Serialization;
 using Clypse.Core.Enums;
 
 namespace Clypse.Core.Secrets;
@@ -69,6 +70,28 @@ public class WebSecret : Secret
     {
         get { return this.GetData(nameof(this.Password)); }
         set { this.SetData(nameof(this.Password), value); }
+    }
+
+    /// <summary>
+    /// Gets or sets when the password was last set or changed, in UTC: null if it never was, or if the secret was saved
+    /// before this was recorded. Not a field the user edits.
+    /// </summary>
+    [JsonIgnore]
+    public DateTime? PasswordUpdatedAt
+    {
+        get
+        {
+            var value = this.GetData(nameof(this.PasswordUpdatedAt));
+            var styles = DateTimeStyles.AdjustToUniversal | DateTimeStyles.AssumeUniversal;
+            return value != null && DateTime.TryParseExact(value, DateFormat, CultureInfo.InvariantCulture, styles, out var at)
+                ? at
+                : null;
+        }
+
+        set
+        {
+            this.SetData(nameof(this.PasswordUpdatedAt), value?.ToString(DateFormat, CultureInfo.InvariantCulture));
+        }
     }
 
     /// <summary>

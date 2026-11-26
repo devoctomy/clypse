@@ -8,6 +8,11 @@ namespace Clypse.Core.Base;
 public class ClypseObject
 {
     /// <summary>
+    /// The format the object's dates and times are stored in, in UTC.
+    /// </summary>
+    public const string DateFormat = "dd-MM-yyyyTHH:mm:ss";
+
+    /// <summary>
     /// Initializes a new instance of the <see cref="ClypseObject"/> class with a unique identifier and current timestamps.
     /// </summary>
     public ClypseObject()
@@ -45,12 +50,12 @@ public class ClypseObject
         get
         {
             var value = this.GetData(nameof(this.CreatedAt));
-            return DateTime.ParseExact(value!, "dd-MM-yyyyTHH:mm:ss", System.Globalization.CultureInfo.InvariantCulture);
+            return DateTime.ParseExact(value!, DateFormat, System.Globalization.CultureInfo.InvariantCulture);
         }
 
         set
         {
-            this.SetData(nameof(this.CreatedAt), value.ToString("dd-MM-yyyyTHH:mm:ss", System.Globalization.CultureInfo.InvariantCulture));
+            this.SetData(nameof(this.CreatedAt), value.ToString(DateFormat, System.Globalization.CultureInfo.InvariantCulture));
         }
     }
 
@@ -64,12 +69,12 @@ public class ClypseObject
         get
         {
             var value = this.GetData(nameof(this.LastUpdatedAt));
-            return DateTime.ParseExact(value!, "dd-MM-yyyyTHH:mm:ss", System.Globalization.CultureInfo.InvariantCulture);
+            return DateTime.ParseExact(value!, DateFormat, System.Globalization.CultureInfo.InvariantCulture);
         }
 
         set
         {
-            this.SetData(nameof(this.LastUpdatedAt), value.ToString("dd-MM-yyyyTHH:mm:ss", System.Globalization.CultureInfo.InvariantCulture));
+            this.SetData(nameof(this.LastUpdatedAt), value.ToString(DateFormat, System.Globalization.CultureInfo.InvariantCulture));
         }
     }
 

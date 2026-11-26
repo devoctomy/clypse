@@ -480,3 +480,189 @@
     font-size: 1rem;
     font-weight: 700;
 }
+
+/* ---------- Vault report ---------- */
+
+.vault-report-overview {
+    display: flex;
+    align-items: center;
+    gap: 0.875rem;
+    margin-bottom: 1rem;
+    padding: 0.875rem 1rem;
+    border: 1px solid rgba(var(--bs-danger-rgb), 0.3);
+    border-radius: 0.75rem;
+    background: rgba(var(--bs-danger-rgb), 0.05);
+}
+
+.vault-report-overview.passed {
+    border-color: rgba(var(--bs-success-rgb), 0.3);
+    background: rgba(var(--bs-success-rgb), 0.06);
+}
+
+.vault-report-overview-icon {
+    flex-shrink: 0;
+    color: var(--bs-danger);
+    font-size: 1.75rem;
+}
+
+.vault-report-overview.passed .vault-report-overview-icon {
+    color: var(--bs-success);
+}
+
+.vault-report-overview-title {
+    font-weight: 700;
+}
+
+.vault-report-sections {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.vault-report-section {
+    border: 1px solid var(--bw-border);
+    border-radius: 0.75rem;
+    overflow: hidden;
+}
+
+.vault-report-section-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    text-align: left;
+}
+
+.vault-report-section-header:hover {
+    background: var(--bw-hover);
+}
+
+.vault-report-status {
+    flex-shrink: 0;
+    font-size: 1.25rem;
+}
+
+.vault-report-section.passed .vault-report-status {
+    color: var(--bs-success);
+}
+
+.vault-report-section.failed .vault-report-status {
+    color: var(--bs-danger);
+}
+
+.vault-report-section-text {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.vault-report-section-title {
+    font-weight: 600;
+}
+
+.vault-report-section-summary {
+    color: var(--bw-text-muted);
+    font-size: 0.875rem;
+}
+
+.vault-report-chevron {
+    flex-shrink: 0;
+    color: var(--bw-text-muted);
+    transition: transform 0.15s ease;
+}
+
+.vault-report-section-header[aria-expanded="true"] .vault-report-chevron {
+    transform: rotate(180deg);
+}
+
+.vault-report-section-body {
+    padding: 0 1rem 0.875rem 3rem;
+}
+
+.vault-report-items {
+    display: flex;
+    flex-direction: column;
+    gap: 0.625rem;
+    margin: 0.75rem 0 0;
+    padding: 0;
+    list-style: none;
+}
+
+.vault-report-item {
+    padding-top: 0.625rem;
+    border-top: 1px solid var(--bw-border);
+}
+
+.vault-report-item-heading {
+    margin-bottom: 0.25rem;
+    font-weight: 600;
+    word-break: break-all;
+}
+
+.vault-report-item-secrets {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.375rem;
+}
+
+.vault-report-secret {
+    display: inline-flex;
+    align-items: center;
+    max-width: 100%;
+    padding: 0.25rem 0.625rem;
+    border: 1px solid var(--bw-border);
+    border-radius: 999px;
+    background: transparent;
+    color: inherit;
+    font-size: 0.875rem;
+}
+
+.vault-report-secret:hover {
+    border-color: var(--bw-accent);
+    color: var(--bw-accent);
+}
+
+.vault-report-item-detail {
+    margin-top: 0.25rem;
+}
+
+@media (max-width: 575.98px) {
+    .vault-report-section-body {
+        padding-left: 1rem;
+    }
+}
+
+/* The Report button says when the report found something. */
+.report-alert-dot {
+    display: inline-block;
+    width: 0.625rem;
+    height: 0.625rem;
+    margin-right: 0.5rem;
+    border-radius: 50%;
+    background: var(--bs-danger);
+    box-shadow: 0 0 0 2px rgba(var(--bs-danger-rgb), 0.25);
+    vertical-align: 0.05em;
+}
+
+/* A secret's field the vault report has a concern about: a dot after its title, and the concerns under it. */
+.field-alert-dot {
+    display: inline-block;
+    width: 0.5rem;
+    height: 0.5rem;
+    margin-left: 0.4rem;
+    border-radius: 50%;
+    background: var(--bs-danger);
+    box-shadow: 0 0 0 2px rgba(var(--bs-danger-rgb), 0.25);
+    vertical-align: 0.1em;
+}
+
+.field-concerns {
+    margin-bottom: 0.5rem;
+    color: var(--bs-danger);
+    font-size: 0.875rem;
+}

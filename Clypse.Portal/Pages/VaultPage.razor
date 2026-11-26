@@ -13,6 +13,14 @@
         <button type="button" class="btn btn-outline-primary" id="import-button" @onclick="() => ViewModel.ShowImportCommand.Execute(null)">
             <i class="bi bi-box-arrow-in-down me-1"></i>@T["Vault.Import"]
         </button>
+        <button type="button" class="btn btn-outline-primary report-button" id="report-button" @onclick="() => ViewModel.ShowReportCommand.Execute(null)">
+            @if (ViewModel.HasReportIssues)
+            {
+                <span class="report-alert-dot" id="report-alert" aria-hidden="true"></span>
+                <span class="visually-hidden">@T["VaultReport.HasIssues"]</span>
+            }
+            <i class="bi bi-clipboard2-pulse me-1"></i>@T["VaultReport.Button"]
+        </button>
         <button type="button" class="btn btn-primary" id="new-secret-button" @onclick="() => ViewModel.NewSecretCommand.Execute(null)">
             <i class="bi bi-plus-lg me-1"></i>@T["Vault.NewSecret"]
         </button>
@@ -159,6 +167,9 @@ else if (ViewModel.Vault != null)
         break;
     case VaultViewModel.VaultDialog.Import:
         <ImportSecretsDialog OnClose="() => ViewModel.CloseDialogCommand.Execute(null)" />
+        break;
+    case VaultViewModel.VaultDialog.Report:
+        <VaultReportDialog OnClose="() => ViewModel.CloseDialogCommand.Execute(null)" OnOpenSecret="id => ViewModel.EditSecretCommand.Execute(id)" />
         break;
     case VaultViewModel.VaultDialog.Settings when ViewModel.Vault != null:
         <VaultSettingsDialog Vault="@ViewModel.Vault" OnClose="() => ViewModel.CloseSettingsCommand.Execute(null)"

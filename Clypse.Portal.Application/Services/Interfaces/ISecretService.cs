@@ -25,7 +25,8 @@ public interface ISecretService
     Task<Secret?> GetAsync(string id, CancellationToken ct = default);
 
     /// <summary>
-    /// Saves a secret, new or changed, after checking it has everything it needs. Its last updated time is set to now.
+    /// Saves a secret, new or changed, after checking it has everything it needs. Its last updated time is set to now,
+    /// and so is <see cref="WebSecret.PasswordUpdatedAt"/> if its password is new or changed.
     /// </summary>
     /// <param name="secret">The secret.</param>
     /// <param name="ct">A token to cancel with.</param>
@@ -41,7 +42,9 @@ public interface ISecretService
     Task DeleteAsync(string id, CancellationToken ct = default);
 
     /// <summary>
-    /// Imports secrets: all of them are checked first, and none is written unless all are valid.
+    /// Imports secrets: all of them are checked first, and none is written unless all are valid. Each keeps the times it
+    /// has (e.g. from clypse's own format); a password without <see cref="WebSecret.PasswordUpdatedAt"/> takes the
+    /// secret's last updated time.
     /// </summary>
     /// <param name="secrets">The secrets.</param>
     /// <param name="progress">Reports how many have been written.</param>

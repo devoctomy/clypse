@@ -321,6 +321,149 @@ public class SecretServiceTests
         Assert.Null(sut.GetSecretId(null!));
     }
 
+    [Fact]
+    public async Task GivenANewSecretWithAPassword_WhenSaved_ThenItsPasswordWasUpdatedNow()
+    {
+        // Arrange
+        var sut = CreateSut();
+        var secret = new WebSecret { Name = "Mail", Password = "first" };
+
+        // Act
+        await sut.SaveAsync(secret);
+
+        // Assert
+        var read = Assert.IsType<WebSecret>(await sut.GetAsync(secret.Id));
+        Assert.Equal(Now.UtcDateTime, read.PasswordUpdatedAt);
+    }
+
+    [Fact]
+    public async Task GivenASavedSecret_WhenSavedAgainWithTheSamePassword_ThenItsPasswordTimeIsKept()
+    {
+        // Arrange
+        var sut = CreateSut();
+        var secret = new WebSecret { Name = "Mail", Password = "first" };
+        await sut.SaveAsync(secret);
+        clock.Advance(TimeSpan.FromDays(30));
+        var edited = WebSecret.FromSecret(Clone(secret));
+        edited.Description = "Edited";
+
+        // Act
+        await sut.SaveAsync(edited);
+
+        // Assert
+        var read = Assert.IsType<WebSecret>(await sut.GetAsync(secret.Id));
+        Assert.Equal(Now.UtcDateTime, read.PasswordUpdatedAt);
+        Assert.Equal(Now.AddDays(30).UtcDateTime, read.LastUpdatedAt);
+    }
+
+    [Fact]
+    public async Task GivenASavedSecret_WhenSavedWithANewPassword_ThenItsPasswordWasUpdatedNow()
+    {
+        // Arrange
+        var sut = CreateSut();
+        var secret = new WebSecret { Name = "Mail", Password = "first" };
+        await sut.SaveAsync(secret);
+        clock.Advance(TimeSpan.FromDays(30));
+        var changed = WebSecret.FromSecret(Clone(secret));
+        changed.Password = "second";
+
+        // Act
+        await sut.SaveAsync(changed);
+
+        // Assert
+        var read = Assert.IsType<WebSecret>(await sut.GetAsync(secret.Id));
+        Assert.Equal(Now.AddDays(30).UtcDateTime, read.PasswordUpdatedAt);
+    }
+
+    [Fact]
+    public async Task GivenASecretSavedBeforePasswordTimesWereKept_WhenSavedWithTheSamePassword_ThenItsLastUpdateIsThePasswordTime()
+    {
+        // Arrange
+        var sut = CreateSut();
+        var legacy = new WebSecret { Name = "Mail", Password = "first" };
+        legacy.LastUpdatedAt = Now.AddMonths(-6).UtcDateTime;
+        await files.WriteAsync($"{vault.Root}secrets/{legacy.Id}.json", JsonSerializer.SerializeToUtf8Bytes<Secret>(legacy), Now, CancellationToken.None);
+        var edited = WebSecret.FromSecret(Clone(legacy));
+        edited.Description = "Edited";
+
+        // Act
+        await sut.SaveAsync(edited);
+
+        // Assert
+        var read = Assert.IsType<WebSecret>(await sut.GetAsync(legacy.Id));
+        Assert.Equal(Now.AddMonths(-6).UtcDateTime, read.PasswordUpdatedAt);
+    }
+
+    [Fact]
+    public async Task GivenASavedSecret_WhenSavedWithoutItsPassword_ThenItHasNoPasswordTime()
+    {
+        // Arrange
+        var sut = CreateSut();
+        var secret = new WebSecret { Name = "Mail", Password = "first" };
+        await sut.SaveAsync(secret);
+        var cleared = WebSecret.FromSecret(Clone(secret));
+        cleared.Password = null;
+
+        // Act
+        await sut.SaveAsync(cleared);
+
+        // Assert
+        var read = Assert.IsType<WebSecret>(await sut.GetAsync(secret.Id));
+        Assert.Null(read.PasswordUpdatedAt);
+        Assert.False(read.Data.ContainsKey(nameof(WebSecret.PasswordUpdatedAt)));
+    }
+
+    [Fact]
+    public async Task GivenSecretsWithTimes_WhenImported_ThenTheyKeepThem()
+    {
+        // Arrange
+        var sut = CreateSut();
+        var secret = new WebSecret { Name = "Mail", Password = "first" };
+        secret.LastUpdatedAt = Now.AddMonths(-2).UtcDateTime;
+        secret.PasswordUpdatedAt = Now.AddYears(-1).UtcDateTime;
+
+        // Act
+        await sut.ImportAsync([secret]);
+
+        // Assert
+        var read = Assert.IsType<WebSecret>(await sut.GetAsync(secret.Id));
+        Assert.Equal(Now.AddMonths(-2).UtcDateTime, read.LastUpdatedAt);
+        Assert.Equal(Now.AddYears(-1).UtcDateTime, read.PasswordUpdatedAt);
+    }
+
+    [Fact]
+    public async Task GivenASecretWithAPasswordButNoPasswordTime_WhenImported_ThenItsLastUpdateIsThePasswordTime()
+    {
+        // Arrange
+        var sut = CreateSut();
+        var secret = new WebSecret { Name = "Mail", Password = "first" };
+        secret.LastUpdatedAt = Now.AddMonths(-4).UtcDateTime;
+
+        // Act
+        await sut.ImportAsync([secret]);
+
+        // Assert
+        var read = Assert.IsType<WebSecret>(await sut.GetAsync(secret.Id));
+        Assert.Equal(Now.AddMonths(-4).UtcDateTime, read.PasswordUpdatedAt);
+    }
+
+    [Fact]
+    public async Task GivenASecretWithAPasswordTimeButNoPassword_WhenImported_ThenTheTimeIsDropped()
+    {
+        // Arrange
+        var sut = CreateSut();
+        var secret = new WebSecret { Name = "Mail", PasswordUpdatedAt = Now.UtcDateTime };
+
+        // Act
+        await sut.ImportAsync([secret]);
+
+        // Assert
+        var read = Assert.IsType<WebSecret>(await sut.GetAsync(secret.Id));
+        Assert.Null(read.PasswordUpdatedAt);
+    }
+
+    private static Secret Clone(Secret secret) => Secret.FromDictionary(new Dictionary<string, string>(secret.Data));
+
     private SecretService CreateSut() => new(vault, files, clock);
 
     private sealed class SynchronousProgress(Action<int> report) : IProgress<int>

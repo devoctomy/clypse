@@ -28,6 +28,7 @@ public partial class VaultViewModel : ViewModelBase
     private readonly IStringLocalizer<ClypseText> text;
     private readonly ISecretCopyService copyService;
     private readonly INavigationService navigationService;
+    private readonly IVaultReportService reportService;
     private readonly Dictionary<string, string> copyLabels = new Dictionary<string, string>(StringComparer.Ordinal);
 
     private string? vaultId;
@@ -52,6 +53,7 @@ public partial class VaultViewModel : ViewModelBase
     /// <param name="text">Clypse's text.</param>
     /// <param name="copyService">Copies secrets' fields to the clipboard.</param>
     /// <param name="navigationService">Goes back to the vaults once the vault is locked.</param>
+    /// <param name="reportService">Keeps the report on the vault's secrets, from when the page opens the vault.</param>
     public VaultViewModel(
         IVaultService vaultService,
         IVaultSession session,
@@ -59,7 +61,8 @@ public partial class VaultViewModel : ViewModelBase
         ITextPlurals plurals,
         IStringLocalizer<ClypseText> text,
         ISecretCopyService copyService,
-        INavigationService navigationService)
+        INavigationService navigationService,
+        IVaultReportService reportService)
     {
         this.navigationService = navigationService ?? throw new ArgumentNullException(nameof(navigationService));
         this.copyService = copyService ?? throw new ArgumentNullException(nameof(copyService));
@@ -68,7 +71,9 @@ public partial class VaultViewModel : ViewModelBase
         this.errorText = errorText ?? throw new ArgumentNullException(nameof(errorText));
         this.plurals = plurals ?? throw new ArgumentNullException(nameof(plurals));
         this.text = text ?? throw new ArgumentNullException(nameof(text));
+        this.reportService = reportService ?? throw new ArgumentNullException(nameof(reportService));
         this.session.Changed += OnSessionChanged;
+        this.reportService.Changed += OnReportChanged;
     }
 
     /// <summary>
@@ -100,6 +105,11 @@ public partial class VaultViewModel : ViewModelBase
         /// Changing the vault's passphrase, opened from its settings.
         /// </summary>
         ChangePassphrase,
+
+        /// <summary>
+        /// The report on the vault's secrets: weak, reused and old passwords, and reused user names.
+        /// </summary>
+        Report,
     }
 
     /// <summary>
@@ -201,6 +211,16 @@ public partial class VaultViewModel : ViewModelBase
     /// Gets a value indicating whether the secrets are being read.
     /// </summary>
     public bool IsLoading => session.IsLoading;
+
+    /// <summary>
+    /// Gets the report on the vault's secrets: weak, reused and old passwords, and reused user names.
+    /// </summary>
+    public VaultReport Report => reportService.Report;
+
+    /// <summary>
+    /// Gets a value indicating whether this vault's report found anything to look at, so the Report button can say so.
+    /// </summary>
+    public bool HasReportIssues => vaultId != null && Report.VaultId == vaultId && Report.HasIssues;
 
     /// <summary>
     /// Gets how far through reading the secrets is, from 0 to 100.
@@ -480,6 +500,15 @@ public partial class VaultViewModel : ViewModelBase
     }
 
     /// <summary>
+    /// Opens the vault's report.
+    /// </summary>
+    [RelayCommand]
+    public void ShowReport()
+    {
+        ActiveDialog = VaultDialog.Report;
+    }
+
+    /// <summary>
     /// Closes the open dialog.
     /// </summary>
     [RelayCommand]
@@ -504,6 +533,7 @@ public partial class VaultViewModel : ViewModelBase
         if (disposing)
         {
             session.Changed -= OnSessionChanged;
+            reportService.Changed -= OnReportChanged;
             session.Close();
         }
 
@@ -566,6 +596,12 @@ public partial class VaultViewModel : ViewModelBase
         {
             ErrorMessage = errorText.Describe(ex);
         }
+    }
+
+    private void OnReportChanged(object? sender, EventArgs e)
+    {
+        OnPropertyChanged(nameof(Report));
+        OnPropertyChanged(nameof(HasReportIssues));
     }
 
     private void OnSessionChanged(object? sender, EventArgs e)
