@@ -390,6 +390,194 @@
     gap: 0.25rem;
 }
 
+/* ---------- Vault tabs ---------- */
+
+.vault-tabs {
+    margin-bottom: 1rem;
+}
+
+/* The header's buttons: a row with even gaps, whichever tab's buttons are in it. */
+.vault-header-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 0.3125rem;
+}
+
+/* ---------- Files ---------- */
+
+/* The New menu, in the page's header. */
+.files-new {
+    position: relative;
+}
+
+/* Under the button, in line with its right edge: the button is at the end of the header. */
+.files-new .dropdown-menu {
+    top: 100%;
+    right: 0;
+    left: auto;
+    z-index: 1010;
+    margin-top: 0.25rem;
+}
+
+.files-new .dropdown-item > .bi {
+    color: var(--bw-text-muted);
+}
+
+/* Covers the page while the New menu is open, so a click anywhere else closes it. */
+.files-new-backdrop {
+    position: fixed;
+    z-index: 1005;
+    inset: 0;
+}
+
+.files-working {
+    margin-bottom: 1rem;
+}
+
+.files-add-error + .files-add-error {
+    margin-top: 0.25rem;
+}
+
+.files-breadcrumb {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.25rem;
+    margin-bottom: 0.75rem;
+}
+
+.files-crumb {
+    max-width: 16rem;
+    padding: 0.25rem 0.5rem;
+    overflow: hidden;
+    border: 0;
+    border-radius: 0.5rem;
+    background: transparent;
+    color: var(--bw-text-muted);
+    font-size: 0.9rem;
+    font-weight: 500;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.files-crumb:hover {
+    background: var(--bw-hover);
+    color: var(--bw-text);
+}
+
+/* The folder that is open. */
+.files-crumb:last-child {
+    color: var(--bw-text);
+    font-weight: 600;
+}
+
+.files-crumb-separator {
+    color: var(--bw-text-muted);
+    font-size: 0.75rem;
+}
+
+.file-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.file-list > li + li {
+    border-top: 1px solid var(--bw-border);
+}
+
+.file-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.file-row {
+    display: flex;
+    flex: 1;
+    align-items: center;
+    gap: 0.875rem;
+    min-width: 0;
+    padding: 0.75rem 0.5rem;
+    border: 0;
+    border-radius: 0.5rem;
+    background: transparent;
+    color: inherit;
+    text-align: left;
+}
+
+.file-row:hover {
+    background: var(--bw-hover);
+}
+
+.file-icon {
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    border-radius: 0.625rem;
+    background: rgba(var(--bw-accent-rgb), 0.12);
+    color: var(--bw-accent);
+}
+
+.file-icon-folder {
+    background: var(--bw-surface-2);
+    color: var(--bw-text-muted);
+}
+
+.file-body {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.file-name {
+    overflow: hidden;
+    font-weight: 600;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.file-summary {
+    overflow: hidden;
+    color: var(--bw-text-muted);
+    font-size: 0.85rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.file-not-here {
+    color: var(--bs-warning-text-emphasis);
+}
+
+.file-actions {
+    display: flex;
+    flex-shrink: 0;
+    gap: 0.25rem;
+}
+
+/* A file's type, size and times, in its details. */
+.file-facts {
+    display: grid;
+    grid-template-columns: max-content 1fr;
+    gap: 0.25rem 1rem;
+    margin: 0;
+    font-size: 0.9rem;
+}
+
+.file-facts dt {
+    color: var(--bw-text-muted);
+    font-weight: 500;
+}
+
+.file-facts dd {
+    margin: 0;
+}
+
 /* ---------- Secret editor ---------- */
 
 .secret-type-options {

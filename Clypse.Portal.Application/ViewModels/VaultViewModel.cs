@@ -17,7 +17,8 @@ namespace Clypse.Portal.Application.ViewModels;
 /// ViewModel for a vault's page: its secrets, read into the <see cref="IVaultSession"/> once it is unlocked, with search
 /// and a tag filter, and which dialog is open (the secret editor, import, the vault's settings or changing its
 /// passphrase). Leaving the page closes the session, so the
-/// decrypted secrets are not kept in memory.
+/// decrypted secrets are not kept in memory. The page has two tabs, Secrets and Files: the files' metadata is read into
+/// the <see cref="IVaultFileSession"/>, opened and closed with the vault.
 /// </summary>
 public partial class VaultViewModel : ViewModelBase
 {
@@ -29,9 +30,11 @@ public partial class VaultViewModel : ViewModelBase
     private readonly ISecretCopyService copyService;
     private readonly INavigationService navigationService;
     private readonly IVaultReportService reportService;
+    private readonly IVaultFileSession fileSession;
     private readonly Dictionary<string, string> copyLabels = new Dictionary<string, string>(StringComparer.Ordinal);
 
     private string? vaultId;
+    private VaultTab activeTab;
     private bool isMissing;
     private string search = string.Empty;
     private string? selectedTag;
@@ -54,6 +57,7 @@ public partial class VaultViewModel : ViewModelBase
     /// <param name="copyService">Copies secrets' fields to the clipboard.</param>
     /// <param name="navigationService">Goes back to the vaults once the vault is locked.</param>
     /// <param name="reportService">Keeps the report on the vault's secrets, from when the page opens the vault.</param>
+    /// <param name="fileSession">Holds the metadata of the vault's files.</param>
     public VaultViewModel(
         IVaultService vaultService,
         IVaultSession session,
@@ -62,8 +66,10 @@ public partial class VaultViewModel : ViewModelBase
         IStringLocalizer<ClypseText> text,
         ISecretCopyService copyService,
         INavigationService navigationService,
-        IVaultReportService reportService)
+        IVaultReportService reportService,
+        IVaultFileSession fileSession)
     {
+        this.fileSession = fileSession ?? throw new ArgumentNullException(nameof(fileSession));
         this.navigationService = navigationService ?? throw new ArgumentNullException(nameof(navigationService));
         this.copyService = copyService ?? throw new ArgumentNullException(nameof(copyService));
         this.vaultService = vaultService ?? throw new ArgumentNullException(nameof(vaultService));
@@ -113,9 +119,34 @@ public partial class VaultViewModel : ViewModelBase
     }
 
     /// <summary>
+    /// The page's tabs.
+    /// </summary>
+    public enum VaultTab
+    {
+        /// <summary>
+        /// The vault's secrets. Shown first.
+        /// </summary>
+        Secrets,
+
+        /// <summary>
+        /// The vault's files.
+        /// </summary>
+        Files,
+    }
+
+    /// <summary>
     /// Gets the vault, or null while it is found (or if it does not exist).
     /// </summary>
     public Vault? Vault => session.Vault?.Id == vaultId ? session.Vault : null;
+
+    /// <summary>
+    /// Gets the tab that is showing.
+    /// </summary>
+    public VaultTab ActiveTab
+    {
+        get => activeTab;
+        private set => SetProperty(ref activeTab, value);
+    }
 
     /// <summary>
     /// Gets a value indicating whether the vault does not exist.
@@ -380,11 +411,13 @@ public partial class VaultViewModel : ViewModelBase
 
         vaultId = id;
         ActiveDialog = VaultDialog.None;
+        ActiveTab = VaultTab.Secrets;
         Search = string.Empty;
         SelectedTag = null;
         IsUntaggedSelected = false;
         ErrorMessage = null;
         session.Close();
+        fileSession.Close();
 
         var vault = await vaultService.FindAsync(id);
         if (vault is { IsDeleting: true })
@@ -402,6 +435,16 @@ public partial class VaultViewModel : ViewModelBase
         }
 
         RaiseVaultChanged();
+    }
+
+    /// <summary>
+    /// Shows one of the page's tabs.
+    /// </summary>
+    /// <param name="tab">The tab.</param>
+    [RelayCommand]
+    public void SelectTab(VaultTab tab)
+    {
+        ActiveTab = tab;
     }
 
     /// <summary>
@@ -535,6 +578,7 @@ public partial class VaultViewModel : ViewModelBase
             session.Changed -= OnSessionChanged;
             reportService.Changed -= OnReportChanged;
             session.Close();
+            fileSession.Close();
         }
 
         base.Dispose(disposing);
@@ -590,7 +634,8 @@ public partial class VaultViewModel : ViewModelBase
     {
         try
         {
-            await session.OpenAsync(vault);
+            // Its secrets and its files' metadata are read side by side.
+            await Task.WhenAll(session.OpenAsync(vault), fileSession.OpenAsync(vault));
         }
         catch (Exception ex)
         {

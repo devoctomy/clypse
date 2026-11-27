@@ -1,0 +1,26 @@
+@inherits MvvmComponentBase<FileNameViewModel>
+
+<ModalDialog Id="file-name-dialog" Title="@ViewModel.Title" Icon="bi-folder" OnClose="CloseAsync">
+    <ChildContent>
+        <form id="file-name-form" @onsubmit="SaveAsync" @onsubmit:preventDefault>
+            <label class="form-label" for="file-name-input">@T["Files.Name.Folder.Label"]</label>
+            <input type="text" class="form-control" id="file-name-input" autocomplete="off" maxlength="100"
+                   disabled="@ViewModel.IsWorking" @bind="ViewModel.Name" @bind:event="oninput" />
+        </form>
+
+        @if (!string.IsNullOrEmpty(ViewModel.Error))
+        {
+            <div class="text-danger mt-3" id="file-name-error">@ViewModel.Error</div>
+        }
+    </ChildContent>
+    <Footer>
+        <button type="button" class="btn btn-secondary" disabled="@ViewModel.IsWorking" @onclick="CloseAsync">@T["Common.Cancel"]</button>
+        <button type="submit" form="file-name-form" class="btn btn-primary" id="file-name-save" disabled="@ViewModel.IsWorking">
+            @if (ViewModel.IsWorking)
+            {
+                <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+            }
+            @ViewModel.SaveText
+        </button>
+    </Footer>
+</ModalDialog>

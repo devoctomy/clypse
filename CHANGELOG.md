@@ -9,6 +9,13 @@ Changed, Fixed, Removed or Security.
 
 ## Unreleased
 
+### Added
+- A vault's page has two tabs: **Secrets**, as before, and **Files**.
+- **Files** in a vault: add important documents, such as a scan of a passport, with **Add files**. Each is encrypted
+  with the vault's keys and synced like a secret, so it is there offline too. A file can be up to 20 MB.
+- Organise files in folders: **New > Folder** makes one, and a file's details move it. Folders can be renamed and
+  deleted, and a file's name and notes changed. Search finds files in any folder by name or notes.
+
 ## 0.9.6
 
 ### Added

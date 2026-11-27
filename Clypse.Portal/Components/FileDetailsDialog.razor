@@ -1,0 +1,64 @@
+@inherits MvvmComponentBase<FileDetailsViewModel>
+
+<ModalDialog Id="file-details-dialog" Title="@T["Files.Details.Title"]" Icon="@ViewModel.Icon" FocusMode="ModalDialogFocusMode.Dialog" OnClose="CloseAsync">
+    <ChildContent>
+        @if (!ViewModel.IsFound)
+        {
+            <p class="mb-0" id="file-details-missing">@T["Files.Details.Missing"]</p>
+        }
+        else
+        {
+            <form id="file-details-form" @onsubmit="SaveAsync" @onsubmit:preventDefault>
+                <div class="mb-3">
+                    <label class="form-label" for="file-details-name">@T["Files.Details.Name"]</label>
+                    <input type="text" class="form-control" id="file-details-name" autocomplete="off" maxlength="200"
+                           disabled="@ViewModel.IsWorking" @bind="ViewModel.Name" @bind:event="oninput" />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label" for="file-details-folder">@T["Files.Details.Folder"]</label>
+                    <select class="form-select" id="file-details-folder" disabled="@ViewModel.IsWorking" @bind="ViewModel.Folder">
+                        <option value="">@T["Files.TopLevel"]</option>
+                        @foreach (var path in ViewModel.Folders)
+                        {
+                            <option value="@path" data-user-content>@path</option>
+                        }
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label" for="file-details-notes">@T["Files.Details.Notes"]</label>
+                    <textarea class="form-control" id="file-details-notes" rows="3" disabled="@ViewModel.IsWorking"
+                              @bind="ViewModel.Notes" @bind:event="oninput"></textarea>
+                </div>
+            </form>
+
+            <dl class="file-facts" id="file-details-facts">
+                <dt>@T["Files.Details.Type"]</dt>
+                <dd id="file-details-type">@ViewModel.TypeName</dd>
+                <dt>@T["Files.Details.Size"]</dt>
+                <dd id="file-details-size">@ViewModel.SizeText</dd>
+                <dt>@T["Files.Details.Added"]</dt>
+                <dd data-user-content id="file-details-added">@ViewModel.AddedText</dd>
+                <dt>@T["Files.Details.Updated"]</dt>
+                <dd data-user-content id="file-details-updated">@ViewModel.UpdatedText</dd>
+            </dl>
+
+            @if (!string.IsNullOrEmpty(ViewModel.Error))
+            {
+                <div class="text-danger mt-3" id="file-details-error">@ViewModel.Error</div>
+            }
+        }
+    </ChildContent>
+    <Footer>
+        <button type="button" class="btn btn-secondary" disabled="@ViewModel.IsWorking" @onclick="CloseAsync">@T["Common.Cancel"]</button>
+        @if (ViewModel.IsFound)
+        {
+            <button type="submit" form="file-details-form" class="btn btn-primary" id="file-details-save" disabled="@ViewModel.IsWorking">
+                @if (ViewModel.IsWorking)
+                {
+                    <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                }
+                @T["Files.Details.Save"]
+            </button>
+        }
+    </Footer>
+</ModalDialog>

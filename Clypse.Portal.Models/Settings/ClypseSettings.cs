@@ -26,4 +26,10 @@ public class ClypseSettings
     /// user chooses otherwise in Settings (<see cref="VaultReportPreferences"/>).
     /// </summary>
     public int OldPasswordMonths { get; set; } = 3;
+
+    /// <summary>
+    /// Gets or sets the largest file a vault takes, in megabytes. A file is held whole in memory while it is encrypted,
+    /// stored and synced.
+    /// </summary>
+    public int MaxFileSizeMegabytes { get; set; } = 20;
 }

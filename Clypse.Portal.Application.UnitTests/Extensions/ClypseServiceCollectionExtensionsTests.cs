@@ -29,6 +29,10 @@ public class ClypseServiceCollectionExtensionsTests
         AssertScoped<IVaultService, VaultService>(services);
         AssertScoped<ISecretServiceFactory, SecretServiceFactory>(services);
         AssertScoped<IVaultSession, VaultSession>(services);
+        AssertScoped<IVaultFileTreeService, VaultFileTreeService>(services);
+        AssertScoped<IFileTypeService, FileTypeService>(services);
+        AssertScoped<IVaultFileServiceFactory, VaultFileServiceFactory>(services);
+        AssertScoped<IVaultFileSession, VaultFileSession>(services);
         AssertScoped<IPasswordStrengthService, PasswordStrengthService>(services);
         AssertScoped<ISecretCopyService, SecretCopyService>(services);
         AssertScoped<IPasswordGeneratorPreferencesService, PasswordGeneratorPreferencesService>(services);
