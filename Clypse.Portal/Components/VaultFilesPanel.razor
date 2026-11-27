@@ -141,7 +141,7 @@
                 @foreach (var file in ViewModel.Files)
                 {
                     <li class="file-item" data-file="@file.Id">
-                        <button type="button" class="file-row" @onclick="() => ViewModel.ShowDetailsCommand.Execute(file.Id)">
+                        <button type="button" class="file-row" @onclick="() => ViewModel.OpenFileCommand.Execute(file.Id)">
                             <span class="file-icon"><i class="bi @ViewModel.GetIcon(file)"></i></span>
                             <span class="file-body">
                                 <span data-user-content class="file-name">@file.Name</span>
@@ -184,6 +184,10 @@
     case VaultFilesViewModel.FilesDialog.RenameFolder:
         <FileNameDialog Mode="FileNameViewModel.FileNameMode.RenameFolder" Folder="@ViewModel.DialogFolder"
                         OnClose="() => ViewModel.CloseDialogCommand.Execute(null)" />
+        break;
+    case VaultFilesViewModel.FilesDialog.Viewer:
+        <FileViewerDialog FileId="@ViewModel.DialogFileId" OnClose="() => ViewModel.CloseDialogCommand.Execute(null)"
+                          OnDetails="id => ViewModel.ShowDetailsCommand.Execute(id)" OnDelete="id => ViewModel.AskDeleteFileCommand.Execute(id)" />
         break;
     case VaultFilesViewModel.FilesDialog.Details:
         <FileDetailsDialog FileId="@ViewModel.DialogFileId" OnClose="() => ViewModel.CloseDialogCommand.Execute(null)" />

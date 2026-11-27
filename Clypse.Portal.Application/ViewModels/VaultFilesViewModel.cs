@@ -15,7 +15,8 @@ namespace Clypse.Portal.Application.ViewModels;
 /// <summary>
 /// ViewModel for the Files tab of a vault's page: the open folder and what is in it, search across every folder, adding
 /// files, the New menu, and which dialog is open. It works from the metadata in the <see cref="IVaultFileSession"/>;
-/// no file's content is read to show the list.
+/// no file's content is read to show the list. A file's content is only read, and decrypted, when it is opened in the
+/// viewer (<see cref="FileViewerViewModel"/>).
 /// </summary>
 public partial class VaultFilesViewModel : ViewModelBase
 {
@@ -96,6 +97,11 @@ public partial class VaultFilesViewModel : ViewModelBase
         /// Renaming the folder <see cref="DialogFolder"/>.
         /// </summary>
         RenameFolder,
+
+        /// <summary>
+        /// The viewer, showing the file <see cref="DialogFileId"/>.
+        /// </summary>
+        Viewer,
 
         /// <summary>
         /// The details of the file <see cref="DialogFileId"/>: its name, folder and notes.
@@ -363,6 +369,16 @@ public partial class VaultFilesViewModel : ViewModelBase
     public void RenameFolder(string path)
     {
         ShowDialog(FilesDialog.RenameFolder, tree.Normalize(path), null);
+    }
+
+    /// <summary>
+    /// Opens a file in the viewer, which decrypts it to show it.
+    /// </summary>
+    /// <param name="id">The file's id.</param>
+    [RelayCommand]
+    public void OpenFile(string id)
+    {
+        ShowDialog(FilesDialog.Viewer, null, id);
     }
 
     /// <summary>

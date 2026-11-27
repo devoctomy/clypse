@@ -29,7 +29,7 @@ public class ClypseSettings
 
     /// <summary>
     /// Gets or sets the largest file a vault takes, in megabytes. A file is held whole in memory while it is encrypted,
-    /// stored and synced.
+    /// stored and synced. Set for the app here, in its settings: there is no setting for the user.
     /// </summary>
     public int MaxFileSizeMegabytes { get; set; } = 20;
 }

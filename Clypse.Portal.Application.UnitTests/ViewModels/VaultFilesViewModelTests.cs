@@ -316,6 +316,46 @@ public class VaultFilesViewModelTests
     }
 
     [Fact]
+    public void GivenAFile_WhenOpened_ThenTheViewerOpensForIt_AndTheNewMenuCloses()
+    {
+        // Arrange
+        var file = File("Passport.jpg", "Travel");
+        entries = [file];
+        var sut = CreateSut();
+        sut.ToggleNewMenu();
+
+        // Act
+        sut.OpenFileCommand.Execute(file.Id);
+
+        // Assert
+        Assert.Equal(VaultFilesViewModel.FilesDialog.Viewer, sut.ActiveDialog);
+        Assert.Equal(file.Id, sut.DialogFileId);
+        Assert.Null(sut.DialogFolder);
+        Assert.False(sut.IsNewMenuOpen);
+    }
+
+    [Fact]
+    public void GivenTheViewer_WhenDetailsOrDeleteIsAskedFor_ThenThatDialogTakesItsPlaceForTheSameFile()
+    {
+        // Arrange
+        var file = File("Passport.jpg", string.Empty);
+        entries = [file];
+        var sut = CreateSut();
+        sut.OpenFile(file.Id);
+
+        // Act
+        sut.ShowDetails(file.Id);
+        var details = (sut.ActiveDialog, sut.DialogFileId);
+        sut.OpenFile(file.Id);
+        sut.AskDeleteFile(file.Id);
+
+        // Assert
+        Assert.Equal((VaultFilesViewModel.FilesDialog.Details, file.Id), details);
+        Assert.Equal(VaultFilesViewModel.FilesDialog.DeleteFile, sut.ActiveDialog);
+        Assert.Equal(file.Id, sut.DialogFileId);
+    }
+
+    [Fact]
     public void GivenAFile_WhenAskedWhetherToDeleteIt_ThenTheQuestionNamesIt()
     {
         // Arrange

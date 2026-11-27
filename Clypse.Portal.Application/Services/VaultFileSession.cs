@@ -194,6 +194,12 @@ public sealed class VaultFileSession : IVaultFileSession, IDisposable
     }
 
     /// <inheritdoc/>
+    public Task<byte[]?> ReadContentAsync(string id, CancellationToken ct = default)
+    {
+        return OpenService().ReadContentAsync(id, ct);
+    }
+
+    /// <inheritdoc/>
     public async Task CreateFolderAsync(string folder, CancellationToken ct = default)
     {
         var service = OpenService();

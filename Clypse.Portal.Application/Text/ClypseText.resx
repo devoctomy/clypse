@@ -273,6 +273,21 @@
   <data name="Files.Unreadable.Other" xml:space="preserve">
     <value>{0} files in this vault could not be read.</value>
   </data>
+  <data name="Files.Viewer.Decrypting" xml:space="preserve">
+    <value>Decrypting...</value>
+  </data>
+  <data name="Files.Viewer.ExitFullScreen" xml:space="preserve">
+    <value>Back to the file's details</value>
+  </data>
+  <data name="Files.Viewer.FullScreen" xml:space="preserve">
+    <value>View full screen</value>
+  </data>
+  <data name="Files.Viewer.NotViewable" xml:space="preserve">
+    <value>This kind of file cannot be shown in the app yet. It is stored and synced like any other file.</value>
+  </data>
+  <data name="Files.Viewer.Title" xml:space="preserve">
+    <value>File</value>
+  </data>
   <data name="Generator.AtLeastOne" xml:space="preserve">
     <value>At least one of each</value>
   </data>

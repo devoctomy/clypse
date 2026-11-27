@@ -102,6 +102,14 @@ public interface IVaultFileSession
     Task DeleteFileAsync(string id, CancellationToken ct = default);
 
     /// <summary>
+    /// Reads and decrypts a file's content, to show it. The session keeps none of it: each call decrypts again.
+    /// </summary>
+    /// <param name="id">The file's id.</param>
+    /// <param name="ct">A token to cancel with.</param>
+    /// <returns>The content, or null if it is not on this device.</returns>
+    Task<byte[]?> ReadContentAsync(string id, CancellationToken ct = default);
+
+    /// <summary>
     /// Makes an empty folder.
     /// </summary>
     /// <param name="folder">The folder's path.</param>

@@ -560,6 +560,70 @@
     gap: 0.25rem;
 }
 
+/* ---------- File viewer ---------- */
+
+.file-viewer-name {
+    margin-bottom: 1rem;
+    overflow-wrap: anywhere;
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+.file-viewer-loading,
+.file-viewer-note {
+    margin-bottom: 1rem;
+}
+
+/* The image, kept within the dialog: a tall scan scrolls inside its frame rather than stretching the page. It is a
+   button: tapping it fills the page with the image. */
+.file-viewer-image {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    max-height: 70vh;
+    margin-bottom: 1rem;
+    padding: 0;
+    overflow: auto;
+    border: 1px solid var(--bw-border);
+    border-radius: 0.75rem;
+    background: var(--bw-surface-2);
+    cursor: zoom-in;
+}
+
+.file-viewer-image img {
+    max-width: 100%;
+    max-height: 70vh;
+    object-fit: contain;
+}
+
+/* Full screen: over the whole page, the dialog included. The image is centred and scaled so all of it shows, and made
+   larger if it is smaller than the page. Tapping it again goes back to the file's details. */
+.file-viewer-image.is-fullscreen {
+    position: fixed;
+    inset: 0;
+    z-index: 2000;
+    max-height: none;
+    margin: 0;
+    overflow: hidden;
+    border: 0;
+    border-radius: 0;
+    background: #000;
+    cursor: zoom-out;
+}
+
+.file-viewer-image.is-fullscreen img {
+    width: 100%;
+    height: 100%;
+    max-width: none;
+    max-height: none;
+    object-fit: contain;
+}
+
+.file-viewer-notes {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
 /* A file's type, size and times, in its details. */
 .file-facts {
     display: grid;

@@ -13,6 +13,10 @@ Changed, Fixed, Removed or Security.
 - A vault's page has two tabs: **Secrets**, as before, and **Files**.
 - **Files** in a vault: add important documents, such as a scan of a passport, with **Add files**. Each is encrypted
   with the vault's keys and synced like a secret, so it is there offline too. A file can be up to 20 MB.
+- Open an image (JPEG, PNG, GIF or WebP) to view it. It is only decrypted then, in memory: nothing decrypted is kept
+  on the device, and it is gone again when you close it or the vault locks. Tap the image to see it full screen,
+  scaled to fit, and tap it again to go back to the file's details. Other kinds of file are stored and synced, and
+  show their details.
 - Organise files in folders: **New > Folder** makes one, and a file's details move it. Folders can be renamed and
   deleted, and a file's name and notes changed. Search finds files in any folder by name or notes.
 

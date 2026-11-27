@@ -224,6 +224,59 @@ public class VaultFileSessionTests
     }
 
     [Fact]
+    public async Task GivenAFile_WhenItsContentIsRead_ThenItIsDecryptedEachTime_AndTheSessionKeepsNoneOfIt()
+    {
+        // Arrange
+        var vault = NewVault(isUnlocked: true);
+        using var sut = CreateSut();
+        await sut.OpenAsync(vault);
+        var entry = await sut.AddFileAsync("Passport.jpg", null, "image/jpeg", [1, 2, 3]);
+
+        // Act
+        var first = await sut.ReadContentAsync(entry.Id);
+        var second = await sut.ReadContentAsync(entry.Id);
+
+        // Assert
+        Assert.Equal(new byte[] { 1, 2, 3 }, first);
+        Assert.Equal(new byte[] { 1, 2, 3 }, second);
+        Assert.NotSame(first, second);
+    }
+
+    [Fact]
+    public async Task GivenAFileWhoseContentIsNotHere_WhenItsContentIsRead_ThenNull()
+    {
+        // Arrange
+        var vault = NewVault(isUnlocked: true);
+        using var sut = CreateSut();
+        await sut.OpenAsync(vault);
+        var entry = await sut.AddFileAsync("Passport.jpg", null, "image/jpeg", [1, 2, 3]);
+        await Store(vault.Id).DeleteAsync($"{vault.Root}files/blobs/{entry.Id}.bin");
+
+        // Act
+        var content = await sut.ReadContentAsync(entry.Id);
+
+        // Assert
+        Assert.Null(content);
+    }
+
+    [Fact]
+    public async Task GivenALockedVault_WhenAFilesContentIsRead_ThenThrowsNoVaultOpen()
+    {
+        // Arrange
+        var vault = NewVault(isUnlocked: true);
+        using var sut = CreateSut();
+        await sut.OpenAsync(vault);
+        var entry = await sut.AddFileAsync("Passport.jpg", null, "image/jpeg", [1, 2, 3]);
+        unlocked.Clear();
+
+        // Act
+        var ex = await Assert.ThrowsAsync<ClypseException>(() => sut.ReadContentAsync(entry.Id));
+
+        // Assert
+        Assert.Equal(ClypseErrorCodes.NoVaultOpen, ex.Code);
+    }
+
+    [Fact]
     public async Task GivenAnEmptyFolder_WhenAFileGoesIntoIt_ThenItsRecordIsRemoved()
     {
         // Arrange
