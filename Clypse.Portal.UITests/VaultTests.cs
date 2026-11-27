@@ -213,6 +213,24 @@ public class VaultTests : TestBase
     }
 
     [TestMethod]
+    public async Task GivenAVaultsPage_WhenTheBrowserIsReloaded_ThenItAsksForThePassphrase_RatherThanSayingTheVaultDoesNotExist()
+    {
+        // The app starts on the vault's page before it has read the user's vaults, so it cannot know yet whether the
+        // vault exists.
+        await LoginAsync();
+        await CreateVaultAsync("Personal");
+        await AddLoginAsync("Gmail", "bob", "hunter2hunter2");
+
+        await ReloadAsync();
+
+        await Expect(Page.Locator("#e2e-unlock-panel")).ToBeVisibleAsync();
+        await Expect(Page.Locator("#vault-not-found")).ToHaveCountAsync(0);
+        await Expect(Page.Locator("#vault-finding")).ToHaveCountAsync(0);
+        await UnlockAsync();
+        await Expect(Page.Locator("#secrets .secret-name")).ToHaveTextAsync("Gmail");
+    }
+
+    [TestMethod]
     public async Task GivenAKeePassCsv_WhenImported_ThenItsLoginsAreAdded()
     {
         await LoginAsync();

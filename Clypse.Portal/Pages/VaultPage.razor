@@ -45,6 +45,13 @@
         <a class="btn btn-primary" href="@VaultsViewModel.Url"><i class="bi bi-arrow-left me-1"></i>@T["Vault.BackToVaults"]</a>
     </div>
 }
+else if (ViewModel.IsFinding)
+{
+    @* The user's vaults are still being read, so it is not known yet whether this one exists. *@
+    <div class="panel text-body-secondary" id="vault-finding">
+        <div class="spinner-border spinner-border-sm text-primary me-2" role="status"></div>@T["Vaults.Loading"]
+    </div>
+}
 else if (ViewModel.Vault != null)
 {
     <E2eUnlockPanel Profile="@ViewModel.Vault.Id">

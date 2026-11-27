@@ -23,7 +23,8 @@ public sealed class VaultSteps(BrowserSession session, ScenarioFlow flow)
     private ILocator VaultCards => Page.Locator("#vaults-page .vault-card");
 
     /// <summary>
-    /// Opens the vaults page from the sidebar and waits for it to show its vaults, or that there are none.
+    /// Opens the vaults page from the sidebar and waits for it to show its vaults, or that there are none. A new browser
+    /// shows the page before it has read the user's vaults from the cloud; it says it is loading until it has.
     /// </summary>
     /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     [Given("I have opened the vaults page")]
@@ -225,20 +226,12 @@ public sealed class VaultSteps(BrowserSession session, ScenarioFlow flow)
 
     private static string Vaults(int count) => count == 1 ? "1 vault" : $"{count} vaults";
 
-    // Counts the vaults as a user would see them. A new browser shows the vaults page before it has read the user's
-    // vaults from the cloud, and the page looks the same while it reads as when there are none, so, like a user, this
-    // gives the vaults time to appear before taking "none" for an answer. They all appear at once.
+    // Counts the vaults as a user would see them. The page says it is loading until it has read the user's vaults from
+    // the cloud, and only then shows them (all at once), or that there are none.
     private async Task<int> CountVaultsAsync()
     {
-        var deadline = DateTime.UtcNow.AddMilliseconds(BrowserSession.VaultListTimeoutMs);
-        var count = await VaultCards.CountAsync();
-        while (count == 0 && DateTime.UtcNow < deadline)
-        {
-            await Page.WaitForTimeoutAsync(250);
-            count = await VaultCards.CountAsync();
-        }
-
-        return count;
+        await Expect(Page.Locator("#vaults, #no-vaults").First).ToBeVisibleAsync();
+        return await VaultCards.CountAsync();
     }
 
     private ILocator TestVaultCard()

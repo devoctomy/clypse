@@ -101,7 +101,7 @@ public partial class VaultsViewModel : ViewModelBase
     public bool HasVaultShownById => vaults.Any(IsShownById);
 
     /// <summary>
-    /// Gets a value indicating whether the vaults are being loaded for the first time.
+    /// Gets a value indicating whether the vaults are still being read, so it is not known yet whether there are any.
     /// </summary>
     public bool IsLoading
     {
@@ -181,18 +181,22 @@ public partial class VaultsViewModel : ViewModelBase
     /// <inheritdoc/>
     /// <remarks>
     /// Shows the vaults known now, then reads the list again, so vaults created or deleted on another device since
-    /// sign in are added or gone (the list changes when the read finishes). Offline, the vaults known stay.
+    /// sign in are added or gone (the list changes when the read finishes). Offline, the vaults known stay. Straight
+    /// after sign in, or when the app is opened again, the vaults are still being read: the page says it is loading
+    /// until they have been, as only then is it known whether there are any.
     /// </remarks>
     public override async Task OnInitializedAsync()
     {
         await RefreshAsync();
-        IsLoading = false;
         if (!profiles.IsLoaded)
         {
-            // Still being read after sign in; the list changes when that finishes.
+            // Still being read after sign in; the list changes, and the loading ends, when that finishes
+            // (OnProfilesChanged).
+            IsLoading = Vaults.Count == 0;
             return;
         }
 
+        IsLoading = false;
         try
         {
             await profiles.LoadAsync();
@@ -366,6 +370,9 @@ public partial class VaultsViewModel : ViewModelBase
     private async void OnProfilesChanged(object? sender, EventArgs e)
     {
         await RefreshSafelyAsync();
+
+        // Once the vaults have been read, the page shows them, or that there are none.
+        IsLoading = !profiles.IsLoaded && Vaults.Count == 0;
     }
 
     private async void OnLockStateChanged(object? sender, E2eKeyScope scope)

@@ -24,6 +24,13 @@ Changed, Fixed, Removed or Security.
 - Organise files in folders: **New > Folder** makes one, and a file's details move it. Folders can be renamed and
   deleted, and a file's name and notes changed. Search finds files in any folder by name or notes.
 
+### Fixed
+- The vaults page no longer says you have no vaults before it has looked. Straight after signing in, or when the app
+  is opened again, it says it is loading your vaults until they have been read, and then shows them, or that there
+  are none.
+- Reloading the browser on a vault's page no longer says the vault does not exist. It waits for your vaults to be
+  read, then asks for the vault's passphrase as usual.
+
 ## 0.9.6
 
 ### Added

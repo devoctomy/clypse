@@ -8,6 +8,7 @@ using Clypse.Portal.Models.Vaults;
 using CommunityToolkit.Mvvm.Input;
 using Devoctomy.Blazwiz.Browser.Services.Interfaces;
 using Devoctomy.Blazwiz.Core.Text.Interfaces;
+using Devoctomy.Blazwiz.Sync.Encryption.Interfaces;
 using Devoctomy.Blazwiz.UI.Text.Interfaces;
 using Microsoft.Extensions.Localization;
 
@@ -32,11 +33,13 @@ public partial class VaultViewModel : ViewModelBase
     private readonly IVaultReportService reportService;
     private readonly IVaultFileSession fileSession;
     private readonly IUnsavedChangesGuard guard;
+    private readonly ISyncProtectedProfileService profiles;
     private readonly Dictionary<string, string> copyLabels = new Dictionary<string, string>(StringComparer.Ordinal);
 
     private string? vaultId;
     private VaultTab activeTab;
     private bool isMissing;
+    private bool isFinding;
     private string search = string.Empty;
     private string? selectedTag;
     private bool isUntaggedSelected;
@@ -60,6 +63,7 @@ public partial class VaultViewModel : ViewModelBase
     /// <param name="reportService">Keeps the report on the vault's secrets, from when the page opens the vault.</param>
     /// <param name="fileSession">Holds the metadata of the vault's files.</param>
     /// <param name="guard">Holds a change of tab back while a text file has unsaved edits.</param>
+    /// <param name="profiles">Says when the user's vaults have been read, so it is known whether the vault exists.</param>
     public VaultViewModel(
         IVaultService vaultService,
         IVaultSession session,
@@ -70,10 +74,12 @@ public partial class VaultViewModel : ViewModelBase
         INavigationService navigationService,
         IVaultReportService reportService,
         IVaultFileSession fileSession,
-        IUnsavedChangesGuard guard)
+        IUnsavedChangesGuard guard,
+        ISyncProtectedProfileService profiles)
     {
         this.fileSession = fileSession ?? throw new ArgumentNullException(nameof(fileSession));
         this.guard = guard ?? throw new ArgumentNullException(nameof(guard));
+        this.profiles = profiles ?? throw new ArgumentNullException(nameof(profiles));
         this.navigationService = navigationService ?? throw new ArgumentNullException(nameof(navigationService));
         this.copyService = copyService ?? throw new ArgumentNullException(nameof(copyService));
         this.vaultService = vaultService ?? throw new ArgumentNullException(nameof(vaultService));
@@ -84,6 +90,7 @@ public partial class VaultViewModel : ViewModelBase
         this.reportService = reportService ?? throw new ArgumentNullException(nameof(reportService));
         this.session.Changed += OnSessionChanged;
         this.reportService.Changed += OnReportChanged;
+        this.profiles.ProfilesChanged += OnProfilesChanged;
     }
 
     /// <summary>
@@ -159,6 +166,16 @@ public partial class VaultViewModel : ViewModelBase
     {
         get => isMissing;
         private set => SetProperty(ref isMissing, value);
+    }
+
+    /// <summary>
+    /// Gets a value indicating whether the vault is still being looked for: the user's vaults are still being read
+    /// (straight after sign in, or when the app is opened again on this page), so it is not known yet whether it exists.
+    /// </summary>
+    public bool IsFinding
+    {
+        get => isFinding;
+        private set => SetProperty(ref isFinding, value);
     }
 
     /// <summary>
@@ -408,7 +425,7 @@ public partial class VaultViewModel : ViewModelBase
     /// <returns>A <see cref="Task"/> that completes once the vault is found; its secrets are read in the background.</returns>
     public async Task LoadAsync(string id)
     {
-        if (id == vaultId && (Vault != null || IsMissing))
+        if (id == vaultId && (Vault != null || IsMissing || IsFinding))
         {
             return;
         }
@@ -423,22 +440,7 @@ public partial class VaultViewModel : ViewModelBase
         session.Close();
         fileSession.Close();
 
-        var vault = await vaultService.FindAsync(id);
-        if (vault is { IsDeleting: true })
-        {
-            // It cannot be opened while it is deleted: the vaults page shows it being deleted.
-            vaultId = null;
-            navigationService.NavigateTo(VaultsViewModel.Url);
-            return;
-        }
-
-        IsMissing = vault == null;
-        if (vault != null)
-        {
-            _ = OpenAsync(vault);
-        }
-
-        RaiseVaultChanged();
+        await FindAsync(id);
     }
 
     /// <summary>
@@ -585,6 +587,7 @@ public partial class VaultViewModel : ViewModelBase
         {
             session.Changed -= OnSessionChanged;
             reportService.Changed -= OnReportChanged;
+            profiles.ProfilesChanged -= OnProfilesChanged;
             session.Close();
             fileSession.Close();
         }
@@ -636,6 +639,54 @@ public partial class VaultViewModel : ViewModelBase
         }
 
         return SelectedTag == null || secret.Tags.Any(t => string.Equals(t.Trim(), SelectedTag, StringComparison.OrdinalIgnoreCase));
+    }
+
+    // Finds the vault and opens it. Straight after sign in, or when the app is opened again on this page, the user's
+    // vaults are still being read: a vault not found then is not missing, it is looked for again once they have been
+    // (OnProfilesChanged).
+    private async Task FindAsync(string id)
+    {
+        var vault = await vaultService.FindAsync(id);
+        if (id != vaultId)
+        {
+            // Another vault was asked for meanwhile.
+            return;
+        }
+
+        if (vault is { IsDeleting: true })
+        {
+            // It cannot be opened while it is deleted: the vaults page shows it being deleted.
+            vaultId = null;
+            IsFinding = false;
+            navigationService.NavigateTo(VaultsViewModel.Url);
+            return;
+        }
+
+        IsFinding = vault == null && !profiles.IsLoaded;
+        IsMissing = vault == null && !IsFinding;
+        if (vault != null)
+        {
+            _ = OpenAsync(vault);
+        }
+
+        RaiseVaultChanged();
+    }
+
+    private async void OnProfilesChanged(object? sender, EventArgs e)
+    {
+        if (!IsFinding || vaultId == null)
+        {
+            return;
+        }
+
+        try
+        {
+            await FindAsync(vaultId);
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = errorText.Describe(ex);
+        }
     }
 
     private async Task OpenAsync(Vault vault)

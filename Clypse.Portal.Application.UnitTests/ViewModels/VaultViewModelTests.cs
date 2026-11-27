@@ -1,4 +1,4 @@
-﻿using Clypse.Core.Enums;
+using Clypse.Core.Enums;
 using Clypse.Core.Secrets;
 using Clypse.Portal.Application.Exceptions;
 using Clypse.Portal.Application.Services;
@@ -7,6 +7,7 @@ using Clypse.Portal.Application.Text;
 using Clypse.Portal.Application.ViewModels;
 using Clypse.Portal.Models.Vaults;
 using Devoctomy.Blazwiz.Browser.Services.Interfaces;
+using Devoctomy.Blazwiz.Sync.Encryption.Interfaces;
 using Devoctomy.Blazwiz.Testing;
 using Moq;
 
@@ -22,12 +23,15 @@ public class VaultViewModelTests
     private readonly Mock<IVaultReportService> mockReport = new();
     private readonly Mock<IVaultFileSession> mockFiles = new();
     private readonly UnsavedChangesGuard guard = new();
+    private readonly Mock<ISyncProtectedProfileService> mockProfiles = new();
     private readonly Vault vault = new() { Id = "v1", Root = "profiles/v1/", Name = "Personal", Description = "Logins", IsUnlocked = true };
     private List<Secret> secrets = [];
     private Vault? open;
+    private bool vaultsRead = true;
 
     public VaultViewModelTests()
     {
+        mockProfiles.SetupGet(x => x.IsLoaded).Returns(() => vaultsRead);
         mockVaults.Setup(x => x.FindAsync("v1", It.IsAny<CancellationToken>())).ReturnsAsync(vault);
         mockSession.SetupGet(x => x.Vault).Returns(() => open);
         mockSession.SetupGet(x => x.Secrets).Returns(() => secrets);
@@ -44,16 +48,17 @@ public class VaultViewModelTests
         var t = text.For<ClypseText>();
 
         // Act & Assert
-        Assert.Equal("vaultService", Assert.Throws<ArgumentNullException>(() => new VaultViewModel(null!, mockSession.Object, text.Errors, text.Plurals, t, mockCopy.Object, mockNavigation.Object, mockReport.Object, mockFiles.Object, guard)).ParamName);
-        Assert.Equal("session", Assert.Throws<ArgumentNullException>(() => new VaultViewModel(mockVaults.Object, null!, text.Errors, text.Plurals, t, mockCopy.Object, mockNavigation.Object, mockReport.Object, mockFiles.Object, guard)).ParamName);
-        Assert.Equal("errorText", Assert.Throws<ArgumentNullException>(() => new VaultViewModel(mockVaults.Object, mockSession.Object, null!, text.Plurals, t, mockCopy.Object, mockNavigation.Object, mockReport.Object, mockFiles.Object, guard)).ParamName);
-        Assert.Equal("plurals", Assert.Throws<ArgumentNullException>(() => new VaultViewModel(mockVaults.Object, mockSession.Object, text.Errors, null!, t, mockCopy.Object, mockNavigation.Object, mockReport.Object, mockFiles.Object, guard)).ParamName);
-        Assert.Equal("text", Assert.Throws<ArgumentNullException>(() => new VaultViewModel(mockVaults.Object, mockSession.Object, text.Errors, text.Plurals, null!, mockCopy.Object, mockNavigation.Object, mockReport.Object, mockFiles.Object, guard)).ParamName);
-        Assert.Equal("copyService", Assert.Throws<ArgumentNullException>(() => new VaultViewModel(mockVaults.Object, mockSession.Object, text.Errors, text.Plurals, t, null!, mockNavigation.Object, mockReport.Object, mockFiles.Object, guard)).ParamName);
-        Assert.Equal("navigationService", Assert.Throws<ArgumentNullException>(() => new VaultViewModel(mockVaults.Object, mockSession.Object, text.Errors, text.Plurals, t, mockCopy.Object, null!, mockReport.Object, mockFiles.Object, guard)).ParamName);
-        Assert.Equal("reportService", Assert.Throws<ArgumentNullException>(() => new VaultViewModel(mockVaults.Object, mockSession.Object, text.Errors, text.Plurals, t, mockCopy.Object, mockNavigation.Object, null!, mockFiles.Object, guard)).ParamName);
-        Assert.Equal("fileSession", Assert.Throws<ArgumentNullException>(() => new VaultViewModel(mockVaults.Object, mockSession.Object, text.Errors, text.Plurals, t, mockCopy.Object, mockNavigation.Object, mockReport.Object, null!, guard)).ParamName);
-        Assert.Equal("guard", Assert.Throws<ArgumentNullException>(() => new VaultViewModel(mockVaults.Object, mockSession.Object, text.Errors, text.Plurals, t, mockCopy.Object, mockNavigation.Object, mockReport.Object, mockFiles.Object, null!)).ParamName);
+        Assert.Equal("vaultService", Assert.Throws<ArgumentNullException>(() => new VaultViewModel(null!, mockSession.Object, text.Errors, text.Plurals, t, mockCopy.Object, mockNavigation.Object, mockReport.Object, mockFiles.Object, guard, mockProfiles.Object)).ParamName);
+        Assert.Equal("session", Assert.Throws<ArgumentNullException>(() => new VaultViewModel(mockVaults.Object, null!, text.Errors, text.Plurals, t, mockCopy.Object, mockNavigation.Object, mockReport.Object, mockFiles.Object, guard, mockProfiles.Object)).ParamName);
+        Assert.Equal("errorText", Assert.Throws<ArgumentNullException>(() => new VaultViewModel(mockVaults.Object, mockSession.Object, null!, text.Plurals, t, mockCopy.Object, mockNavigation.Object, mockReport.Object, mockFiles.Object, guard, mockProfiles.Object)).ParamName);
+        Assert.Equal("plurals", Assert.Throws<ArgumentNullException>(() => new VaultViewModel(mockVaults.Object, mockSession.Object, text.Errors, null!, t, mockCopy.Object, mockNavigation.Object, mockReport.Object, mockFiles.Object, guard, mockProfiles.Object)).ParamName);
+        Assert.Equal("text", Assert.Throws<ArgumentNullException>(() => new VaultViewModel(mockVaults.Object, mockSession.Object, text.Errors, text.Plurals, null!, mockCopy.Object, mockNavigation.Object, mockReport.Object, mockFiles.Object, guard, mockProfiles.Object)).ParamName);
+        Assert.Equal("copyService", Assert.Throws<ArgumentNullException>(() => new VaultViewModel(mockVaults.Object, mockSession.Object, text.Errors, text.Plurals, t, null!, mockNavigation.Object, mockReport.Object, mockFiles.Object, guard, mockProfiles.Object)).ParamName);
+        Assert.Equal("navigationService", Assert.Throws<ArgumentNullException>(() => new VaultViewModel(mockVaults.Object, mockSession.Object, text.Errors, text.Plurals, t, mockCopy.Object, null!, mockReport.Object, mockFiles.Object, guard, mockProfiles.Object)).ParamName);
+        Assert.Equal("reportService", Assert.Throws<ArgumentNullException>(() => new VaultViewModel(mockVaults.Object, mockSession.Object, text.Errors, text.Plurals, t, mockCopy.Object, mockNavigation.Object, null!, mockFiles.Object, guard, mockProfiles.Object)).ParamName);
+        Assert.Equal("fileSession", Assert.Throws<ArgumentNullException>(() => new VaultViewModel(mockVaults.Object, mockSession.Object, text.Errors, text.Plurals, t, mockCopy.Object, mockNavigation.Object, mockReport.Object, null!, guard, mockProfiles.Object)).ParamName);
+        Assert.Equal("guard", Assert.Throws<ArgumentNullException>(() => new VaultViewModel(mockVaults.Object, mockSession.Object, text.Errors, text.Plurals, t, mockCopy.Object, mockNavigation.Object, mockReport.Object, mockFiles.Object, null!, mockProfiles.Object)).ParamName);
+        Assert.Equal("profiles", Assert.Throws<ArgumentNullException>(() => new VaultViewModel(mockVaults.Object, mockSession.Object, text.Errors, text.Plurals, t, mockCopy.Object, mockNavigation.Object, mockReport.Object, mockFiles.Object, guard, null!)).ParamName);
     }
 
     [Fact]
@@ -118,6 +123,86 @@ public class VaultViewModelTests
         mockSession.Verify(x => x.OpenAsync(It.IsAny<Vault>(), It.IsAny<CancellationToken>()), Times.Never);
         mockNavigation.Verify(x => x.NavigateTo("vaults"), Times.Once);
         Assert.False(sut.IsMissing);
+    }
+
+    [Fact]
+    public async Task GivenTheUsersVaultsStillBeingRead_WhenLoaded_ThenTheVaultIsNotCalledMissing_AndIsOpenedOnceTheyAreRead()
+    {
+        // Arrange: straight after sign in, or when the app is opened again on the vault's page.
+        vaultsRead = false;
+        mockVaults.Setup(x => x.FindAsync("v1", It.IsAny<CancellationToken>())).ReturnsAsync(() => vaultsRead ? vault : null);
+        var sut = CreateSut();
+
+        // Act
+        await sut.LoadAsync("v1");
+        var whileReading = (sut.IsFinding, sut.IsMissing, sut.Vault);
+        await sut.LoadAsync("v1");
+        vaultsRead = true;
+        mockProfiles.Raise(x => x.ProfilesChanged += null, mockProfiles.Object, EventArgs.Empty);
+
+        // Assert
+        Assert.Equal((true, false, null), whileReading);
+        Assert.False(sut.IsFinding);
+        Assert.False(sut.IsMissing);
+        Assert.Same(vault, sut.Vault);
+        mockSession.Verify(x => x.Close(), Times.Once);
+        mockSession.Verify(x => x.OpenAsync(vault, It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task GivenTheUsersVaultsStillBeingRead_WhenTheyAreReadWithoutTheVault_ThenItIsMissing()
+    {
+        // Arrange
+        vaultsRead = false;
+        var sut = CreateSut();
+        await sut.LoadAsync("gone");
+        var whileReading = (sut.IsFinding, sut.IsMissing);
+
+        // Act: a change that is not the vaults being read changes nothing; then they are read.
+        mockProfiles.Raise(x => x.ProfilesChanged += null, mockProfiles.Object, EventArgs.Empty);
+        var stillReading = (sut.IsFinding, sut.IsMissing);
+        vaultsRead = true;
+        mockProfiles.Raise(x => x.ProfilesChanged += null, mockProfiles.Object, EventArgs.Empty);
+
+        // Assert
+        Assert.Equal((true, false), whileReading);
+        Assert.Equal((true, false), stillReading);
+        Assert.False(sut.IsFinding);
+        Assert.True(sut.IsMissing);
+        mockSession.Verify(x => x.OpenAsync(It.IsAny<Vault>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task GivenAVaultThatIsOpen_WhenTheUsersVaultsChange_ThenItIsNotLookedForAgain()
+    {
+        // Arrange
+        var sut = CreateSut();
+        await sut.LoadAsync("v1");
+
+        // Act
+        mockProfiles.Raise(x => x.ProfilesChanged += null, mockProfiles.Object, EventArgs.Empty);
+        sut.Dispose();
+        mockProfiles.Raise(x => x.ProfilesChanged += null, mockProfiles.Object, EventArgs.Empty);
+
+        // Assert
+        mockVaults.Verify(x => x.FindAsync("v1", It.IsAny<CancellationToken>()), Times.Once);
+        mockSession.Verify(x => x.OpenAsync(vault, It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task GivenTheUsersVaultsStillBeingRead_WhenLookingAgainFails_ThenTheErrorIsShown()
+    {
+        // Arrange
+        vaultsRead = false;
+        var sut = CreateSut();
+        await sut.LoadAsync("gone");
+        mockVaults.Setup(x => x.FindAsync("gone", It.IsAny<CancellationToken>())).ThrowsAsync(new ClypseException(ClypseErrorCodes.VaultNotFound));
+
+        // Act
+        mockProfiles.Raise(x => x.ProfilesChanged += null, mockProfiles.Object, EventArgs.Empty);
+
+        // Assert
+        Assert.NotNull(sut.ErrorMessage);
     }
 
     [Fact]
@@ -849,5 +934,5 @@ public class VaultViewModelTests
         Assert.Same(report, read);
     }
 
-    private VaultViewModel CreateSut() => new(mockVaults.Object, mockSession.Object, text.Errors, text.Plurals, text.For<ClypseText>(), mockCopy.Object, mockNavigation.Object, mockReport.Object, mockFiles.Object, guard);
+    private VaultViewModel CreateSut() => new(mockVaults.Object, mockSession.Object, text.Errors, text.Plurals, text.For<ClypseText>(), mockCopy.Object, mockNavigation.Object, mockReport.Object, mockFiles.Object, guard, mockProfiles.Object);
 }

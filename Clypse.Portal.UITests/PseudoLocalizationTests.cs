@@ -136,6 +136,90 @@ public class PseudoLocalizationTests : TestBase
         await AssertNoHardCodedTextAsync("import dialog", "Personal");
     }
 
+    [TestMethod]
+    public async Task GivenPseudoLocalization_WhenUsingAVaultsFiles_ThenAllTextIsFromResources()
+    {
+        // Arrange
+        await LoginAsync(Username);
+        await CreateVaultAsync("Personal");
+
+        // Act & Assert: the Files tab, its dialogs and the editor.
+        await Page.Locator("#vault-tab-files").ClickAsync();
+        await Expect(Page.Locator("#no-files")).ToBeVisibleAsync();
+        await AssertNoHardCodedTextAsync("empty files tab", "Personal");
+
+        await Page.Locator("#new-file-button").ClickAsync();
+        await Expect(Page.Locator("#new-file-menu")).ToBeVisibleAsync();
+        await AssertNoHardCodedTextAsync("new menu", "Personal");
+
+        await Page.Locator("#new-folder").ClickAsync();
+        await Expect(Page.Locator("#file-name-dialog")).ToBeVisibleAsync();
+        await AssertNoHardCodedTextAsync("new folder dialog", "Personal");
+        await Page.Locator("#file-name-save").ClickAsync();
+        await Expect(Page.Locator("#file-name-error")).ToBeVisibleAsync();
+        await AssertNoHardCodedTextAsync("new folder dialog without a name", "Personal");
+        await Page.Locator("#file-name-input").FillAsync("Travel");
+        await Page.Locator("#file-name-save").ClickAsync();
+        await Expect(Page.Locator("#files .file-item[data-folder='Travel']")).ToBeVisibleAsync();
+
+        var image = Convert.FromBase64String("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==");
+        await Page.Locator("#add-files-input").SetInputFilesAsync(new FilePayload { Name = "passport.png", MimeType = "image/png", Buffer = image });
+        var file = Page.Locator("#files .file-item[data-file]");
+        await Expect(file).ToBeVisibleAsync();
+        await AssertNoHardCodedTextAsync("files tab", "Personal");
+
+        await Page.Locator("#file-search").FillAsync("nothing like it");
+        await Expect(Page.Locator("#no-file-matches")).ToBeVisibleAsync();
+        await AssertNoHardCodedTextAsync("files search with no matches", "Personal");
+        await Page.Locator("#file-search").FillAsync(string.Empty);
+
+        await file.Locator(".file-row").ClickAsync();
+        await Expect(Page.Locator("#file-viewer-image")).ToBeVisibleAsync();
+        await AssertNoHardCodedTextAsync("file viewer", "Personal");
+
+        await Page.Locator("#file-viewer-details").ClickAsync();
+        await Expect(Page.Locator("#file-details-dialog")).ToBeVisibleAsync();
+        await AssertNoHardCodedTextAsync("file details dialog", "Personal");
+        await Page.Locator("#file-details-dialog .btn-secondary").ClickAsync();
+
+        await file.Locator(".file-delete").ClickAsync();
+        await Expect(Page.Locator("#file-delete-dialog")).ToBeVisibleAsync();
+        await AssertNoHardCodedTextAsync("delete file dialog", "Personal");
+        await Page.Locator("#file-delete-no").ClickAsync();
+
+        await Page.Locator("#new-file-button").ClickAsync();
+        await Page.Locator("#new-markdown").ClickAsync();
+        await Expect(Page.Locator("#file-name-dialog")).ToBeVisibleAsync();
+        await AssertNoHardCodedTextAsync("new markdown document dialog", "Personal");
+        await Page.Locator("#file-name-input").FillAsync("Notes");
+        await Page.Locator("#file-name-save").ClickAsync();
+        await Expect(Page.Locator("#text-editor")).ToBeVisibleAsync();
+        await AssertNoHardCodedTextAsync("markdown editor", "Personal");
+
+        await Page.Locator("#text-editor").FillAsync("# Title");
+        await Expect(Page.Locator("#editor-preview h1")).ToBeVisibleAsync();
+        await AssertNoHardCodedTextAsync("markdown editor with unsaved changes", "Personal");
+        await Page.Locator("#editor-save-button").ClickAsync();
+        await Expect(Page.Locator("#editor-save-button")).ToBeDisabledAsync();
+        await AssertNoHardCodedTextAsync("markdown editor once saved", "Personal");
+
+        await Page.Locator("#text-editor").FillAsync("# Title\n\nMore.");
+        await Page.Locator("#editor-close-button").ClickAsync();
+        await Expect(Page.Locator("#editor-leave-dialog")).ToBeVisibleAsync();
+        await AssertNoHardCodedTextAsync("unsaved changes dialog", "Personal");
+        await Page.Locator("#editor-leave-discard").ClickAsync();
+        await Expect(Page.Locator("#vault-files")).ToBeVisibleAsync();
+
+        await Page.Locator("#new-file-button").ClickAsync();
+        await Page.Locator("#new-text").ClickAsync();
+        await Expect(Page.Locator("#file-name-dialog")).ToBeVisibleAsync();
+        await AssertNoHardCodedTextAsync("new text file dialog", "Personal");
+        await Page.Locator("#file-name-input").FillAsync("Codes");
+        await Page.Locator("#file-name-save").ClickAsync();
+        await Expect(Page.Locator("#text-editor")).ToBeVisibleAsync();
+        await AssertNoHardCodedTextAsync("text editor", "Personal");
+    }
+
     // Version numbers, such as the framework's 0.1.0-preview.1: data, not text.
     private static bool IsVersion(string text) =>
         System.Text.RegularExpressions.Regex.IsMatch(text, @"^\d+\.\d+\.\d+(\.\d+)?(-[0-9A-Za-z.]+)?$");
