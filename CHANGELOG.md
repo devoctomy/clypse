@@ -9,6 +9,8 @@ Changed, Fixed, Removed or Security.
 
 ## Unreleased
 
+## 0.9.7
+
 ### Added
 - A vault's page has two tabs: **Secrets**, as before, and **Files**.
 - **Files** in a vault: add important documents, such as a scan of a passport, with **Add files**. Each is encrypted
