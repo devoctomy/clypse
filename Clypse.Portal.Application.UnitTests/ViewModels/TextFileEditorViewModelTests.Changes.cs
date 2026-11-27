@@ -18,7 +18,7 @@ public partial class TextFileEditorViewModelTests
         sut.CloseRequested += (_, _) => closed++;
 
         // Act
-        unlocked = false;
+        mockSession.SetupGet(x => x.IsUnlocked).Returns(false);
         entries = [];
         mockSession.Raise(x => x.Changed += null, mockSession.Object, EventArgs.Empty);
 

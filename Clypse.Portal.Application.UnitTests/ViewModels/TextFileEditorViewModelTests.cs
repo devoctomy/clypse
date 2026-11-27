@@ -24,7 +24,6 @@ public partial class TextFileEditorViewModelTests
     private readonly Dictionary<string, byte[]> contents = [];
     private readonly List<(string Id, byte[] Content)> saved = [];
     private List<VaultFileEntry> entries;
-    private bool unlocked = true;
 
     public TextFileEditorViewModelTests()
     {
@@ -32,7 +31,7 @@ public partial class TextFileEditorViewModelTests
         contents[markdown.Id] = Encoding.UTF8.GetBytes("# Title\n\nSome **bold** text.");
         contents[plain.Id] = Encoding.UTF8.GetBytes("milk\neggs");
         mockSession.SetupGet(x => x.Entries).Returns(() => entries);
-        mockSession.SetupGet(x => x.IsUnlocked).Returns(() => unlocked);
+        mockSession.SetupGet(x => x.IsUnlocked).Returns(true);
         mockSession.Setup(x => x.ReadContentAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((string id, CancellationToken _) => contents.TryGetValue(id, out var content) ? (byte[])content.Clone() : null);
         mockSession.Setup(x => x.SaveContentAsync(It.IsAny<string>(), It.IsAny<byte[]>(), It.IsAny<CancellationToken>()))
