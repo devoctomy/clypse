@@ -241,13 +241,7 @@ public sealed class VaultReportService : IVaultReportService, IDisposable
 
         Report = report;
         IsUpdating = isUpdating;
-
-        // Raised through a copy of the handler, not ?.Invoke, which SonarC# S3264 does not count as raising it.
-        var changed = Changed;
-        if (changed != null)
-        {
-            changed(this, EventArgs.Empty);
-        }
+        Changed?.Invoke(this, EventArgs.Empty);
     }
 
     private async void OnChanged(object? sender, EventArgs e)

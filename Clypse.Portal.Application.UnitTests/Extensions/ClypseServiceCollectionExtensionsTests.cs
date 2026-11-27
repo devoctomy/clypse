@@ -29,6 +29,14 @@ public class ClypseServiceCollectionExtensionsTests
         AssertScoped<IVaultService, VaultService>(services);
         AssertScoped<ISecretServiceFactory, SecretServiceFactory>(services);
         AssertScoped<IVaultSession, VaultSession>(services);
+        AssertScoped<IVaultFileTreeService, VaultFileTreeService>(services);
+        AssertScoped<IFileTypeService, FileTypeService>(services);
+        AssertScoped<IVaultFileServiceFactory, VaultFileServiceFactory>(services);
+        AssertScoped<IVaultFileSession, VaultFileSession>(services);
+        AssertScoped<IMarkdownRenderer, MarkdownRenderer>(services);
+        AssertScoped<ITextFileEncodingService, TextFileEncodingService>(services);
+        AssertScoped<IMarkdownFormatService, MarkdownFormatService>(services);
+        AssertScoped<IUnsavedChangesGuard, UnsavedChangesGuard>(services);
         AssertScoped<IPasswordStrengthService, PasswordStrengthService>(services);
         AssertScoped<ISecretCopyService, SecretCopyService>(services);
         AssertScoped<IPasswordGeneratorPreferencesService, PasswordGeneratorPreferencesService>(services);
@@ -91,6 +99,24 @@ public class ClypseServiceCollectionExtensionsTests
         // Assert
         var settings = Assert.IsType<ClypseSettings>(Assert.Single(services, d => d.ServiceType == typeof(ClypseSettings)).ImplementationInstance);
         Assert.Empty(settings.MemorablePasswordTemplates);
+        Assert.Equal(20, settings.MaxFileSizeMegabytes);
+    }
+
+    [Fact]
+    public void GivenAFileSizeLimitInTheClypseSection_WhenAddingClypse_ThenItIsTheLimit()
+    {
+        // Arrange
+        var configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?> { ["Clypse:MaxFileSizeMegabytes"] = "50" })
+            .Build();
+        var services = new ServiceCollection();
+
+        // Act
+        services.AddClypse(configuration);
+
+        // Assert
+        var settings = Assert.IsType<ClypseSettings>(Assert.Single(services, d => d.ServiceType == typeof(ClypseSettings)).ImplementationInstance);
+        Assert.Equal(50, settings.MaxFileSizeMegabytes);
     }
 
     [Fact]

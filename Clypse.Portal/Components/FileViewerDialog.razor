@@ -1,0 +1,81 @@
+@inherits MvvmComponentBase<FileViewerViewModel>
+
+<ModalDialog Id="file-viewer-dialog" Title="@T["Files.Viewer.Title"]" Icon="@ViewModel.Icon" SizeClass="modal-xl" FocusMode="ModalDialogFocusMode.Dialog" OnClose="CloseAsync">
+    <ChildContent>
+        @if (!ViewModel.IsFound)
+        {
+            <p class="mb-0" id="file-viewer-missing">@T["Files.Details.Missing"]</p>
+        }
+        else
+        {
+            <h2 class="file-viewer-name" data-user-content id="file-viewer-name">@ViewModel.Name</h2>
+
+            @if (ViewModel.IsLoading)
+            {
+                <div class="file-viewer-loading text-body-secondary" id="file-viewer-loading" role="status">
+                    <span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>@T["Files.Viewer.Decrypting"]
+                </div>
+            }
+            else if (ViewModel.ImageSource != null)
+            {
+                @* The decrypted image, straight from memory: a data: URI, never a stored or fetched file. Tapping it
+                   fills the page with it, and tapping it again comes back to the file's details. *@
+                var fullScreenText = ViewModel.IsFullScreen ? T["Files.Viewer.ExitFullScreen"] : T["Files.Viewer.FullScreen"];
+                <button type="button" class="file-viewer-image @(ViewModel.IsFullScreen ? "is-fullscreen" : null)" id="file-viewer-image-toggle"
+                        title="@fullScreenText" aria-label="@fullScreenText" aria-pressed="@(ViewModel.IsFullScreen.ToString().ToLowerInvariant())"
+                        @onclick="() => ViewModel.ToggleFullScreenCommand.Execute(null)">
+                    <img id="file-viewer-image" src="@ViewModel.ImageSource" alt="@ViewModel.Name" />
+                </button>
+            }
+            else if (ViewModel.Error != null)
+            {
+                <div class="alert alert-warning" role="alert" id="file-viewer-error">
+                    <i class="bi bi-exclamation-triangle me-2"></i>@ViewModel.Error
+                </div>
+            }
+            else if (ViewModel.IsNotViewable)
+            {
+                <p class="file-viewer-note text-body-secondary" id="file-viewer-not-viewable">
+                    <i class="bi bi-eye-slash me-2"></i>@T["Files.Viewer.NotViewable"]
+                </p>
+            }
+
+            <dl class="file-facts" id="file-viewer-facts">
+                <dt>@T["Files.Details.Type"]</dt>
+                <dd id="file-viewer-type">@ViewModel.TypeName</dd>
+                <dt>@T["Files.Details.Size"]</dt>
+                <dd id="file-viewer-size">@ViewModel.SizeText</dd>
+                <dt>@T["Files.Details.Folder"]</dt>
+                @if (ViewModel.Folder.Length == 0)
+                {
+                    <dd id="file-viewer-folder">@T["Files.TopLevel"]</dd>
+                }
+                else
+                {
+                    <dd data-user-content id="file-viewer-folder">@ViewModel.Folder</dd>
+                }
+                <dt>@T["Files.Details.Added"]</dt>
+                <dd data-user-content id="file-viewer-added">@ViewModel.AddedText</dd>
+                <dt>@T["Files.Details.Updated"]</dt>
+                <dd data-user-content id="file-viewer-updated">@ViewModel.UpdatedText</dd>
+                @if (ViewModel.Notes != null)
+                {
+                    <dt>@T["Files.Details.Notes"]</dt>
+                    <dd data-user-content class="file-viewer-notes" id="file-viewer-notes">@ViewModel.Notes</dd>
+                }
+            </dl>
+        }
+    </ChildContent>
+    <Footer>
+        @if (ViewModel.IsFound)
+        {
+            <button type="button" class="btn btn-outline-danger me-auto" id="file-viewer-delete" @onclick="DeleteAsync">
+                <i class="bi bi-trash me-1"></i>@T["Files.Delete"]
+            </button>
+            <button type="button" class="btn btn-outline-secondary" id="file-viewer-details" @onclick="DetailsAsync">
+                <i class="bi bi-pencil me-1"></i>@T["Files.Details"]
+            </button>
+        }
+        <button type="button" class="btn btn-primary" id="file-viewer-close" @onclick="CloseAsync">@T["Common.Close"]</button>
+    </Footer>
+</ModalDialog>

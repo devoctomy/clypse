@@ -91,3 +91,41 @@ Every `uses:` of `actions/*` is pinned to the commit SHA blazwiz uses:
   afterwards: `gh` takes its token from `GH_TOKEN`.
 - `actions/setup-dotnet` v6.1.0.
 - `actions/upload-artifact` v7.0.2.
+
+## Changes on 2026-11-27
+
+Made while pull request 25 (files in a vault) was checked. The maintainer made the changes on Codacy.
+
+### Patterns turned off
+
+| Tool | Pattern | Why |
+|---|---|---|
+| SonarC# | `SonarCSharp_S1172` unused method parameters | It reports the `sender` of an event handler whose event does not use `EventArgs`, e.g. `OnLockStateChanged(object? sender, E2eKeyScope scope)`. The event's signature fixes the parameter, and a handler need not use it. StyleCop does not allow naming it `_` (SA1313). |
+| SonarC# | `SonarCSharp_S3264` events should be invoked | It does not count `Changed?.Invoke(this, EventArgs.Empty)` as raising the event, and that is the proper way to raise one. It reported every event raised that way: `VaultSession.Changed`, `VaultFileSession.Changed` and `TextFileEditorViewModel.CloseRequested`. |
+
+These replace the single issues ignored above for the same two patterns: `S1172` (3) and `S3264` (1).
+
+`VaultReportService` and `VaultReportPreferencesService` had raised `Changed` through a copy of the handler, only to
+get round `S3264`. Both use `?.Invoke` again. Code is not rewritten to get round a false positive: the pattern is turned
+off instead.
+
+### Single issue ignored
+
+| Pattern | Where | Why it's wrong |
+|---|---|---|
+| Lizard `Lizard_ccn-minor` cyclomatic complexity (12, limit 10) | `VaultViewModel`'s constructor | The count is its eleven `?? throw new ArgumentNullException(...)` checks, one for each injected service. There is no branching in it. The pattern is kept: it found two real ones in the same pull request. |
+
+### Left as it is
+
+Lizard `Lizard_parameter-count-medium` lists `VaultViewModel`'s constructor (11 parameters, limit 8) as a potential
+issue. Lizard cannot tell a constructor from a method, so the pattern cannot be turned off for constructors alone, and
+it is kept on for methods. Injecting services through a constructor is not a fault, however many there are.
+
+### Fixed in code
+
+| Pattern | Where | Fix |
+|---|---|---|
+| Lizard `Lizard_file-nloc-medium` file over 500 lines (5) | `VaultViewModelTests.cs`, `VaultFileSessionTests.cs`, `TextFileEditorViewModelTests.cs`, `VaultTests.cs` (UI tests), `TextFileEditorViewModel.cs` | Each test class is split by theme into a second file of the same partial class, e.g. `VaultFileSessionTests.Folders.cs`. The view model's text encoding moved to `TextFileEncodingService`. |
+| Lizard `Lizard_ccn-minor` cyclomatic complexity (2) | `FileViewerViewModel.LoadAsync`, `VaultService.DescribeAsync` | Each is split into smaller methods. |
+| SonarC# `S2933` field should be `readonly` (2) | `FileDetailsViewModelTests.cs`, `TextFileEditorViewModelTests.cs` | The first is `readonly`. The second (`unlocked`) is gone: after the split its only assignment was in the class's other file, which Codacy does not look at, so the test sets the mock directly. |
+| Stylelint `comment-empty-line-before` | `app.css` | A blank line before the comment. |

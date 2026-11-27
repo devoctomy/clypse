@@ -30,9 +30,11 @@ public class VaultsViewModelTests
     private readonly Mock<INavigationService> mockNavigation = new();
     private readonly List<string> calls = [];
     private List<Vault> vaults = [];
+    private bool vaultsRead = true;
 
     public VaultsViewModelTests()
     {
+        mockProfiles.SetupGet(x => x.IsLoaded).Returns(() => vaultsRead);
         mockVaults.Setup(x => x.GetVaultsAsync(It.IsAny<CancellationToken>())).ReturnsAsync(() => vaults);
         mockProfiles.Setup(x => x.GetArgon2ParametersAsync(null, It.IsAny<CancellationToken>())).ReturnsAsync(() => AppCosts());
         mockArgon2.Setup(x => x.DeriveKeyAsync(It.IsAny<string>(), It.IsAny<byte[]>(), It.IsAny<Argon2idParameters>(), It.IsAny<CancellationToken>())).ReturnsAsync(() => new byte[32]);
@@ -424,17 +426,72 @@ public class VaultsViewModelTests
     }
 
     [Fact]
-    public async Task GivenTheVaultsStillBeingRead_WhenThePageOpens_ThenTheyAreNotReadAgain()
+    public async Task GivenTheVaultsStillBeingRead_WhenThePageOpens_ThenTheyAreNotReadAgain_AndItSaysItIsLoading()
+    {
+        // Arrange: straight after sign in, or when the app is opened again.
+        vaultsRead = false;
+        var sut = CreateSut();
+
+        // Act
+        await sut.OnInitializedAsync();
+
+        // Assert: it has not checked yet, so it does not say there are no vaults.
+        mockProfiles.Verify(x => x.LoadAsync(It.IsAny<CancellationToken>()), Times.Never);
+        Assert.True(sut.IsLoading);
+        Assert.Empty(sut.Vaults);
+    }
+
+    [Fact]
+    public async Task GivenTheVaultsStillBeingRead_WhenTheyHaveBeenRead_ThenTheLoadingEnds_AndTheyAreShown()
     {
         // Arrange
-        mockProfiles.SetupGet(x => x.IsLoaded).Returns(false);
+        vaultsRead = false;
+        var sut = CreateSut();
+        await sut.OnInitializedAsync();
+
+        // Act
+        vaults = [Vault("Work")];
+        vaultsRead = true;
+        mockProfiles.Raise(x => x.ProfilesChanged += null, EventArgs.Empty);
+        await WaitForAsync(() => !sut.IsLoading);
+
+        // Assert
+        Assert.False(sut.IsLoading);
+        Assert.Equal(["Work"], sut.Vaults.Select(v => v.Name));
+    }
+
+    [Fact]
+    public async Task GivenTheVaultsStillBeingRead_WhenTheyHaveBeenReadAndThereAreNone_ThenTheLoadingEnds_WithNoVaults()
+    {
+        // Arrange
+        vaultsRead = false;
+        var sut = CreateSut();
+        await sut.OnInitializedAsync();
+
+        // Act
+        vaultsRead = true;
+        mockProfiles.Raise(x => x.ProfilesChanged += null, EventArgs.Empty);
+        await WaitForAsync(() => !sut.IsLoading);
+
+        // Assert
+        Assert.False(sut.IsLoading);
+        Assert.Empty(sut.Vaults);
+    }
+
+    [Fact]
+    public async Task GivenTheVaultsStillBeingRead_WhenSomeAreKnownAlready_ThenTheyAreShownAtOnce()
+    {
+        // Arrange
+        vaultsRead = false;
+        vaults = [Vault("Work")];
         var sut = CreateSut();
 
         // Act
         await sut.OnInitializedAsync();
 
         // Assert
-        mockProfiles.Verify(x => x.LoadAsync(It.IsAny<CancellationToken>()), Times.Never);
+        Assert.False(sut.IsLoading);
+        Assert.Single(sut.Vaults);
     }
 
     [Fact]

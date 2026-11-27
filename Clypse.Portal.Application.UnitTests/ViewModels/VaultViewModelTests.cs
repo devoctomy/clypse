@@ -1,17 +1,19 @@
-﻿using Clypse.Core.Enums;
+using Clypse.Core.Enums;
 using Clypse.Core.Secrets;
 using Clypse.Portal.Application.Exceptions;
+using Clypse.Portal.Application.Services;
 using Clypse.Portal.Application.Services.Interfaces;
 using Clypse.Portal.Application.Text;
 using Clypse.Portal.Application.ViewModels;
 using Clypse.Portal.Models.Vaults;
 using Devoctomy.Blazwiz.Browser.Services.Interfaces;
+using Devoctomy.Blazwiz.Sync.Encryption.Interfaces;
 using Devoctomy.Blazwiz.Testing;
 using Moq;
 
 namespace Clypse.Portal.Application.UnitTests.ViewModels;
 
-public class VaultViewModelTests
+public partial class VaultViewModelTests
 {
     private readonly FrameworkText text = new(typeof(ClypseText));
     private readonly Mock<IVaultService> mockVaults = new();
@@ -19,12 +21,17 @@ public class VaultViewModelTests
     private readonly Mock<ISecretCopyService> mockCopy = new();
     private readonly Mock<INavigationService> mockNavigation = new();
     private readonly Mock<IVaultReportService> mockReport = new();
+    private readonly Mock<IVaultFileSession> mockFiles = new();
+    private readonly UnsavedChangesGuard guard = new();
+    private readonly Mock<ISyncProtectedProfileService> mockProfiles = new();
     private readonly Vault vault = new() { Id = "v1", Root = "profiles/v1/", Name = "Personal", Description = "Logins", IsUnlocked = true };
     private List<Secret> secrets = [];
     private Vault? open;
+    private bool vaultsRead = true;
 
     public VaultViewModelTests()
     {
+        mockProfiles.SetupGet(x => x.IsLoaded).Returns(() => vaultsRead);
         mockVaults.Setup(x => x.FindAsync("v1", It.IsAny<CancellationToken>())).ReturnsAsync(vault);
         mockSession.SetupGet(x => x.Vault).Returns(() => open);
         mockSession.SetupGet(x => x.Secrets).Returns(() => secrets);
@@ -41,14 +48,17 @@ public class VaultViewModelTests
         var t = text.For<ClypseText>();
 
         // Act & Assert
-        Assert.Equal("vaultService", Assert.Throws<ArgumentNullException>(() => new VaultViewModel(null!, mockSession.Object, text.Errors, text.Plurals, t, mockCopy.Object, mockNavigation.Object, mockReport.Object)).ParamName);
-        Assert.Equal("session", Assert.Throws<ArgumentNullException>(() => new VaultViewModel(mockVaults.Object, null!, text.Errors, text.Plurals, t, mockCopy.Object, mockNavigation.Object, mockReport.Object)).ParamName);
-        Assert.Equal("errorText", Assert.Throws<ArgumentNullException>(() => new VaultViewModel(mockVaults.Object, mockSession.Object, null!, text.Plurals, t, mockCopy.Object, mockNavigation.Object, mockReport.Object)).ParamName);
-        Assert.Equal("plurals", Assert.Throws<ArgumentNullException>(() => new VaultViewModel(mockVaults.Object, mockSession.Object, text.Errors, null!, t, mockCopy.Object, mockNavigation.Object, mockReport.Object)).ParamName);
-        Assert.Equal("text", Assert.Throws<ArgumentNullException>(() => new VaultViewModel(mockVaults.Object, mockSession.Object, text.Errors, text.Plurals, null!, mockCopy.Object, mockNavigation.Object, mockReport.Object)).ParamName);
-        Assert.Equal("copyService", Assert.Throws<ArgumentNullException>(() => new VaultViewModel(mockVaults.Object, mockSession.Object, text.Errors, text.Plurals, t, null!, mockNavigation.Object, mockReport.Object)).ParamName);
-        Assert.Equal("navigationService", Assert.Throws<ArgumentNullException>(() => new VaultViewModel(mockVaults.Object, mockSession.Object, text.Errors, text.Plurals, t, mockCopy.Object, null!, mockReport.Object)).ParamName);
-        Assert.Equal("reportService", Assert.Throws<ArgumentNullException>(() => new VaultViewModel(mockVaults.Object, mockSession.Object, text.Errors, text.Plurals, t, mockCopy.Object, mockNavigation.Object, null!)).ParamName);
+        Assert.Equal("vaultService", Assert.Throws<ArgumentNullException>(() => new VaultViewModel(null!, mockSession.Object, text.Errors, text.Plurals, t, mockCopy.Object, mockNavigation.Object, mockReport.Object, mockFiles.Object, guard, mockProfiles.Object)).ParamName);
+        Assert.Equal("session", Assert.Throws<ArgumentNullException>(() => new VaultViewModel(mockVaults.Object, null!, text.Errors, text.Plurals, t, mockCopy.Object, mockNavigation.Object, mockReport.Object, mockFiles.Object, guard, mockProfiles.Object)).ParamName);
+        Assert.Equal("errorText", Assert.Throws<ArgumentNullException>(() => new VaultViewModel(mockVaults.Object, mockSession.Object, null!, text.Plurals, t, mockCopy.Object, mockNavigation.Object, mockReport.Object, mockFiles.Object, guard, mockProfiles.Object)).ParamName);
+        Assert.Equal("plurals", Assert.Throws<ArgumentNullException>(() => new VaultViewModel(mockVaults.Object, mockSession.Object, text.Errors, null!, t, mockCopy.Object, mockNavigation.Object, mockReport.Object, mockFiles.Object, guard, mockProfiles.Object)).ParamName);
+        Assert.Equal("text", Assert.Throws<ArgumentNullException>(() => new VaultViewModel(mockVaults.Object, mockSession.Object, text.Errors, text.Plurals, null!, mockCopy.Object, mockNavigation.Object, mockReport.Object, mockFiles.Object, guard, mockProfiles.Object)).ParamName);
+        Assert.Equal("copyService", Assert.Throws<ArgumentNullException>(() => new VaultViewModel(mockVaults.Object, mockSession.Object, text.Errors, text.Plurals, t, null!, mockNavigation.Object, mockReport.Object, mockFiles.Object, guard, mockProfiles.Object)).ParamName);
+        Assert.Equal("navigationService", Assert.Throws<ArgumentNullException>(() => new VaultViewModel(mockVaults.Object, mockSession.Object, text.Errors, text.Plurals, t, mockCopy.Object, null!, mockReport.Object, mockFiles.Object, guard, mockProfiles.Object)).ParamName);
+        Assert.Equal("reportService", Assert.Throws<ArgumentNullException>(() => new VaultViewModel(mockVaults.Object, mockSession.Object, text.Errors, text.Plurals, t, mockCopy.Object, mockNavigation.Object, null!, mockFiles.Object, guard, mockProfiles.Object)).ParamName);
+        Assert.Equal("fileSession", Assert.Throws<ArgumentNullException>(() => new VaultViewModel(mockVaults.Object, mockSession.Object, text.Errors, text.Plurals, t, mockCopy.Object, mockNavigation.Object, mockReport.Object, null!, guard, mockProfiles.Object)).ParamName);
+        Assert.Equal("guard", Assert.Throws<ArgumentNullException>(() => new VaultViewModel(mockVaults.Object, mockSession.Object, text.Errors, text.Plurals, t, mockCopy.Object, mockNavigation.Object, mockReport.Object, mockFiles.Object, null!, mockProfiles.Object)).ParamName);
+        Assert.Equal("profiles", Assert.Throws<ArgumentNullException>(() => new VaultViewModel(mockVaults.Object, mockSession.Object, text.Errors, text.Plurals, t, mockCopy.Object, mockNavigation.Object, mockReport.Object, mockFiles.Object, guard, null!)).ParamName);
     }
 
     [Fact]
@@ -116,6 +126,109 @@ public class VaultViewModelTests
     }
 
     [Fact]
+    public async Task GivenTheUsersVaultsStillBeingRead_WhenLoaded_ThenTheVaultIsNotCalledMissing_AndIsOpenedOnceTheyAreRead()
+    {
+        // Arrange: straight after sign in, or when the app is opened again on the vault's page.
+        vaultsRead = false;
+        mockVaults.Setup(x => x.FindAsync("v1", It.IsAny<CancellationToken>())).ReturnsAsync(() => vaultsRead ? vault : null);
+        var sut = CreateSut();
+
+        // Act
+        await sut.LoadAsync("v1");
+        var whileReading = (sut.IsFinding, sut.IsMissing, sut.Vault);
+        await sut.LoadAsync("v1");
+        vaultsRead = true;
+        mockProfiles.Raise(x => x.ProfilesChanged += null, mockProfiles.Object, EventArgs.Empty);
+
+        // Assert
+        Assert.Equal((true, false, null), whileReading);
+        Assert.False(sut.IsFinding);
+        Assert.False(sut.IsMissing);
+        Assert.Same(vault, sut.Vault);
+        mockSession.Verify(x => x.Close(), Times.Once);
+        mockSession.Verify(x => x.OpenAsync(vault, It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task GivenTheUsersVaultsStillBeingRead_WhenTheyAreReadWithoutTheVault_ThenItIsMissing()
+    {
+        // Arrange
+        vaultsRead = false;
+        var sut = CreateSut();
+        await sut.LoadAsync("gone");
+        var whileReading = (sut.IsFinding, sut.IsMissing);
+
+        // Act: a change that is not the vaults being read changes nothing; then they are read.
+        mockProfiles.Raise(x => x.ProfilesChanged += null, mockProfiles.Object, EventArgs.Empty);
+        var stillReading = (sut.IsFinding, sut.IsMissing);
+        vaultsRead = true;
+        mockProfiles.Raise(x => x.ProfilesChanged += null, mockProfiles.Object, EventArgs.Empty);
+
+        // Assert
+        Assert.Equal((true, false), whileReading);
+        Assert.Equal((true, false), stillReading);
+        Assert.False(sut.IsFinding);
+        Assert.True(sut.IsMissing);
+        mockSession.Verify(x => x.OpenAsync(It.IsAny<Vault>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task GivenAVaultThatIsOpen_WhenTheUsersVaultsChange_ThenItIsNotLookedForAgain()
+    {
+        // Arrange
+        var sut = CreateSut();
+        await sut.LoadAsync("v1");
+
+        // Act
+        mockProfiles.Raise(x => x.ProfilesChanged += null, mockProfiles.Object, EventArgs.Empty);
+        sut.Dispose();
+        mockProfiles.Raise(x => x.ProfilesChanged += null, mockProfiles.Object, EventArgs.Empty);
+
+        // Assert
+        mockVaults.Verify(x => x.FindAsync("v1", It.IsAny<CancellationToken>()), Times.Once);
+        mockSession.Verify(x => x.OpenAsync(vault, It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task GivenTheUsersVaultsStillBeingRead_WhenLookingAgainFails_ThenTheErrorIsShown()
+    {
+        // Arrange
+        vaultsRead = false;
+        var sut = CreateSut();
+        await sut.LoadAsync("gone");
+        mockVaults.Setup(x => x.FindAsync("gone", It.IsAny<CancellationToken>())).ThrowsAsync(new ClypseException(ClypseErrorCodes.VaultNotFound));
+
+        // Act
+        mockProfiles.Raise(x => x.ProfilesChanged += null, mockProfiles.Object, EventArgs.Empty);
+
+        // Assert
+        Assert.NotNull(sut.ErrorMessage);
+    }
+
+    [Fact]
+    public async Task GivenAVaultStillBeingFound_WhenAnotherIsLoadedMeanwhile_ThenOnlyTheOtherIsOpened()
+    {
+        // Arrange
+        var other = new Vault { Id = "v2", Root = "profiles/v2/", Name = "Work", IsUnlocked = true };
+        var finding = new TaskCompletionSource<Vault?>();
+        mockVaults.Setup(x => x.FindAsync("v1", It.IsAny<CancellationToken>())).Returns(finding.Task);
+        mockVaults.Setup(x => x.FindAsync("v2", It.IsAny<CancellationToken>())).ReturnsAsync(other);
+        var sut = CreateSut();
+        var first = sut.LoadAsync("v1");
+
+        // Act
+        await sut.LoadAsync("v2");
+        finding.SetResult(vault);
+        await first;
+
+        // Assert
+        Assert.Same(other, sut.Vault);
+        Assert.False(sut.IsMissing);
+        mockSession.Verify(x => x.OpenAsync(vault, It.IsAny<CancellationToken>()), Times.Never);
+        mockSession.Verify(x => x.OpenAsync(other, It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
     public async Task GivenNoSuchVault_WhenLoaded_ThenItIsMissing()
     {
         // Arrange
@@ -146,228 +259,6 @@ public class VaultViewModelTests
         Assert.Equal("A secret in this vault could not be read.", sut.ErrorMessage);
         sut.DismissErrorCommand.Execute(null);
         Assert.Null(sut.ErrorMessage);
-    }
-
-    [Fact]
-    public async Task GivenSecrets_WhenListed_ThenByNameWithEveryTag()
-    {
-        // Arrange
-        secrets = [Web("Zoo", "bob", "fun"), Web("bank", "alice", "money, Fun"), new AwsCredentials { Name = "Deploy", AccessKeyId = "AKIA" }];
-        var sut = CreateSut();
-        await sut.LoadAsync("v1");
-
-        // Act
-        var names = sut.Secrets.Select(s => s.Name).ToList();
-
-        // Assert
-        Assert.Equal(["bank", "Deploy", "Zoo"], names);
-        Assert.Equal(["fun", "money"], sut.Tags);
-        Assert.Equal(3, sut.SecretCount);
-        Assert.Equal("Showing 3/3 secrets", sut.CountText);
-    }
-
-    [Fact]
-    public async Task GivenATag_WhenSelected_ThenTheCountSaysHowManyAreShownOfAll()
-    {
-        // Arrange
-        secrets = [Web("Zoo", "bob", "fun"), Web("bank", "alice", "money"), Web("shop", "carol", "fun")];
-        var sut = CreateSut();
-        await sut.LoadAsync("v1");
-
-        // Act
-        sut.SelectTagCommand.Execute("fun");
-
-        // Assert
-        Assert.Equal("Showing 2/3 secrets", sut.CountText);
-    }
-
-    [Fact]
-    public async Task GivenOneSecret_WhenShown_ThenTheCountIsSingular()
-    {
-        // Arrange
-        secrets = [Web("Zoo", "bob", "fun")];
-        var sut = CreateSut();
-        await sut.LoadAsync("v1");
-
-        // Act
-        var count = sut.CountText;
-
-        // Assert
-        Assert.Equal("Showing 1/1 secret", count);
-    }
-
-    [Fact]
-    public async Task GivenUntaggedSecrets_WhenUntaggedIsSelectedAndSelectedAgain_ThenOnlyThoseAndThenAll()
-    {
-        // Arrange
-        secrets = [Web("Zoo", "bob", "fun"), new AwsCredentials { Name = "Deploy", AccessKeyId = "AKIA" }];
-        var sut = CreateSut();
-        await sut.LoadAsync("v1");
-        Assert.True(sut.HasUntagged);
-
-        // Act & Assert
-        sut.SelectUntaggedCommand.Execute(null);
-        Assert.True(sut.IsUntaggedSelected);
-        Assert.Equal("Deploy", Assert.Single(sut.Secrets).Name);
-        sut.SelectUntaggedCommand.Execute(null);
-        Assert.False(sut.IsUntaggedSelected);
-        Assert.Equal(2, sut.Secrets.Count);
-    }
-
-    [Fact]
-    public async Task GivenUntaggedSelected_WhenATagOrAllIsSelected_ThenUntaggedIsCleared()
-    {
-        // Arrange
-        secrets = [Web("Zoo", "bob", "fun"), new AwsCredentials { Name = "Deploy", AccessKeyId = "AKIA" }];
-        var sut = CreateSut();
-        await sut.LoadAsync("v1");
-        sut.SelectUntaggedCommand.Execute(null);
-
-        // Act & Assert
-        sut.SelectTagCommand.Execute("fun");
-        Assert.False(sut.IsUntaggedSelected);
-        Assert.Equal("Zoo", Assert.Single(sut.Secrets).Name);
-        sut.SelectUntaggedCommand.Execute(null);
-        Assert.Null(sut.SelectedTag);
-        sut.SelectTagCommand.Execute(null);
-        Assert.False(sut.IsUntaggedSelected);
-        Assert.Equal(2, sut.Secrets.Count);
-    }
-
-    [Fact]
-    public async Task GivenUntaggedSelected_WhenSearching_ThenOnlyUntaggedMatchesAreShown()
-    {
-        // Arrange
-        secrets = [Web("Deploy notes", "bob", "fun"), new AwsCredentials { Name = "Deploy", AccessKeyId = "AKIA" }, new AwsCredentials { Name = "Other", AccessKeyId = "AKIB" }];
-        var sut = CreateSut();
-        await sut.LoadAsync("v1");
-        sut.SelectUntaggedCommand.Execute(null);
-
-        // Act
-        sut.Search = "deploy";
-
-        // Assert
-        Assert.Equal("Deploy", Assert.Single(sut.Secrets).Name);
-    }
-
-    [Fact]
-    public async Task GivenEverySecretTagged_WhenShown_ThenUntaggedIsNotOffered()
-    {
-        // Arrange
-        secrets = [Web("Zoo", "bob", "fun"), Web("bank", "alice", "money")];
-        var sut = CreateSut();
-
-        // Act
-        await sut.LoadAsync("v1");
-
-        // Assert
-        Assert.False(sut.HasUntagged);
-    }
-
-    [Fact]
-    public async Task GivenUntaggedSelected_WhenTheLastUntaggedSecretGoes_ThenTheFilterIsCleared()
-    {
-        // Arrange
-        secrets = [Web("Zoo", "bob", "fun"), new AwsCredentials { Name = "Deploy", AccessKeyId = "AKIA" }];
-        var sut = CreateSut();
-        await sut.LoadAsync("v1");
-        sut.SelectUntaggedCommand.Execute(null);
-
-        // Act
-        secrets = [secrets[0]];
-        mockSession.Raise(x => x.Changed += null, EventArgs.Empty);
-
-        // Assert
-        Assert.False(sut.IsUntaggedSelected);
-        Assert.Single(sut.Secrets);
-    }
-
-    [Theory]
-    [InlineData("ZOO", "Zoo")]
-    [InlineData("alice", "bank")]
-    [InlineData("example.com", "Zoo")]
-    [InlineData("money", "bank")]
-    [InlineData("akia", "Deploy")]
-    public async Task GivenASearch_WhenListed_ThenOnlyMatchingSecrets(string search, string expected)
-    {
-        // Arrange
-        var aws = new AwsCredentials { Name = "Deploy", AccessKeyId = "AKIA", Description = "akia keys" };
-        secrets = [Web("Zoo", "bob", "fun", "https://example.com"), Web("bank", "alice", "money"), aws];
-        var sut = CreateSut();
-        await sut.LoadAsync("v1");
-
-        // Act
-        sut.Search = search;
-
-        // Assert
-        Assert.Equal(expected, Assert.Single(sut.Secrets).Name);
-    }
-
-    [Fact]
-    public async Task GivenATag_WhenSelectedAndSelectedAgain_ThenFilteredAndThenAll()
-    {
-        // Arrange
-        secrets = [Web("Zoo", "bob", "fun"), Web("bank", "alice", "money")];
-        var sut = CreateSut();
-        await sut.LoadAsync("v1");
-
-        // Act & Assert
-        sut.SelectTagCommand.Execute("MONEY");
-        Assert.Equal("bank", Assert.Single(sut.Secrets).Name);
-        sut.SelectTagCommand.Execute("money");
-        Assert.Null(sut.SelectedTag);
-        Assert.Equal(2, sut.Secrets.Count);
-        sut.SelectTagCommand.Execute("fun");
-        sut.SelectTagCommand.Execute(null);
-        Assert.Null(sut.SelectedTag);
-    }
-
-    [Fact]
-    public async Task GivenATagFilter_WhenItsLastSecretGoes_ThenTheFilterIsCleared()
-    {
-        // Arrange
-        secrets = [Web("Zoo", "bob", "fun"), Web("bank", "alice", "money")];
-        var sut = CreateSut();
-        await sut.LoadAsync("v1");
-        sut.SelectTagCommand.Execute("money");
-
-        // Act
-        secrets = [secrets[0]];
-        mockSession.Raise(x => x.Changed += null, EventArgs.Empty);
-
-        // Assert
-        Assert.Null(sut.SelectedTag);
-        Assert.Single(sut.Secrets);
-    }
-
-    [Fact]
-    public async Task GivenLoading_WhenShown_ThenProgressAndUnreadableAreWorded()
-    {
-        // Arrange
-        mockSession.SetupGet(x => x.IsLoading).Returns(true);
-        mockSession.SetupGet(x => x.TotalCount).Returns(40);
-        mockSession.SetupGet(x => x.LoadedCount).Returns(10);
-        mockSession.SetupGet(x => x.UnreadableCount).Returns(1);
-        var sut = CreateSut();
-        await sut.LoadAsync("v1");
-
-        // Act & Assert
-        Assert.True(sut.IsLoading);
-        Assert.Equal(25, sut.LoadingPercent);
-        Assert.Equal("Decrypting 10 of 40 secrets...", sut.LoadingText);
-        Assert.Equal("1 secret in this vault could not be read.", sut.UnreadableText);
-    }
-
-    [Fact]
-    public async Task GivenNothingToRead_WhenShown_ThenNoProgressOrWarning()
-    {
-        // Arrange
-        var sut = CreateSut();
-        await sut.LoadAsync("v1");
-
-        // Act & Assert
-        Assert.Equal(0, sut.LoadingPercent);
-        Assert.Null(sut.UnreadableText);
     }
 
     [Fact]
@@ -713,5 +604,5 @@ public class VaultViewModelTests
         Assert.Same(report, read);
     }
 
-    private VaultViewModel CreateSut() => new(mockVaults.Object, mockSession.Object, text.Errors, text.Plurals, text.For<ClypseText>(), mockCopy.Object, mockNavigation.Object, mockReport.Object);
+    private VaultViewModel CreateSut() => new(mockVaults.Object, mockSession.Object, text.Errors, text.Plurals, text.For<ClypseText>(), mockCopy.Object, mockNavigation.Object, mockReport.Object, mockFiles.Object, guard, mockProfiles.Object);
 }

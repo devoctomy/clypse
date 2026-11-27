@@ -390,6 +390,542 @@
     gap: 0.25rem;
 }
 
+/* ---------- Vault tabs ---------- */
+
+.vault-tabs {
+    margin-bottom: 1rem;
+}
+
+/* The header's buttons: a row with even gaps, whichever tab's buttons are in it. */
+.vault-header-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 0.3125rem;
+}
+
+/* ---------- Files ---------- */
+
+/* The New menu, in the page's header. */
+.files-new {
+    position: relative;
+}
+
+/* Under the button, in line with its right edge: the button is at the end of the header. */
+.files-new .dropdown-menu {
+    top: 100%;
+    right: 0;
+    left: auto;
+    z-index: 1010;
+    margin-top: 0.25rem;
+}
+
+.files-new .dropdown-item > .bi {
+    color: var(--bw-text-muted);
+}
+
+/* Covers the page while the New menu is open, so a click anywhere else closes it. */
+.files-new-backdrop {
+    position: fixed;
+    z-index: 1005;
+    inset: 0;
+}
+
+.files-working {
+    margin-bottom: 1rem;
+}
+
+.files-add-error + .files-add-error {
+    margin-top: 0.25rem;
+}
+
+.files-breadcrumb {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.25rem;
+    margin-bottom: 0.75rem;
+}
+
+.files-crumb {
+    max-width: 16rem;
+    padding: 0.25rem 0.5rem;
+    overflow: hidden;
+    border: 0;
+    border-radius: 0.5rem;
+    background: transparent;
+    color: var(--bw-text-muted);
+    font-size: 0.9rem;
+    font-weight: 500;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.files-crumb:hover {
+    background: var(--bw-hover);
+    color: var(--bw-text);
+}
+
+/* The folder that is open. */
+.files-crumb:last-child {
+    color: var(--bw-text);
+    font-weight: 600;
+}
+
+.files-crumb-separator {
+    color: var(--bw-text-muted);
+    font-size: 0.75rem;
+}
+
+.file-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.file-list > li + li {
+    border-top: 1px solid var(--bw-border);
+}
+
+.file-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.file-row {
+    display: flex;
+    flex: 1;
+    align-items: center;
+    gap: 0.875rem;
+    min-width: 0;
+    padding: 0.75rem 0.5rem;
+    border: 0;
+    border-radius: 0.5rem;
+    background: transparent;
+    color: inherit;
+    text-align: left;
+}
+
+.file-row:hover {
+    background: var(--bw-hover);
+}
+
+.file-icon {
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    border-radius: 0.625rem;
+    background: rgba(var(--bw-accent-rgb), 0.12);
+    color: var(--bw-accent);
+}
+
+.file-icon-folder {
+    background: var(--bw-surface-2);
+    color: var(--bw-text-muted);
+}
+
+.file-body {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.file-name {
+    overflow: hidden;
+    font-weight: 600;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.file-summary {
+    overflow: hidden;
+    color: var(--bw-text-muted);
+    font-size: 0.85rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.file-not-here {
+    color: var(--bs-warning-text-emphasis);
+}
+
+.file-actions {
+    display: flex;
+    flex-shrink: 0;
+    gap: 0.25rem;
+}
+
+/* ---------- File viewer ---------- */
+
+.file-viewer-name {
+    margin-bottom: 1rem;
+    overflow-wrap: anywhere;
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+.file-viewer-loading,
+.file-viewer-note {
+    margin-bottom: 1rem;
+}
+
+/* The image, kept within the dialog: a tall scan scrolls inside its frame rather than stretching the page. It is a
+   button: tapping it fills the page with the image. */
+.file-viewer-image {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    max-height: 70vh;
+    margin-bottom: 1rem;
+    padding: 0;
+    overflow: auto;
+    border: 1px solid var(--bw-border);
+    border-radius: 0.75rem;
+    background: var(--bw-surface-2);
+    cursor: zoom-in;
+}
+
+.file-viewer-image img {
+    max-width: 100%;
+    max-height: 70vh;
+    object-fit: contain;
+}
+
+/* Full screen: over the whole page, the dialog included. The image is centred and scaled so all of it shows, and made
+   larger if it is smaller than the page. Tapping it again goes back to the file's details. */
+.file-viewer-image.is-fullscreen {
+    position: fixed;
+    inset: 0;
+    z-index: 2000;
+    max-height: none;
+    margin: 0;
+    overflow: hidden;
+    border: 0;
+    border-radius: 0;
+    background: #000;
+    cursor: zoom-out;
+}
+
+.file-viewer-image.is-fullscreen img {
+    width: 100%;
+    height: 100%;
+    max-width: none;
+    max-height: none;
+    object-fit: contain;
+}
+
+.file-viewer-notes {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+/* ---------- Text editor ---------- */
+
+/* The editor takes the place of the file list. Its header has the file's name, whether it is saved, and its buttons. */
+.text-editor-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.text-editor-title {
+    display: flex;
+    flex: 1;
+    align-items: baseline;
+    min-width: 0;
+    font-weight: 600;
+}
+
+.text-editor-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.text-editor-folder {
+    margin-left: 0.75rem;
+    overflow: hidden;
+    color: var(--bw-text-muted);
+    font-size: 0.85rem;
+    font-weight: 400;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.editor-status {
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.editor-status .bi-circle-fill {
+    font-size: 0.5rem;
+    vertical-align: middle;
+}
+
+.text-editor {
+    display: flex;
+    flex-direction: column;
+
+    /* Fill the page below its header and the tabs. */
+    height: calc(100vh - var(--bw-topbar-height) - 22rem);
+    min-height: 420px;
+    overflow: hidden;
+    border: 1px solid var(--bw-border);
+    border-radius: 0.75rem;
+    background: var(--bw-surface);
+}
+
+.editor-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.4rem 0.5rem;
+    border-bottom: 1px solid var(--bw-border);
+    background: var(--bw-surface-2);
+}
+
+.toolbar-group {
+    display: inline-flex;
+    gap: 0.1rem;
+    margin-right: 0.1rem;
+    padding-right: 0.35rem;
+    border-right: 1px solid var(--bw-border);
+}
+
+.toolbar-group:last-of-type {
+    border-right: 0;
+}
+
+.toolbar-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 34px;
+    height: 34px;
+    padding: 0 0.4rem;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--bw-text-muted);
+    font-size: 1.05rem;
+    font-weight: 600;
+    transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.toolbar-btn:hover {
+    border-color: var(--bw-border);
+    background: var(--bw-hover);
+    color: var(--bw-text);
+}
+
+.toolbar-btn.active {
+    background: var(--bw-active);
+    color: var(--bw-accent);
+}
+
+.toolbar-btn-wide {
+    font-size: 0.9rem;
+}
+
+.editor-panes {
+    display: grid;
+    flex: 1 1 auto;
+    grid-template-columns: 1fr 1fr;
+    min-height: 0;
+}
+
+.preview-collapsed .editor-panes {
+    grid-template-columns: 1fr;
+}
+
+.editor-pane,
+.preview-pane {
+    min-width: 0;
+    min-height: 0;
+}
+
+.editor-textarea {
+    display: block;
+    width: 100%;
+    height: 100%;
+    padding: 1.25rem 1.5rem;
+    border: 0;
+    outline: none;
+    background: transparent;
+    color: var(--bw-text);
+    font-family: ui-monospace, SFMono-Regular, "Cascadia Code", Menlo, Consolas, monospace;
+    font-size: 0.95rem;
+    line-height: 1.65;
+    resize: none;
+    tab-size: 4;
+}
+
+.preview-pane {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    border-left: 1px solid var(--bw-border);
+    background: var(--bw-surface-2);
+}
+
+.preview-label {
+    padding: 0.5rem 1.5rem 0;
+    color: var(--bw-text-muted);
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+@media (max-width: 991.98px) {
+    .text-editor {
+        height: auto;
+    }
+
+    .editor-panes {
+        grid-template-rows: minmax(320px, 55vh) auto;
+        grid-template-columns: 1fr;
+    }
+
+    .preview-collapsed .editor-panes {
+        grid-template-rows: minmax(320px, 65vh);
+    }
+
+    .preview-pane {
+        border-top: 1px solid var(--bw-border);
+        border-left: 0;
+    }
+}
+
+/* ---------- Rendered markdown ---------- */
+
+.markdown-body {
+    flex: 1 1 auto;
+    padding: 0.75rem 1.5rem 1.5rem;
+    overflow-y: auto;
+    line-height: 1.65;
+    overflow-wrap: anywhere;
+}
+
+.markdown-body > :first-child {
+    margin-top: 0;
+}
+
+.markdown-body h1,
+.markdown-body h2,
+.markdown-body h3,
+.markdown-body h4,
+.markdown-body h5,
+.markdown-body h6 {
+    margin: 1.4em 0 0.6em;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+}
+
+.markdown-body h1 {
+    padding-bottom: 0.3em;
+    border-bottom: 1px solid var(--bw-border);
+    font-size: 1.75rem;
+}
+
+.markdown-body h2 {
+    padding-bottom: 0.25em;
+    border-bottom: 1px solid var(--bw-border);
+    font-size: 1.4rem;
+}
+
+.markdown-body h3 {
+    font-size: 1.15rem;
+}
+
+.markdown-body blockquote {
+    margin: 0 0 1rem;
+    padding: 0.25rem 1rem;
+    border-left: 4px solid var(--bw-accent);
+    border-radius: 0 0.5rem 0.5rem 0;
+    background: var(--bw-hover);
+    color: var(--bw-text-muted);
+}
+
+.markdown-body blockquote > :last-child {
+    margin-bottom: 0;
+}
+
+.markdown-body pre {
+    padding: 0.85rem 1rem;
+    border: 1px solid var(--bw-border);
+    border-radius: 0.5rem;
+    background: var(--bw-surface);
+}
+
+.markdown-body pre code {
+    padding: 0;
+    background: transparent;
+    color: var(--bw-text);
+}
+
+.markdown-body table {
+    width: auto;
+    margin-bottom: 1rem;
+    border-collapse: collapse;
+}
+
+.markdown-body th,
+.markdown-body td {
+    padding: 0.4rem 0.75rem;
+    border: 1px solid var(--bw-border);
+}
+
+.markdown-body th {
+    background: var(--bw-surface);
+    font-weight: 700;
+}
+
+.markdown-body hr {
+    margin: 1.5rem 0;
+    border-color: var(--bw-border);
+    opacity: 1;
+}
+
+.markdown-body img {
+    max-width: 100%;
+}
+
+.markdown-body .contains-task-list {
+    padding-left: 0.5rem;
+    list-style: none;
+}
+
+.markdown-body .task-list-item-checkbox {
+    margin-right: 0.4rem;
+}
+
+/* A file's type, size and times, in its details. */
+.file-facts {
+    display: grid;
+    grid-template-columns: max-content 1fr;
+    gap: 0.25rem 1rem;
+    margin: 0;
+    font-size: 0.9rem;
+}
+
+.file-facts dt {
+    color: var(--bw-text-muted);
+    font-weight: 500;
+}
+
+.file-facts dd {
+    margin: 0;
+}
+
 /* ---------- Secret editor ---------- */
 
 .secret-type-options {

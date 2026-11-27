@@ -148,24 +148,37 @@ public class VaultService(
 
     private async Task<Vault> DescribeAsync(SyncProtectedProfile profile, CancellationToken ct)
     {
-        var vault = new Vault
+        var id = profile.Scope.Id;
+        var root = RootOf(id);
+        var isUnlocked = !profile.IsDeleting && manager.IsUnlocked(profile.Scope);
+        var details = isUnlocked ? await ReadAndLabelAsync(profile, root, ct) : null;
+        return new Vault
         {
-            Id = profile.Scope.Id,
-            Root = RootOf(profile.Scope.Id),
-            IsUnlocked = !profile.IsDeleting && manager.IsUnlocked(profile.Scope),
+            Id = id,
+            Root = root,
+            IsUnlocked = isUnlocked,
             IsDeleting = profile.IsDeleting,
+            Name = details?.Name ?? profile.Label ?? id,
+            Description = details?.Description,
+            CanUnlockWithBiometrics = await CanUnlockWithBiometricsAsync(profile, isUnlocked),
         };
+    }
 
-        var details = vault.IsUnlocked ? await ReadDetailsAsync(profile.Name, vault.Root, ct) : null;
+    // An unlocked vault's details, read from its file. Its name is kept as the profile's label on this device.
+    private async Task<VaultDetails?> ReadAndLabelAsync(SyncProtectedProfile profile, string root, CancellationToken ct)
+    {
+        var details = await ReadDetailsAsync(profile.Name, root, ct);
         if (details != null && details.Name != profile.Label)
         {
             await profiles.SetLabelAsync(profile.Scope, details.Name);
         }
 
-        vault.Name = details?.Name ?? profile.Label ?? vault.Id;
-        vault.Description = details?.Description;
-        vault.CanUnlockWithBiometrics = !vault.IsUnlocked && !vault.IsDeleting && await deviceUnlock.CanUnlockAsync(profile.Scope);
-        return vault;
+        return details;
+    }
+
+    private async Task<bool> CanUnlockWithBiometricsAsync(SyncProtectedProfile profile, bool isUnlocked)
+    {
+        return !isUnlocked && !profile.IsDeleting && await deviceUnlock.CanUnlockAsync(profile.Scope);
     }
 
     private async Task<VaultDetails?> ReadDetailsAsync(string profileName, string root, CancellationToken ct)

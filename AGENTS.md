@@ -55,7 +55,13 @@ end to end.
 - **A vault is a blazwiz protected sync profile.** It has its own passphrase and keys, its own lock, and syncs
   `profiles/<id>/**`. The profile holds:
   - its name and description, in an encrypted `.vault` file;
-  - each **secret**, as one encrypted JSON file, `secrets/<secretId>.json`.
+  - each **secret**, as one encrypted JSON file, `secrets/<secretId>.json`;
+  - each **file** (e.g. a scan of a passport), as two encrypted files: its details (name, folder, type, size, notes)
+    in `files/meta/<fileId>.json`, and its content in `files/blobs/<fileId>.bin`. An empty folder is a details file
+    with no content.
+
+  File keys are GUIDs, like secret keys: nothing about a file is in its key. A file's details are decrypted when the
+  vault is unlocked, as the secrets are. Its content is decrypted only when it is viewed or edited, in memory.
 - **Users start with no vaults.** The app defines no sync profiles in code.
 - **The reference app:** the template's notes feature in blazwiz (`template/MyApp.Portal*`, `NotebookService`,
   `NoteService`) shows how to use protected profiles, file stores and `E2eUnlockPanel`. Use it as the reference.

@@ -57,6 +57,150 @@
   <data name="Copy.Failed" xml:space="preserve">
     <value>{0} could not be copied.</value>
   </data>
+  <data name="Editor.Format.Bold" xml:space="preserve">
+    <value>Bold (Ctrl+B)</value>
+  </data>
+  <data name="Editor.Format.BulletList" xml:space="preserve">
+    <value>Bulleted list</value>
+  </data>
+  <data name="Editor.Format.CodeBlock" xml:space="preserve">
+    <value>Code block</value>
+  </data>
+  <data name="Editor.Format.Heading1" xml:space="preserve">
+    <value>Heading 1</value>
+  </data>
+  <data name="Editor.Format.Heading2" xml:space="preserve">
+    <value>Heading 2</value>
+  </data>
+  <data name="Editor.Format.Heading3" xml:space="preserve">
+    <value>Heading 3</value>
+  </data>
+  <data name="Editor.Format.HorizontalRule" xml:space="preserve">
+    <value>Horizontal rule</value>
+  </data>
+  <data name="Editor.Format.InlineCode" xml:space="preserve">
+    <value>Inline code</value>
+  </data>
+  <data name="Editor.Format.Italic" xml:space="preserve">
+    <value>Italic (Ctrl+I)</value>
+  </data>
+  <data name="Editor.Format.Link" xml:space="preserve">
+    <value>Link</value>
+  </data>
+  <data name="Editor.Format.NumberedList" xml:space="preserve">
+    <value>Numbered list</value>
+  </data>
+  <data name="Editor.Format.Quote" xml:space="preserve">
+    <value>Quote</value>
+  </data>
+  <data name="Editor.Format.Strikethrough" xml:space="preserve">
+    <value>Strikethrough</value>
+  </data>
+  <data name="Editor.Format.TaskList" xml:space="preserve">
+    <value>Task list</value>
+  </data>
+  <data name="Editor.Leave.Discard" xml:space="preserve">
+    <value>Discard</value>
+  </data>
+  <data name="Editor.Leave.Stay" xml:space="preserve">
+    <value>Keep editing</value>
+  </data>
+  <data name="Editor.Leave.Text" xml:space="preserve">
+    <value>You have unsaved changes to {0}. What would you like to do with them?</value>
+  </data>
+  <data name="Editor.Leave.Title" xml:space="preserve">
+    <value>Unsaved changes</value>
+  </data>
+  <data name="Editor.Placeholder" xml:space="preserve">
+    <value>Start writing...</value>
+  </data>
+  <data name="Editor.Placeholder.Bold" xml:space="preserve">
+    <value>bold text</value>
+  </data>
+  <data name="Editor.Placeholder.Code" xml:space="preserve">
+    <value>code</value>
+  </data>
+  <data name="Editor.Placeholder.Italic" xml:space="preserve">
+    <value>italic text</value>
+  </data>
+  <data name="Editor.Placeholder.Link" xml:space="preserve">
+    <value>link text</value>
+  </data>
+  <data name="Editor.Placeholder.Strikethrough" xml:space="preserve">
+    <value>strikethrough text</value>
+  </data>
+  <data name="Editor.Preview" xml:space="preserve">
+    <value>Preview</value>
+  </data>
+  <data name="Editor.Preview.Hide" xml:space="preserve">
+    <value>Hide preview</value>
+  </data>
+  <data name="Editor.Preview.Show" xml:space="preserve">
+    <value>Show preview</value>
+  </data>
+  <data name="Editor.Remote.Changed" xml:space="preserve">
+    <value>{0} was changed on another device while you were editing it. Which version would you like to keep?</value>
+  </data>
+  <data name="Editor.Remote.Deleted" xml:space="preserve">
+    <value>{0} was deleted on another device while you were editing it. Keep your version, or let it go?</value>
+  </data>
+  <data name="Editor.Remote.KeepMine" xml:space="preserve">
+    <value>Keep mine</value>
+  </data>
+  <data name="Editor.Remote.LetGo" xml:space="preserve">
+    <value>Let it go</value>
+  </data>
+  <data name="Editor.Remote.TakeTheirs" xml:space="preserve">
+    <value>Take theirs</value>
+  </data>
+  <data name="Editor.Remote.Title" xml:space="preserve">
+    <value>Changed on another device</value>
+  </data>
+  <data name="Editor.Save" xml:space="preserve">
+    <value>Save</value>
+  </data>
+  <data name="Editor.Save.Title" xml:space="preserve">
+    <value>Save (Ctrl+S)</value>
+  </data>
+  <data name="Editor.SavedAt" xml:space="preserve">
+    <value>Saved at {0}</value>
+  </data>
+  <data name="Editor.Text" xml:space="preserve">
+    <value>Text</value>
+  </data>
+  <data name="Editor.Toolbar" xml:space="preserve">
+    <value>Formatting</value>
+  </data>
+  <data name="Editor.Unsaved" xml:space="preserve">
+    <value>Unsaved changes</value>
+  </data>
+  <data name="Error.Clypse.FileContentMissing" xml:space="preserve">
+    <value>That file's content is not on this device yet.</value>
+  </data>
+  <data name="Error.Clypse.FileIdInvalid" xml:space="preserve">
+    <value>That file's id is not valid.</value>
+  </data>
+  <data name="Error.Clypse.FileNameRequired" xml:space="preserve">
+    <value>Give the file a name.</value>
+  </data>
+  <data name="Error.Clypse.FileNotFound" xml:space="preserve">
+    <value>That file no longer exists.</value>
+  </data>
+  <data name="Error.Clypse.FileTooLarge" xml:space="preserve">
+    <value>That file is too large. A vault takes files of up to {0} MB.</value>
+  </data>
+  <data name="Error.Clypse.FileUnreadable" xml:space="preserve">
+    <value>A file in this vault could not be read.</value>
+  </data>
+  <data name="Error.Clypse.FolderExists" xml:space="preserve">
+    <value>There is already a folder with that name.</value>
+  </data>
+  <data name="Error.Clypse.FolderMoveInvalid" xml:space="preserve">
+    <value>A folder cannot be moved into itself.</value>
+  </data>
+  <data name="Error.Clypse.FolderNameInvalid" xml:space="preserve">
+    <value>Give the folder a name, without a / in it.</value>
+  </data>
   <data name="Error.Clypse.ImportNothingFound" xml:space="preserve">
     <value>No secrets were found in that file.</value>
   </data>
@@ -75,11 +219,212 @@
   <data name="Error.Clypse.SecretUnreadable" xml:space="preserve">
     <value>A secret in this vault could not be read.</value>
   </data>
+  <data name="Error.Clypse.TextFileNotText" xml:space="preserve">
+    <value>That file's content is not text, so it cannot be edited here.</value>
+  </data>
+  <data name="Error.Clypse.TextFileTooLarge" xml:space="preserve">
+    <value>Text can be edited here up to {0} MB.</value>
+  </data>
   <data name="Error.Clypse.VaultNameRequired" xml:space="preserve">
     <value>Give the vault a name.</value>
   </data>
   <data name="Error.Clypse.VaultNotFound" xml:space="preserve">
     <value>That vault no longer exists.</value>
+  </data>
+  <data name="Files.Add" xml:space="preserve">
+    <value>Add files</value>
+  </data>
+  <data name="Files.Add.Failed" xml:space="preserve">
+    <value>{0} was not added. {1}</value>
+  </data>
+  <data name="Files.Add.TooMany" xml:space="preserve">
+    <value>Add up to {0} files at a time.</value>
+  </data>
+  <data name="Files.Adding" xml:space="preserve">
+    <value>Adding {0} of {1}: {2}</value>
+  </data>
+  <data name="Files.Breadcrumb" xml:space="preserve">
+    <value>Folders</value>
+  </data>
+  <data name="Files.Delete" xml:space="preserve">
+    <value>Delete</value>
+  </data>
+  <data name="Files.Delete.File.Confirm" xml:space="preserve">
+    <value>Delete {0}? This cannot be undone.</value>
+  </data>
+  <data name="Files.Delete.Folder.Confirm.One" xml:space="preserve">
+    <value>Delete the folder {1} and the {0} file in it? This cannot be undone.</value>
+  </data>
+  <data name="Files.Delete.Folder.Confirm.Other" xml:space="preserve">
+    <value>Delete the folder {1} and the {0} files in it? This cannot be undone.</value>
+  </data>
+  <data name="Files.Delete.Folder.ConfirmEmpty" xml:space="preserve">
+    <value>Delete the empty folder {0}?</value>
+  </data>
+  <data name="Files.Delete.No" xml:space="preserve">
+    <value>Keep it</value>
+  </data>
+  <data name="Files.Delete.Title" xml:space="preserve">
+    <value>Delete</value>
+  </data>
+  <data name="Files.Delete.Yes" xml:space="preserve">
+    <value>Delete it</value>
+  </data>
+  <data name="Files.Details" xml:space="preserve">
+    <value>Details</value>
+  </data>
+  <data name="Files.Details.Added" xml:space="preserve">
+    <value>Added</value>
+  </data>
+  <data name="Files.Details.Folder" xml:space="preserve">
+    <value>Folder</value>
+  </data>
+  <data name="Files.Details.Missing" xml:space="preserve">
+    <value>That file no longer exists.</value>
+  </data>
+  <data name="Files.Details.Name" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="Files.Details.Notes" xml:space="preserve">
+    <value>Notes</value>
+  </data>
+  <data name="Files.Details.Save" xml:space="preserve">
+    <value>Save</value>
+  </data>
+  <data name="Files.Details.Size" xml:space="preserve">
+    <value>Size</value>
+  </data>
+  <data name="Files.Details.Title" xml:space="preserve">
+    <value>File details</value>
+  </data>
+  <data name="Files.Details.Type" xml:space="preserve">
+    <value>Type</value>
+  </data>
+  <data name="Files.Details.Updated" xml:space="preserve">
+    <value>Last changed</value>
+  </data>
+  <data name="Files.Empty.Text" xml:space="preserve">
+    <value>Add important documents, such as a scan of a passport. Each is encrypted with this vault's keys, and only decrypted when you open it.</value>
+  </data>
+  <data name="Files.Empty.Title" xml:space="preserve">
+    <value>This vault has no files yet</value>
+  </data>
+  <data name="Files.Folder.Empty" xml:space="preserve">
+    <value>This folder is empty.</value>
+  </data>
+  <data name="Files.Loading.One" xml:space="preserve">
+    <value>Decrypting the details of {1} of {0} file...</value>
+  </data>
+  <data name="Files.Loading.Other" xml:space="preserve">
+    <value>Decrypting the details of {1} of {0} files...</value>
+  </data>
+  <data name="Files.Name.Create" xml:space="preserve">
+    <value>Create</value>
+  </data>
+  <data name="Files.Name.File.Label" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="Files.Name.Folder.Label" xml:space="preserve">
+    <value>Folder name</value>
+  </data>
+  <data name="Files.Name.NewFolder.Title" xml:space="preserve">
+    <value>New folder</value>
+  </data>
+  <data name="Files.Name.NewMarkdown.Title" xml:space="preserve">
+    <value>New markdown document</value>
+  </data>
+  <data name="Files.Name.NewText.Title" xml:space="preserve">
+    <value>New text file</value>
+  </data>
+  <data name="Files.Name.Rename" xml:space="preserve">
+    <value>Rename</value>
+  </data>
+  <data name="Files.Name.RenameFolder.Title" xml:space="preserve">
+    <value>Rename folder</value>
+  </data>
+  <data name="Files.New" xml:space="preserve">
+    <value>New</value>
+  </data>
+  <data name="Files.New.Folder" xml:space="preserve">
+    <value>Folder</value>
+  </data>
+  <data name="Files.New.Markdown" xml:space="preserve">
+    <value>Markdown Document</value>
+  </data>
+  <data name="Files.New.Text" xml:space="preserve">
+    <value>Text File</value>
+  </data>
+  <data name="Files.NoMatches" xml:space="preserve">
+    <value>No files match.</value>
+  </data>
+  <data name="Files.Rename" xml:space="preserve">
+    <value>Rename</value>
+  </data>
+  <data name="Files.Row.InFolder" xml:space="preserve">
+    <value>In {0}</value>
+  </data>
+  <data name="Files.Row.NotHere" xml:space="preserve">
+    <value>Still syncing to this device</value>
+  </data>
+  <data name="Files.Row.Summary" xml:space="preserve">
+    <value>{0} · {1} · Added {2}</value>
+  </data>
+  <data name="Files.Search" xml:space="preserve">
+    <value>Search files</value>
+  </data>
+  <data name="Files.Search.Placeholder" xml:space="preserve">
+    <value>Search by name or notes</value>
+  </data>
+  <data name="Files.Size.Bytes" xml:space="preserve">
+    <value>{0} B</value>
+  </data>
+  <data name="Files.Size.Gigabytes" xml:space="preserve">
+    <value>{0} GB</value>
+  </data>
+  <data name="Files.Size.Kilobytes" xml:space="preserve">
+    <value>{0} KB</value>
+  </data>
+  <data name="Files.Size.Megabytes" xml:space="preserve">
+    <value>{0} MB</value>
+  </data>
+  <data name="Files.TopLevel" xml:space="preserve">
+    <value>Top level</value>
+  </data>
+  <data name="Files.Type.Image" xml:space="preserve">
+    <value>Image</value>
+  </data>
+  <data name="Files.Type.Markdown" xml:space="preserve">
+    <value>Markdown document</value>
+  </data>
+  <data name="Files.Type.Other" xml:space="preserve">
+    <value>File</value>
+  </data>
+  <data name="Files.Type.Pdf" xml:space="preserve">
+    <value>PDF document</value>
+  </data>
+  <data name="Files.Type.Text" xml:space="preserve">
+    <value>Text file</value>
+  </data>
+  <data name="Files.Unreadable.One" xml:space="preserve">
+    <value>{0} file in this vault could not be read.</value>
+  </data>
+  <data name="Files.Unreadable.Other" xml:space="preserve">
+    <value>{0} files in this vault could not be read.</value>
+  </data>
+  <data name="Files.Viewer.Decrypting" xml:space="preserve">
+    <value>Decrypting...</value>
+  </data>
+  <data name="Files.Viewer.ExitFullScreen" xml:space="preserve">
+    <value>Back to the file's details</value>
+  </data>
+  <data name="Files.Viewer.FullScreen" xml:space="preserve">
+    <value>View full screen</value>
+  </data>
+  <data name="Files.Viewer.NotViewable" xml:space="preserve">
+    <value>This kind of file cannot be shown in the app yet. It is stored and synced like any other file.</value>
+  </data>
+  <data name="Files.Viewer.Title" xml:space="preserve">
+    <value>File</value>
   </data>
   <data name="Generator.AtLeastOne" xml:space="preserve">
     <value>At least one of each</value>
@@ -401,6 +746,15 @@
   </data>
   <data name="Vault.Subtitle" xml:space="preserve">
     <value>Your secrets in this vault, encrypted with its own keys.</value>
+  </data>
+  <data name="Vault.Tab.Files" xml:space="preserve">
+    <value>Files</value>
+  </data>
+  <data name="Vault.Tab.Secrets" xml:space="preserve">
+    <value>Secrets</value>
+  </data>
+  <data name="Vault.Tabs" xml:space="preserve">
+    <value>What this vault holds</value>
   </data>
   <data name="Vault.Tags.All" xml:space="preserve">
     <value>All</value>

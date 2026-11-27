@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using Clypse.Core.Extensions;
 using Clypse.Portal;
 using Clypse.Portal.Components;
+using Clypse.Portal.Services;
 using Clypse.Portal.Application;
 using Clypse.Portal.Application.Extensions;
 using Clypse.Portal.Application.Services.Interfaces;
@@ -59,6 +60,10 @@ builder.Services.AddClypseCore(textLists =>
 // section of wwwroot/appsettings.json. Replace or turn off framework pages here too, e.g.
 // builder.Services.ReplacePage<MyLogin>(BlazwizPages.Login) or builder.Services.DisablePage(BlazwizPages.Sync).
 builder.Services.AddClypse(builder.Configuration);
+
+// The text editor for a vault's text files and markdown documents reads its text area's selection in the browser,
+// through wwwroot/js/editor.js.
+builder.Services.AddScoped<ITextEditorInteropService, TextEditorInteropService>();
 
 // The framework's End to end encryption section lists protected profiles by id. Clypse does all of that on its own
 // pages, by name: vaults are created and locked on the vaults page, and renamed, deleted and given a new passphrase in

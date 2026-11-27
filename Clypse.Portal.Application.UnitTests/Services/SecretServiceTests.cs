@@ -235,6 +235,24 @@ public class SecretServiceTests
     }
 
     [Fact]
+    public async Task GivenAVaultWithFiles_WhenListed_ThenItsFilesAreNotTakenForSecrets()
+    {
+        // Arrange
+        var sut = CreateSut();
+        var secret = await sut.SaveAsync(new Secret { Name = "One" });
+        var fileId = Guid.NewGuid().ToString("D");
+        await files.WriteAsync($"{vault.Root}files/meta/{fileId}.json", [1]);
+        await files.WriteAsync($"{vault.Root}files/blobs/{fileId}.bin", [1]);
+
+        // Act
+        var ids = await sut.ListIdsAsync();
+
+        // Assert
+        Assert.Equal([secret.Id], ids);
+        Assert.Null(sut.GetSecretId($"{vault.Root}files/meta/{fileId}.json"));
+    }
+
+    [Fact]
     public async Task GivenASecret_WhenDeleted_ThenItIsGone()
     {
         // Arrange
