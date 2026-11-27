@@ -29,7 +29,7 @@ public class FileDetailsViewModelTests
         LastUpdatedAt = Added.AddDays(1),
     };
 
-    private List<VaultFileEntry> entries;
+    private readonly List<VaultFileEntry> entries;
 
     public FileDetailsViewModelTests()
     {

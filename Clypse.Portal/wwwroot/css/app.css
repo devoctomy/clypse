@@ -672,6 +672,7 @@
 .text-editor {
     display: flex;
     flex-direction: column;
+
     /* Fill the page below its header and the tabs. */
     height: calc(100vh - var(--bw-topbar-height) - 22rem);
     min-height: 420px;

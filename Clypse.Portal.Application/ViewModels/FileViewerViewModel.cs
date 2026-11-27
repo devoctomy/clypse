@@ -159,47 +159,30 @@ public partial class FileViewerViewModel : ViewModelBase
         }
 
         var shown = file;
-        byte[]? content = null;
         IsLoading = true;
+        string? source = null;
+        string? failure = null;
         try
         {
             // Decrypting cannot be interrupted, and the page cannot respond until it is done: let the viewer say it is
             // working first.
             await Task.Yield();
-            content = await session.ReadContentAsync(shown.Id);
-            if (opened != version)
-            {
-                // Closed, locked or another file opened meanwhile: nothing of this one is kept.
-                return;
-            }
-
-            if (content == null)
-            {
-                throw new ClypseException(ClypseErrorCodes.FileContentMissing);
-            }
-
-            ImageSource = "data:" + fileTypes.GetContentType(shown.Name, shown.ContentType) + ";base64," + Convert.ToBase64String(content);
+            source = await ReadImageAsync(shown);
         }
         catch (Exception ex)
         {
-            if (opened == version)
-            {
-                Error = errorText.Describe(ex);
-            }
+            failure = errorText.Describe(ex);
         }
-        finally
-        {
-            if (content != null)
-            {
-                // Only the data: URI is needed from here on.
-                CryptographicOperations.ZeroMemory(content);
-            }
 
-            if (opened == version)
-            {
-                IsLoading = false;
-            }
+        if (opened != version)
+        {
+            // Closed, locked or another file opened meanwhile: nothing of this one is kept.
+            return;
         }
+
+        ImageSource = source;
+        Error = failure;
+        IsLoading = false;
     }
 
     /// <summary>
@@ -241,6 +224,21 @@ public partial class FileViewerViewModel : ViewModelBase
     private static string Describe(DateTimeOffset? time)
     {
         return time == null ? string.Empty : time.Value.ToLocalTime().ToString("g", CultureInfo.CurrentCulture);
+    }
+
+    // Reads and decrypts an image, as a data: URI the page can show straight from memory.
+    private async Task<string> ReadImageAsync(VaultFileEntry image)
+    {
+        var content = await session.ReadContentAsync(image.Id) ?? throw new ClypseException(ClypseErrorCodes.FileContentMissing);
+        try
+        {
+            return "data:" + fileTypes.GetContentType(image.Name, image.ContentType) + ";base64," + Convert.ToBase64String(content);
+        }
+        finally
+        {
+            // Only the data: URI is needed from here on.
+            CryptographicOperations.ZeroMemory(content);
+        }
     }
 
     private void OnSessionChanged(object? sender, EventArgs e)

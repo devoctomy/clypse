@@ -1,5 +1,4 @@
 using System.Security.Cryptography;
-using System.Text;
 using Blazing.Mvvm.ComponentModel;
 using Clypse.Portal.Application.Exceptions;
 using Clypse.Portal.Application.Services.Interfaces;
@@ -67,11 +66,6 @@ public partial class TextFileEditorViewModel : ViewModelBase
         ],
     ];
 
-    private const char ByteOrderMark = '﻿';
-
-    // Strict, so content that is not text is refused rather than opened, and damaged when it is saved again.
-    private static readonly UTF8Encoding StrictUtf8 = new UTF8Encoding(false, true);
-
     private readonly IVaultFileSession session;
     private readonly IFileTypeService fileTypes;
     private readonly IMarkdownRenderer renderer;
@@ -79,19 +73,19 @@ public partial class TextFileEditorViewModel : ViewModelBase
     private readonly ITextEditorInteropService interop;
     private readonly IUnsavedChangesGuard guard;
     private readonly IErrorText errorText;
+    private readonly ITextFileEncodingService encoding;
     private readonly Func<Action, bool> holder;
 
     private VaultFileEntry? file;
     private bool isMarkdown;
     private bool isReady;
     private bool isDeleted;
-    private bool hasByteOrderMark;
-    private bool usesWindowsLineEndings;
+    private DecodedText fileText = new DecodedText();
     private DateTimeOffset knownUpdatedAt;
     private string content = string.Empty;
     private string savedContent = string.Empty;
     private string previewHtml = string.Empty;
-    private string? theirContent;
+    private DecodedText? theirText;
     private bool isLoading;
     private bool isSaving;
     private bool isPreviewCollapsed;
@@ -113,6 +107,7 @@ public partial class TextFileEditorViewModel : ViewModelBase
     /// <param name="interop">Access to the editor's text and selection in the browser.</param>
     /// <param name="guard">Holds back what would lose unsaved edits, e.g. showing another tab.</param>
     /// <param name="errorText">Describes errors.</param>
+    /// <param name="encoding">Turns a file's content into the text the editor holds, and back.</param>
     public TextFileEditorViewModel(
         IVaultFileSession session,
         IFileTypeService fileTypes,
@@ -120,8 +115,10 @@ public partial class TextFileEditorViewModel : ViewModelBase
         IMarkdownFormatService formatService,
         ITextEditorInteropService interop,
         IUnsavedChangesGuard guard,
-        IErrorText errorText)
+        IErrorText errorText,
+        ITextFileEncodingService encoding)
     {
+        this.encoding = encoding ?? throw new ArgumentNullException(nameof(encoding));
         this.session = session ?? throw new ArgumentNullException(nameof(session));
         this.fileTypes = fileTypes ?? throw new ArgumentNullException(nameof(fileTypes));
         this.renderer = renderer ?? throw new ArgumentNullException(nameof(renderer));
@@ -448,7 +445,7 @@ public partial class TextFileEditorViewModel : ViewModelBase
     [RelayCommand]
     public void KeepMine()
     {
-        theirContent = null;
+        theirText = null;
         IsRemoteChangeDialogOpen = false;
     }
 
@@ -458,8 +455,8 @@ public partial class TextFileEditorViewModel : ViewModelBase
     [RelayCommand]
     public void TakeTheirs()
     {
-        var theirs = theirContent;
-        theirContent = null;
+        var theirs = theirText;
+        theirText = null;
         IsRemoteChangeDialogOpen = false;
         if (IsRemoteDeleted || theirs == null)
         {
@@ -489,10 +486,9 @@ public partial class TextFileEditorViewModel : ViewModelBase
         isMarkdown = false;
         isReady = false;
         isDeleted = false;
-        hasByteOrderMark = false;
-        usesWindowsLineEndings = false;
+        fileText = new DecodedText();
         savedContent = string.Empty;
-        theirContent = null;
+        theirText = null;
         pendingAction = null;
         content = string.Empty;
         OnPropertyChanged(nameof(Content));
@@ -520,20 +516,13 @@ public partial class TextFileEditorViewModel : ViewModelBase
         base.Dispose(disposing);
     }
 
-    // The text without a byte order mark, and with plain line breaks: as the editor holds it.
-    private static string Normalize(string text)
-    {
-        var withoutMark = text.Length > 0 && text[0] == ByteOrderMark ? text[1..] : text;
-        return withoutMark.Replace("\r\n", "\n", StringComparison.Ordinal);
-    }
-
     private void RequestClose()
     {
         Clear();
         CloseRequested?.Invoke(this, EventArgs.Empty);
     }
 
-    private async Task<string> ReadTextAsync(string id)
+    private async Task<DecodedText> ReadTextAsync(string id)
     {
         var bytes = await session.ReadContentAsync(id) ?? throw new ClypseException(ClypseErrorCodes.FileContentMissing);
         try
@@ -543,11 +532,7 @@ public partial class TextFileEditorViewModel : ViewModelBase
                 throw new ClypseException(ClypseErrorCodes.TextFileTooLarge, MaximumTextMegabytes);
             }
 
-            return StrictUtf8.GetString(bytes);
-        }
-        catch (DecoderFallbackException ex)
-        {
-            throw new ClypseException(ClypseErrorCodes.TextFileNotText, ex);
+            return encoding.Decode(bytes);
         }
         finally
         {
@@ -556,31 +541,19 @@ public partial class TextFileEditorViewModel : ViewModelBase
         }
     }
 
-    // Shows a file's text as the editor holds it: without a byte order mark, and with plain line breaks, as a text area
-    // gives them. What the file had is remembered, and put back when it is saved.
-    private void Show(string fileText)
+    // Shows a file's text as the editor holds it. What the file had (a byte order mark, Windows line endings) is
+    // remembered, and put back when it is saved.
+    private void Show(DecodedText decoded)
     {
-        hasByteOrderMark = fileText.Length > 0 && fileText[0] == ByteOrderMark;
-        usesWindowsLineEndings = fileText.Contains("\r\n", StringComparison.Ordinal);
-        var text = Normalize(fileText);
-        savedContent = text;
+        fileText = decoded;
+        savedContent = decoded.Text;
         isDeleted = false;
         isReady = true;
-        content = text;
+        content = decoded.Text;
         OnPropertyChanged(nameof(Content));
         OnPropertyChanged(nameof(IsReady));
         OnPropertyChanged(nameof(IsDirty));
         RenderPreview();
-    }
-
-    private byte[] Encode(string text)
-    {
-        if (usesWindowsLineEndings)
-        {
-            text = text.Replace("\n", "\r\n", StringComparison.Ordinal);
-        }
-
-        return Encoding.UTF8.GetBytes(hasByteOrderMark ? ByteOrderMark + text : text);
     }
 
     private async Task<bool> TrySaveAsync()
@@ -595,7 +568,7 @@ public partial class TextFileEditorViewModel : ViewModelBase
         Error = null;
         var opened = version;
         var text = Content;
-        var bytes = Encode(text);
+        var bytes = encoding.Encode(text, fileText);
         try
         {
             if (bytes.LongLength > MaximumTextSize)
@@ -704,7 +677,7 @@ public partial class TextFileEditorViewModel : ViewModelBase
         file = current;
         RaiseFileChanged();
         var theirs = await ReadTextAsync(current.Id);
-        if (opened != version || string.Equals(Normalize(theirs), savedContent, StringComparison.Ordinal))
+        if (opened != version || string.Equals(theirs.Text, savedContent, StringComparison.Ordinal))
         {
             // Closed meanwhile, or only its details changed (e.g. it was renamed).
             return;
@@ -712,7 +685,7 @@ public partial class TextFileEditorViewModel : ViewModelBase
 
         if (IsDirty)
         {
-            theirContent = theirs;
+            theirText = theirs;
             IsRemoteDeleted = false;
             IsRemoteChangeDialogOpen = true;
         }
