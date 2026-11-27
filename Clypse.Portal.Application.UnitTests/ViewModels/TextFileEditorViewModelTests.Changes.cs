@@ -50,6 +50,26 @@ public partial class TextFileEditorViewModelTests
     }
 
     [Fact]
+    public async Task GivenASyncChangesTheOpenFile_WhenItCannotBeReadAgain_ThenNothingIsThrown_AndTheEditorIsLeftAsItIs()
+    {
+        // Arrange
+        var sut = CreateSut();
+        await sut.LoadAsync(plain.Id);
+        ChangeElsewhere(plain, "theirs");
+        mockSession.Setup(x => x.ReadContentAsync(plain.Id, It.IsAny<CancellationToken>())).ThrowsAsync(new InvalidOperationException("boom"));
+
+        // Act
+        var ex = Record.Exception(() => mockSession.Raise(x => x.Changed += null, mockSession.Object, EventArgs.Empty));
+
+        // Assert
+        Assert.Null(ex);
+        Assert.True(sut.IsReady);
+        Assert.Equal("milk\neggs", sut.Content);
+        Assert.False(sut.IsRemoteChangeDialogOpen);
+        Assert.Null(sut.Error);
+    }
+
+    [Fact]
     public async Task GivenUnsavedChanges_WhenASyncChangesTheOpenFile_ThenTheUserChoosesWhichToKeep()
     {
         // Arrange

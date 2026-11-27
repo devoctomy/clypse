@@ -270,6 +270,30 @@ public partial class TextFileEditorViewModelTests
     }
 
     [Fact]
+    public async Task GivenASaveStillRunning_WhenTheEditorIsClearedMeanwhile_ThenNothingOfItIsKept()
+    {
+        // Arrange: e.g. the vault locks while the text is being stored.
+        var storing = new TaskCompletionSource<VaultFileEntry>();
+        mockSession.Setup(x => x.SaveContentAsync(plain.Id, It.IsAny<byte[]>(), It.IsAny<CancellationToken>())).Returns(storing.Task);
+        var sut = CreateSut();
+        await sut.LoadAsync(plain.Id);
+        sut.Content = "changed";
+        var saving = sut.SaveAsync();
+
+        // Act
+        sut.Clear();
+        storing.SetResult(Updated(plain, 7, Added.AddMinutes(1)));
+        await saving;
+
+        // Assert
+        Assert.False(sut.IsFound);
+        Assert.Equal(string.Empty, sut.Content);
+        Assert.Null(sut.LastSavedAt);
+        Assert.Null(sut.Error);
+        Assert.False(sut.IsSaving);
+    }
+
+    [Fact]
     public async Task GivenTextGrownLongerThanTheEditorTakes_WhenSaved_ThenItIsRefused_AndNothingIsStored()
     {
         // Arrange

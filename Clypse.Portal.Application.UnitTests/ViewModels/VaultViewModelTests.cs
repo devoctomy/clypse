@@ -206,6 +206,29 @@ public partial class VaultViewModelTests
     }
 
     [Fact]
+    public async Task GivenAVaultStillBeingFound_WhenAnotherIsLoadedMeanwhile_ThenOnlyTheOtherIsOpened()
+    {
+        // Arrange
+        var other = new Vault { Id = "v2", Root = "profiles/v2/", Name = "Work", IsUnlocked = true };
+        var finding = new TaskCompletionSource<Vault?>();
+        mockVaults.Setup(x => x.FindAsync("v1", It.IsAny<CancellationToken>())).Returns(finding.Task);
+        mockVaults.Setup(x => x.FindAsync("v2", It.IsAny<CancellationToken>())).ReturnsAsync(other);
+        var sut = CreateSut();
+        var first = sut.LoadAsync("v1");
+
+        // Act
+        await sut.LoadAsync("v2");
+        finding.SetResult(vault);
+        await first;
+
+        // Assert
+        Assert.Same(other, sut.Vault);
+        Assert.False(sut.IsMissing);
+        mockSession.Verify(x => x.OpenAsync(vault, It.IsAny<CancellationToken>()), Times.Never);
+        mockSession.Verify(x => x.OpenAsync(other, It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
     public async Task GivenNoSuchVault_WhenLoaded_ThenItIsMissing()
     {
         // Arrange

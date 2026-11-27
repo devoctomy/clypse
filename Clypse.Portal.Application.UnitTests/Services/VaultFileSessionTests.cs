@@ -242,6 +242,85 @@ public partial class VaultFileSessionTests
     }
 
     [Fact]
+    public async Task GivenAVaultStillBeingRead_WhenClosed_ThenTheReadIsAbandonedQuietly()
+    {
+        // Arrange: the list of files is still being read, and is cancelled like any other read.
+        var vault = NewVault(isUnlocked: true);
+        var slow = new Mock<IVaultFileService>();
+        slow.Setup(x => x.ListAsync(It.IsAny<CancellationToken>())).Returns((CancellationToken ct) =>
+        {
+            var listing = new TaskCompletionSource<VaultFileListing>();
+            ct.Register(() => listing.TrySetCanceled(ct));
+            return listing.Task;
+        });
+        mockFactory.Setup(x => x.Create(vault)).Returns(slow.Object);
+        using var sut = CreateSut();
+        var opening = sut.OpenAsync(vault);
+        var whileReading = sut.IsLoading;
+
+        // Act
+        sut.Close();
+        await opening;
+
+        // Assert
+        Assert.True(whileReading);
+        Assert.False(sut.IsLoading);
+        Assert.Empty(sut.Entries);
+        Assert.Null(sut.Vault);
+    }
+
+    [Fact]
+    public async Task GivenALockedVault_WhenItIsUnlockedButItsFilesCannotBeListed_ThenNothingIsThrown()
+    {
+        // Arrange
+        var vault = NewVault(isUnlocked: false);
+        var broken = new Mock<IVaultFileService>();
+        broken.Setup(x => x.ListAsync(It.IsAny<CancellationToken>())).ThrowsAsync(new InvalidOperationException("boom"));
+        mockFactory.Setup(x => x.Create(vault)).Returns(broken.Object);
+        using var sut = CreateSut();
+        await sut.OpenAsync(vault);
+
+        // Act
+        unlocked.Add(new E2eKeyScope(vault.Id));
+        var ex = Record.Exception(() => mockManager.Raise(x => x.LockStateChanged += null, mockManager.Object, new E2eKeyScope(vault.Id)));
+        await WaitForAsync(() => broken.Invocations.Count > 0 && !sut.IsLoading);
+
+        // Assert
+        Assert.Null(ex);
+        broken.Verify(x => x.ListAsync(It.IsAny<CancellationToken>()), Times.Once);
+        Assert.False(sut.IsLoading);
+        Assert.Empty(sut.Entries);
+    }
+
+    [Fact]
+    public async Task GivenAnOpenVault_WhenSyncBringsMetadataThatCannotBeFetched_ThenNothingIsThrown_OrRaised()
+    {
+        // Arrange
+        var vault = NewVault(isUnlocked: true);
+        var id = Guid.NewGuid().ToString("D");
+        var key = $"{vault.Root}files/meta/{id}.json";
+        var broken = new Mock<IVaultFileService>();
+        broken.Setup(x => x.ListAsync(It.IsAny<CancellationToken>())).ReturnsAsync(new VaultFileListing());
+        broken.Setup(x => x.GetEntryId(key)).Returns(id);
+        broken.Setup(x => x.GetAsync(id, It.IsAny<CancellationToken>())).ThrowsAsync(new InvalidOperationException("boom"));
+        mockFactory.Setup(x => x.Create(vault)).Returns(broken.Object);
+        using var sut = CreateSut();
+        await sut.OpenAsync(vault);
+        var changes = 0;
+        sut.Changed += (_, _) => changes++;
+
+        // Act
+        var ex = Record.Exception(() => mockSync.Raise(x => x.FilesChanged += null, mockSync.Object, new SyncFilesChangedEventArgs(vault.Id, [key])));
+        await WaitForAsync(() => broken.Invocations.Any(i => i.Method.Name == nameof(IVaultFileService.GetAsync)));
+
+        // Assert
+        Assert.Null(ex);
+        broken.Verify(x => x.GetAsync(id, It.IsAny<CancellationToken>()), Times.Once);
+        Assert.Equal(0, changes);
+        Assert.Empty(sut.Entries);
+    }
+
+    [Fact]
     public async Task GivenAnOpenVault_WhenClosed_ThenItsMetadataIsForgotten_AndTheVaultIsNotLocked()
     {
         // Arrange

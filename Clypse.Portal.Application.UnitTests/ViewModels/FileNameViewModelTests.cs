@@ -231,6 +231,28 @@ public class FileNameViewModelTests
     }
 
     [Fact]
+    public async Task GivenASaveStillRunning_WhenSavedAgain_ThenTheSecondDoesNothing()
+    {
+        // Arrange: e.g. Create pressed twice.
+        var making = new TaskCompletionSource();
+        mockSession.Setup(x => x.CreateFolderAsync("Travel", It.IsAny<CancellationToken>())).Returns(making.Task);
+        var sut = CreateSut();
+        sut.Load(FileNameViewModel.FileNameMode.NewFolder, string.Empty);
+        sut.Name = "Travel";
+        var first = sut.SaveAsync();
+
+        // Act
+        var second = await sut.SaveAsync();
+        making.SetResult();
+
+        // Assert
+        Assert.False(second);
+        Assert.True(await first);
+        Assert.False(sut.IsWorking);
+        mockSession.Verify(x => x.CreateFolderAsync("Travel", It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
     public void GivenANullName_WhenSet_ThenItIsEmpty()
     {
         // Arrange
