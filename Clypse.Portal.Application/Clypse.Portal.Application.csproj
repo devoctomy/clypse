@@ -8,6 +8,7 @@
     <PackageReference Include="Devoctomy.Blazwiz.UI.Sync" />
     <PackageReference Include="Blazing.Mvvm" />
     <PackageReference Include="CommunityToolkit.Mvvm" />
+    <PackageReference Include="Markdig" />
     <PackageReference Include="StyleCop.Analyzers">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>

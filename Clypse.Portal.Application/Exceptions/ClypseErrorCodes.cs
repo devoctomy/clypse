@@ -76,6 +76,16 @@ public static class ClypseErrorCodes
     public const string FileContentMissing = "Clypse.FileContentMissing";
 
     /// <summary>
+    /// A text file's text is longer than can be edited in the app. Argument: the limit, in megabytes.
+    /// </summary>
+    public const string TextFileTooLarge = "Clypse.TextFileTooLarge";
+
+    /// <summary>
+    /// A text file's content is not text the editor can read (it is not UTF-8), so it cannot be edited.
+    /// </summary>
+    public const string TextFileNotText = "Clypse.TextFileNotText";
+
+    /// <summary>
     /// A folder was given no name, or one with a <c>/</c> in it.
     /// </summary>
     public const string FolderNameInvalid = "Clypse.FolderNameInvalid";

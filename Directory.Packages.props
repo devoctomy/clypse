@@ -24,6 +24,8 @@
     <!-- MVVM -->
     <PackageVersion Include="Blazing.Mvvm" Version="3.2.1" />
     <PackageVersion Include="CommunityToolkit.Mvvm" Version="8.4.0" />
+    <!-- Markdown, for the preview of a vault's markdown documents -->
+    <PackageVersion Include="Markdig" Version="1.4.0" />
     <!-- Analysers -->
     <PackageVersion Include="StyleCop.Analyzers" Version="1.1.118" />
     <!-- Testing -->

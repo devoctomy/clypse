@@ -5,6 +5,7 @@ using Clypse.Portal.Models.Vaults;
 using Devoctomy.Blazwiz.Encryption.Exceptions;
 using Devoctomy.Blazwiz.Encryption.Interfaces;
 using Devoctomy.Blazwiz.Encryption.Models;
+using Devoctomy.Blazwiz.Sync.Encryption.Interfaces;
 using Devoctomy.Blazwiz.Sync.Interfaces;
 using Devoctomy.Blazwiz.Sync.Models;
 
@@ -24,6 +25,7 @@ public sealed class VaultFileSession : IVaultFileSession, IDisposable
     private readonly IVaultFileTreeService tree;
     private readonly IE2eProtectedProfileManager manager;
     private readonly ISyncService syncService;
+    private readonly IE2eIdleLock idleLock;
     private readonly Dictionary<string, VaultFileEntry> entries = new Dictionary<string, VaultFileEntry>(StringComparer.Ordinal);
     private readonly HashSet<string> contentIds = new HashSet<string>(StringComparer.Ordinal);
     private readonly Lock gate = new Lock();
@@ -40,16 +42,19 @@ public sealed class VaultFileSession : IVaultFileSession, IDisposable
     /// <param name="tree">Works out the folders from the metadata.</param>
     /// <param name="manager">Says when the vault is locked or unlocked.</param>
     /// <param name="syncService">Says when sync changes the vault's files.</param>
+    /// <param name="idleLock">Locks the vault when it is idle, and is told when it is in use.</param>
     public VaultFileSession(
         IVaultFileServiceFactory fileServiceFactory,
         IVaultFileTreeService tree,
         IE2eProtectedProfileManager manager,
-        ISyncService syncService)
+        ISyncService syncService,
+        IE2eIdleLock idleLock)
     {
         this.fileServiceFactory = fileServiceFactory ?? throw new ArgumentNullException(nameof(fileServiceFactory));
         this.tree = tree ?? throw new ArgumentNullException(nameof(tree));
         this.manager = manager ?? throw new ArgumentNullException(nameof(manager));
         this.syncService = syncService ?? throw new ArgumentNullException(nameof(syncService));
+        this.idleLock = idleLock ?? throw new ArgumentNullException(nameof(idleLock));
         this.manager.LockStateChanged += OnLockStateChanged;
         this.syncService.FilesChanged += OnFilesChanged;
     }
@@ -101,7 +106,8 @@ public sealed class VaultFileSession : IVaultFileSession, IDisposable
         }
     }
 
-    private bool IsUnlocked => Vault != null && manager.IsUnlocked(new E2eKeyScope(Vault.Id));
+    /// <inheritdoc/>
+    public bool IsUnlocked => Vault != null && manager.IsUnlocked(new E2eKeyScope(Vault.Id));
 
     /// <inheritdoc/>
     public bool HasContent(string id)
@@ -197,6 +203,29 @@ public sealed class VaultFileSession : IVaultFileSession, IDisposable
     public Task<byte[]?> ReadContentAsync(string id, CancellationToken ct = default)
     {
         return OpenService().ReadContentAsync(id, ct);
+    }
+
+    /// <inheritdoc/>
+    public async Task<VaultFileEntry> SaveContentAsync(string id, byte[] content, CancellationToken ct = default)
+    {
+        var saved = await OpenService().SaveContentAsync(id, content, ct);
+        Set(saved);
+        lock (gate)
+        {
+            contentIds.Add(saved.Id);
+        }
+
+        Notify();
+        return saved;
+    }
+
+    /// <inheritdoc/>
+    public void KeepUnlocked()
+    {
+        if (Vault != null)
+        {
+            idleLock.Touch(new E2eKeyScope(Vault.Id));
+        }
     }
 
     /// <inheritdoc/>

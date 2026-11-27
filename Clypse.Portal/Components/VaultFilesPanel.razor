@@ -1,216 +1,243 @@
 @inherits MvvmComponentBase<VaultFilesViewModel>
 
-@* The tab's buttons, shown in the page's header beside Lock and Settings. *@
-<SectionContent SectionName="@HeaderSection">
-    <label class="btn btn-outline-primary @(ViewModel.IsWorking ? "disabled" : null)" id="add-files-button" for="add-files-input">
-        <i class="bi bi-upload me-1"></i>@T["Files.Add"]
-    </label>
-    <div class="dropdown files-new">
-        <button type="button" class="btn btn-primary dropdown-toggle" id="new-file-button" aria-haspopup="true"
-                aria-expanded="@(ViewModel.IsNewMenuOpen.ToString().ToLowerInvariant())" disabled="@ViewModel.IsWorking"
-                @onclick="() => ViewModel.ToggleNewMenuCommand.Execute(null)">
-            <i class="bi bi-plus-lg me-1"></i>@T["Files.New"]
-        </button>
-        @if (ViewModel.IsNewMenuOpen)
+@if (ViewModel.EditingFileId != null)
+{
+    @* A text file or markdown document is open: its editor takes the place of the list, and has its own buttons. *@
+    <TextFileEditorPanel FileId="@ViewModel.EditingFileId" OnClose="() => ViewModel.CloseEditorCommand.Execute(null)" />
+}
+else
+{
+    @* The tab's buttons, shown in the page's header beside Lock and Settings. *@
+    <SectionContent SectionName="@HeaderSection">
+        <label class="btn btn-outline-primary @(ViewModel.IsWorking ? "disabled" : null)" id="add-files-button" for="add-files-input">
+            <i class="bi bi-upload me-1"></i>@T["Files.Add"]
+        </label>
+        <div class="dropdown files-new">
+            <button type="button" class="btn btn-primary dropdown-toggle" id="new-file-button" aria-haspopup="true"
+                    aria-expanded="@(ViewModel.IsNewMenuOpen.ToString().ToLowerInvariant())" disabled="@ViewModel.IsWorking"
+                    @onclick="() => ViewModel.ToggleNewMenuCommand.Execute(null)">
+                <i class="bi bi-plus-lg me-1"></i>@T["Files.New"]
+            </button>
+            @if (ViewModel.IsNewMenuOpen)
+            {
+                @* Anywhere else on the page closes the menu. *@
+                <div class="files-new-backdrop" @onclick="() => ViewModel.CloseNewMenuCommand.Execute(null)"></div>
+                <ul class="dropdown-menu dropdown-menu-end show" id="new-file-menu" aria-labelledby="new-file-button">
+                    <li>
+                        <button type="button" class="dropdown-item" id="new-folder" @onclick="() => ViewModel.NewFolderCommand.Execute(null)">
+                            <i class="bi bi-folder-plus me-2"></i>@T["Files.New.Folder"]
+                        </button>
+                    </li>
+                    <li>
+                        <button type="button" class="dropdown-item" id="new-markdown" @onclick="() => ViewModel.NewMarkdownCommand.Execute(null)">
+                            <i class="bi bi-file-earmark-richtext me-2"></i>@T["Files.New.Markdown"]
+                        </button>
+                    </li>
+                    <li>
+                        <button type="button" class="dropdown-item" id="new-text" @onclick="() => ViewModel.NewTextCommand.Execute(null)">
+                            <i class="bi bi-file-earmark-text me-2"></i>@T["Files.New.Text"]
+                        </button>
+                    </li>
+                </ul>
+            }
+        </div>
+    </SectionContent>
+
+    @* A new input after each pick, so picking the same file again is noticed. *@
+    <InputFile @key="inputKey" id="add-files-input" class="visually-hidden" multiple disabled="@ViewModel.IsWorking" OnChange="AddFilesAsync" />
+
+    @if (ViewModel.ErrorMessage != null || ViewModel.AddErrors.Count > 0)
+    {
+        <div class="alert alert-danger alert-dismissible" role="alert" id="files-error">
+            @if (ViewModel.ErrorMessage != null)
+            {
+                <div><i class="bi bi-exclamation-triangle me-2"></i>@ViewModel.ErrorMessage</div>
+            }
+            @foreach (var failure in ViewModel.AddErrors)
+            {
+                <div class="files-add-error"><i class="bi bi-exclamation-triangle me-2"></i>@failure</div>
+            }
+            <button type="button" class="btn-close" aria-label="@T["Common.Close"]" @onclick="() => ViewModel.DismissErrorCommand.Execute(null)"></button>
+        </div>
+    }
+
+    @if (ViewModel.UnreadableText != null)
+    {
+        <div class="alert alert-warning" role="alert" id="files-unreadable">
+            <i class="bi bi-exclamation-triangle me-2"></i>@ViewModel.UnreadableText
+        </div>
+    }
+
+    <div class="panel files-panel" id="vault-files" role="tabpanel" aria-labelledby="vault-tab-files">
+        @if (ViewModel.IsLoading)
         {
-            @* Anywhere else on the page closes the menu. *@
-            <div class="files-new-backdrop" @onclick="() => ViewModel.CloseNewMenuCommand.Execute(null)"></div>
-            <ul class="dropdown-menu dropdown-menu-end show" id="new-file-menu" aria-labelledby="new-file-button">
-                <li>
-                    <button type="button" class="dropdown-item" id="new-folder" @onclick="() => ViewModel.NewFolderCommand.Execute(null)">
-                        <i class="bi bi-folder-plus me-2"></i>@T["Files.New.Folder"]
+            <div class="secrets-loading" id="files-loading">
+                <div class="small text-body-secondary mb-1">@ViewModel.LoadingText</div>
+                <div class="progress" role="progressbar" aria-valuenow="@ViewModel.LoadingPercent" aria-valuemin="0" aria-valuemax="100">
+                    <div class="progress-bar" style="width: @(ViewModel.LoadingPercent)%"></div>
+                </div>
+            </div>
+        }
+
+        @if (ViewModel.WorkingText != null)
+        {
+            <div class="files-working text-body-secondary" id="files-working" role="status">
+                <span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>@ViewModel.WorkingText
+            </div>
+        }
+
+        @if (ViewModel.IsEmpty && !ViewModel.IsLoading)
+        {
+            <div class="empty-state" id="no-files">
+                <span class="empty-state-icon"><i class="bi bi-files"></i></span>
+                <h2 class="empty-state-title">@T["Files.Empty.Title"]</h2>
+                <p class="empty-state-text">@T["Files.Empty.Text"]</p>
+                <div class="d-flex flex-wrap gap-2 justify-content-center">
+                    <label class="btn btn-primary @(ViewModel.IsWorking ? "disabled" : null)" for="add-files-input">
+                        <i class="bi bi-upload me-1"></i>@T["Files.Add"]
+                    </label>
+                </div>
+            </div>
+        }
+        else if (!ViewModel.IsEmpty)
+        {
+            <div class="secrets-toolbar">
+                <div class="secrets-search">
+                    <i class="bi bi-search"></i>
+                    <input type="search" class="form-control" id="file-search" autocomplete="off"
+                           aria-label="@T["Files.Search"]" placeholder="@T["Files.Search.Placeholder"]"
+                           @bind="ViewModel.Search" @bind:event="oninput" />
+                </div>
+            </div>
+
+            @if (!ViewModel.IsSearching)
+            {
+                <nav class="files-breadcrumb" id="files-breadcrumb" aria-label="@T["Files.Breadcrumb"]">
+                    <button type="button" class="files-crumb" data-folder="" @onclick="() => ViewModel.OpenFolderCommand.Execute(null)">
+                        <i class="bi bi-safe2 me-1"></i><span data-user-content>@ViewModel.VaultName</span>
                     </button>
-                </li>
-            </ul>
-        }
-    </div>
-</SectionContent>
-
-@* A new input after each pick, so picking the same file again is noticed. *@
-<InputFile @key="inputKey" id="add-files-input" class="visually-hidden" multiple disabled="@ViewModel.IsWorking" OnChange="AddFilesAsync" />
-
-@if (ViewModel.ErrorMessage != null || ViewModel.AddErrors.Count > 0)
-{
-    <div class="alert alert-danger alert-dismissible" role="alert" id="files-error">
-        @if (ViewModel.ErrorMessage != null)
-        {
-            <div><i class="bi bi-exclamation-triangle me-2"></i>@ViewModel.ErrorMessage</div>
-        }
-        @foreach (var failure in ViewModel.AddErrors)
-        {
-            <div class="files-add-error"><i class="bi bi-exclamation-triangle me-2"></i>@failure</div>
-        }
-        <button type="button" class="btn-close" aria-label="@T["Common.Close"]" @onclick="() => ViewModel.DismissErrorCommand.Execute(null)"></button>
-    </div>
-}
-
-@if (ViewModel.UnreadableText != null)
-{
-    <div class="alert alert-warning" role="alert" id="files-unreadable">
-        <i class="bi bi-exclamation-triangle me-2"></i>@ViewModel.UnreadableText
-    </div>
-}
-
-<div class="panel files-panel" id="vault-files" role="tabpanel" aria-labelledby="vault-tab-files">
-    @if (ViewModel.IsLoading)
-    {
-        <div class="secrets-loading" id="files-loading">
-            <div class="small text-body-secondary mb-1">@ViewModel.LoadingText</div>
-            <div class="progress" role="progressbar" aria-valuenow="@ViewModel.LoadingPercent" aria-valuemin="0" aria-valuemax="100">
-                <div class="progress-bar" style="width: @(ViewModel.LoadingPercent)%"></div>
-            </div>
-        </div>
-    }
-
-    @if (ViewModel.WorkingText != null)
-    {
-        <div class="files-working text-body-secondary" id="files-working" role="status">
-            <span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>@ViewModel.WorkingText
-        </div>
-    }
-
-    @if (ViewModel.IsEmpty && !ViewModel.IsLoading)
-    {
-        <div class="empty-state" id="no-files">
-            <span class="empty-state-icon"><i class="bi bi-files"></i></span>
-            <h2 class="empty-state-title">@T["Files.Empty.Title"]</h2>
-            <p class="empty-state-text">@T["Files.Empty.Text"]</p>
-            <div class="d-flex flex-wrap gap-2 justify-content-center">
-                <label class="btn btn-primary @(ViewModel.IsWorking ? "disabled" : null)" for="add-files-input">
-                    <i class="bi bi-upload me-1"></i>@T["Files.Add"]
-                </label>
-            </div>
-        </div>
-    }
-    else if (!ViewModel.IsEmpty)
-    {
-        <div class="secrets-toolbar">
-            <div class="secrets-search">
-                <i class="bi bi-search"></i>
-                <input type="search" class="form-control" id="file-search" autocomplete="off"
-                       aria-label="@T["Files.Search"]" placeholder="@T["Files.Search.Placeholder"]"
-                       @bind="ViewModel.Search" @bind:event="oninput" />
-            </div>
-        </div>
-
-        @if (!ViewModel.IsSearching)
-        {
-            <nav class="files-breadcrumb" id="files-breadcrumb" aria-label="@T["Files.Breadcrumb"]">
-                <button type="button" class="files-crumb" data-folder="" @onclick="() => ViewModel.OpenFolderCommand.Execute(null)">
-                    <i class="bi bi-safe2 me-1"></i><span data-user-content>@ViewModel.VaultName</span>
-                </button>
-                @foreach (var crumb in ViewModel.Breadcrumb)
-                {
-                    <i class="bi bi-chevron-right files-crumb-separator" aria-hidden="true"></i>
-                    <button type="button" class="files-crumb" data-folder="@crumb.Path" data-user-content
-                            @onclick="() => ViewModel.OpenFolderCommand.Execute(crumb.Path)">@crumb.Name</button>
-                }
-            </nav>
-        }
-
-        @if (ViewModel.Folders.Count == 0 && ViewModel.Files.Count == 0)
-        {
-            <p class="panel-text mb-0" id="no-file-matches">@(ViewModel.IsSearching ? T["Files.NoMatches"] : T["Files.Folder.Empty"])</p>
-        }
-        else
-        {
-            <ul class="file-list" id="files">
-                @foreach (var item in ViewModel.Folders)
-                {
-                    <li class="file-item" data-folder="@item.Path">
-                        <button type="button" class="file-row" @onclick="() => ViewModel.OpenFolderCommand.Execute(item.Path)">
-                            <span class="file-icon file-icon-folder"><i class="bi bi-folder-fill"></i></span>
-                            <span class="file-body">
-                                <span data-user-content class="file-name">@item.Name</span>
-                            </span>
-                        </button>
-                        <span class="file-actions">
-                            <button type="button" class="btn btn-sm btn-outline-secondary file-rename" title="@T["Files.Rename"]"
-                                    @onclick="() => ViewModel.RenameFolderCommand.Execute(item.Path)">
-                                <i class="bi bi-pencil"></i>
-                                <span class="visually-hidden">@T["Files.Rename"]</span>
-                            </button>
-                            <button type="button" class="btn btn-sm btn-outline-danger file-delete" title="@T["Files.Delete"]"
-                                    @onclick="() => ViewModel.AskDeleteFolderCommand.Execute(item.Path)">
-                                <i class="bi bi-trash"></i>
-                                <span class="visually-hidden">@T["Files.Delete"]</span>
-                            </button>
-                        </span>
-                    </li>
-                }
-                @foreach (var file in ViewModel.Files)
-                {
-                    <li class="file-item" data-file="@file.Id">
-                        <button type="button" class="file-row" @onclick="() => ViewModel.OpenFileCommand.Execute(file.Id)">
-                            <span class="file-icon"><i class="bi @ViewModel.GetIcon(file)"></i></span>
-                            <span class="file-body">
-                                <span data-user-content class="file-name">@file.Name</span>
-                                <span class="file-summary">@ViewModel.GetSummary(file)</span>
-                                @if (ViewModel.IsSearching && file.Folder.Length > 0)
-                                {
-                                    <span class="file-summary file-in-folder">@T["Files.Row.InFolder", file.Folder]</span>
-                                }
-                                @if (!ViewModel.HasContent(file))
-                                {
-                                    <span class="file-summary file-not-here"><i class="bi bi-cloud-arrow-down me-1"></i>@T["Files.Row.NotHere"]</span>
-                                }
-                            </span>
-                        </button>
-                        <span class="file-actions">
-                            <button type="button" class="btn btn-sm btn-outline-secondary file-details" title="@T["Files.Details"]"
-                                    @onclick="() => ViewModel.ShowDetailsCommand.Execute(file.Id)">
-                                <i class="bi bi-info-circle"></i>
-                                <span class="visually-hidden">@T["Files.Details"]</span>
-                            </button>
-                            <button type="button" class="btn btn-sm btn-outline-danger file-delete" title="@T["Files.Delete"]"
-                                    @onclick="() => ViewModel.AskDeleteFileCommand.Execute(file.Id)">
-                                <i class="bi bi-trash"></i>
-                                <span class="visually-hidden">@T["Files.Delete"]</span>
-                            </button>
-                        </span>
-                    </li>
-                }
-            </ul>
-        }
-    }
-</div>
-
-@switch (ViewModel.ActiveDialog)
-{
-    case VaultFilesViewModel.FilesDialog.NewFolder:
-        <FileNameDialog Mode="FileNameViewModel.FileNameMode.NewFolder" Folder="@ViewModel.DialogFolder"
-                        OnClose="() => ViewModel.CloseDialogCommand.Execute(null)" />
-        break;
-    case VaultFilesViewModel.FilesDialog.RenameFolder:
-        <FileNameDialog Mode="FileNameViewModel.FileNameMode.RenameFolder" Folder="@ViewModel.DialogFolder"
-                        OnClose="() => ViewModel.CloseDialogCommand.Execute(null)" />
-        break;
-    case VaultFilesViewModel.FilesDialog.Viewer:
-        <FileViewerDialog FileId="@ViewModel.DialogFileId" OnClose="() => ViewModel.CloseDialogCommand.Execute(null)"
-                          OnDetails="id => ViewModel.ShowDetailsCommand.Execute(id)" OnDelete="id => ViewModel.AskDeleteFileCommand.Execute(id)" />
-        break;
-    case VaultFilesViewModel.FilesDialog.Details:
-        <FileDetailsDialog FileId="@ViewModel.DialogFileId" OnClose="() => ViewModel.CloseDialogCommand.Execute(null)" />
-        break;
-    case VaultFilesViewModel.FilesDialog.DeleteFile:
-    case VaultFilesViewModel.FilesDialog.DeleteFolder:
-        <ModalDialog Id="file-delete-dialog" Title="@T["Files.Delete.Title"]" Icon="bi-trash" FocusMode="ModalDialogFocusMode.Dialog"
-                     OnClose="() => ViewModel.CloseDialogCommand.Execute(null)">
-            <ChildContent>
-                <p class="mb-0" id="file-delete-question">@ViewModel.DeleteQuestion</p>
-            </ChildContent>
-            <Footer>
-                <button type="button" class="btn btn-secondary" id="file-delete-no" disabled="@ViewModel.IsWorking"
-                        @onclick="() => ViewModel.CloseDialogCommand.Execute(null)">@T["Files.Delete.No"]</button>
-                <button type="button" class="btn btn-danger" id="file-delete-yes" disabled="@ViewModel.IsWorking"
-                        @onclick="() => ViewModel.ConfirmDeleteAsync()">
-                    @if (ViewModel.IsWorking)
+                    @foreach (var crumb in ViewModel.Breadcrumb)
                     {
-                        <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                        <i class="bi bi-chevron-right files-crumb-separator" aria-hidden="true"></i>
+                        <button type="button" class="files-crumb" data-folder="@crumb.Path" data-user-content
+                                @onclick="() => ViewModel.OpenFolderCommand.Execute(crumb.Path)">@crumb.Name</button>
                     }
-                    @T["Files.Delete.Yes"]
-                </button>
-            </Footer>
-        </ModalDialog>
-        break;
+                </nav>
+            }
+
+            @if (ViewModel.Folders.Count == 0 && ViewModel.Files.Count == 0)
+            {
+                <p class="panel-text mb-0" id="no-file-matches">@(ViewModel.IsSearching ? T["Files.NoMatches"] : T["Files.Folder.Empty"])</p>
+            }
+            else
+            {
+                <ul class="file-list" id="files">
+                    @foreach (var item in ViewModel.Folders)
+                    {
+                        <li class="file-item" data-folder="@item.Path">
+                            <button type="button" class="file-row" @onclick="() => ViewModel.OpenFolderCommand.Execute(item.Path)">
+                                <span class="file-icon file-icon-folder"><i class="bi bi-folder-fill"></i></span>
+                                <span class="file-body">
+                                    <span data-user-content class="file-name">@item.Name</span>
+                                </span>
+                            </button>
+                            <span class="file-actions">
+                                <button type="button" class="btn btn-sm btn-outline-secondary file-rename" title="@T["Files.Rename"]"
+                                        @onclick="() => ViewModel.RenameFolderCommand.Execute(item.Path)">
+                                    <i class="bi bi-pencil"></i>
+                                    <span class="visually-hidden">@T["Files.Rename"]</span>
+                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-danger file-delete" title="@T["Files.Delete"]"
+                                        @onclick="() => ViewModel.AskDeleteFolderCommand.Execute(item.Path)">
+                                    <i class="bi bi-trash"></i>
+                                    <span class="visually-hidden">@T["Files.Delete"]</span>
+                                </button>
+                            </span>
+                        </li>
+                    }
+                    @foreach (var file in ViewModel.Files)
+                    {
+                        <li class="file-item" data-file="@file.Id">
+                            <button type="button" class="file-row" @onclick="() => ViewModel.OpenFileCommand.Execute(file.Id)">
+                                <span class="file-icon"><i class="bi @ViewModel.GetIcon(file)"></i></span>
+                                <span class="file-body">
+                                    <span data-user-content class="file-name">@file.Name</span>
+                                    <span class="file-summary">@ViewModel.GetSummary(file)</span>
+                                    @if (ViewModel.IsSearching && file.Folder.Length > 0)
+                                    {
+                                        <span class="file-summary file-in-folder">@T["Files.Row.InFolder", file.Folder]</span>
+                                    }
+                                    @if (!ViewModel.HasContent(file))
+                                    {
+                                        <span class="file-summary file-not-here"><i class="bi bi-cloud-arrow-down me-1"></i>@T["Files.Row.NotHere"]</span>
+                                    }
+                                </span>
+                            </button>
+                            <span class="file-actions">
+                                <button type="button" class="btn btn-sm btn-outline-secondary file-details" title="@T["Files.Details"]"
+                                        @onclick="() => ViewModel.ShowDetailsCommand.Execute(file.Id)">
+                                    <i class="bi bi-info-circle"></i>
+                                    <span class="visually-hidden">@T["Files.Details"]</span>
+                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-danger file-delete" title="@T["Files.Delete"]"
+                                        @onclick="() => ViewModel.AskDeleteFileCommand.Execute(file.Id)">
+                                    <i class="bi bi-trash"></i>
+                                    <span class="visually-hidden">@T["Files.Delete"]</span>
+                                </button>
+                            </span>
+                        </li>
+                    }
+                </ul>
+            }
+        }
+    </div>
+
+    @switch (ViewModel.ActiveDialog)
+    {
+        case VaultFilesViewModel.FilesDialog.NewFolder:
+            <FileNameDialog Mode="FileNameViewModel.FileNameMode.NewFolder" Folder="@ViewModel.DialogFolder"
+                            OnClose="() => ViewModel.CloseDialogCommand.Execute(null)" />
+            break;
+        case VaultFilesViewModel.FilesDialog.RenameFolder:
+            <FileNameDialog Mode="FileNameViewModel.FileNameMode.RenameFolder" Folder="@ViewModel.DialogFolder"
+                            OnClose="() => ViewModel.CloseDialogCommand.Execute(null)" />
+            break;
+        case VaultFilesViewModel.FilesDialog.NewMarkdown:
+            @* A new document is made empty, and opens in the editor. *@
+            <FileNameDialog Mode="FileNameViewModel.FileNameMode.NewMarkdown" Folder="@ViewModel.DialogFolder"
+                            OnClose="() => ViewModel.CloseDialogCommand.Execute(null)" OnCreated="id => ViewModel.OpenFileCommand.Execute(id)" />
+            break;
+        case VaultFilesViewModel.FilesDialog.NewText:
+            <FileNameDialog Mode="FileNameViewModel.FileNameMode.NewText" Folder="@ViewModel.DialogFolder"
+                            OnClose="() => ViewModel.CloseDialogCommand.Execute(null)" OnCreated="id => ViewModel.OpenFileCommand.Execute(id)" />
+            break;
+        case VaultFilesViewModel.FilesDialog.Viewer:
+            <FileViewerDialog FileId="@ViewModel.DialogFileId" OnClose="() => ViewModel.CloseDialogCommand.Execute(null)"
+                              OnDetails="id => ViewModel.ShowDetailsCommand.Execute(id)" OnDelete="id => ViewModel.AskDeleteFileCommand.Execute(id)" />
+            break;
+        case VaultFilesViewModel.FilesDialog.Details:
+            <FileDetailsDialog FileId="@ViewModel.DialogFileId" OnClose="() => ViewModel.CloseDialogCommand.Execute(null)" />
+            break;
+        case VaultFilesViewModel.FilesDialog.DeleteFile:
+        case VaultFilesViewModel.FilesDialog.DeleteFolder:
+            <ModalDialog Id="file-delete-dialog" Title="@T["Files.Delete.Title"]" Icon="bi-trash" FocusMode="ModalDialogFocusMode.Dialog"
+                         OnClose="() => ViewModel.CloseDialogCommand.Execute(null)">
+                <ChildContent>
+                    <p class="mb-0" id="file-delete-question">@ViewModel.DeleteQuestion</p>
+                </ChildContent>
+                <Footer>
+                    <button type="button" class="btn btn-secondary" id="file-delete-no" disabled="@ViewModel.IsWorking"
+                            @onclick="() => ViewModel.CloseDialogCommand.Execute(null)">@T["Files.Delete.No"]</button>
+                    <button type="button" class="btn btn-danger" id="file-delete-yes" disabled="@ViewModel.IsWorking"
+                            @onclick="() => ViewModel.ConfirmDeleteAsync()">
+                        @if (ViewModel.IsWorking)
+                        {
+                            <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                        }
+                        @T["Files.Delete.Yes"]
+                    </button>
+                </Footer>
+            </ModalDialog>
+            break;
+    }
 }

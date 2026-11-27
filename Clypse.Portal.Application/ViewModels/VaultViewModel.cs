@@ -31,6 +31,7 @@ public partial class VaultViewModel : ViewModelBase
     private readonly INavigationService navigationService;
     private readonly IVaultReportService reportService;
     private readonly IVaultFileSession fileSession;
+    private readonly IUnsavedChangesGuard guard;
     private readonly Dictionary<string, string> copyLabels = new Dictionary<string, string>(StringComparer.Ordinal);
 
     private string? vaultId;
@@ -58,6 +59,7 @@ public partial class VaultViewModel : ViewModelBase
     /// <param name="navigationService">Goes back to the vaults once the vault is locked.</param>
     /// <param name="reportService">Keeps the report on the vault's secrets, from when the page opens the vault.</param>
     /// <param name="fileSession">Holds the metadata of the vault's files.</param>
+    /// <param name="guard">Holds a change of tab back while a text file has unsaved edits.</param>
     public VaultViewModel(
         IVaultService vaultService,
         IVaultSession session,
@@ -67,9 +69,11 @@ public partial class VaultViewModel : ViewModelBase
         ISecretCopyService copyService,
         INavigationService navigationService,
         IVaultReportService reportService,
-        IVaultFileSession fileSession)
+        IVaultFileSession fileSession,
+        IUnsavedChangesGuard guard)
     {
         this.fileSession = fileSession ?? throw new ArgumentNullException(nameof(fileSession));
+        this.guard = guard ?? throw new ArgumentNullException(nameof(guard));
         this.navigationService = navigationService ?? throw new ArgumentNullException(nameof(navigationService));
         this.copyService = copyService ?? throw new ArgumentNullException(nameof(copyService));
         this.vaultService = vaultService ?? throw new ArgumentNullException(nameof(vaultService));
@@ -438,13 +442,17 @@ public partial class VaultViewModel : ViewModelBase
     }
 
     /// <summary>
-    /// Shows one of the page's tabs.
+    /// Shows one of the page's tabs. If a text file is being edited with unsaved changes, the user is asked about them
+    /// first, and the tab only changes once they are saved or discarded.
     /// </summary>
     /// <param name="tab">The tab.</param>
     [RelayCommand]
     public void SelectTab(VaultTab tab)
     {
-        ActiveTab = tab;
+        if (tab != ActiveTab)
+        {
+            guard.Run(() => ActiveTab = tab);
+        }
     }
 
     /// <summary>

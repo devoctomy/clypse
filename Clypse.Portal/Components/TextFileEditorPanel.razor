@@ -1,0 +1,148 @@
+@inherits MvvmComponentBase<TextFileEditorViewModel>
+
+@* Leaving the page with unsaved changes asks first. *@
+<NavigationLock OnBeforeInternalNavigation="OnBeforeInternalNavigation" ConfirmExternalNavigation="@ViewModel.IsDirty" />
+
+<div class="panel text-editor-panel" id="text-editor-panel" role="tabpanel" aria-labelledby="vault-tab-files">
+    <div class="text-editor-header">
+        <div class="text-editor-title">
+            <i class="bi @(ViewModel.IsMarkdown ? "bi-file-earmark-richtext" : "bi-file-earmark-text") me-2"></i>
+            @if (ViewModel.IsFound)
+            {
+                <span data-user-content class="text-editor-name" id="text-editor-name">@ViewModel.Name</span>
+                @if (ViewModel.Folder.Length > 0)
+                {
+                    <span data-user-content class="text-editor-folder" id="text-editor-folder">@ViewModel.Folder</span>
+                }
+            }
+        </div>
+        <span class="editor-status" id="editor-status">
+            @if (ViewModel.IsDirty)
+            {
+                <span class="text-warning-emphasis"><i class="bi bi-circle-fill me-1"></i>@T["Editor.Unsaved"]</span>
+            }
+            else if (ViewModel.LastSavedAt is { } savedAt)
+            {
+                <span class="text-success"><i class="bi bi-check2 me-1"></i>@T["Editor.SavedAt", savedAt.ToLocalTime().ToString("t")]</span>
+            }
+        </span>
+        <button type="button" class="btn btn-outline-primary" id="editor-close-button" @onclick="() => ViewModel.CloseCommand.Execute(null)">
+            <i class="bi bi-x-lg me-1"></i>@T["Common.Close"]
+        </button>
+        @if (ViewModel.IsReady)
+        {
+            <button type="button" class="btn btn-primary" id="editor-save-button" title="@T["Editor.Save.Title"]"
+                    disabled="@(!ViewModel.IsDirty || ViewModel.IsSaving)" @onclick="() => ViewModel.SaveCommand.ExecuteAsync(null)">
+                @if (ViewModel.IsSaving)
+                {
+                    <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                }
+                else
+                {
+                    <i class="bi bi-floppy me-1"></i>
+                }
+                @T["Editor.Save"]
+            </button>
+        }
+    </div>
+
+    @if (ViewModel.Error != null)
+    {
+        <div class="alert alert-danger alert-dismissible" role="alert" id="editor-error">
+            <i class="bi bi-exclamation-triangle me-2"></i>@ViewModel.Error
+            <button type="button" class="btn-close" aria-label="@T["Common.Close"]" @onclick="() => ViewModel.DismissErrorCommand.Execute(null)"></button>
+        </div>
+    }
+
+    @if (ViewModel.IsLoading)
+    {
+        <div class="text-body-secondary" id="editor-loading" role="status">
+            <span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>@T["Files.Viewer.Decrypting"]
+        </div>
+    }
+    else if (!ViewModel.IsFound)
+    {
+        <p class="panel-text mb-0" id="editor-missing">@T["Files.Details.Missing"]</p>
+    }
+    else if (ViewModel.IsReady)
+    {
+        var showPreview = ViewModel.IsMarkdown && !ViewModel.IsPreviewCollapsed;
+        <div class="text-editor @(showPreview ? null : "preview-collapsed")">
+            @if (ViewModel.IsMarkdown)
+            {
+                var previewText = ViewModel.IsPreviewCollapsed ? T["Editor.Preview.Show"] : T["Editor.Preview.Hide"];
+                <div class="editor-toolbar" role="toolbar" aria-label="@T["Editor.Toolbar"]">
+                    @foreach (var group in TextFileEditorViewModel.ToolbarGroups)
+                    {
+                        <div class="toolbar-group">
+                            @foreach (var (format, icon) in group)
+                            {
+                                @* A toolbar button keeps the focus (and the selection) in the editor by cancelling mousedown. *@
+                                var formatText = T["Editor.Format." + format];
+                                <button type="button" class="toolbar-btn" id="format-@format.ToString().ToLowerInvariant()"
+                                        title="@formatText" aria-label="@formatText" @onmousedown:preventDefault
+                                        @onclick="() => ViewModel.FormatCommand.ExecuteAsync(format)">
+                                    <i class="bi @icon"></i>
+                                </button>
+                            }
+                        </div>
+                    }
+                    <div class="flex-grow-1"></div>
+                    <button type="button" class="toolbar-btn toolbar-btn-wide @(ViewModel.IsPreviewCollapsed ? null : "active")" id="toggle-preview-button"
+                            title="@previewText" aria-pressed="@((!ViewModel.IsPreviewCollapsed).ToString().ToLowerInvariant())"
+                            @onclick="() => ViewModel.TogglePreviewCommand.Execute(null)">
+                        <i class="bi @(ViewModel.IsPreviewCollapsed ? "bi-layout-sidebar-inset-reverse" : "bi-layout-split")"></i>
+                        <span class="d-none d-sm-inline ms-1">@T["Editor.Preview"]</span>
+                    </button>
+                </div>
+            }
+
+            <div class="editor-panes">
+                <div class="editor-pane">
+                    <textarea id="@TextFileEditorViewModel.EditorElementId" class="editor-textarea" spellcheck="true"
+                              aria-label="@T["Editor.Text"]" placeholder="@T["Editor.Placeholder"]"
+                              @bind="ViewModel.Content" @bind:event="oninput"></textarea>
+                </div>
+                @if (showPreview)
+                {
+                    <div class="preview-pane">
+                        <div class="preview-label">@T["Editor.Preview"]</div>
+                        @* The one place HTML is rendered: the renderer passes no raw HTML through, and only safe links. *@
+                        <div class="markdown-body" data-user-content id="editor-preview">@((MarkupString)ViewModel.PreviewHtml)</div>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+</div>
+
+@if (ViewModel.IsLeaveDialogOpen)
+{
+    <ModalDialog Id="editor-leave-dialog" Title="@T["Editor.Leave.Title"]" Icon="bi-exclamation-circle" FocusMode="ModalDialogFocusMode.Dialog"
+                 OnClose="() => ViewModel.KeepEditingCommand.Execute(null)">
+        <ChildContent>
+            <p class="mb-0" id="editor-leave-text">@T["Editor.Leave.Text", ViewModel.Name]</p>
+        </ChildContent>
+        <Footer>
+            <button type="button" class="btn btn-secondary" id="editor-leave-stay" @onclick="() => ViewModel.KeepEditingCommand.Execute(null)">@T["Editor.Leave.Stay"]</button>
+            <button type="button" class="btn btn-outline-danger" id="editor-leave-discard" @onclick="() => ViewModel.DiscardAndLeaveCommand.Execute(null)">@T["Editor.Leave.Discard"]</button>
+            <button type="button" class="btn btn-primary" id="editor-leave-save" @onclick="() => ViewModel.SaveAndLeaveCommand.ExecuteAsync(null)">@T["Editor.Save"]</button>
+        </Footer>
+    </ModalDialog>
+}
+
+@if (ViewModel.IsRemoteChangeDialogOpen)
+{
+    <ModalDialog Id="editor-remote-dialog" Title="@T["Editor.Remote.Title"]" Icon="bi-cloud-arrow-down" FocusMode="ModalDialogFocusMode.Dialog"
+                 OnClose="() => ViewModel.KeepMineCommand.Execute(null)">
+        <ChildContent>
+            <p class="mb-0" id="editor-remote-text">@(ViewModel.IsRemoteDeleted ? T["Editor.Remote.Deleted", ViewModel.Name] : T["Editor.Remote.Changed", ViewModel.Name])</p>
+        </ChildContent>
+        <Footer>
+            <button type="button" class="btn btn-outline-secondary" id="editor-remote-theirs" @onclick="() => ViewModel.TakeTheirsCommand.Execute(null)">
+                @(ViewModel.IsRemoteDeleted ? T["Editor.Remote.LetGo"] : T["Editor.Remote.TakeTheirs"])
+            </button>
+            <button type="button" class="btn btn-primary" id="editor-remote-mine" @onclick="() => ViewModel.KeepMineCommand.Execute(null)">@T["Editor.Remote.KeepMine"]</button>
+        </Footer>
+    </ModalDialog>
+}

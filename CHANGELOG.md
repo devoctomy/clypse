@@ -17,6 +17,10 @@ Changed, Fixed, Removed or Security.
   on the device, and it is gone again when you close it or the vault locks. Tap the image to see it full screen,
   scaled to fit, and tap it again to go back to the file's details. Other kinds of file are stored and synced, and
   show their details.
+- Write and edit text in a vault: **New > Markdown Document** and **New > Text File** make one, and opening a
+  markdown or text file (up to 1 MB) shows it in an editor. A markdown document has formatting buttons and a preview
+  beside the text; Ctrl+S saves, and Ctrl+B and Ctrl+I make text bold or italic. Closing the editor, changing tab or
+  leaving the page with unsaved changes asks whether to save or discard them. Locking the vault drops unsaved text.
 - Organise files in folders: **New > Folder** makes one, and a file's details move it. Folders can be renamed and
   deleted, and a file's name and notes changed. Search finds files in any folder by name or notes.
 

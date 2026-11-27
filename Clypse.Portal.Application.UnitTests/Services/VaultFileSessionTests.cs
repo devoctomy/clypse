@@ -8,6 +8,7 @@ using Clypse.Portal.Models.Vaults;
 using Devoctomy.Blazwiz.Encryption.Exceptions;
 using Devoctomy.Blazwiz.Encryption.Interfaces;
 using Devoctomy.Blazwiz.Encryption.Models;
+using Devoctomy.Blazwiz.Sync.Encryption.Interfaces;
 using Devoctomy.Blazwiz.Sync.InMemory;
 using Devoctomy.Blazwiz.Sync.Interfaces;
 using Devoctomy.Blazwiz.Sync.Models;
@@ -21,6 +22,7 @@ public class VaultFileSessionTests
     private readonly Mock<IVaultFileServiceFactory> mockFactory = new();
     private readonly Mock<IE2eProtectedProfileManager> mockManager = new();
     private readonly Mock<ISyncService> mockSync = new();
+    private readonly Mock<IE2eIdleLock> mockIdle = new();
     private readonly Mock<ISyncUserContext> mockUser = new();
     private readonly FakeTimeProvider clock = new(new DateTimeOffset(2026, 11, 27, 12, 0, 0, TimeSpan.Zero));
     private readonly VaultFileTreeService tree = new();
@@ -39,10 +41,73 @@ public class VaultFileSessionTests
     public void GivenNullDependencies_WhenConstructing_ThenThrowsArgumentNullException()
     {
         // Act & Assert
-        Assert.Equal("fileServiceFactory", Assert.Throws<ArgumentNullException>(() => new VaultFileSession(null!, tree, mockManager.Object, mockSync.Object)).ParamName);
-        Assert.Equal("tree", Assert.Throws<ArgumentNullException>(() => new VaultFileSession(mockFactory.Object, null!, mockManager.Object, mockSync.Object)).ParamName);
-        Assert.Equal("manager", Assert.Throws<ArgumentNullException>(() => new VaultFileSession(mockFactory.Object, tree, null!, mockSync.Object)).ParamName);
-        Assert.Equal("syncService", Assert.Throws<ArgumentNullException>(() => new VaultFileSession(mockFactory.Object, tree, mockManager.Object, null!)).ParamName);
+        Assert.Equal("fileServiceFactory", Assert.Throws<ArgumentNullException>(() => new VaultFileSession(null!, tree, mockManager.Object, mockSync.Object, mockIdle.Object)).ParamName);
+        Assert.Equal("tree", Assert.Throws<ArgumentNullException>(() => new VaultFileSession(mockFactory.Object, null!, mockManager.Object, mockSync.Object, mockIdle.Object)).ParamName);
+        Assert.Equal("manager", Assert.Throws<ArgumentNullException>(() => new VaultFileSession(mockFactory.Object, tree, null!, mockSync.Object, mockIdle.Object)).ParamName);
+        Assert.Equal("syncService", Assert.Throws<ArgumentNullException>(() => new VaultFileSession(mockFactory.Object, tree, mockManager.Object, null!, mockIdle.Object)).ParamName);
+        Assert.Equal("idleLock", Assert.Throws<ArgumentNullException>(() => new VaultFileSession(mockFactory.Object, tree, mockManager.Object, mockSync.Object, null!)).ParamName);
+    }
+
+    [Fact]
+    public async Task GivenATextFile_WhenItsContentIsSaved_ThenItIsStored_AndItsMetadataFollows()
+    {
+        // Arrange
+        var vault = NewVault(isUnlocked: true);
+        using var sut = CreateSut();
+        await sut.OpenAsync(vault);
+        var entry = await sut.AddFileAsync("Notes.md", "Work", "text/markdown", Encoding.UTF8.GetBytes("one"));
+        clock.Advance(TimeSpan.FromMinutes(5));
+        var changes = 0;
+        sut.Changed += (_, _) => changes++;
+
+        // Act
+        var saved = await sut.SaveContentAsync(entry.Id, Encoding.UTF8.GetBytes("one two three"));
+
+        // Assert
+        Assert.Same(saved, Assert.Single(sut.Entries));
+        Assert.Equal(13, saved.Size);
+        Assert.Equal(entry.LastUpdatedAt.AddMinutes(5), saved.LastUpdatedAt);
+        Assert.Equal("Work", saved.Folder);
+        Assert.True(sut.HasContent(entry.Id));
+        Assert.Equal(1, changes);
+        Assert.Equal("one two three", Encoding.UTF8.GetString((await sut.ReadContentAsync(entry.Id))!));
+    }
+
+    [Fact]
+    public async Task GivenAnOpenVault_WhenKeptUnlocked_ThenItsIdleTimerIsRestarted_AndNothingHappensWithNoneOpen()
+    {
+        // Arrange
+        var vault = NewVault(isUnlocked: true);
+        using var sut = CreateSut();
+
+        // Act
+        sut.KeepUnlocked();
+        var withNoneOpen = mockIdle.Invocations.Count;
+        await sut.OpenAsync(vault);
+        sut.KeepUnlocked();
+
+        // Assert
+        Assert.Equal(0, withNoneOpen);
+        mockIdle.Verify(x => x.Touch(new E2eKeyScope(vault.Id)), Times.Once);
+    }
+
+    [Fact]
+    public async Task GivenAVault_WhenAskedWhetherItIsUnlocked_ThenItFollowsTheVaultsLock()
+    {
+        // Arrange
+        var vault = NewVault(isUnlocked: true);
+        using var sut = CreateSut();
+        var withNoneOpen = sut.IsUnlocked;
+        await sut.OpenAsync(vault);
+        var whileUnlocked = sut.IsUnlocked;
+
+        // Act
+        unlocked.Clear();
+
+        // Assert
+        Assert.False(withNoneOpen);
+        Assert.True(whileUnlocked);
+        Assert.False(sut.IsUnlocked);
     }
 
     [Fact]
@@ -714,7 +779,7 @@ public class VaultFileSessionTests
         }
     }
 
-    private VaultFileSession CreateSut() => new(mockFactory.Object, tree, mockManager.Object, mockSync.Object);
+    private VaultFileSession CreateSut() => new(mockFactory.Object, tree, mockManager.Object, mockSync.Object, mockIdle.Object);
 
     private VaultFileService Service(Vault vault) => new(vault, Store(vault.Id), tree, settings, clock);
 

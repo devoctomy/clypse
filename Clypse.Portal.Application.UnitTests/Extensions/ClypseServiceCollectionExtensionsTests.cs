@@ -33,6 +33,9 @@ public class ClypseServiceCollectionExtensionsTests
         AssertScoped<IFileTypeService, FileTypeService>(services);
         AssertScoped<IVaultFileServiceFactory, VaultFileServiceFactory>(services);
         AssertScoped<IVaultFileSession, VaultFileSession>(services);
+        AssertScoped<IMarkdownRenderer, MarkdownRenderer>(services);
+        AssertScoped<IMarkdownFormatService, MarkdownFormatService>(services);
+        AssertScoped<IUnsavedChangesGuard, UnsavedChangesGuard>(services);
         AssertScoped<IPasswordStrengthService, PasswordStrengthService>(services);
         AssertScoped<ISecretCopyService, SecretCopyService>(services);
         AssertScoped<IPasswordGeneratorPreferencesService, PasswordGeneratorPreferencesService>(services);

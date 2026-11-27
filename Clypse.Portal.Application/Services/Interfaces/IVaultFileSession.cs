@@ -52,6 +52,11 @@ public interface IVaultFileSession
     int UnreadableCount { get; }
 
     /// <summary>
+    /// Gets a value indicating whether a vault is open and unlocked. When it locks, everything decrypted is forgotten.
+    /// </summary>
+    bool IsUnlocked { get; }
+
+    /// <summary>
     /// Checks whether a file's content is on this device. During a sync, a file's metadata can arrive before its content.
     /// </summary>
     /// <param name="id">The file's id.</param>
@@ -108,6 +113,21 @@ public interface IVaultFileSession
     /// <param name="ct">A token to cancel with.</param>
     /// <returns>The content, or null if it is not on this device.</returns>
     Task<byte[]?> ReadContentAsync(string id, CancellationToken ct = default);
+
+    /// <summary>
+    /// Saves a text file's content: the content is written first, then its metadata, with the new size and time.
+    /// </summary>
+    /// <param name="id">The file's id.</param>
+    /// <param name="content">The new content.</param>
+    /// <param name="ct">A token to cancel with.</param>
+    /// <returns>The file's metadata, as saved.</returns>
+    Task<VaultFileEntry> SaveContentAsync(string id, byte[] content, CancellationToken ct = default);
+
+    /// <summary>
+    /// Says the open vault is in use, so it does not lock itself as idle: e.g. while the user is typing in the editor,
+    /// which reads and writes nothing.
+    /// </summary>
+    void KeepUnlocked();
 
     /// <summary>
     /// Makes an empty folder.

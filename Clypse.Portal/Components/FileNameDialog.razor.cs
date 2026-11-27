@@ -32,6 +32,13 @@ public partial class FileNameDialog : MvvmComponentBase<FileNameViewModel>
     [Parameter]
     public EventCallback OnClose { get; set; }
 
+    /// <summary>
+    /// Gets or sets what happens when a markdown document or text file has been made, given its id (e.g. it is opened
+    /// in the editor). The dialog is not told to close as well: this takes its place.
+    /// </summary>
+    [Parameter]
+    public EventCallback<string> OnCreated { get; set; }
+
     /// <inheritdoc/>
     protected override void OnParametersSet()
     {
@@ -47,7 +54,16 @@ public partial class FileNameDialog : MvvmComponentBase<FileNameViewModel>
 
     private async Task SaveAsync()
     {
-        if (await ViewModel.SaveAsync())
+        if (!await ViewModel.SaveAsync())
+        {
+            return;
+        }
+
+        if (ViewModel.CreatedFileId is { } id && OnCreated.HasDelegate)
+        {
+            await OnCreated.InvokeAsync(id);
+        }
+        else
         {
             await OnClose.InvokeAsync();
         }

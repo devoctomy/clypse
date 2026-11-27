@@ -1,9 +1,9 @@
 @inherits MvvmComponentBase<FileNameViewModel>
 
-<ModalDialog Id="file-name-dialog" Title="@ViewModel.Title" Icon="bi-folder" OnClose="CloseAsync">
+<ModalDialog Id="file-name-dialog" Title="@ViewModel.Title" Icon="@ViewModel.Icon" OnClose="CloseAsync">
     <ChildContent>
         <form id="file-name-form" @onsubmit="SaveAsync" @onsubmit:preventDefault>
-            <label class="form-label" for="file-name-input">@T["Files.Name.Folder.Label"]</label>
+            <label class="form-label" for="file-name-input">@ViewModel.Label</label>
             <input type="text" class="form-control" id="file-name-input" autocomplete="off" maxlength="100"
                    disabled="@ViewModel.IsWorking" @bind="ViewModel.Name" @bind:event="oninput" />
         </form>

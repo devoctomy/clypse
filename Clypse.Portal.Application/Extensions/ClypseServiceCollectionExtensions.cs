@@ -43,6 +43,9 @@ public static class ClypseServiceCollectionExtensions
         services.AddScoped<IFileTypeService, FileTypeService>();
         services.AddScoped<IVaultFileServiceFactory, VaultFileServiceFactory>();
         services.AddScoped<IVaultFileSession, VaultFileSession>();
+        services.AddScoped<IMarkdownRenderer, MarkdownRenderer>();
+        services.AddScoped<IMarkdownFormatService, MarkdownFormatService>();
+        services.AddScoped<IUnsavedChangesGuard, UnsavedChangesGuard>();
         services.AddScoped<IPasswordStrengthService, PasswordStrengthService>();
         services.AddScoped<ISecretCopyService, SecretCopyService>();
         services.AddScoped<IPasswordGeneratorPreferencesService, PasswordGeneratorPreferencesService>();

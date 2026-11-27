@@ -334,6 +334,84 @@ public class VaultFilesViewModelTests
         Assert.False(sut.IsNewMenuOpen);
     }
 
+    [Theory]
+    [InlineData("Notes.md", "text/markdown")]
+    [InlineData("Notes.md", "")]
+    [InlineData("todo.txt", "text/plain")]
+    public void GivenATextFile_WhenOpened_ThenTheEditorTakesTheListsPlace_AndNoDialogOpens(string name, string contentType)
+    {
+        // Arrange
+        var file = File(name, string.Empty);
+        file.ContentType = contentType;
+        entries = [file];
+        var sut = CreateSut();
+        sut.ShowDetails(file.Id);
+
+        // Act
+        sut.OpenFile(file.Id);
+        var editing = sut.EditingFileId;
+        sut.CloseEditorCommand.Execute(null);
+
+        // Assert
+        Assert.Equal(file.Id, editing);
+        Assert.Equal(VaultFilesViewModel.FilesDialog.None, sut.ActiveDialog);
+        Assert.Null(sut.DialogFileId);
+        Assert.Null(sut.EditingFileId);
+    }
+
+    [Fact]
+    public void GivenATextFileLongerThanTheEditorTakes_WhenOpened_ThenItsDetailsShowInTheViewer()
+    {
+        // Arrange
+        var file = File("log.txt", string.Empty);
+        file.ContentType = "text/plain";
+        file.Size = TextFileEditorViewModel.MaximumTextSize + 1;
+        entries = [file];
+        var sut = CreateSut();
+
+        // Act
+        sut.OpenFile(file.Id);
+
+        // Assert
+        Assert.Null(sut.EditingFileId);
+        Assert.Equal(VaultFilesViewModel.FilesDialog.Viewer, sut.ActiveDialog);
+        Assert.Equal(file.Id, sut.DialogFileId);
+    }
+
+    [Fact]
+    public void GivenAFileThatIsGone_WhenOpened_ThenTheViewerSaysSo_RatherThanTheEditor()
+    {
+        // Arrange
+        var sut = CreateSut();
+
+        // Act
+        sut.OpenFile(Guid.NewGuid().ToString("D"));
+
+        // Assert
+        Assert.Null(sut.EditingFileId);
+        Assert.Equal(VaultFilesViewModel.FilesDialog.Viewer, sut.ActiveDialog);
+    }
+
+    [Fact]
+    public void GivenAnOpenFolder_WhenADocumentIsChosenFromTheNewMenu_ThenTheNameDialogOpensForThatKind_InThatFolder()
+    {
+        // Arrange
+        entries = [File("a.jpg", "Travel")];
+        var sut = CreateSut();
+        sut.OpenFolder("Travel");
+        sut.ToggleNewMenu();
+
+        // Act
+        sut.NewMarkdownCommand.Execute(null);
+        var markdown = (sut.ActiveDialog, sut.DialogFolder, sut.IsNewMenuOpen);
+        sut.NewTextCommand.Execute(null);
+
+        // Assert
+        Assert.Equal((VaultFilesViewModel.FilesDialog.NewMarkdown, "Travel", false), markdown);
+        Assert.Equal(VaultFilesViewModel.FilesDialog.NewText, sut.ActiveDialog);
+        Assert.Equal("Travel", sut.DialogFolder);
+    }
+
     [Fact]
     public void GivenTheViewer_WhenDetailsOrDeleteIsAskedFor_ThenThatDialogTakesItsPlaceForTheSameFile()
     {

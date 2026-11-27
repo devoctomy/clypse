@@ -57,6 +57,123 @@
   <data name="Copy.Failed" xml:space="preserve">
     <value>{0} could not be copied.</value>
   </data>
+  <data name="Editor.Format.Bold" xml:space="preserve">
+    <value>Bold (Ctrl+B)</value>
+  </data>
+  <data name="Editor.Format.BulletList" xml:space="preserve">
+    <value>Bulleted list</value>
+  </data>
+  <data name="Editor.Format.CodeBlock" xml:space="preserve">
+    <value>Code block</value>
+  </data>
+  <data name="Editor.Format.Heading1" xml:space="preserve">
+    <value>Heading 1</value>
+  </data>
+  <data name="Editor.Format.Heading2" xml:space="preserve">
+    <value>Heading 2</value>
+  </data>
+  <data name="Editor.Format.Heading3" xml:space="preserve">
+    <value>Heading 3</value>
+  </data>
+  <data name="Editor.Format.HorizontalRule" xml:space="preserve">
+    <value>Horizontal rule</value>
+  </data>
+  <data name="Editor.Format.InlineCode" xml:space="preserve">
+    <value>Inline code</value>
+  </data>
+  <data name="Editor.Format.Italic" xml:space="preserve">
+    <value>Italic (Ctrl+I)</value>
+  </data>
+  <data name="Editor.Format.Link" xml:space="preserve">
+    <value>Link</value>
+  </data>
+  <data name="Editor.Format.NumberedList" xml:space="preserve">
+    <value>Numbered list</value>
+  </data>
+  <data name="Editor.Format.Quote" xml:space="preserve">
+    <value>Quote</value>
+  </data>
+  <data name="Editor.Format.Strikethrough" xml:space="preserve">
+    <value>Strikethrough</value>
+  </data>
+  <data name="Editor.Format.TaskList" xml:space="preserve">
+    <value>Task list</value>
+  </data>
+  <data name="Editor.Leave.Discard" xml:space="preserve">
+    <value>Discard</value>
+  </data>
+  <data name="Editor.Leave.Stay" xml:space="preserve">
+    <value>Keep editing</value>
+  </data>
+  <data name="Editor.Leave.Text" xml:space="preserve">
+    <value>You have unsaved changes to {0}. What would you like to do with them?</value>
+  </data>
+  <data name="Editor.Leave.Title" xml:space="preserve">
+    <value>Unsaved changes</value>
+  </data>
+  <data name="Editor.Placeholder" xml:space="preserve">
+    <value>Start writing...</value>
+  </data>
+  <data name="Editor.Placeholder.Bold" xml:space="preserve">
+    <value>bold text</value>
+  </data>
+  <data name="Editor.Placeholder.Code" xml:space="preserve">
+    <value>code</value>
+  </data>
+  <data name="Editor.Placeholder.Italic" xml:space="preserve">
+    <value>italic text</value>
+  </data>
+  <data name="Editor.Placeholder.Link" xml:space="preserve">
+    <value>link text</value>
+  </data>
+  <data name="Editor.Placeholder.Strikethrough" xml:space="preserve">
+    <value>strikethrough text</value>
+  </data>
+  <data name="Editor.Preview" xml:space="preserve">
+    <value>Preview</value>
+  </data>
+  <data name="Editor.Preview.Hide" xml:space="preserve">
+    <value>Hide preview</value>
+  </data>
+  <data name="Editor.Preview.Show" xml:space="preserve">
+    <value>Show preview</value>
+  </data>
+  <data name="Editor.Remote.Changed" xml:space="preserve">
+    <value>{0} was changed on another device while you were editing it. Which version would you like to keep?</value>
+  </data>
+  <data name="Editor.Remote.Deleted" xml:space="preserve">
+    <value>{0} was deleted on another device while you were editing it. Keep your version, or let it go?</value>
+  </data>
+  <data name="Editor.Remote.KeepMine" xml:space="preserve">
+    <value>Keep mine</value>
+  </data>
+  <data name="Editor.Remote.LetGo" xml:space="preserve">
+    <value>Let it go</value>
+  </data>
+  <data name="Editor.Remote.TakeTheirs" xml:space="preserve">
+    <value>Take theirs</value>
+  </data>
+  <data name="Editor.Remote.Title" xml:space="preserve">
+    <value>Changed on another device</value>
+  </data>
+  <data name="Editor.Save" xml:space="preserve">
+    <value>Save</value>
+  </data>
+  <data name="Editor.Save.Title" xml:space="preserve">
+    <value>Save (Ctrl+S)</value>
+  </data>
+  <data name="Editor.SavedAt" xml:space="preserve">
+    <value>Saved at {0}</value>
+  </data>
+  <data name="Editor.Text" xml:space="preserve">
+    <value>Text</value>
+  </data>
+  <data name="Editor.Toolbar" xml:space="preserve">
+    <value>Formatting</value>
+  </data>
+  <data name="Editor.Unsaved" xml:space="preserve">
+    <value>Unsaved changes</value>
+  </data>
   <data name="Error.Clypse.FileContentMissing" xml:space="preserve">
     <value>That file's content is not on this device yet.</value>
   </data>
@@ -101,6 +218,12 @@
   </data>
   <data name="Error.Clypse.SecretUnreadable" xml:space="preserve">
     <value>A secret in this vault could not be read.</value>
+  </data>
+  <data name="Error.Clypse.TextFileNotText" xml:space="preserve">
+    <value>That file's content is not text, so it cannot be edited here.</value>
+  </data>
+  <data name="Error.Clypse.TextFileTooLarge" xml:space="preserve">
+    <value>Text can be edited here up to {0} MB.</value>
   </data>
   <data name="Error.Clypse.VaultNameRequired" xml:space="preserve">
     <value>Give the vault a name.</value>
@@ -198,11 +321,20 @@
   <data name="Files.Name.Create" xml:space="preserve">
     <value>Create</value>
   </data>
+  <data name="Files.Name.File.Label" xml:space="preserve">
+    <value>Name</value>
+  </data>
   <data name="Files.Name.Folder.Label" xml:space="preserve">
     <value>Folder name</value>
   </data>
   <data name="Files.Name.NewFolder.Title" xml:space="preserve">
     <value>New folder</value>
+  </data>
+  <data name="Files.Name.NewMarkdown.Title" xml:space="preserve">
+    <value>New markdown document</value>
+  </data>
+  <data name="Files.Name.NewText.Title" xml:space="preserve">
+    <value>New text file</value>
   </data>
   <data name="Files.Name.Rename" xml:space="preserve">
     <value>Rename</value>
@@ -215,6 +347,12 @@
   </data>
   <data name="Files.New.Folder" xml:space="preserve">
     <value>Folder</value>
+  </data>
+  <data name="Files.New.Markdown" xml:space="preserve">
+    <value>Markdown Document</value>
+  </data>
+  <data name="Files.New.Text" xml:space="preserve">
+    <value>Text File</value>
   </data>
   <data name="Files.NoMatches" xml:space="preserve">
     <value>No files match.</value>

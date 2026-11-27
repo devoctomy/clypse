@@ -3,6 +3,7 @@ using Clypse.Portal.Application.Services;
 using Clypse.Portal.Application.Services.Interfaces;
 using Clypse.Portal.Application.Text;
 using Clypse.Portal.Application.ViewModels;
+using Clypse.Portal.Models.Files;
 using Devoctomy.Blazwiz.Testing;
 using Moq;
 
@@ -141,6 +142,92 @@ public class FileNameViewModelTests
         Assert.Equal("There is already a folder with that name.", shown);
         Assert.Null(sut.Error);
         Assert.Equal(string.Empty, sut.Name);
+    }
+
+    [Theory]
+    [InlineData(FileNameViewModel.FileNameMode.NewFolder, "New folder", "Folder name", "Create", "bi-folder")]
+    [InlineData(FileNameViewModel.FileNameMode.RenameFolder, "Rename folder", "Folder name", "Rename", "bi-folder")]
+    [InlineData(FileNameViewModel.FileNameMode.NewMarkdown, "New markdown document", "Name", "Create", "bi-file-earmark-richtext")]
+    [InlineData(FileNameViewModel.FileNameMode.NewText, "New text file", "Name", "Create", "bi-file-earmark-text")]
+    public void GivenWhatIsBeingNamed_WhenLoaded_ThenTheDialogSaysSo(FileNameViewModel.FileNameMode mode, string title, string label, string save, string icon)
+    {
+        // Arrange
+        var sut = CreateSut();
+
+        // Act
+        sut.Load(mode, "Travel");
+
+        // Assert
+        Assert.Equal(mode, sut.Mode);
+        Assert.Equal(title, sut.Title);
+        Assert.Equal(label, sut.Label);
+        Assert.Equal(save, sut.SaveText);
+        Assert.Equal(icon, sut.Icon);
+        Assert.Null(sut.CreatedFileId);
+    }
+
+    [Theory]
+    [InlineData(FileNameViewModel.FileNameMode.NewMarkdown, "Trip notes", "Trip notes.md", "text/markdown")]
+    [InlineData(FileNameViewModel.FileNameMode.NewMarkdown, " Trip notes.MD ", "Trip notes.MD", "text/markdown")]
+    [InlineData(FileNameViewModel.FileNameMode.NewMarkdown, "Trip notes.markdown", "Trip notes.markdown", "text/markdown")]
+    [InlineData(FileNameViewModel.FileNameMode.NewMarkdown, "v1.2", "v1.2.md", "text/markdown")]
+    [InlineData(FileNameViewModel.FileNameMode.NewText, "Codes", "Codes.txt", "text/plain")]
+    [InlineData(FileNameViewModel.FileNameMode.NewText, "Codes.txt", "Codes.txt", "text/plain")]
+    [InlineData(FileNameViewModel.FileNameMode.NewText, "Codes.md", "Codes.md.txt", "text/plain")]
+    public async Task GivenANewDocumentsName_WhenSaved_ThenAnEmptyFileOfThatKindIsMade_ToOpenInTheEditor(
+        FileNameViewModel.FileNameMode mode, string name, string expectedName, string expectedType)
+    {
+        // Arrange
+        var id = Guid.NewGuid().ToString("D");
+        mockSession.Setup(x => x.AddFileAsync(expectedName, "Travel", expectedType, It.Is<byte[]>(b => b.Length == 0), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new VaultFileEntry { Id = id, Kind = VaultFileKind.File, Name = expectedName, Folder = "Travel" });
+        var sut = CreateSut();
+        sut.Load(mode, "Travel");
+        sut.Name = name;
+
+        // Act
+        var saved = await sut.SaveAsync();
+
+        // Assert
+        Assert.True(saved);
+        Assert.Equal(id, sut.CreatedFileId);
+        Assert.Null(sut.Error);
+        mockSession.Verify(x => x.CreateFolderAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Theory]
+    [InlineData(FileNameViewModel.FileNameMode.NewMarkdown)]
+    [InlineData(FileNameViewModel.FileNameMode.NewText)]
+    public async Task GivenNoName_WhenANewDocumentIsSaved_ThenItSaysSo_AndNothingIsMade(FileNameViewModel.FileNameMode mode)
+    {
+        // Arrange
+        var sut = CreateSut();
+        sut.Load(mode, string.Empty);
+        sut.Name = "   ";
+
+        // Act
+        var saved = await sut.SaveAsync();
+
+        // Assert
+        Assert.False(saved);
+        Assert.Equal("Give the file a name.", sut.Error);
+        Assert.Null(sut.CreatedFileId);
+        mockSession.Verify(x => x.AddFileAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<byte[]>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task GivenAFolder_WhenMade_ThenNoFileIsReportedAsMade()
+    {
+        // Arrange
+        var sut = CreateSut();
+        sut.Load(FileNameViewModel.FileNameMode.NewFolder, string.Empty);
+        sut.Name = "Travel";
+
+        // Act
+        await sut.SaveAsync();
+
+        // Assert
+        Assert.Null(sut.CreatedFileId);
     }
 
     [Fact]

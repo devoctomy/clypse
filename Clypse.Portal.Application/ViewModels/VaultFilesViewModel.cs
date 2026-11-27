@@ -42,6 +42,7 @@ public partial class VaultFilesViewModel : ViewModelBase
     private FilesDialog activeDialog;
     private string? dialogFolder;
     private string? dialogFileId;
+    private string? editingFileId;
     private bool isNewMenuOpen;
     private bool isWorking;
     private string? workingText;
@@ -92,6 +93,16 @@ public partial class VaultFilesViewModel : ViewModelBase
         /// Naming a new folder, made in <see cref="DialogFolder"/>.
         /// </summary>
         NewFolder,
+
+        /// <summary>
+        /// Naming a new markdown document, made in <see cref="DialogFolder"/>.
+        /// </summary>
+        NewMarkdown,
+
+        /// <summary>
+        /// Naming a new text file, made in <see cref="DialogFolder"/>.
+        /// </summary>
+        NewText,
 
         /// <summary>
         /// Renaming the folder <see cref="DialogFolder"/>.
@@ -216,6 +227,15 @@ public partial class VaultFilesViewModel : ViewModelBase
     {
         get => dialogFileId;
         private set => SetProperty(ref dialogFileId, value);
+    }
+
+    /// <summary>
+    /// Gets the id of the text file open in the editor, which takes the place of the list, or null.
+    /// </summary>
+    public string? EditingFileId
+    {
+        get => editingFileId;
+        private set => SetProperty(ref editingFileId, value);
     }
 
     /// <summary>
@@ -372,13 +392,49 @@ public partial class VaultFilesViewModel : ViewModelBase
     }
 
     /// <summary>
-    /// Opens a file in the viewer, which decrypts it to show it.
+    /// Asks for the name of a new markdown document, to be made in the open folder.
+    /// </summary>
+    [RelayCommand]
+    public void NewMarkdown()
+    {
+        ShowDialog(FilesDialog.NewMarkdown, folder, null);
+    }
+
+    /// <summary>
+    /// Asks for the name of a new text file, to be made in the open folder.
+    /// </summary>
+    [RelayCommand]
+    public void NewText()
+    {
+        ShowDialog(FilesDialog.NewText, folder, null);
+    }
+
+    /// <summary>
+    /// Opens a file, which decrypts it: a text file or markdown document in the editor, in place of the list; anything
+    /// else in the viewer.
     /// </summary>
     /// <param name="id">The file's id.</param>
     [RelayCommand]
     public void OpenFile(string id)
     {
-        ShowDialog(FilesDialog.Viewer, null, id);
+        if (IsEditable(FindFile(id)))
+        {
+            ShowDialog(FilesDialog.None, null, null);
+            EditingFileId = id;
+        }
+        else
+        {
+            ShowDialog(FilesDialog.Viewer, null, id);
+        }
+    }
+
+    /// <summary>
+    /// Shows the list again, in place of the editor.
+    /// </summary>
+    [RelayCommand]
+    public void CloseEditor()
+    {
+        EditingFileId = null;
     }
 
     /// <summary>
@@ -543,6 +599,19 @@ public partial class VaultFilesViewModel : ViewModelBase
         await Task.Yield();
         var content = await file.ReadAsync(CancellationToken.None);
         await session.AddFileAsync(file.Name, target, fileTypes.GetContentType(file.Name, file.ContentType), content);
+    }
+
+    // Text and markdown open in the editor, up to the size it takes. A longer text file is stored and synced like any
+    // other file, and shows its details.
+    private bool IsEditable(VaultFileEntry? file)
+    {
+        if (file == null || (file.Size ?? 0) > TextFileEditorViewModel.MaximumTextSize)
+        {
+            return false;
+        }
+
+        var kind = fileTypes.GetViewKind(file);
+        return kind == FileViewKind.Text || kind == FileViewKind.Markdown;
     }
 
     private VaultFileEntry? FindFile(string? id)
