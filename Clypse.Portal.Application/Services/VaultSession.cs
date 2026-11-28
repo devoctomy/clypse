@@ -160,6 +160,24 @@ public sealed class VaultSession : IVaultSession, IDisposable
     }
 
     /// <inheritdoc/>
+    public string? GetSecretKey(string id)
+    {
+        return IsUnlocked ? secretService?.GetKey(id) : null;
+    }
+
+    /// <inheritdoc/>
+    public string? GetSecretId(string key)
+    {
+        return IsUnlocked ? secretService?.GetSecretId(key) : null;
+    }
+
+    /// <inheritdoc/>
+    public Secret ReadSecret(string id, byte[] content)
+    {
+        return OpenService().Read(id, content);
+    }
+
+    /// <inheritdoc/>
     public void Dispose()
     {
         manager.LockStateChanged -= OnLockStateChanged;

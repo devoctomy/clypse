@@ -93,4 +93,11 @@ public interface IVaultFileService
     /// <param name="key">A file key.</param>
     /// <returns>The id, or null if the key is not a file's content in this vault.</returns>
     string? GetContentId(string key);
+
+    /// <summary>
+    /// Gets the key of a file's content: the synced file whose versions are the file's history.
+    /// </summary>
+    /// <param name="id">The file's id.</param>
+    /// <returns>The key.</returns>
+    string GetContentKey(string id);
 }

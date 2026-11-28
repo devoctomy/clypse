@@ -46,6 +46,29 @@ public interface IVaultSession
     int UnreadableCount { get; }
 
     /// <summary>
+    /// Gets the key of a secret's file in the open vault: the synced file whose versions are the secret's history.
+    /// </summary>
+    /// <param name="id">The secret's id.</param>
+    /// <returns>The key, or null if no vault is open and unlocked.</returns>
+    string? GetSecretKey(string id);
+
+    /// <summary>
+    /// Gets the id of the secret a file key names, if it is one of the open vault's.
+    /// </summary>
+    /// <param name="key">A file key.</param>
+    /// <returns>The id, or null if no vault is open and unlocked, or the key is not a secret in it.</returns>
+    string? GetSecretId(string key);
+
+    /// <summary>
+    /// Reads a secret of the open vault from its file's content (decrypted), e.g. a past version of it. The session
+    /// keeps none of it.
+    /// </summary>
+    /// <param name="id">The secret's id.</param>
+    /// <param name="content">The file's content.</param>
+    /// <returns>The secret.</returns>
+    Secret ReadSecret(string id, byte[] content);
+
+    /// <summary>
     /// Opens a vault. If it is unlocked, its secrets are read; otherwise they are read once it is unlocked.
     /// </summary>
     /// <param name="vault">The vault.</param>

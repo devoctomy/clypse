@@ -4,17 +4,27 @@ using Clypse.Portal.Application.Services.Interfaces;
 using Clypse.Portal.Application.Text;
 using Clypse.Portal.Application.ViewModels;
 using Clypse.Portal.Models.Files;
+using Clypse.Portal.Models.Vaults;
+using Devoctomy.Blazwiz.Sync.Connectivity;
+using Devoctomy.Blazwiz.Sync.Interfaces;
+using Devoctomy.Blazwiz.Sync.Models;
 using Devoctomy.Blazwiz.Testing;
+using Devoctomy.Blazwiz.UI.Sync.Text;
+using Devoctomy.Blazwiz.UI.Sync.ViewModels;
+using Microsoft.Extensions.Time.Testing;
 using Moq;
 
 namespace Clypse.Portal.Application.UnitTests.ViewModels;
 
 public class FileViewerViewModelTests
 {
+    private const string VaultId = "vault-1";
+
     private static readonly DateTimeOffset Added = new(2026, 11, 27, 12, 0, 0, TimeSpan.Zero);
 
     private readonly FrameworkText text = new(typeof(ClypseText));
     private readonly Mock<IVaultFileSession> mockSession = new();
+    private readonly Mock<ISyncFileHistoryService> mockHistory = new();
     private readonly VaultFileEntry image = NewFile("Passport.jpg", "image/jpeg", "Travel");
     private readonly VaultFileEntry document = NewFile("Ticket.pdf", "application/pdf", string.Empty);
     private List<VaultFileEntry> entries;
@@ -23,6 +33,9 @@ public class FileViewerViewModelTests
     {
         entries = [image, document, new VaultFileEntry { Id = Guid.NewGuid().ToString("D"), Kind = VaultFileKind.Folder, Folder = "Archive" }];
         mockSession.SetupGet(x => x.Entries).Returns(() => entries);
+        mockSession.SetupGet(x => x.Vault).Returns(new Vault { Id = VaultId });
+        mockSession.Setup(x => x.GetContentKey(It.IsAny<string>())).Returns((string id) => ContentKeyOf(id));
+        mockHistory.SetupGet(x => x.IsAvailable).Returns(true);
     }
 
     [Fact]
@@ -30,11 +43,13 @@ public class FileViewerViewModelTests
     {
         // Arrange
         var types = new FileTypeService(text.For<ClypseText>());
+        var history = CreateHistory();
 
         // Act & Assert
-        Assert.Equal("session", Assert.Throws<ArgumentNullException>(() => new FileViewerViewModel(null!, types, text.Errors)).ParamName);
-        Assert.Equal("fileTypes", Assert.Throws<ArgumentNullException>(() => new FileViewerViewModel(mockSession.Object, null!, text.Errors)).ParamName);
-        Assert.Equal("errorText", Assert.Throws<ArgumentNullException>(() => new FileViewerViewModel(mockSession.Object, types, null!)).ParamName);
+        Assert.Equal("session", Assert.Throws<ArgumentNullException>(() => new FileViewerViewModel(null!, types, text.Errors, history)).ParamName);
+        Assert.Equal("fileTypes", Assert.Throws<ArgumentNullException>(() => new FileViewerViewModel(mockSession.Object, null!, text.Errors, history)).ParamName);
+        Assert.Equal("errorText", Assert.Throws<ArgumentNullException>(() => new FileViewerViewModel(mockSession.Object, types, null!, history)).ParamName);
+        Assert.Equal("history", Assert.Throws<ArgumentNullException>(() => new FileViewerViewModel(mockSession.Object, types, text.Errors, null!)).ParamName);
     }
 
     [Fact]
@@ -414,6 +429,154 @@ public class FileViewerViewModelTests
         Assert.Equal(0, changed);
     }
 
+    [Fact]
+    public async Task GivenAnImageShown_WhenItsHistoryIsExpanded_ThenItsContentsVersionsAreListed()
+    {
+        // Arrange
+        mockSession.Setup(x => x.ReadContentAsync(image.Id, It.IsAny<CancellationToken>())).ReturnsAsync([1, 2, 3]);
+        mockHistory.Setup(x => x.GetVersionsAsync(VaultId, ContentKeyOf(image.Id), It.IsAny<CancellationToken>())).ReturnsAsync([VersionOf(image.Id)]);
+        var sut = CreateSut();
+        await sut.LoadAsync(image.Id);
+
+        // Act
+        await sut.History.ToggleAsync();
+
+        // Assert
+        Assert.True(sut.History.IsAvailable);
+        Assert.Single(sut.History.Versions);
+    }
+
+    [Fact]
+    public async Task GivenAnImageShown_WhenAPastVersionIsPicked_ThenThatVersionIsShownInItsPlace()
+    {
+        // Arrange
+        byte[] current = [1, 2, 3];
+        byte[] past = [9, 8, 7];
+        var version = VersionOf(image.Id);
+        mockSession.Setup(x => x.ReadContentAsync(image.Id, It.IsAny<CancellationToken>())).ReturnsAsync(current);
+        mockHistory.Setup(x => x.ReadVersionAsync(version, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new SyncFileVersionContent { Version = version, Content = past });
+        var sut = CreateSut();
+        await sut.LoadAsync(image.Id);
+        var currentSource = sut.ImageSource;
+
+        // Act
+        await sut.History.SelectAsync(version);
+
+        // Assert
+        Assert.True(sut.IsViewingVersion);
+        Assert.False(sut.HasUnsavedChanges);
+        Assert.Equal("data:image/jpeg;base64," + Convert.ToBase64String(past), sut.ShownImageSource);
+        Assert.Equal(currentSource, sut.ImageSource);
+        Assert.Equal(new byte[] { 9, 8, 7 }, past);
+    }
+
+    [Fact]
+    public async Task GivenAPastVersionShown_WhenBackToCurrent_OrTheViewerIsCleared_ThenTheCurrentImageIsShownAgain()
+    {
+        // Arrange
+        var version = VersionOf(image.Id);
+        mockSession.Setup(x => x.ReadContentAsync(image.Id, It.IsAny<CancellationToken>())).ReturnsAsync([1, 2, 3]);
+        mockHistory.Setup(x => x.ReadVersionAsync(version, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new SyncFileVersionContent { Version = version, Content = [9, 8, 7] });
+        var sut = CreateSut();
+        await sut.LoadAsync(image.Id);
+        var currentSource = sut.ImageSource;
+        await sut.History.SelectAsync(version);
+
+        // Act
+        sut.History.BackToCurrent();
+        var afterBack = sut.ShownImageSource;
+        await sut.History.SelectAsync(version);
+        sut.Clear();
+
+        // Assert
+        Assert.NotNull(currentSource);
+        Assert.Equal(currentSource, afterBack);
+        Assert.False(sut.IsViewingVersion);
+        Assert.Null(sut.History.SelectedContent);
+        Assert.Null(sut.ShownImageSource);
+    }
+
+    [Fact]
+    public async Task GivenAnImageShown_WhenItsContentIsSavedAgain_ThenTheImageIsReadAgain()
+    {
+        // Arrange
+        byte[] restored = [4, 5, 6];
+        mockSession.SetupSequence(x => x.ReadContentAsync(image.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync([1, 2, 3])
+            .ReturnsAsync(restored);
+        var sut = CreateSut();
+        await sut.LoadAsync(image.Id);
+        var after = NewFile(image.Name!, image.ContentType, image.Folder);
+        after.Id = image.Id;
+        after.LastUpdatedAt = image.LastUpdatedAt.AddHours(1);
+        entries = [after, document];
+
+        // Act
+        mockSession.Raise(x => x.Changed += null, mockSession.Object, EventArgs.Empty);
+
+        // Assert
+        Assert.Equal("data:image/jpeg;base64," + Convert.ToBase64String([4, 5, 6]), sut.ImageSource);
+        mockSession.Verify(x => x.ReadContentAsync(image.Id, It.IsAny<CancellationToken>()), Times.Exactly(2));
+    }
+
+    [Fact]
+    public async Task GivenAnImageShown_WhenItsContentChangesButCannotBeReadAgain_ThenTheImageStays_AndTheViewerSaysWhy()
+    {
+        // Arrange
+        mockSession.SetupSequence(x => x.ReadContentAsync(image.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync([1, 2, 3])
+            .ReturnsAsync((byte[]?)null);
+        var sut = CreateSut();
+        await sut.LoadAsync(image.Id);
+        var before = sut.ImageSource;
+        var after = NewFile(image.Name!, image.ContentType, image.Folder);
+        after.Id = image.Id;
+        after.LastUpdatedAt = image.LastUpdatedAt.AddHours(1);
+        entries = [after, document];
+
+        // Act
+        mockSession.Raise(x => x.Changed += null, mockSession.Object, EventArgs.Empty);
+
+        // Assert
+        Assert.Equal(before, sut.ImageSource);
+        Assert.Equal("That file's content is not on this device yet.", sut.Error);
+    }
+
+    [Fact]
+    public async Task GivenAnImageShown_WhenItsHistoryAsksAboutUnsavedChanges_ThenThereAreNone_AndNothingIsSavedOrDropped()
+    {
+        // Arrange
+        mockSession.Setup(x => x.ReadContentAsync(image.Id, It.IsAny<CancellationToken>())).ReturnsAsync([1, 2, 3]);
+        var sut = CreateSut();
+        await sut.LoadAsync(image.Id);
+        var source = sut.ImageSource;
+
+        // Act
+        var saved = await sut.SaveChangesAsync();
+        sut.DiscardChanges();
+
+        // Assert
+        Assert.False(sut.HasUnsavedChanges);
+        Assert.True(saved);
+        Assert.Equal(source, sut.ImageSource);
+        mockSession.Verify(x => x.SaveContentAsync(It.IsAny<string>(), It.IsAny<byte[]>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task GivenAFileThatIsNotAnImage_WhenOpened_ThenItHasNoHistory()
+    {
+        // Arrange
+        var sut = CreateSut();
+
+        // Act
+        await sut.LoadAsync(document.Id);
+
+        // Assert
+        Assert.False(sut.History.IsAvailable);
+    }
+
     private static VaultFileEntry NewFile(string name, string? contentType, string folder)
     {
         return new VaultFileEntry
@@ -430,5 +593,23 @@ public class FileViewerViewModelTests
         };
     }
 
-    private FileViewerViewModel CreateSut() => new(mockSession.Object, new FileTypeService(text.For<ClypseText>()), text.Errors);
+    private static string ContentKeyOf(string id) => $"profiles/{VaultId}/files/blobs/{id}.bin";
+
+    private static SyncFileVersion VersionOf(string id) => new()
+    {
+        Profile = VaultId,
+        Key = ContentKeyOf(id),
+        VersionId = "v1",
+        ETag = "\"abc\"",
+        UploadedAt = Added,
+    };
+
+    private FileHistoryViewModel CreateHistory()
+    {
+        var connectivity = new Mock<IConnectivityService>();
+        connectivity.SetupGet(x => x.Status).Returns(new ConnectivityStatus { IsOnline = true });
+        return new FileHistoryViewModel(mockHistory.Object, connectivity.Object, text.For<SyncUiText>(), text.Errors, new FakeTimeProvider());
+    }
+
+    private FileViewerViewModel CreateSut() => new(mockSession.Object, new FileTypeService(text.For<ClypseText>()), text.Errors, CreateHistory());
 }

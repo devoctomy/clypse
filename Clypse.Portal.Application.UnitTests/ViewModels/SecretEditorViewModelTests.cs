@@ -5,13 +5,17 @@ using Clypse.Portal.Application.Services.Interfaces;
 using Clypse.Portal.Application.Text;
 using Clypse.Portal.Application.ViewModels;
 using Clypse.Portal.Models.Vaults;
+using Devoctomy.Blazwiz.Sync.Connectivity;
+using Devoctomy.Blazwiz.Sync.Interfaces;
 using Devoctomy.Blazwiz.Testing;
+using Devoctomy.Blazwiz.UI.Sync.Text;
+using Devoctomy.Blazwiz.UI.Sync.ViewModels;
 using Microsoft.Extensions.Time.Testing;
 using Moq;
 
 namespace Clypse.Portal.Application.UnitTests.ViewModels;
 
-public class SecretEditorViewModelTests
+public partial class SecretEditorViewModelTests
 {
     private static readonly PasswordStrength Strong = new() { Estimation = PasswordComplexityEstimation.Strong, Entropy = 100 };
     private static readonly PasswordStrength KnownWeak = new() { Estimation = PasswordComplexityEstimation.VeryWeak, Entropy = 50, IsKnownWeak = true };
@@ -21,6 +25,7 @@ public class SecretEditorViewModelTests
     private readonly Mock<IPasswordStrengthService> mockStrength = new();
     private readonly Mock<ISecretCopyService> mockCopy = new();
     private readonly Mock<IVaultReportService> mockReport = new();
+    private readonly Mock<ISyncFileHistoryService> mockHistory = new();
     private readonly Vault vault = new() { Id = "v1", IsUnlocked = true };
     private VaultReport report = new() { VaultId = "v1" };
     private readonly FakeTimeProvider time = new();
@@ -31,6 +36,8 @@ public class SecretEditorViewModelTests
     {
         mockSession.SetupGet(x => x.Secrets).Returns(() => secrets);
         mockSession.SetupGet(x => x.Vault).Returns(vault);
+        mockSession.Setup(x => x.GetSecretKey(It.IsAny<string>())).Returns((string id) => SecretKeyOf(id));
+        mockHistory.SetupGet(x => x.IsAvailable).Returns(true);
         mockReport.SetupGet(x => x.Report).Returns(() => report);
         mockSession.Setup(x => x.SaveAsync(It.IsAny<Secret>(), It.IsAny<CancellationToken>()))
             .Callback<Secret, CancellationToken>((s, _) => saved = s)
@@ -47,15 +54,17 @@ public class SecretEditorViewModelTests
     {
         // Arrange
         var t = text.For<ClypseText>();
+        var h = CreateHistory();
 
         // Act & Assert
-        Assert.Equal("session", Assert.Throws<ArgumentNullException>(() => new SecretEditorViewModel(null!, mockStrength.Object, text.Errors, mockCopy.Object, time, mockReport.Object, t)).ParamName);
-        Assert.Equal("strengthService", Assert.Throws<ArgumentNullException>(() => new SecretEditorViewModel(mockSession.Object, null!, text.Errors, mockCopy.Object, time, mockReport.Object, t)).ParamName);
-        Assert.Equal("errorText", Assert.Throws<ArgumentNullException>(() => new SecretEditorViewModel(mockSession.Object, mockStrength.Object, null!, mockCopy.Object, time, mockReport.Object, t)).ParamName);
-        Assert.Equal("copyService", Assert.Throws<ArgumentNullException>(() => new SecretEditorViewModel(mockSession.Object, mockStrength.Object, text.Errors, null!, time, mockReport.Object, t)).ParamName);
-        Assert.Equal("timeProvider", Assert.Throws<ArgumentNullException>(() => new SecretEditorViewModel(mockSession.Object, mockStrength.Object, text.Errors, mockCopy.Object, null!, mockReport.Object, t)).ParamName);
-        Assert.Equal("reportService", Assert.Throws<ArgumentNullException>(() => new SecretEditorViewModel(mockSession.Object, mockStrength.Object, text.Errors, mockCopy.Object, time, null!, t)).ParamName);
-        Assert.Equal("text", Assert.Throws<ArgumentNullException>(() => new SecretEditorViewModel(mockSession.Object, mockStrength.Object, text.Errors, mockCopy.Object, time, mockReport.Object, null!)).ParamName);
+        Assert.Equal("session", Assert.Throws<ArgumentNullException>(() => new SecretEditorViewModel(null!, mockStrength.Object, text.Errors, mockCopy.Object, time, mockReport.Object, t, h)).ParamName);
+        Assert.Equal("strengthService", Assert.Throws<ArgumentNullException>(() => new SecretEditorViewModel(mockSession.Object, null!, text.Errors, mockCopy.Object, time, mockReport.Object, t, h)).ParamName);
+        Assert.Equal("errorText", Assert.Throws<ArgumentNullException>(() => new SecretEditorViewModel(mockSession.Object, mockStrength.Object, null!, mockCopy.Object, time, mockReport.Object, t, h)).ParamName);
+        Assert.Equal("copyService", Assert.Throws<ArgumentNullException>(() => new SecretEditorViewModel(mockSession.Object, mockStrength.Object, text.Errors, null!, time, mockReport.Object, t, h)).ParamName);
+        Assert.Equal("timeProvider", Assert.Throws<ArgumentNullException>(() => new SecretEditorViewModel(mockSession.Object, mockStrength.Object, text.Errors, mockCopy.Object, null!, mockReport.Object, t, h)).ParamName);
+        Assert.Equal("reportService", Assert.Throws<ArgumentNullException>(() => new SecretEditorViewModel(mockSession.Object, mockStrength.Object, text.Errors, mockCopy.Object, time, null!, t, h)).ParamName);
+        Assert.Equal("text", Assert.Throws<ArgumentNullException>(() => new SecretEditorViewModel(mockSession.Object, mockStrength.Object, text.Errors, mockCopy.Object, time, mockReport.Object, null!, h)).ParamName);
+        Assert.Equal("history", Assert.Throws<ArgumentNullException>(() => new SecretEditorViewModel(mockSession.Object, mockStrength.Object, text.Errors, mockCopy.Object, time, mockReport.Object, t, null!)).ParamName);
     }
 
     [Fact]
@@ -667,5 +676,12 @@ public class SecretEditorViewModelTests
         return secret;
     }
 
-    private SecretEditorViewModel CreateSut() => new(mockSession.Object, mockStrength.Object, text.Errors, mockCopy.Object, time, mockReport.Object, text.For<ClypseText>());
+    private FileHistoryViewModel CreateHistory()
+    {
+        var connectivity = new Mock<IConnectivityService>();
+        connectivity.SetupGet(x => x.Status).Returns(new ConnectivityStatus { IsOnline = true });
+        return new FileHistoryViewModel(mockHistory.Object, connectivity.Object, text.For<SyncUiText>(), text.Errors, new FakeTimeProvider());
+    }
+
+    private SecretEditorViewModel CreateSut() => new(mockSession.Object, mockStrength.Object, text.Errors, mockCopy.Object, time, mockReport.Object, text.For<ClypseText>(), CreateHistory());
 }

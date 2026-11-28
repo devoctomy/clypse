@@ -624,6 +624,12 @@
     overflow-wrap: anywhere;
 }
 
+/* A History dropdown in a dialog's footer (the image viewer's, the secret editor's): its list opens upwards. */
+.dialog-history .file-history-menu {
+    top: auto;
+    bottom: 100%;
+}
+
 /* ---------- Text editor ---------- */
 
 /* The editor takes the place of the file list. Its header has the file's name, whether it is saved, and its buttons. */

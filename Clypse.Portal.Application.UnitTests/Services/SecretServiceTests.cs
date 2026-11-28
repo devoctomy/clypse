@@ -337,6 +337,40 @@ public class SecretServiceTests
         Assert.Null(sut.GetSecretId($"{vault.Root}secrets/sub/{id}.json"));
         Assert.Null(sut.GetSecretId($"profiles/{Guid.NewGuid():D}/secrets/{id}.json"));
         Assert.Null(sut.GetSecretId(null!));
+
+        Assert.Equal($"{vault.Root}secrets/{id}.json", sut.GetKey(id));
+        Assert.Throws<ClypseException>(() => sut.GetKey("gmail"));
+    }
+
+    [Fact]
+    public async Task GivenASecretFilesContent_WhenRead_ThenItIsTheSecret_AsItsOwnType()
+    {
+        // Arrange
+        var sut = CreateSut();
+        var secret = await sut.SaveAsync(new WebSecret { Name = "Mail", UserName = "bob" });
+        var content = (await files.ReadAsync($"{vault.Root}secrets/{secret.Id}.json"))!.Content;
+
+        // Act
+        var read = sut.Read(secret.Id, content);
+
+        // Assert
+        var web = Assert.IsType<WebSecret>(read);
+        Assert.Equal("Mail", web.Name);
+        Assert.Equal("bob", web.UserName);
+    }
+
+    [Fact]
+    public async Task GivenAnotherSecretsContent_OrNone_WhenRead_ThenItIsRefused()
+    {
+        // Arrange
+        var sut = CreateSut();
+        var secret = await sut.SaveAsync(new Secret { Name = "Mail" });
+        var content = (await files.ReadAsync($"{vault.Root}secrets/{secret.Id}.json"))!.Content;
+
+        // Act & Assert
+        Assert.Equal(ClypseErrorCodes.SecretUnreadable, Assert.Throws<ClypseException>(() => sut.Read(Guid.NewGuid().ToString("D"), content)).Code);
+        Assert.Equal(ClypseErrorCodes.SecretUnreadable, Assert.Throws<ClypseException>(() => sut.Read(secret.Id, [1, 2, 3])).Code);
+        Assert.Throws<ArgumentNullException>(() => sut.Read(secret.Id, null!));
     }
 
     [Fact]

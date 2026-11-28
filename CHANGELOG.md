@@ -9,6 +9,18 @@ Changed, Fixed, Removed or Security.
 
 ## Unreleased
 
+## 0.9.8
+
+### Added
+- **Past versions** of secrets, markdown documents, text files and images. The secret editor, the text editor and the
+  image viewer have a **History** dropdown, listing every version synced, newest first. Pick one to see it, read only,
+  then go **Back to current** or **Restore this version**, which saves it as the current version; the version it
+  replaces stays in the history. With unsaved changes, you are asked whether to save them first. History isn't
+  available in offline mode.
+
+### Changed
+- Built on blazwiz 0.9.6.
+
 ## 0.9.7
 
 ### Added

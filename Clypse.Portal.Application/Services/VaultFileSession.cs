@@ -220,6 +220,18 @@ public sealed class VaultFileSession : IVaultFileSession, IDisposable
     }
 
     /// <inheritdoc/>
+    public string? GetContentKey(string id)
+    {
+        return IsUnlocked ? fileService?.GetContentKey(id) : null;
+    }
+
+    /// <inheritdoc/>
+    public string? GetContentId(string key)
+    {
+        return IsUnlocked ? fileService?.GetContentId(key) : null;
+    }
+
+    /// <inheritdoc/>
     public void KeepUnlocked()
     {
         if (Vault != null)

@@ -5,7 +5,13 @@ using Clypse.Portal.Application.Services.Interfaces;
 using Clypse.Portal.Application.Text;
 using Clypse.Portal.Application.ViewModels;
 using Clypse.Portal.Models.Files;
+using Clypse.Portal.Models.Vaults;
+using Devoctomy.Blazwiz.Sync.Connectivity;
+using Devoctomy.Blazwiz.Sync.Interfaces;
 using Devoctomy.Blazwiz.Testing;
+using Devoctomy.Blazwiz.UI.Sync.Text;
+using Devoctomy.Blazwiz.UI.Sync.ViewModels;
+using Microsoft.Extensions.Time.Testing;
 using Moq;
 
 namespace Clypse.Portal.Application.UnitTests.ViewModels;
@@ -17,6 +23,7 @@ public partial class TextFileEditorViewModelTests
     private readonly FrameworkText text = new(typeof(ClypseText));
     private readonly Mock<IVaultFileSession> mockSession = new();
     private readonly Mock<ITextEditorInteropService> mockInterop = new();
+    private readonly Mock<ISyncFileHistoryService> mockHistory = new();
     private readonly UnsavedChangesGuard guard = new();
     private readonly VaultFileEntry markdown = NewFile("Notes.md", "text/markdown", "Work");
     private readonly VaultFileEntry plain = NewFile("todo.txt", "text/plain", string.Empty);
@@ -32,6 +39,9 @@ public partial class TextFileEditorViewModelTests
         contents[plain.Id] = Encoding.UTF8.GetBytes("milk\neggs");
         mockSession.SetupGet(x => x.Entries).Returns(() => entries);
         mockSession.SetupGet(x => x.IsUnlocked).Returns(true);
+        mockSession.SetupGet(x => x.Vault).Returns(new Vault { Id = VaultId });
+        mockSession.Setup(x => x.GetContentKey(It.IsAny<string>())).Returns((string id) => ContentKeyOf(id));
+        mockHistory.SetupGet(x => x.IsAvailable).Returns(true);
         mockSession.Setup(x => x.ReadContentAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((string id, CancellationToken _) => contents.TryGetValue(id, out var content) ? (byte[])content.Clone() : null);
         mockSession.Setup(x => x.SaveContentAsync(It.IsAny<string>(), It.IsAny<byte[]>(), It.IsAny<CancellationToken>()))
@@ -47,16 +57,18 @@ public partial class TextFileEditorViewModelTests
         var renderer = new MarkdownRenderer();
         var format = new MarkdownFormatService(t);
         var encoding = new TextFileEncodingService();
+        var history = CreateHistory();
 
         // Act & Assert
-        Assert.Equal("session", Assert.Throws<ArgumentNullException>(() => new TextFileEditorViewModel(null!, types, renderer, format, mockInterop.Object, guard, text.Errors, encoding)).ParamName);
-        Assert.Equal("fileTypes", Assert.Throws<ArgumentNullException>(() => new TextFileEditorViewModel(mockSession.Object, null!, renderer, format, mockInterop.Object, guard, text.Errors, encoding)).ParamName);
-        Assert.Equal("renderer", Assert.Throws<ArgumentNullException>(() => new TextFileEditorViewModel(mockSession.Object, types, null!, format, mockInterop.Object, guard, text.Errors, encoding)).ParamName);
-        Assert.Equal("formatService", Assert.Throws<ArgumentNullException>(() => new TextFileEditorViewModel(mockSession.Object, types, renderer, null!, mockInterop.Object, guard, text.Errors, encoding)).ParamName);
-        Assert.Equal("interop", Assert.Throws<ArgumentNullException>(() => new TextFileEditorViewModel(mockSession.Object, types, renderer, format, null!, guard, text.Errors, encoding)).ParamName);
-        Assert.Equal("guard", Assert.Throws<ArgumentNullException>(() => new TextFileEditorViewModel(mockSession.Object, types, renderer, format, mockInterop.Object, null!, text.Errors, encoding)).ParamName);
-        Assert.Equal("errorText", Assert.Throws<ArgumentNullException>(() => new TextFileEditorViewModel(mockSession.Object, types, renderer, format, mockInterop.Object, guard, null!, encoding)).ParamName);
-        Assert.Equal("encoding", Assert.Throws<ArgumentNullException>(() => new TextFileEditorViewModel(mockSession.Object, types, renderer, format, mockInterop.Object, guard, text.Errors, null!)).ParamName);
+        Assert.Equal("session", Assert.Throws<ArgumentNullException>(() => new TextFileEditorViewModel(null!, types, renderer, format, mockInterop.Object, guard, text.Errors, encoding, history)).ParamName);
+        Assert.Equal("fileTypes", Assert.Throws<ArgumentNullException>(() => new TextFileEditorViewModel(mockSession.Object, null!, renderer, format, mockInterop.Object, guard, text.Errors, encoding, history)).ParamName);
+        Assert.Equal("renderer", Assert.Throws<ArgumentNullException>(() => new TextFileEditorViewModel(mockSession.Object, types, null!, format, mockInterop.Object, guard, text.Errors, encoding, history)).ParamName);
+        Assert.Equal("formatService", Assert.Throws<ArgumentNullException>(() => new TextFileEditorViewModel(mockSession.Object, types, renderer, null!, mockInterop.Object, guard, text.Errors, encoding, history)).ParamName);
+        Assert.Equal("interop", Assert.Throws<ArgumentNullException>(() => new TextFileEditorViewModel(mockSession.Object, types, renderer, format, null!, guard, text.Errors, encoding, history)).ParamName);
+        Assert.Equal("guard", Assert.Throws<ArgumentNullException>(() => new TextFileEditorViewModel(mockSession.Object, types, renderer, format, mockInterop.Object, null!, text.Errors, encoding, history)).ParamName);
+        Assert.Equal("errorText", Assert.Throws<ArgumentNullException>(() => new TextFileEditorViewModel(mockSession.Object, types, renderer, format, mockInterop.Object, guard, null!, encoding, history)).ParamName);
+        Assert.Equal("encoding", Assert.Throws<ArgumentNullException>(() => new TextFileEditorViewModel(mockSession.Object, types, renderer, format, mockInterop.Object, guard, text.Errors, null!, history)).ParamName);
+        Assert.Equal("history", Assert.Throws<ArgumentNullException>(() => new TextFileEditorViewModel(mockSession.Object, types, renderer, format, mockInterop.Object, guard, text.Errors, encoding, null!)).ParamName);
     }
 
     [Fact]
@@ -570,6 +582,14 @@ public partial class TextFileEditorViewModelTests
             mockInterop.Object,
             guard,
             text.Errors,
-            new TextFileEncodingService());
+            new TextFileEncodingService(),
+            CreateHistory());
+    }
+
+    private FileHistoryViewModel CreateHistory()
+    {
+        var connectivity = new Mock<IConnectivityService>();
+        connectivity.SetupGet(x => x.Status).Returns(new ConnectivityStatus { IsOnline = true });
+        return new FileHistoryViewModel(mockHistory.Object, connectivity.Object, text.For<SyncUiText>(), text.Errors, new FakeTimeProvider());
     }
 }

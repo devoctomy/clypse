@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using System.Globalization;
 using Blazing.Mvvm.ComponentModel;
 using Clypse.Core.Base;
@@ -7,6 +8,7 @@ using Clypse.Core.Secrets;
 using Clypse.Portal.Application.Services.Interfaces;
 using Clypse.Portal.Application.Text;
 using Clypse.Portal.Models.Vaults;
+using Devoctomy.Blazwiz.UI.Sync.ViewModels;
 using Devoctomy.Blazwiz.UI.Text.Interfaces;
 using Microsoft.Extensions.Localization;
 
@@ -15,9 +17,11 @@ namespace Clypse.Portal.Application.ViewModels;
 /// <summary>
 /// ViewModel for the secret editor: a new secret of a chosen kind, or a copy of one of the open vault's secrets. Its
 /// fields come from the secret's type (<see cref="SecretFieldAttribute"/>), and their values are edited in a copy of the
-/// secret's data, so nothing changes until it is saved.
+/// secret's data, so nothing changes until it is saved. A saved secret's past versions are in <see cref="History"/>:
+/// one picked there is shown read only, in place of the secret, until the user goes back to the current version or
+/// restores it.
 /// </summary>
-public partial class SecretEditorViewModel : ViewModelBase
+public partial class SecretEditorViewModel : ViewModelBase, IFileHistoryHost
 {
     /// <summary>
     /// The kinds of secret that can be created, in the order they are offered.
@@ -43,6 +47,7 @@ public partial class SecretEditorViewModel : ViewModelBase
     private readonly HashSet<string> revealed = [];
 
     private Secret? original;
+    private Secret? shownVersion;
     private SecretType secretType = SecretType.Web;
     private IReadOnlyList<SecretField> fields = [];
     private bool isWorking;
@@ -60,6 +65,7 @@ public partial class SecretEditorViewModel : ViewModelBase
     /// <param name="timeProvider">Times the pause before a password is checked against the known passwords.</param>
     /// <param name="reportService">Says what the vault's report found about the secret's password and user name.</param>
     /// <param name="text">Clypse's text.</param>
+    /// <param name="history">The secret's past versions.</param>
     public SecretEditorViewModel(
         IVaultSession session,
         IPasswordStrengthService strengthService,
@@ -67,7 +73,8 @@ public partial class SecretEditorViewModel : ViewModelBase
         ISecretCopyService copyService,
         TimeProvider timeProvider,
         IVaultReportService reportService,
-        IStringLocalizer<ClypseText> text)
+        IStringLocalizer<ClypseText> text,
+        FileHistoryViewModel history)
     {
         this.session = session ?? throw new ArgumentNullException(nameof(session));
         this.strengthService = strengthService ?? throw new ArgumentNullException(nameof(strengthService));
@@ -76,9 +83,26 @@ public partial class SecretEditorViewModel : ViewModelBase
         this.timeProvider = timeProvider ?? throw new ArgumentNullException(nameof(timeProvider));
         this.reportService = reportService ?? throw new ArgumentNullException(nameof(reportService));
         this.text = text ?? throw new ArgumentNullException(nameof(text));
+        History = history ?? throw new ArgumentNullException(nameof(history));
         Fields = FieldsOf(SecretType.Web);
         this.reportService.Changed += OnReportChanged;
+        History.PropertyChanged += OnHistoryChanged;
+        History.ShownChanged += OnShownVersionChanged;
     }
+
+    /// <summary>
+    /// Gets the secret's past versions: the History dropdown, and the bar above a past version shown.
+    /// </summary>
+    public FileHistoryViewModel History { get; }
+
+    /// <summary>
+    /// Gets a value indicating whether a past version of the secret is shown, read only, in place of the current one.
+    /// </summary>
+    public bool IsViewingVersion => History.IsViewingVersion && shownVersion != null;
+
+    /// <inheritdoc/>
+    public bool HasUnsavedChanges => original != null
+        && Fields.Any(f => !string.Equals(values.GetValueOrDefault(f.Name) ?? string.Empty, original.GetData(f.Name) ?? string.Empty, StringComparison.Ordinal));
 
     /// <summary>
     /// Gets a value indicating whether the secret is new.
@@ -104,9 +128,12 @@ public partial class SecretEditorViewModel : ViewModelBase
     }
 
     /// <summary>
-    /// Gets when the secret was last saved (UTC), or null if it is new.
+    /// Gets when the secret shown was last saved (UTC): the past version's time while one is shown, or null if it is
+    /// new.
     /// </summary>
-    public DateTime? LastUpdatedAt => original == null ? null : DateTime.SpecifyKind(original.LastUpdatedAt, DateTimeKind.Utc);
+    public DateTime? LastUpdatedAt => (IsViewingVersion ? shownVersion : original) is { } shown
+        ? DateTime.SpecifyKind(shown.LastUpdatedAt, DateTimeKind.Utc)
+        : null;
 
     /// <summary>
     /// Gets a value indicating whether the secret is being saved or deleted.
@@ -164,22 +191,18 @@ public partial class SecretEditorViewModel : ViewModelBase
         IsConfirmingDelete = false;
         GeneratingFor = null;
 
+        // A past version of another secret shown is dropped: nothing decrypted is kept.
+        original = null;
+        shownVersion = null;
+        History.BackToCurrent();
         original = secretId == null ? null : session.Secrets.FirstOrDefault(s => s.Id == secretId);
-        if (original != null)
-        {
-            foreach (var (key, value) in original.Data)
-            {
-                values[key] = value;
-            }
-        }
-
         SecretType = original?.SecretType ?? SecretType.Web;
         Fields = FieldsOf(SecretType);
         OnPropertyChanged(nameof(IsNew));
-        OnPropertyChanged(nameof(LastUpdatedAt));
-        foreach (var field in Fields.Where(f => f.FieldType == SecretFieldType.Password))
+        await ShowOriginalAsync();
+        if (original != null && session.Vault is { } vault && session.GetSecretKey(original.Id) is { } key)
         {
-            await UpdateStrengthAsync(field.Name);
+            History.SetFile(vault.Id, key, this);
         }
     }
 
@@ -203,7 +226,7 @@ public partial class SecretEditorViewModel : ViewModelBase
     /// </summary>
     /// <param name="field">The field's name.</param>
     /// <returns>The value, or an empty string.</returns>
-    public string GetValue(string field) => values.GetValueOrDefault(field) ?? string.Empty;
+    public string GetValue(string field) => (IsViewingVersion ? shownVersion!.GetData(field) : values.GetValueOrDefault(field)) ?? string.Empty;
 
     /// <summary>
     /// Gets what the vault's report found about a field of the secret being edited, worded: e.g. that its password is
@@ -216,6 +239,7 @@ public partial class SecretEditorViewModel : ViewModelBase
     {
         var report = reportService.Report;
         if (original == null
+            || IsViewingVersion
             || report.VaultId != session.Vault?.Id
             || !string.Equals(GetValue(field), original.GetData(field) ?? string.Empty, StringComparison.Ordinal))
         {
@@ -239,6 +263,11 @@ public partial class SecretEditorViewModel : ViewModelBase
     public async Task SetValueAsync(string field, string? value)
     {
         ArgumentException.ThrowIfNullOrEmpty(field);
+        if (IsViewingVersion)
+        {
+            // A past version cannot be edited.
+            return;
+        }
 
         values[field] = value ?? string.Empty;
         if (Fields.Any(f => f.Name == field && f.FieldType == SecretFieldType.Password))
@@ -297,7 +326,7 @@ public partial class SecretEditorViewModel : ViewModelBase
     /// <param name="field">The field's name.</param>
     public void OpenGenerator(string field)
     {
-        GeneratingFor = field;
+        GeneratingFor = IsViewingVersion ? null : field;
     }
 
     /// <summary>
@@ -322,27 +351,28 @@ public partial class SecretEditorViewModel : ViewModelBase
     /// <returns>True if it was saved.</returns>
     public async Task<bool> SaveAsync()
     {
-        if (IsWorking)
+        return !IsViewingVersion && await TrySaveAsync() != null;
+    }
+
+    /// <inheritdoc/>
+    /// <remarks>The editor stays open, showing the secret as saved.</remarks>
+    public async Task<bool> SaveChangesAsync()
+    {
+        var saved = await TrySaveAsync();
+        if (saved == null)
         {
             return false;
         }
 
-        IsWorking = true;
-        Error = null;
-        try
-        {
-            await session.SaveAsync(Build());
-            return true;
-        }
-        catch (Exception ex)
-        {
-            Error = errorText.Describe(ex);
-            return false;
-        }
-        finally
-        {
-            IsWorking = false;
-        }
+        original = saved;
+        await ShowOriginalAsync();
+        return true;
+    }
+
+    /// <inheritdoc/>
+    public void DiscardChanges()
+    {
+        _ = ShowOriginalAsync();
     }
 
     /// <summary>
@@ -390,6 +420,9 @@ public partial class SecretEditorViewModel : ViewModelBase
         if (disposing)
         {
             reportService.Changed -= OnReportChanged;
+            History.PropertyChanged -= OnHistoryChanged;
+            History.ShownChanged -= OnShownVersionChanged;
+            History.BackToCurrent();
         }
 
         base.Dispose(disposing);
@@ -420,6 +453,107 @@ public partial class SecretEditorViewModel : ViewModelBase
         ',',
         value.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
             .Distinct(StringComparer.CurrentCultureIgnoreCase));
+
+    private async Task<Secret?> TrySaveAsync()
+    {
+        if (IsWorking)
+        {
+            return null;
+        }
+
+        IsWorking = true;
+        Error = null;
+        try
+        {
+            return await session.SaveAsync(Build());
+        }
+        catch (Exception ex)
+        {
+            Error = errorText.Describe(ex);
+            return null;
+        }
+        finally
+        {
+            IsWorking = false;
+        }
+    }
+
+    // Shows the secret as it is in the vault (or a new one): its values, and its passwords' strength.
+    private async Task ShowOriginalAsync()
+    {
+        foreach (var check in knownPasswordChecks.Values)
+        {
+            check.Cancel();
+        }
+
+        knownPasswordChecks.Clear();
+        values.Clear();
+        strengths.Clear();
+        if (original != null)
+        {
+            foreach (var (key, value) in original.Data)
+            {
+                values[key] = value;
+            }
+        }
+
+        // Every property: each field's value, strength and concerns.
+        OnPropertyChanged(string.Empty);
+        foreach (var field in Fields.Where(f => f.FieldType == SecretFieldType.Password))
+        {
+            await UpdateStrengthAsync(field.Name);
+        }
+
+        OnPropertyChanged(string.Empty);
+    }
+
+    // The page shows the history's dropdown and bar, so it is shown again whenever they change.
+    private void OnHistoryChanged(object? sender, PropertyChangedEventArgs e) => OnPropertyChanged(nameof(History));
+
+    private async void OnShownVersionChanged(object? sender, EventArgs e)
+    {
+        try
+        {
+            if (History.SelectedContent is { } content && original != null)
+            {
+                ShowVersion(original.Id, content.Content);
+                return;
+            }
+
+            shownVersion = null;
+            var current = original == null ? null : session.Secrets.FirstOrDefault(s => s.Id == original.Id);
+            if (current != null && !ReferenceEquals(current, original) && !HasUnsavedChanges)
+            {
+                // Back on the current version, which may have just been restored: shown as the vault has it now.
+                original = current;
+                await ShowOriginalAsync();
+                return;
+            }
+
+            OnPropertyChanged(string.Empty);
+        }
+        catch (Exception)
+        {
+            // Event handlers must not throw. The editor is left as it is; opening the secret again reads it.
+        }
+    }
+
+    private void ShowVersion(string id, byte[] content)
+    {
+        try
+        {
+            shownVersion = session.ReadSecret(id, content);
+        }
+        catch (Exception ex)
+        {
+            Error = errorText.Describe(ex);
+            History.BackToCurrent();
+            return;
+        }
+
+        GeneratingFor = null;
+        OnPropertyChanged(string.Empty);
+    }
 
     private Secret Build()
     {

@@ -26,13 +26,17 @@
                 <span class="text-success"><i class="bi bi-check2 me-1"></i>@T["Editor.SavedAt", savedAt.ToLocalTime().ToString("t")]</span>
             }
         </span>
+        @if (ViewModel.IsReady)
+        {
+            <FileHistoryPicker Model="ViewModel.History" IdPrefix="editor-history" />
+        }
         <button type="button" class="btn btn-outline-primary" id="editor-close-button" @onclick="() => ViewModel.CloseCommand.Execute(null)">
             <i class="bi bi-x-lg me-1"></i>@T["Common.Close"]
         </button>
         @if (ViewModel.IsReady)
         {
             <button type="button" class="btn btn-primary" id="editor-save-button" title="@T["Editor.Save.Title"]"
-                    disabled="@(!ViewModel.IsDirty || ViewModel.IsSaving)" @onclick="() => ViewModel.SaveCommand.ExecuteAsync(null)">
+                    disabled="@(!ViewModel.IsDirty || ViewModel.IsSaving || ViewModel.IsViewingVersion)" @onclick="() => ViewModel.SaveCommand.ExecuteAsync(null)">
                 @if (ViewModel.IsSaving)
                 {
                     <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
@@ -66,6 +70,7 @@
     }
     else if (ViewModel.IsReady)
     {
+        <FileHistoryBar Model="ViewModel.History" IdPrefix="editor-history" />
         var showPreview = ViewModel.IsMarkdown && !ViewModel.IsPreviewCollapsed;
         <div class="text-editor @(showPreview ? null : "preview-collapsed")">
             @if (ViewModel.IsMarkdown)
@@ -80,7 +85,7 @@
                                 @* A toolbar button keeps the focus (and the selection) in the editor by cancelling mousedown. *@
                                 var formatText = T["Editor.Format." + format];
                                 <button type="button" class="toolbar-btn" id="format-@format.ToString().ToLowerInvariant()"
-                                        title="@formatText" aria-label="@formatText" @onmousedown:preventDefault
+                                        title="@formatText" aria-label="@formatText" disabled="@ViewModel.IsViewingVersion" @onmousedown:preventDefault
                                         @onclick="() => ViewModel.FormatCommand.ExecuteAsync(format)">
                                     <i class="bi @icon"></i>
                                 </button>
@@ -100,15 +105,15 @@
             <div class="editor-panes">
                 <div class="editor-pane">
                     <textarea id="@TextFileEditorViewModel.EditorElementId" class="editor-textarea" spellcheck="true"
-                              aria-label="@T["Editor.Text"]" placeholder="@T["Editor.Placeholder"]"
-                              @bind="ViewModel.Content" @bind:event="oninput"></textarea>
+                              aria-label="@T["Editor.Text"]" placeholder="@T["Editor.Placeholder"]" readonly="@ViewModel.IsViewingVersion"
+                              @bind="ViewModel.EditorText" @bind:event="oninput"></textarea>
                 </div>
                 @if (showPreview)
                 {
                     <div class="preview-pane">
                         <div class="preview-label">@T["Editor.Preview"]</div>
                         @* The one place HTML is rendered: the renderer passes no raw HTML through, and only safe links. *@
-                        <div class="markdown-body" data-user-content id="editor-preview">@((MarkupString)ViewModel.PreviewHtml)</div>
+                        <div class="markdown-body" data-user-content id="editor-preview">@((MarkupString)ViewModel.ShownPreviewHtml)</div>
                     </div>
                 }
             </div>

@@ -124,6 +124,20 @@ public interface IVaultFileSession
     Task<VaultFileEntry> SaveContentAsync(string id, byte[] content, CancellationToken ct = default);
 
     /// <summary>
+    /// Gets the key of a file's content in the open vault: the synced file whose versions are the file's history.
+    /// </summary>
+    /// <param name="id">The file's id.</param>
+    /// <returns>The key, or null if no vault is open and unlocked.</returns>
+    string? GetContentKey(string id);
+
+    /// <summary>
+    /// Gets the id of the file whose content a key names, if it is one of the open vault's.
+    /// </summary>
+    /// <param name="key">A file key.</param>
+    /// <returns>The id, or null if no vault is open and unlocked, or the key is not a file's content in it.</returns>
+    string? GetContentId(string key);
+
+    /// <summary>
     /// Says the open vault is in use, so it does not lock itself as idle: e.g. while the user is typing in the editor,
     /// which reads and writes nothing.
     /// </summary>
