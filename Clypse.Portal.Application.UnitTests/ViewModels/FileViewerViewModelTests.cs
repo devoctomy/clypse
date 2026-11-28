@@ -522,6 +522,49 @@ public class FileViewerViewModelTests
     }
 
     [Fact]
+    public async Task GivenAnImageShown_WhenItsContentChangesButCannotBeReadAgain_ThenTheImageStays_AndTheViewerSaysWhy()
+    {
+        // Arrange
+        mockSession.SetupSequence(x => x.ReadContentAsync(image.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync([1, 2, 3])
+            .ReturnsAsync((byte[]?)null);
+        var sut = CreateSut();
+        await sut.LoadAsync(image.Id);
+        var before = sut.ImageSource;
+        var after = NewFile(image.Name!, image.ContentType, image.Folder);
+        after.Id = image.Id;
+        after.LastUpdatedAt = image.LastUpdatedAt.AddHours(1);
+        entries = [after, document];
+
+        // Act
+        mockSession.Raise(x => x.Changed += null, mockSession.Object, EventArgs.Empty);
+
+        // Assert
+        Assert.Equal(before, sut.ImageSource);
+        Assert.Equal("That file's content is not on this device yet.", sut.Error);
+    }
+
+    [Fact]
+    public async Task GivenAnImageShown_WhenItsHistoryAsksAboutUnsavedChanges_ThenThereAreNone_AndNothingIsSavedOrDropped()
+    {
+        // Arrange
+        mockSession.Setup(x => x.ReadContentAsync(image.Id, It.IsAny<CancellationToken>())).ReturnsAsync([1, 2, 3]);
+        var sut = CreateSut();
+        await sut.LoadAsync(image.Id);
+        var source = sut.ImageSource;
+
+        // Act
+        var saved = await sut.SaveChangesAsync();
+        sut.DiscardChanges();
+
+        // Assert
+        Assert.False(sut.HasUnsavedChanges);
+        Assert.True(saved);
+        Assert.Equal(source, sut.ImageSource);
+        mockSession.Verify(x => x.SaveContentAsync(It.IsAny<string>(), It.IsAny<byte[]>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
     public async Task GivenAFileThatIsNotAnImage_WhenOpened_ThenItHasNoHistory()
     {
         // Arrange

@@ -555,6 +555,9 @@ public class VaultFileServiceTests
         Assert.Null(sut.GetContentId($"{vault.Root}files/blobs/passport.bin"));
         Assert.Null(sut.GetContentId($"profiles/{Guid.NewGuid():D}/files/blobs/{id}.bin"));
         Assert.Null(sut.GetContentId(null!));
+
+        Assert.Equal($"{vault.Root}files/blobs/{id}.bin", sut.GetContentKey(id));
+        Assert.Throws<ClypseException>(() => sut.GetContentKey("passport"));
     }
 
     [Theory]

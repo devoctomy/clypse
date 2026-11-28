@@ -535,6 +535,41 @@ public partial class VaultFileSessionTests
         }
     }
 
+    [Fact]
+    public async Task GivenAnOpenUnlockedVault_WhenAFilesContentKeyIsAsked_ThenItIsTheVaults_AndNamesTheFileAgain()
+    {
+        // Arrange
+        var vault = NewVault(isUnlocked: true);
+        var id = Guid.NewGuid().ToString("D");
+        using var sut = CreateSut();
+        await sut.OpenAsync(vault);
+
+        // Act
+        var key = sut.GetContentKey(id);
+
+        // Assert
+        Assert.Equal($"{vault.Root}files/blobs/{id}.bin", key);
+        Assert.Equal(id, sut.GetContentId(key!));
+        Assert.Null(sut.GetContentId($"{vault.Root}files/meta/{id}.json"));
+    }
+
+    [Fact]
+    public async Task GivenALockedVault_OrNone_WhenAFilesContentKeyIsAsked_ThenThereIsNone()
+    {
+        // Arrange
+        var vault = NewVault(isUnlocked: false);
+        var id = Guid.NewGuid().ToString("D");
+        using var none = CreateSut();
+        using var sut = CreateSut();
+        await sut.OpenAsync(vault);
+
+        // Act & Assert
+        Assert.Null(none.GetContentKey(id));
+        Assert.Null(none.GetContentId($"{vault.Root}files/blobs/{id}.bin"));
+        Assert.Null(sut.GetContentKey(id));
+        Assert.Null(sut.GetContentId($"{vault.Root}files/blobs/{id}.bin"));
+    }
+
     private VaultFileSession CreateSut() => new(mockFactory.Object, tree, mockManager.Object, mockSync.Object, mockIdle.Object);
 
     private VaultFileService Service(Vault vault) => new(vault, Store(vault.Id), tree, settings, clock);

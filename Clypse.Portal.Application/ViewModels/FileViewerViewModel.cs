@@ -218,10 +218,9 @@ public partial class FileViewerViewModel : ViewModelBase, IFileHistoryHost
         ImageSource = source;
         Error = failure;
         IsLoading = false;
-        if (source != null && session.Vault is { } vault && session.GetContentKey(shown.Id) is { } key)
+        if (source != null)
         {
-            // The image's history is of its content, which is a synced file of the vault's own.
-            History.SetFile(vault.Id, key, this);
+            SetHistory(shown.Id);
         }
     }
 
@@ -293,6 +292,15 @@ public partial class FileViewerViewModel : ViewModelBase, IFileHistoryHost
         {
             // Only the data: URI is needed from here on.
             CryptographicOperations.ZeroMemory(content);
+        }
+    }
+
+    // The image's history is of its content, which is a synced file of the vault's own.
+    private void SetHistory(string id)
+    {
+        if (session.Vault is { } vault && session.GetContentKey(id) is { } key)
+        {
+            History.SetFile(vault.Id, key, this);
         }
     }
 

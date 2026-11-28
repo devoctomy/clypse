@@ -480,6 +480,59 @@ public class VaultSessionTests
 
     private VaultSession CreateSut() => new(mockFactory.Object, mockManager.Object, mockSync.Object, mockVaults.Object);
 
+    [Fact]
+    public async Task GivenAnOpenUnlockedVault_WhenASecretsKeyIsAsked_ThenItIsTheVaults_AndNamesTheSecretAgain()
+    {
+        // Arrange
+        var vault = NewVault(isUnlocked: true);
+        var id = Guid.NewGuid().ToString("D");
+        using var sut = CreateSut();
+        await sut.OpenAsync(vault);
+
+        // Act
+        var key = sut.GetSecretKey(id);
+
+        // Assert
+        Assert.Equal($"{vault.Root}secrets/{id}.json", key);
+        Assert.Equal(id, sut.GetSecretId(key!));
+        Assert.Null(sut.GetSecretId($"{vault.Root}files/meta/{id}.json"));
+    }
+
+    [Fact]
+    public async Task GivenALockedVault_OrNone_WhenASecretsKeyIsAsked_ThenThereIsNone_AndNoSecretCanBeRead()
+    {
+        // Arrange
+        var vault = NewVault(isUnlocked: false);
+        var id = Guid.NewGuid().ToString("D");
+        using var none = CreateSut();
+        using var sut = CreateSut();
+        await sut.OpenAsync(vault);
+
+        // Act & Assert
+        Assert.Null(none.GetSecretKey(id));
+        Assert.Null(none.GetSecretId($"{vault.Root}secrets/{id}.json"));
+        Assert.Null(sut.GetSecretKey(id));
+        Assert.Null(sut.GetSecretId($"{vault.Root}secrets/{id}.json"));
+        Assert.Equal(ClypseErrorCodes.NoVaultOpen, Assert.Throws<ClypseException>(() => sut.ReadSecret(id, [1])).Code);
+    }
+
+    [Fact]
+    public async Task GivenAnOpenUnlockedVault_WhenASecretFilesContentIsRead_ThenItIsTheSecret()
+    {
+        // Arrange
+        var vault = NewVault(isUnlocked: true);
+        var ids = await AddSecretsAsync(vault, "Mail");
+        var content = (await Store(vault.Id).ReadAsync($"{vault.Root}secrets/{ids[0]}.json"))!.Content;
+        using var sut = CreateSut();
+        await sut.OpenAsync(vault);
+
+        // Act
+        var secret = sut.ReadSecret(ids[0], content);
+
+        // Assert
+        Assert.Equal("Mail", secret.Name);
+    }
+
     private Vault NewVault(bool isUnlocked)
     {
         var id = Guid.NewGuid().ToString("D");

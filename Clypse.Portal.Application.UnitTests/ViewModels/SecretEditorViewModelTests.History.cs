@@ -107,6 +107,29 @@ public partial class SecretEditorViewModelTests
     }
 
     [Fact]
+    public async Task GivenAPastVersionRestored_WhenTheSecretCannotBeShownAgain_ThenNothingIsThrown()
+    {
+        // Arrange
+        var secret = Login("Mail", "bob", "second");
+        var restored = new WebSecret { Name = "Old mail", UserName = "robert", Password = "first" };
+        restored.SetData(nameof(Secret.Id), secret.Id);
+        mockHistory.Setup(x => x.RestoreAsync(It.IsAny<SyncFileVersionContent>(), It.IsAny<CancellationToken>()))
+            .Callback(() => secrets[secrets.FindIndex(s => s.Id == secret.Id)] = restored)
+            .Returns(Task.CompletedTask);
+        var sut = CreateSut();
+        await sut.LoadAsync(secret.Id);
+        await sut.History.SelectAsync(SetupVersion(secret, restored, secret.Id));
+        mockStrength.Setup(x => x.EstimateAsync(It.IsAny<string?>(), It.IsAny<CancellationToken>())).ThrowsAsync(new InvalidOperationException("boom"));
+
+        // Act
+        await sut.History.RestoreAsync();
+
+        // Assert
+        Assert.False(sut.IsViewingVersion);
+        Assert.Null(sut.History.Error);
+    }
+
+    [Fact]
     public async Task GivenUnsavedChanges_WhenAPastVersionIsPickedAndSaveChosen_ThenTheyAreSavedAndTheEditorStaysOpen()
     {
         // Arrange

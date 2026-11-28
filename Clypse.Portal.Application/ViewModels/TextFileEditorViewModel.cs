@@ -1,4 +1,3 @@
-using System.ComponentModel;
 using System.Security.Cryptography;
 using Blazing.Mvvm.ComponentModel;
 using Clypse.Portal.Application.Exceptions;
@@ -89,19 +88,14 @@ public partial class TextFileEditorViewModel : ViewModelBase, IFileHistoryHost
     private string content = string.Empty;
     private string savedContent = string.Empty;
     private string previewHtml = string.Empty;
-    private DecodedText? theirText;
     private bool isLoading;
     private bool isSaving;
     private bool isPreviewCollapsed;
     private bool isLeaveDialogOpen;
-    private bool isRemoteChangeDialogOpen;
-    private bool isRemoteDeleted;
     private string? error;
     private DateTimeOffset? lastSavedAt;
     private Action? pendingAction;
     private int version;
-    private string versionText = string.Empty;
-    private string versionPreviewHtml = string.Empty;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="TextFileEditorViewModel"/> class.
@@ -146,16 +140,6 @@ public partial class TextFileEditorViewModel : ViewModelBase, IFileHistoryHost
     /// Raised when the editor should close: the user closed it, or the file it was showing is gone.
     /// </summary>
     public event EventHandler? CloseRequested;
-
-    /// <summary>
-    /// Gets the file's past versions: the History dropdown, and the bar above a past version shown.
-    /// </summary>
-    public FileHistoryViewModel History { get; }
-
-    /// <summary>
-    /// Gets a value indicating whether a past version is shown, read only, in place of the text.
-    /// </summary>
-    public bool IsViewingVersion => History.IsViewingVersion;
 
     /// <summary>
     /// Gets a value indicating whether the file was found, and is one the editor takes.
@@ -204,27 +188,6 @@ public partial class TextFileEditorViewModel : ViewModelBase, IFileHistoryHost
     }
 
     /// <summary>
-    /// Gets or sets what the editor shows: the text being edited, or a past version's text while one is shown. A past
-    /// version cannot be edited, so setting it then does nothing.
-    /// </summary>
-    public string EditorText
-    {
-        get => IsViewingVersion ? versionText : Content;
-        set
-        {
-            if (!IsViewingVersion)
-            {
-                Content = value;
-            }
-        }
-    }
-
-    /// <summary>
-    /// Gets the preview shown: of the text being edited, or of a past version's text while one is shown.
-    /// </summary>
-    public string ShownPreviewHtml => IsViewingVersion ? versionPreviewHtml : PreviewHtml;
-
-    /// <summary>
     /// Gets the preview of a markdown document as HTML. Raw HTML in the markdown is not passed through, so it is safe
     /// to show.
     /// </summary>
@@ -244,9 +207,6 @@ public partial class TextFileEditorViewModel : ViewModelBase, IFileHistoryHost
     /// Gets a value indicating whether there are unsaved changes.
     /// </summary>
     public bool IsDirty => isReady && (isDeleted || !string.Equals(content, savedContent, StringComparison.Ordinal));
-
-    /// <inheritdoc/>
-    public bool HasUnsavedChanges => IsDirty;
 
     /// <summary>
     /// Gets a value indicating whether the text is being read and decrypted.
@@ -282,24 +242,6 @@ public partial class TextFileEditorViewModel : ViewModelBase, IFileHistoryHost
     {
         get => isLeaveDialogOpen;
         private set => SetProperty(ref isLeaveDialogOpen, value);
-    }
-
-    /// <summary>
-    /// Gets a value indicating whether the dialog asking what to do about a file changed by a sync is showing.
-    /// </summary>
-    public bool IsRemoteChangeDialogOpen
-    {
-        get => isRemoteChangeDialogOpen;
-        private set => SetProperty(ref isRemoteChangeDialogOpen, value);
-    }
-
-    /// <summary>
-    /// Gets a value indicating whether the sync deleted the file (rather than changed it).
-    /// </summary>
-    public bool IsRemoteDeleted
-    {
-        get => isRemoteDeleted;
-        private set => SetProperty(ref isRemoteDeleted, value);
     }
 
     /// <summary>
@@ -385,15 +327,6 @@ public partial class TextFileEditorViewModel : ViewModelBase, IFileHistoryHost
         {
             await TrySaveAsync();
         }
-    }
-
-    /// <inheritdoc/>
-    public Task<bool> SaveChangesAsync() => TrySaveAsync();
-
-    /// <inheritdoc/>
-    public void DiscardChanges()
-    {
-        Content = savedContent;
     }
 
     /// <summary>
@@ -503,35 +436,6 @@ public partial class TextFileEditorViewModel : ViewModelBase, IFileHistoryHost
     }
 
     /// <summary>
-    /// Keeps the user's unsaved edits after a sync changed or deleted the file. Saving writes them over the synced
-    /// version; if the file was deleted, saving adds it again.
-    /// </summary>
-    [RelayCommand]
-    public void KeepMine()
-    {
-        theirText = null;
-        IsRemoteChangeDialogOpen = false;
-    }
-
-    /// <summary>
-    /// Discards the user's unsaved edits and takes the synced version; if the file was deleted, closes the editor.
-    /// </summary>
-    [RelayCommand]
-    public void TakeTheirs()
-    {
-        var theirs = theirText;
-        theirText = null;
-        IsRemoteChangeDialogOpen = false;
-        if (IsRemoteDeleted || theirs == null)
-        {
-            RequestClose();
-            return;
-        }
-
-        Show(theirs);
-    }
-
-    /// <summary>
     /// Hides the error.
     /// </summary>
     [RelayCommand]
@@ -616,15 +520,6 @@ public partial class TextFileEditorViewModel : ViewModelBase, IFileHistoryHost
         return encoding.Decode(bytes);
     }
 
-    // The file's history is of its content, which is a synced file of the vault's own.
-    private void SetHistory(string id)
-    {
-        if (session.Vault is { } vault && session.GetContentKey(id) is { } key)
-        {
-            History.SetFile(vault.Id, key, this);
-        }
-    }
-
     // Shows a file's text as the editor holds it. What the file had (a byte order mark, Windows line endings) is
     // remembered, and put back when it is saved.
     private void Show(DecodedText decoded)
@@ -700,137 +595,6 @@ public partial class TextFileEditorViewModel : ViewModelBase, IFileHistoryHost
         // Only a markdown document has a preview, and it is only worked out while it shows.
         PreviewHtml = isMarkdown && !IsPreviewCollapsed ? renderer.ToHtml(content) : string.Empty;
         RenderVersionPreview();
-    }
-
-    private void RenderVersionPreview()
-    {
-        versionPreviewHtml = isMarkdown && !IsPreviewCollapsed && IsViewingVersion ? renderer.ToHtml(versionText) : string.Empty;
-        OnPropertyChanged(nameof(ShownPreviewHtml));
-    }
-
-    private void ClearVersion()
-    {
-        versionText = string.Empty;
-        versionPreviewHtml = string.Empty;
-        OnPropertyChanged(nameof(EditorText));
-        OnPropertyChanged(nameof(ShownPreviewHtml));
-    }
-
-    // The page shows the history's dropdown and bar, so it is shown again whenever they change.
-    private void OnHistoryChanged(object? sender, PropertyChangedEventArgs e)
-    {
-        OnPropertyChanged(nameof(History));
-        if (e.PropertyName == nameof(FileHistoryViewModel.IsViewingVersion))
-        {
-            OnPropertyChanged(nameof(IsViewingVersion));
-            OnPropertyChanged(nameof(EditorText));
-            OnPropertyChanged(nameof(ShownPreviewHtml));
-        }
-    }
-
-    // A past version is shown as its text. Going back to the current one needs nothing read: a restore saves it
-    // through the session, and the editor follows the session's changes.
-    private void OnShownVersionChanged(object? sender, EventArgs e)
-    {
-        if (History.SelectedContent is not { } shown || file == null)
-        {
-            ClearVersion();
-            return;
-        }
-
-        try
-        {
-            // The history holds the version's content, to restore it: it is not wiped here.
-            versionText = Decode(shown.Content).Text;
-        }
-        catch (Exception ex)
-        {
-            Error = errorText.Describe(ex);
-            History.BackToCurrent();
-            return;
-        }
-
-        OnPropertyChanged(nameof(EditorText));
-        RenderVersionPreview();
-    }
-
-    private async void OnSessionChanged(object? sender, EventArgs e)
-    {
-        var shown = file;
-        if (shown == null || IsSaving)
-        {
-            // Nothing open, or this editor is what changed it.
-            return;
-        }
-
-        if (!session.IsUnlocked)
-        {
-            // Locking forgets everything decrypted, unsaved edits included.
-            Clear();
-            return;
-        }
-
-        try
-        {
-            await FollowAsync(shown);
-        }
-        catch (Exception)
-        {
-            // Event handlers must not throw. The editor is left as it is; the user can still save their version.
-        }
-    }
-
-    private async Task FollowAsync(VaultFileEntry shown)
-    {
-        var current = session.Entries.FirstOrDefault(f => f.Kind == VaultFileKind.File && f.Id == shown.Id);
-        if (current == null)
-        {
-            if (isDeleted)
-            {
-                // Already known, and the user kept their version.
-                return;
-            }
-
-            if (!IsDirty)
-            {
-                // Deleted on another device, with nothing to lose here.
-                RequestClose();
-                return;
-            }
-
-            isDeleted = true;
-            IsRemoteDeleted = true;
-            IsRemoteChangeDialogOpen = true;
-            return;
-        }
-
-        if (current.LastUpdatedAt == knownUpdatedAt)
-        {
-            // Something else in the vault changed.
-            return;
-        }
-
-        var opened = version;
-        knownUpdatedAt = current.LastUpdatedAt;
-        file = current;
-        RaiseFileChanged();
-        var theirs = await ReadTextAsync(current.Id);
-        if (opened != version || string.Equals(theirs.Text, savedContent, StringComparison.Ordinal))
-        {
-            // Closed meanwhile, or only its details changed (e.g. it was renamed).
-            return;
-        }
-
-        if (IsDirty)
-        {
-            theirText = theirs;
-            IsRemoteDeleted = false;
-            IsRemoteChangeDialogOpen = true;
-        }
-        else
-        {
-            Show(theirs);
-        }
     }
 
     private void RaiseFileChanged()

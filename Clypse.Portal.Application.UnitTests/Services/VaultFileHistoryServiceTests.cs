@@ -4,6 +4,7 @@ using Clypse.Portal.Application.Services.Interfaces;
 using Clypse.Portal.Models.Files;
 using Clypse.Portal.Models.Vaults;
 using Devoctomy.Blazwiz.Sync;
+using Devoctomy.Blazwiz.Sync.Encryption.Interfaces;
 using Devoctomy.Blazwiz.Sync.Interfaces;
 using Devoctomy.Blazwiz.Sync.Models;
 using Moq;
@@ -21,12 +22,17 @@ public class VaultFileHistoryServiceTests
     private readonly Mock<IS3SyncTargetProvider> mockTarget = new();
     private readonly Mock<ISyncUserContext> mockUser = new();
     private readonly Mock<ISyncFileStore> mockStore = new();
+    private readonly Mock<ISyncRemoteStore> mockRemote = new();
+    private readonly Mock<ISyncFileDecryptor> mockDecryptor = new();
     private readonly Mock<IVaultFileSession> mockSession = new();
     private readonly Mock<IVaultSession> mockSecrets = new();
 
     public VaultFileHistoryServiceTests()
     {
         mockRegistry.Setup(x => x.GetFileStore(It.IsAny<string>())).Returns(mockStore.Object);
+        mockRegistry.Setup(x => x.GetFileDecryptor(It.IsAny<string>())).Returns(mockDecryptor.Object);
+        mockRegistry.Setup(x => x.GetSyncProfile(It.IsAny<string>()))
+            .Returns((string name) => new SyncProfile(name, mockStore.Object, Mock.Of<ISyncIndexStore>(), mockRemote.Object, Mock.Of<ISyncPathMatcher>()));
         mockSession.SetupGet(x => x.Vault).Returns(new Vault { Id = "vault-1" });
         mockSession.Setup(x => x.GetContentId(ContentKey)).Returns(FileId);
         mockSession.Setup(x => x.SaveContentAsync(It.IsAny<string>(), It.IsAny<byte[]>(), It.IsAny<CancellationToken>()))
@@ -62,6 +68,41 @@ public class VaultFileHistoryServiceTests
 
         // Assert
         Assert.Equal(configured, available);
+    }
+
+    [Fact]
+    public async Task GivenAFile_WhenItsVersionsAreListed_ThenBlazwizListsThem()
+    {
+        // Arrange
+        mockRemote.Setup(x => x.ListVersionsAsync(ContentKey, It.IsAny<CancellationToken>()))
+            .ReturnsAsync([new RemoteObjectVersion { Key = ContentKey, VersionId = "v1", ETag = "\"abc\"", IsLatest = true }]);
+        var sut = CreateSut();
+
+        // Act
+        var versions = await sut.GetVersionsAsync("vault-1", ContentKey);
+
+        // Assert
+        var version = Assert.Single(versions);
+        Assert.Equal("vault-1", version.Profile);
+        Assert.Equal("v1", version.VersionId);
+    }
+
+    [Fact]
+    public async Task GivenAVersion_WhenRead_ThenBlazwizDownloadsAndDecryptsIt()
+    {
+        // Arrange
+        byte[] stored = [1, 2, 3];
+        byte[] plain = [4, 5, 6];
+        mockRemote.Setup(x => x.GetVersionAsync(ContentKey, "v1", It.IsAny<CancellationToken>())).ReturnsAsync(new RemoteObject { Content = stored });
+        mockDecryptor.Setup(x => x.DecryptAsync(ContentKey, stored)).ReturnsAsync(plain);
+        var sut = CreateSut();
+
+        // Act
+        var content = await sut.ReadVersionAsync(Version("vault-1", ContentKey, []).Version);
+
+        // Assert
+        Assert.NotNull(content);
+        Assert.Equal(plain, content.Content);
     }
 
     [Fact]
