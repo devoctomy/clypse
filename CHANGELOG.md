@@ -9,6 +9,8 @@ Changed, Fixed, Removed or Security.
 
 ## Unreleased
 
+## 0.9.8
+
 ### Added
 - **Past versions** of secrets, markdown documents, text files and images. The secret editor, the text editor and the
   image viewer have a **History** dropdown, listing every version synced, newest first. Pick one to see it, read only,
