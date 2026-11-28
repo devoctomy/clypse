@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using System.Globalization;
 using System.Security.Cryptography;
 using Blazing.Mvvm.ComponentModel;
@@ -5,6 +6,7 @@ using Clypse.Portal.Application.Exceptions;
 using Clypse.Portal.Application.Services.Interfaces;
 using Clypse.Portal.Models.Files;
 using CommunityToolkit.Mvvm.Input;
+using Devoctomy.Blazwiz.UI.Sync.ViewModels;
 using Devoctomy.Blazwiz.UI.Text.Interfaces;
 
 namespace Clypse.Portal.Application.ViewModels;
@@ -13,9 +15,11 @@ namespace Clypse.Portal.Application.ViewModels;
 /// ViewModel for the file viewer. Opening a file reads and decrypts its content into memory, and an image is shown from
 /// a <c>data:</c> URI: nothing decrypted is written to the browser's storage. Nothing is kept, either: each time a file
 /// is opened it is decrypted again, and what was decrypted is dropped when the viewer closes or the vault locks. A file
-/// of a kind that cannot be shown has only its details shown, and its content is not read at all.
+/// of a kind that cannot be shown has only its details shown, and its content is not read at all. An image's past
+/// versions are in <see cref="History"/>: one picked there is shown in place of the image, until the user goes back to
+/// the current version or restores it.
 /// </summary>
-public partial class FileViewerViewModel : ViewModelBase
+public partial class FileViewerViewModel : ViewModelBase, IFileHistoryHost
 {
     private readonly IVaultFileSession session;
     private readonly IFileTypeService fileTypes;
@@ -28,6 +32,7 @@ public partial class FileViewerViewModel : ViewModelBase
     private string? error;
     private bool isFullScreen;
     private int version;
+    private string? versionImageSource;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="FileViewerViewModel"/> class.
@@ -35,13 +40,31 @@ public partial class FileViewerViewModel : ViewModelBase
     /// <param name="session">The open vault's files, which reads and decrypts the content.</param>
     /// <param name="fileTypes">Says what kind of file it is, and so how it is shown.</param>
     /// <param name="errorText">Describes errors.</param>
-    public FileViewerViewModel(IVaultFileSession session, IFileTypeService fileTypes, IErrorText errorText)
+    /// <param name="history">The image's past versions.</param>
+    public FileViewerViewModel(IVaultFileSession session, IFileTypeService fileTypes, IErrorText errorText, FileHistoryViewModel history)
     {
         this.session = session ?? throw new ArgumentNullException(nameof(session));
         this.fileTypes = fileTypes ?? throw new ArgumentNullException(nameof(fileTypes));
         this.errorText = errorText ?? throw new ArgumentNullException(nameof(errorText));
+        History = history ?? throw new ArgumentNullException(nameof(history));
         this.session.Changed += OnSessionChanged;
+        History.PropertyChanged += OnHistoryChanged;
+        History.ShownChanged += OnShownVersionChanged;
     }
+
+    /// <summary>
+    /// Gets the image's past versions: the History dropdown, and the bar above a past version shown.
+    /// </summary>
+    public FileHistoryViewModel History { get; }
+
+    /// <summary>
+    /// Gets a value indicating whether a past version of the image is shown in place of the current one.
+    /// </summary>
+    public bool IsViewingVersion => History.IsViewingVersion;
+
+    /// <inheritdoc/>
+    /// <remarks>The viewer changes nothing, so it never has unsaved changes.</remarks>
+    public bool HasUnsavedChanges => false;
 
     /// <summary>
     /// Gets a value indicating whether the file was found.
@@ -114,8 +137,20 @@ public partial class FileViewerViewModel : ViewModelBase
     public string? ImageSource
     {
         get => imageSource;
-        private set => SetProperty(ref imageSource, value);
+        private set
+        {
+            if (SetProperty(ref imageSource, value))
+            {
+                OnPropertyChanged(nameof(ShownImageSource));
+            }
+        }
     }
+
+    /// <summary>
+    /// Gets the image shown, as a <c>data:</c> URI: the current one, or a past version while one is shown. It is held
+    /// in memory only.
+    /// </summary>
+    public string? ShownImageSource => IsViewingVersion ? versionImageSource : ImageSource;
 
     /// <summary>
     /// Gets a value indicating whether the image fills the whole page: centred, and scaled so all of it shows (made
@@ -183,6 +218,20 @@ public partial class FileViewerViewModel : ViewModelBase
         ImageSource = source;
         Error = failure;
         IsLoading = false;
+        if (source != null && session.Vault is { } vault && session.GetContentKey(shown.Id) is { } key)
+        {
+            // The image's history is of its content, which is a synced file of the vault's own.
+            History.SetFile(vault.Id, key, this);
+        }
+    }
+
+    /// <inheritdoc/>
+    public Task<bool> SaveChangesAsync() => Task.FromResult(true);
+
+    /// <inheritdoc/>
+    public void DiscardChanges()
+    {
+        // Nothing is ever changed here.
     }
 
     /// <summary>
@@ -206,6 +255,10 @@ public partial class FileViewerViewModel : ViewModelBase
         ImageSource = null;
         Error = null;
         IsLoading = false;
+
+        // A past version shown is dropped too: nothing decrypted is kept.
+        History.BackToCurrent();
+        SetVersionImage(null);
         RaiseFileChanged();
     }
 
@@ -216,6 +269,8 @@ public partial class FileViewerViewModel : ViewModelBase
         {
             session.Changed -= OnSessionChanged;
             Clear();
+            History.PropertyChanged -= OnHistoryChanged;
+            History.ShownChanged -= OnShownVersionChanged;
         }
 
         base.Dispose(disposing);
@@ -232,7 +287,7 @@ public partial class FileViewerViewModel : ViewModelBase
         var content = await session.ReadContentAsync(image.Id) ?? throw new ClypseException(ClypseErrorCodes.FileContentMissing);
         try
         {
-            return "data:" + fileTypes.GetContentType(image.Name, image.ContentType) + ";base64," + Convert.ToBase64String(content);
+            return ToDataUri(image, content);
         }
         finally
         {
@@ -241,7 +296,18 @@ public partial class FileViewerViewModel : ViewModelBase
         }
     }
 
-    private void OnSessionChanged(object? sender, EventArgs e)
+    private string ToDataUri(VaultFileEntry image, byte[] content)
+    {
+        return "data:" + fileTypes.GetContentType(image.Name, image.ContentType) + ";base64," + Convert.ToBase64String(content);
+    }
+
+    private void SetVersionImage(string? source)
+    {
+        versionImageSource = source;
+        OnPropertyChanged(nameof(ShownImageSource));
+    }
+
+    private async void OnSessionChanged(object? sender, EventArgs e)
     {
         var shown = file;
         if (shown == null)
@@ -254,13 +320,60 @@ public partial class FileViewerViewModel : ViewModelBase
         {
             // Deleted (here or on another device), or the vault locked: nothing decrypted is kept.
             Clear();
+            return;
         }
-        else if (!ReferenceEquals(current, shown))
+
+        if (ReferenceEquals(current, shown))
         {
-            // Its details changed: the image is the same, as content never changes.
-            file = current;
-            RaiseFileChanged();
+            return;
         }
+
+        // Its details changed, and its content may have too: a past version restored, here or on another device.
+        file = current;
+        RaiseFileChanged();
+        if (ImageSource != null && current.LastUpdatedAt != shown.LastUpdatedAt)
+        {
+            await ReloadImageAsync(current);
+        }
+    }
+
+    private async Task ReloadImageAsync(VaultFileEntry image)
+    {
+        var opened = version;
+        try
+        {
+            var source = await ReadImageAsync(image);
+            if (opened == version)
+            {
+                ImageSource = source;
+                Error = null;
+            }
+        }
+        catch (Exception ex)
+        {
+            // Event handlers must not throw: the image shown stays, and the viewer says why it could not be read.
+            if (opened == version)
+            {
+                Error = errorText.Describe(ex);
+            }
+        }
+    }
+
+    // The page shows the history's dropdown and bar, so it is shown again whenever they change.
+    private void OnHistoryChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        OnPropertyChanged(nameof(History));
+        if (e.PropertyName == nameof(FileHistoryViewModel.IsViewingVersion))
+        {
+            OnPropertyChanged(nameof(IsViewingVersion));
+            OnPropertyChanged(nameof(ShownImageSource));
+        }
+    }
+
+    // A past version is shown from its content, which the history holds (to restore it): it is not wiped here.
+    private void OnShownVersionChanged(object? sender, EventArgs e)
+    {
+        SetVersionImage(History.SelectedContent is { } shown && file != null ? ToDataUri(file, shown.Content) : null);
     }
 
     private void RaiseFileChanged()

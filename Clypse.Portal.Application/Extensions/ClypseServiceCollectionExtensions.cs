@@ -4,6 +4,8 @@ using Clypse.Portal.Application.Text;
 using Clypse.Portal.Models.Settings;
 using Devoctomy.Blazwiz.Auth.Extensions;
 using Devoctomy.Blazwiz.Core.Extensions;
+using Devoctomy.Blazwiz.Sync;
+using Devoctomy.Blazwiz.Sync.Interfaces;
 using Devoctomy.Blazwiz.UI.Extensions;
 using Devoctomy.Blazwiz.UI.Models;
 using Microsoft.Extensions.Configuration;
@@ -43,6 +45,10 @@ public static class ClypseServiceCollectionExtensions
         services.AddScoped<IFileTypeService, FileTypeService>();
         services.AddScoped<IVaultFileServiceFactory, VaultFileServiceFactory>();
         services.AddScoped<IVaultFileSession, VaultFileSession>();
+
+        // A restored version of a file's content is saved with the file's details, as the editor saves it.
+        services.TryAddScoped<SyncFileHistoryService>();
+        services.Replace(ServiceDescriptor.Scoped<ISyncFileHistoryService, VaultFileHistoryService>());
         services.AddScoped<IMarkdownRenderer, MarkdownRenderer>();
         services.AddScoped<ITextFileEncodingService, TextFileEncodingService>();
         services.AddScoped<IMarkdownFormatService, MarkdownFormatService>();

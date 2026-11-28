@@ -4,6 +4,8 @@ using Clypse.Portal.Application.Services.Interfaces;
 using Clypse.Portal.Application.Text;
 using Clypse.Portal.Models.Settings;
 using Devoctomy.Blazwiz.Auth.Sessions.Interfaces;
+using Devoctomy.Blazwiz.Sync;
+using Devoctomy.Blazwiz.Sync.Interfaces;
 using Devoctomy.Blazwiz.UI.Models;
 using Devoctomy.Blazwiz.UI.Text;
 using Microsoft.Extensions.Configuration;
@@ -33,6 +35,8 @@ public class ClypseServiceCollectionExtensionsTests
         AssertScoped<IFileTypeService, FileTypeService>(services);
         AssertScoped<IVaultFileServiceFactory, VaultFileServiceFactory>(services);
         AssertScoped<IVaultFileSession, VaultFileSession>(services);
+        AssertScoped<ISyncFileHistoryService, VaultFileHistoryService>(services);
+        AssertScoped<SyncFileHistoryService, SyncFileHistoryService>(services);
         AssertScoped<IMarkdownRenderer, MarkdownRenderer>(services);
         AssertScoped<ITextFileEncodingService, TextFileEncodingService>(services);
         AssertScoped<IMarkdownFormatService, MarkdownFormatService>(services);

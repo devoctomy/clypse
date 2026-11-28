@@ -58,4 +58,20 @@ public interface ISecretService
     /// <param name="key">A file key.</param>
     /// <returns>The secret's id, or null if the key is not a secret of this vault.</returns>
     string? GetSecretId(string key);
+
+    /// <summary>
+    /// Gets the key of a secret's file: the synced file whose versions are the secret's history.
+    /// </summary>
+    /// <param name="id">The secret's id.</param>
+    /// <returns>The key.</returns>
+    string GetKey(string id);
+
+    /// <summary>
+    /// Reads a secret from a secret file's content (decrypted), e.g. a past version of it, as its own type.
+    /// </summary>
+    /// <param name="id">The secret's id.</param>
+    /// <param name="content">The file's content.</param>
+    /// <returns>The secret.</returns>
+    /// <exception cref="Exceptions.ClypseException">The content is not that secret.</exception>
+    Secret Read(string id, byte[] content);
 }

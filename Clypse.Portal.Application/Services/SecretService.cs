@@ -51,15 +51,18 @@ public class SecretService(Vault vault, ISyncFileStore fileStore, TimeProvider t
     public async Task<Secret?> GetAsync(string id, CancellationToken ct = default)
     {
         var file = await fileStore.ReadAsync(KeyOf(id), ct);
-        if (file == null)
-        {
-            return null;
-        }
+        return file == null ? null : Read(id, file.Content);
+    }
+
+    /// <inheritdoc/>
+    public Secret Read(string id, byte[] content)
+    {
+        ArgumentNullException.ThrowIfNull(content);
 
         Secret? secret;
         try
         {
-            secret = JsonSerializer.Deserialize<Secret>(file.Content);
+            secret = JsonSerializer.Deserialize<Secret>(content);
             secret = secret?.CastSecretToCorrectType();
         }
         catch (Exception ex) when (ex is JsonException or ArgumentException or NotSupportedException or FormatException)
@@ -129,6 +132,9 @@ public class SecretService(Vault vault, ISyncFileStore fileStore, TimeProvider t
         var id = key[SecretsRoot.Length..^SecretExtension.Length];
         return IsValidId(id) ? id : null;
     }
+
+    /// <inheritdoc/>
+    public string GetKey(string id) => KeyOf(id);
 
     private static bool IsValidId(string? id) => Guid.TryParseExact(id, "D", out _);
 

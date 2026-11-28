@@ -18,13 +18,14 @@
             }
             else if (ViewModel.ImageSource != null)
             {
+                <FileHistoryBar Model="ViewModel.History" IdPrefix="file-viewer-history" />
                 @* The decrypted image, straight from memory: a data: URI, never a stored or fetched file. Tapping it
                    fills the page with it, and tapping it again comes back to the file's details. *@
                 var fullScreenText = ViewModel.IsFullScreen ? T["Files.Viewer.ExitFullScreen"] : T["Files.Viewer.FullScreen"];
                 <button type="button" class="file-viewer-image @(ViewModel.IsFullScreen ? "is-fullscreen" : null)" id="file-viewer-image-toggle"
                         title="@fullScreenText" aria-label="@fullScreenText" aria-pressed="@(ViewModel.IsFullScreen.ToString().ToLowerInvariant())"
                         @onclick="() => ViewModel.ToggleFullScreenCommand.Execute(null)">
-                    <img id="file-viewer-image" src="@ViewModel.ImageSource" alt="@ViewModel.Name" />
+                    <img id="file-viewer-image" src="@ViewModel.ShownImageSource" alt="@ViewModel.Name" />
                 </button>
             }
             else if (ViewModel.Error != null)
@@ -72,6 +73,13 @@
             <button type="button" class="btn btn-outline-danger me-auto" id="file-viewer-delete" @onclick="DeleteAsync">
                 <i class="bi bi-trash me-1"></i>@T["Files.Delete"]
             </button>
+            @if (ViewModel.ImageSource != null)
+            {
+                @* The history's own dialogs open inside this one: Escape there closes only them, not the viewer too. *@
+                <div class="dialog-history" @onkeydown:stopPropagation="true">
+                    <FileHistoryPicker Model="ViewModel.History" IdPrefix="file-viewer-history" />
+                </div>
+            }
             <button type="button" class="btn btn-outline-secondary" id="file-viewer-details" @onclick="DetailsAsync">
                 <i class="bi bi-pencil me-1"></i>@T["Files.Details"]
             </button>

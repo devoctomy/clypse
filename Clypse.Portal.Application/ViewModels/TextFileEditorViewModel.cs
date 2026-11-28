@@ -1,9 +1,11 @@
+using System.ComponentModel;
 using System.Security.Cryptography;
 using Blazing.Mvvm.ComponentModel;
 using Clypse.Portal.Application.Exceptions;
 using Clypse.Portal.Application.Services.Interfaces;
 using Clypse.Portal.Models.Files;
 using CommunityToolkit.Mvvm.Input;
+using Devoctomy.Blazwiz.UI.Sync.ViewModels;
 using Devoctomy.Blazwiz.UI.Text.Interfaces;
 
 namespace Clypse.Portal.Application.ViewModels;
@@ -17,9 +19,11 @@ namespace Clypse.Portal.Application.ViewModels;
 /// <remarks>
 /// Anything that would lose unsaved edits (closing the editor, showing another tab, leaving the page) is held back
 /// while the user is asked whether to save them, discard them or keep editing. When a sync changes the open file, it is
-/// read again, or (with unsaved edits) the user is asked which version to keep.
+/// read again, or (with unsaved edits) the user is asked which version to keep. The file's past versions are in
+/// <see cref="History"/>: one picked there is shown read only, in place of the text, until the user goes back to the
+/// current version or restores it.
 /// </remarks>
-public partial class TextFileEditorViewModel : ViewModelBase
+public partial class TextFileEditorViewModel : ViewModelBase, IFileHistoryHost
 {
     /// <summary>
     /// The id of the editor's text area.
@@ -96,6 +100,8 @@ public partial class TextFileEditorViewModel : ViewModelBase
     private DateTimeOffset? lastSavedAt;
     private Action? pendingAction;
     private int version;
+    private string versionText = string.Empty;
+    private string versionPreviewHtml = string.Empty;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="TextFileEditorViewModel"/> class.
@@ -108,6 +114,7 @@ public partial class TextFileEditorViewModel : ViewModelBase
     /// <param name="guard">Holds back what would lose unsaved edits, e.g. showing another tab.</param>
     /// <param name="errorText">Describes errors.</param>
     /// <param name="encoding">Turns a file's content into the text the editor holds, and back.</param>
+    /// <param name="history">The file's past versions.</param>
     public TextFileEditorViewModel(
         IVaultFileSession session,
         IFileTypeService fileTypes,
@@ -116,7 +123,8 @@ public partial class TextFileEditorViewModel : ViewModelBase
         ITextEditorInteropService interop,
         IUnsavedChangesGuard guard,
         IErrorText errorText,
-        ITextFileEncodingService encoding)
+        ITextFileEncodingService encoding,
+        FileHistoryViewModel history)
     {
         this.encoding = encoding ?? throw new ArgumentNullException(nameof(encoding));
         this.session = session ?? throw new ArgumentNullException(nameof(session));
@@ -126,15 +134,28 @@ public partial class TextFileEditorViewModel : ViewModelBase
         this.interop = interop ?? throw new ArgumentNullException(nameof(interop));
         this.guard = guard ?? throw new ArgumentNullException(nameof(guard));
         this.errorText = errorText ?? throw new ArgumentNullException(nameof(errorText));
+        History = history ?? throw new ArgumentNullException(nameof(history));
         holder = Hold;
         this.session.Changed += OnSessionChanged;
         this.guard.SetHolder(holder);
+        History.PropertyChanged += OnHistoryChanged;
+        History.ShownChanged += OnShownVersionChanged;
     }
 
     /// <summary>
     /// Raised when the editor should close: the user closed it, or the file it was showing is gone.
     /// </summary>
     public event EventHandler? CloseRequested;
+
+    /// <summary>
+    /// Gets the file's past versions: the History dropdown, and the bar above a past version shown.
+    /// </summary>
+    public FileHistoryViewModel History { get; }
+
+    /// <summary>
+    /// Gets a value indicating whether a past version is shown, read only, in place of the text.
+    /// </summary>
+    public bool IsViewingVersion => History.IsViewingVersion;
 
     /// <summary>
     /// Gets a value indicating whether the file was found, and is one the editor takes.
@@ -183,19 +204,49 @@ public partial class TextFileEditorViewModel : ViewModelBase
     }
 
     /// <summary>
+    /// Gets or sets what the editor shows: the text being edited, or a past version's text while one is shown. A past
+    /// version cannot be edited, so setting it then does nothing.
+    /// </summary>
+    public string EditorText
+    {
+        get => IsViewingVersion ? versionText : Content;
+        set
+        {
+            if (!IsViewingVersion)
+            {
+                Content = value;
+            }
+        }
+    }
+
+    /// <summary>
+    /// Gets the preview shown: of the text being edited, or of a past version's text while one is shown.
+    /// </summary>
+    public string ShownPreviewHtml => IsViewingVersion ? versionPreviewHtml : PreviewHtml;
+
+    /// <summary>
     /// Gets the preview of a markdown document as HTML. Raw HTML in the markdown is not passed through, so it is safe
     /// to show.
     /// </summary>
     public string PreviewHtml
     {
         get => previewHtml;
-        private set => SetProperty(ref previewHtml, value);
+        private set
+        {
+            if (SetProperty(ref previewHtml, value))
+            {
+                OnPropertyChanged(nameof(ShownPreviewHtml));
+            }
+        }
     }
 
     /// <summary>
     /// Gets a value indicating whether there are unsaved changes.
     /// </summary>
     public bool IsDirty => isReady && (isDeleted || !string.Equals(content, savedContent, StringComparison.Ordinal));
+
+    /// <inheritdoc/>
+    public bool HasUnsavedChanges => IsDirty;
 
     /// <summary>
     /// Gets a value indicating whether the text is being read and decrypted.
@@ -305,6 +356,7 @@ public partial class TextFileEditorViewModel : ViewModelBase
             // No longer loading before it is ready, so the page never shows both at once.
             IsLoading = false;
             Show(text);
+            SetHistory(entry.Id);
         }
         catch (Exception ex)
         {
@@ -329,7 +381,19 @@ public partial class TextFileEditorViewModel : ViewModelBase
     [RelayCommand]
     public async Task SaveAsync()
     {
-        await TrySaveAsync();
+        if (!IsViewingVersion)
+        {
+            await TrySaveAsync();
+        }
+    }
+
+    /// <inheritdoc/>
+    public Task<bool> SaveChangesAsync() => TrySaveAsync();
+
+    /// <inheritdoc/>
+    public void DiscardChanges()
+    {
+        Content = savedContent;
     }
 
     /// <summary>
@@ -340,7 +404,7 @@ public partial class TextFileEditorViewModel : ViewModelBase
     [RelayCommand]
     public async Task FormatAsync(MarkdownFormat format)
     {
-        if (!isReady || !isMarkdown)
+        if (!isReady || !isMarkdown || IsViewingVersion)
         {
             return;
         }
@@ -500,6 +564,10 @@ public partial class TextFileEditorViewModel : ViewModelBase
         IsLeaveDialogOpen = false;
         IsRemoteChangeDialogOpen = false;
         IsRemoteDeleted = false;
+
+        // A past version shown is dropped too: nothing decrypted is kept.
+        History.BackToCurrent();
+        ClearVersion();
         RaiseFileChanged();
     }
 
@@ -511,6 +579,8 @@ public partial class TextFileEditorViewModel : ViewModelBase
             session.Changed -= OnSessionChanged;
             guard.ClearHolder(holder);
             Clear();
+            History.PropertyChanged -= OnHistoryChanged;
+            History.ShownChanged -= OnShownVersionChanged;
         }
 
         base.Dispose(disposing);
@@ -527,17 +597,31 @@ public partial class TextFileEditorViewModel : ViewModelBase
         var bytes = await session.ReadContentAsync(id) ?? throw new ClypseException(ClypseErrorCodes.FileContentMissing);
         try
         {
-            if (bytes.LongLength > MaximumTextSize)
-            {
-                throw new ClypseException(ClypseErrorCodes.TextFileTooLarge, MaximumTextMegabytes);
-            }
-
-            return encoding.Decode(bytes);
+            return Decode(bytes);
         }
         finally
         {
             // Only the text is needed from here on.
             CryptographicOperations.ZeroMemory(bytes);
+        }
+    }
+
+    private DecodedText Decode(byte[] bytes)
+    {
+        if (bytes.LongLength > MaximumTextSize)
+        {
+            throw new ClypseException(ClypseErrorCodes.TextFileTooLarge, MaximumTextMegabytes);
+        }
+
+        return encoding.Decode(bytes);
+    }
+
+    // The file's history is of its content, which is a synced file of the vault's own.
+    private void SetHistory(string id)
+    {
+        if (session.Vault is { } vault && session.GetContentKey(id) is { } key)
+        {
+            History.SetFile(vault.Id, key, this);
         }
     }
 
@@ -588,6 +672,7 @@ public partial class TextFileEditorViewModel : ViewModelBase
 
             file = saved;
             isDeleted = false;
+            SetHistory(saved.Id);
             knownUpdatedAt = saved.LastUpdatedAt;
             savedContent = text;
             LastSavedAt = saved.LastUpdatedAt;
@@ -614,6 +699,59 @@ public partial class TextFileEditorViewModel : ViewModelBase
     {
         // Only a markdown document has a preview, and it is only worked out while it shows.
         PreviewHtml = isMarkdown && !IsPreviewCollapsed ? renderer.ToHtml(content) : string.Empty;
+        RenderVersionPreview();
+    }
+
+    private void RenderVersionPreview()
+    {
+        versionPreviewHtml = isMarkdown && !IsPreviewCollapsed && IsViewingVersion ? renderer.ToHtml(versionText) : string.Empty;
+        OnPropertyChanged(nameof(ShownPreviewHtml));
+    }
+
+    private void ClearVersion()
+    {
+        versionText = string.Empty;
+        versionPreviewHtml = string.Empty;
+        OnPropertyChanged(nameof(EditorText));
+        OnPropertyChanged(nameof(ShownPreviewHtml));
+    }
+
+    // The page shows the history's dropdown and bar, so it is shown again whenever they change.
+    private void OnHistoryChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        OnPropertyChanged(nameof(History));
+        if (e.PropertyName == nameof(FileHistoryViewModel.IsViewingVersion))
+        {
+            OnPropertyChanged(nameof(IsViewingVersion));
+            OnPropertyChanged(nameof(EditorText));
+            OnPropertyChanged(nameof(ShownPreviewHtml));
+        }
+    }
+
+    // A past version is shown as its text. Going back to the current one needs nothing read: a restore saves it
+    // through the session, and the editor follows the session's changes.
+    private void OnShownVersionChanged(object? sender, EventArgs e)
+    {
+        if (History.SelectedContent is not { } shown || file == null)
+        {
+            ClearVersion();
+            return;
+        }
+
+        try
+        {
+            // The history holds the version's content, to restore it: it is not wiped here.
+            versionText = Decode(shown.Content).Text;
+        }
+        catch (Exception ex)
+        {
+            Error = errorText.Describe(ex);
+            History.BackToCurrent();
+            return;
+        }
+
+        OnPropertyChanged(nameof(EditorText));
+        RenderVersionPreview();
     }
 
     private async void OnSessionChanged(object? sender, EventArgs e)

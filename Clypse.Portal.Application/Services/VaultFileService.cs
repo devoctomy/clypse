@@ -222,6 +222,9 @@ public class VaultFileService(
     /// <inheritdoc/>
     public string? GetContentId(string key) => GetId(key, ContentRoot, ContentExtension);
 
+    /// <inheritdoc/>
+    public string GetContentKey(string id) => ContentKeyOf(id);
+
     private static bool IsValidId(string? id) => Guid.TryParseExact(id, "D", out _);
 
     // Only a GUID may name a file: it keeps a file's name out of its path, and a path out of its id.
